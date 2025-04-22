@@ -23,6 +23,16 @@ class User(AbstractUser):
         verbose_name=_("所属租户")
     )
     
+    # 父账号关联，用于子账号功能
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="sub_accounts",
+        verbose_name=_("父账号")
+    )
+    
     # 用户角色字段
     is_admin = models.BooleanField(_("是否管理员"), default=False)
     is_member = models.BooleanField(_("是否普通成员"), default=True)
@@ -57,6 +67,8 @@ class User(AbstractUser):
         ordering = ['-date_joined']
     
     def __str__(self):
+        if self.parent:
+            return f"{self.username} (子账号)"
         return f"{self.username}"
     
     def save(self, *args, **kwargs):
@@ -87,6 +99,16 @@ class User(AbstractUser):
         # 超级管理员始终是管理员
         if self.is_super_admin:
             self.is_admin = True
+            
+        # 子账号不能成为管理员或超级管理员
+        if self.parent:
+            self.is_admin = False
+            self.is_super_admin = False
+            self.is_staff = False
+            self.is_superuser = False
+            # 子账号不允许登录
+            self.is_active = False
+            logger.info(f"用户 {self.username} 是子账号，已禁止管理员权限和登录权限")
         
         super().save(*args, **kwargs)
     
@@ -109,11 +131,20 @@ class User(AbstractUser):
         return self.is_admin and not self.is_super_admin
     
     @property
+    def is_sub_account(self):
+        """
+        判断是否为子账号
+        """
+        return self.parent is not None
+    
+    @property
     def display_role(self):
         """
         获取用户角色显示名称
         """
-        if self.is_super_admin:
+        if self.is_sub_account:
+            return "子账号"
+        elif self.is_super_admin:
             return "超级管理员"
         elif self.is_admin:
             return "租户管理员"

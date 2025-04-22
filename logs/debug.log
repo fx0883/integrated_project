@@ -3577,3 +3577,72 @@ INFO 2025-04-22 18:44:53,990 basehttp "GET /api/doc/multi_tenant/README.md/ HTTP
 INFO 2025-04-22 18:44:55,009 basehttp "GET /api/doc/multi_tenant/api_error_codes.md/ HTTP/1.1" 200 30894
 INFO 2025-04-22 18:45:07,806 basehttp "GET /api/doc/multi_tenant/api_testing_examples.md/ HTTP/1.1" 200 41712
 INFO 2025-04-22 18:45:10,346 basehttp "GET /api/doc/multi_tenant/api_error_codes.md/ HTTP/1.1" 200 30894
+INFO 2025-04-22 18:46:10,070 basehttp "GET /api/doc/multi_tenant/api_testing_examples.md/ HTTP/1.1" 200 41712
+INFO 2025-04-22 18:46:10,746 basehttp "GET /api/doc/multi_tenant/auth_api.md/ HTTP/1.1" 200 42290
+INFO 2025-04-22 18:46:20,202 basehttp "GET /api/doc/multi_tenant/common_api.md/ HTTP/1.1" 200 20540
+INFO 2025-04-22 18:46:21,399 basehttp "GET /api/doc/multi_tenant/data_models.md/ HTTP/1.1" 200 13456
+INFO 2025-04-22 18:57:21,681 autoreload D:\GitHub\integrated_project\users\models.py changed, reloading.
+INFO 2025-04-22 18:57:21,687 autoreload D:\GitHub\integrated_project\users\models.py changed, reloading.
+INFO 2025-04-22 18:57:22,061 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 18:57:22,086 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:20:57,305 autoreload D:\GitHub\integrated_project\users\models.py changed, reloading.
+INFO 2025-04-22 19:20:57,308 autoreload D:\GitHub\integrated_project\users\models.py changed, reloading.
+INFO 2025-04-22 19:20:57,663 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:20:57,663 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:21:28,365 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 19:21:28,677 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:21:49,955 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-22 19:21:50,270 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:22:03,412 autoreload D:\GitHub\integrated_project\common\authentication\jwt_auth.py changed, reloading.
+INFO 2025-04-22 19:22:03,720 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:22:24,028 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-22 19:22:24,337 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:22:36,500 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-22 19:22:36,808 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:22:46,949 autoreload D:\GitHub\integrated_project\users\views\__init__.py changed, reloading.
+INFO 2025-04-22 19:22:47,261 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:22:59,405 autoreload D:\GitHub\integrated_project\users\urls\user_urls.py changed, reloading.
+INFO 2025-04-22 19:22:59,714 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:23:22,035 autoreload D:\GitHub\integrated_project\users\schema.py changed, reloading.
+INFO 2025-04-22 19:23:22,352 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:23:37,553 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-22 19:23:37,863 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:24:36,805 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-22 19:24:37,108 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:36:33,695 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:37:28,143 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 19:37:28,459 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:37:28,570 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 19:37:28,873 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-22 19:37:55,763 log Not Found: /
+WARNING 2025-04-22 19:37:55,764 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-22 19:38:10,142 log Not Found: /api/swagger/
+WARNING 2025-04-22 19:38:10,142 basehttp "GET /api/swagger/ HTTP/1.1" 404 3783
+INFO 2025-04-22 19:38:22,011 basehttp "GET /api/docs/ HTTP/1.1" 200 1470
+WARNING 2025-04-22 19:38:33,543 log Not Found: /api/doc
+WARNING 2025-04-22 19:38:33,544 basehttp "GET /api/doc HTTP/1.1" 404 3768
+WARNING 2025-04-22 19:38:42,404 log Not Found: /api/v1/doc
+WARNING 2025-04-22 19:38:42,404 basehttp "GET /api/v1/doc HTTP/1.1" 404 5399
+INFO 2025-04-22 19:38:57,469 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-22 19:38:57,624 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 229223
+INFO 2025-04-22 19:38:57,627 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 154985
+INFO 2025-04-22 19:38:57,634 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1466741
+INFO 2025-04-22 19:38:57,768 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 173617
+WARNING 2025-04-22 19:39:34,223 log Bad Request: /api/v1/users/sub-account/create/
+WARNING 2025-04-22 19:39:34,223 basehttp "POST /api/v1/users/sub-account/create/ HTTP/1.1" 400 184
+WARNING 2025-04-22 19:39:35,451 log Bad Request: /api/v1/users/sub-account/create/
+WARNING 2025-04-22 19:39:35,451 basehttp "POST /api/v1/users/sub-account/create/ HTTP/1.1" 400 184
+INFO 2025-04-22 19:41:08,715 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-22 19:41:09,037 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:41:09,065 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-22 19:41:09,381 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:41:23,683 autoreload D:\GitHub\integrated_project\users\schema.py changed, reloading.
+INFO 2025-04-22 19:41:23,994 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:41:24,375 autoreload D:\GitHub\integrated_project\users\schema.py changed, reloading.
+INFO 2025-04-22 19:41:24,677 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:42:23,236 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 19:42:30,793 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-22 19:42:30,957 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 174242
+INFO 2025-04-22 19:42:41,011 basehttp "POST /api/v1/users/sub-account/create/ HTTP/1.1" 201 401
+WARNING 2025-04-22 19:43:51,322 log Unauthorized: /api/v1/users/sub-account/create/
+WARNING 2025-04-22 19:43:51,322 basehttp "POST /api/v1/users/sub-account/create/ HTTP/1.1" 401 78

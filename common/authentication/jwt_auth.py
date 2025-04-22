@@ -68,6 +68,11 @@ class JWTAuthentication(authentication.BaseAuthentication):
         if user.status != 'active':
             logger.warning(f"用户状态异常: {user.username} ({user.status})")
             raise exceptions.AuthenticationFailed('用户状态异常')
+            
+        # 检查是否为子账号
+        if user.parent:
+            logger.warning(f"子账号尝试认证: {user.username}")
+            raise exceptions.AuthenticationFailed('子账号不允许登录')
         
         # 检查用户的租户状态
         if user.tenant and not user.is_super_admin:

@@ -1,11 +1,15 @@
 """
 用户序列化器
 """
+import logging
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from users.models import User
 from tenants.models import Tenant
+
+# 添加日志器
+logger = logging.getLogger(__name__)
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -295,18 +299,25 @@ class LoginSerializer(serializers.Serializer):
         """
         验证用户名和密码
         """
-        user = authenticate(
-            username=data['username'],
-            password=data['password']
-        )
-        
+        user = authenticate(username=data['username'], password=data['password'])
         if not user:
             raise serializers.ValidationError("用户名或密码错误")
         
+        # 验证用户状态
         if not user.is_active:
             raise serializers.ValidationError("用户已被禁用")
         
-        # 添加到验证后的数据中
+        if user.is_deleted:
+            raise serializers.ValidationError("用户已被删除")
+            
+        # 检查用户是否为子账号
+        if user.parent:
+            raise serializers.ValidationError("子账号不允许登录")
+            
+        # 验证租户状态
+        if user.tenant and user.tenant.status != 'active':
+            raise serializers.ValidationError("所属租户已被禁用或暂停")
+        
         data['user'] = user
         return data
 
@@ -461,4 +472,80 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.status = 'active'
         
         user.save()
+        return user 
+
+
+class SubAccountCreateSerializer(serializers.ModelSerializer):
+    """
+    子账号创建序列化器
+    """
+    password = serializers.CharField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
+            'last_name', 'password', 'avatar'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'id': {'read_only': True}
+        }
+    
+    def validate_username(self, value):
+        """
+        验证用户名唯一性
+        """
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("该用户名已被使用")
+        return value
+    
+    def validate_email(self, value):
+        """
+        验证邮箱唯一性
+        """
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("该邮箱已被使用")
+        return value
+    
+    def create(self, validated_data):
+        """
+        创建子账号
+        """
+        # 获取当前用户作为父账号
+        parent_user = self.context['request'].user
+        
+        # 使用默认密码"123456"（如果未提供）
+        password = validated_data.get('password', '123456')
+        
+        # 创建用户但不允许登录
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=password,
+            is_active=False  # 子账号不允许登录
+        )
+        
+        # 设置父账号关系
+        user.parent = parent_user
+        
+        # 子账号继承父账号的租户
+        user.tenant = parent_user.tenant
+        
+        # 设置其他字段
+        for field in ['phone', 'nick_name', 'first_name', 'last_name', 'avatar']:
+            if field in validated_data:
+                setattr(user, field, validated_data[field])
+        
+        # 子账号默认为普通成员
+        user.is_admin = False
+        user.is_member = True
+        user.is_super_admin = False
+        user.is_staff = False
+        user.is_superuser = False
+        
+        # 保存
+        user.save()
+        
+        logger.info(f"用户 {parent_user.username} 创建了子账号 {user.username}，使用{'默认' if password == '123456' else '自定义'}密码")
         return user 

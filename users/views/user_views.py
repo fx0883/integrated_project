@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
+from drf_spectacular.utils import extend_schema
 
 from common.permissions import IsAdmin, IsSuperAdmin
 from users.models import User
@@ -17,8 +18,11 @@ from users.serializers import (
     UserCreateSerializer, 
     ChangePasswordSerializer,
     SuperAdminCreateSerializer,
-    UserRoleSerializer
+    UserRoleSerializer,
+    SubAccountCreateSerializer
 )
+from users.schema import sub_account_create_request_examples, sub_account_create_response_examples, sub_account_create_responses
+from common.schema import api_schema
 from tenants.models import Tenant
 
 logger = logging.getLogger(__name__)
@@ -83,6 +87,42 @@ class UserListCreateView(generics.ListCreateAPIView):
         if is_admin is not None:
             is_admin = is_admin.lower() == 'true'
             queryset = queryset.filter(is_admin=is_admin)
+        
+        # 子账号过滤
+        is_sub_account = self.request.query_params.get('is_sub_account', None)
+        if is_sub_account is not None:
+            is_sub = is_sub_account.lower() == 'true'
+            if is_sub:
+                queryset = queryset.filter(parent__isnull=False)
+            else:
+                queryset = queryset.filter(parent__isnull=True)
+        
+        # 父账号过滤
+        parent_id = self.request.query_params.get('parent', None)
+        if parent_id:
+            try:
+                parent_id = int(parent_id)
+                # 如果是查询自己的子账号，放行
+                if parent_id == user.id:
+                    queryset = queryset.filter(parent_id=parent_id)
+                # 对于超级管理员可以查看任何人的子账号
+                elif user.is_super_admin:
+                    queryset = queryset.filter(parent_id=parent_id)
+                # 对于租户管理员只能查看同一租户下用户的子账号
+                elif user.is_admin and user.tenant:
+                    parent = User.objects.filter(pk=parent_id, tenant=user.tenant).first()
+                    if parent:
+                        queryset = queryset.filter(parent_id=parent_id)
+                    else:
+                        queryset = User.objects.none()
+                # 普通用户只能查看自己的子账号
+                else:
+                    if parent_id != user.id:
+                        queryset = User.objects.none()
+                    else:
+                        queryset = queryset.filter(parent_id=parent_id)
+            except ValueError:
+                queryset = User.objects.none()
         
         return queryset
     
@@ -315,4 +355,45 @@ class TenantUserListView(generics.ListAPIView):
             return User.objects.filter(tenant=tenant, is_deleted=False)
         
         # 其他情况无权限
-        raise PermissionDenied("无权限查看其他租户的用户列表") 
+        raise PermissionDenied("无权限查看其他租户的用户列表")
+
+class SubAccountCreateView(generics.CreateAPIView):
+    """
+    创建子账号视图
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SubAccountCreateSerializer
+    
+    @api_schema(
+        summary="创建子账号",
+        description="创建一个与当前用户关联的子账号，子账号不能登录系统，仅用于数据关联",
+        request_body=SubAccountCreateSerializer,
+        responses=sub_account_create_responses,
+        examples=sub_account_create_request_examples + sub_account_create_response_examples,
+        tags=["用户管理"]
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
+    def perform_create(self, serializer):
+        """
+        创建子账号
+        """
+        user = serializer.save()
+        logger.info(f"用户 {self.request.user.username} 创建了子账号 {user.username}")
+        return user
+        
+    def create(self, request, *args, **kwargs):
+        """
+        重写创建方法，自定义响应
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = self.perform_create(serializer)
+        
+        return Response({
+            'success': True,
+            'code': 2000,
+            'message': '子账号创建成功',
+            'data': UserSerializer(instance).data
+        }, status=status.HTTP_201_CREATED) 

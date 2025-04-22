@@ -29,4 +29,7 @@ urlpatterns = [
     
     # 租户用户管理
     path('tenant/<int:tenant_id>/', user_views.TenantUserListView.as_view(), name='tenant-user-list'),
+    
+    # 子账号管理
+    path('sub-account/create/', user_views.SubAccountCreateView.as_view(), name='create-sub-account'),
 ] 

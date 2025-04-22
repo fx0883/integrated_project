@@ -15,8 +15,8 @@ class UserAdmin(TenantAdminMixin, DjangoUserAdmin):
     """
     自定义用户模型的Admin配置
     """
-    list_display = ('id', 'username', 'email', 'display_role', 'is_active', 'tenant', 'date_joined')
-    list_filter = ('is_active', 'is_super_admin', 'is_admin', 'is_member', 'tenant__name', 'status')
+    list_display = ('id', 'username', 'email', 'display_role', 'is_active', 'tenant', 'parent', 'date_joined')
+    list_filter = ('is_active', 'is_super_admin', 'is_admin', 'is_member', 'tenant__name', 'status', 'parent')
     search_fields = ('username', 'email', 'nick_name', 'first_name', 'last_name')
     ordering = ('-date_joined',)
     
@@ -27,14 +27,14 @@ class UserAdmin(TenantAdminMixin, DjangoUserAdmin):
             'fields': ('is_active', 'is_staff', 'is_superuser', 'is_super_admin', 'is_admin', 'is_member', 
                      'groups', 'user_permissions'),
         }),
-        (_('租户信息'), {'fields': ('tenant', 'status', 'is_deleted')}),
+        (_('租户和账号关系'), {'fields': ('tenant', 'status', 'is_deleted', 'parent')}),
         (_('重要日期'), {'fields': ('last_login', 'date_joined')}),
     )
     
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'tenant'),
+            'fields': ('username', 'email', 'password1', 'password2', 'tenant', 'parent'),
         }),
     )
     

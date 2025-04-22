@@ -3,6 +3,7 @@
 """
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, OpenApiParameter
 from common.schema import common_error_responses
+from rest_framework import status
 
 # 登录请求示例
 login_request_examples = [
@@ -473,4 +474,118 @@ register_response_examples = [
         },
         status_codes=["400"]
     )
-] 
+]
+
+# 子账号创建请求示例
+sub_account_create_request_examples = [
+    OpenApiExample(
+        name="创建子账号（指定密码）",
+        value={
+            "username": "subaccount",
+            "email": "subaccount@example.com",
+            "password": "Secure@Password123",
+            "nick_name": "子账号",
+            "phone": "13800138001",
+            "first_name": "",
+            "last_name": "",
+            "avatar": ""
+        },
+        request_only=True
+    ),
+    OpenApiExample(
+        name="创建子账号（使用默认密码）",
+        value={
+            "username": "subaccount2",
+            "email": "subaccount2@example.com",
+            "nick_name": "子账号2",
+            "phone": "13800138002",
+            "first_name": "",
+            "last_name": "",
+            "avatar": ""
+        },
+        request_only=True
+    )
+]
+
+# 子账号创建响应示例
+sub_account_create_response_examples = [
+    OpenApiExample(
+        name="创建成功",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "子账号创建成功",
+            "data": {
+                "id": 5,
+                "username": "subaccount",
+                "email": "subaccount@example.com",
+                "nick_name": "子账号",
+                "phone": "13800138001",
+                "first_name": "",
+                "last_name": "",
+                "is_active": False,
+                "avatar": "",
+                "tenant": 1,
+                "tenant_name": "测试租户",
+                "is_admin": False,
+                "is_member": True,
+                "is_super_admin": False,
+                "role": "子账号",
+                "date_joined": "2025-04-22T10:00:00Z",
+                "parent": 3
+            }
+        },
+        response_only=True
+    )
+]
+
+# 子账号创建API响应定义
+sub_account_create_responses = {
+    status.HTTP_201_CREATED: OpenApiResponse(
+        description="子账号创建成功",
+        examples=sub_account_create_response_examples
+    ),
+    status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+        description="创建失败，输入数据无效",
+        examples=[
+            OpenApiExample(
+                name="用户名已存在",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "创建失败",
+                    "data": {
+                        "username": ["该用户名已被使用"]
+                    }
+                }
+            ),
+            OpenApiExample(
+                name="邮箱已存在",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "创建失败",
+                    "data": {
+                        "email": ["该邮箱已被使用"]
+                    }
+                }
+            )
+        ]
+    ),
+    status.HTTP_401_UNAUTHORIZED: OpenApiResponse(
+        description="未认证或认证失败",
+        examples=[
+            OpenApiExample(
+                name="未认证",
+                value={
+                    "success": False,
+                    "code": 4001,
+                    "message": "认证失败",
+                    "data": {
+                        "detail": "未提供有效的认证凭据"
+                    }
+                }
+            )
+        ]
+    )
+} 
