@@ -182,3 +182,10 @@ python manage.py makemigrations --skip-checks
 # 退出虚拟环境
 deactivate
 ``` 
+
+
+
+.\venv\Scripts\activate 
+
+
+python manage.py runserver

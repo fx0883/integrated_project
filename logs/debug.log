@@ -400,3 +400,357 @@ INFO 2025-04-22 09:34:05,826 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 1
 INFO 2025-04-22 09:34:05,839 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
 INFO 2025-04-22 09:34:10,378 basehttp "GET /admin/common/ HTTP/1.1" 200 5376
 INFO 2025-04-22 09:34:11,211 basehttp "GET /admin/ HTTP/1.1" 200 6475
+INFO 2025-04-22 09:37:39,856 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:37:44,091 basehttp "GET /admin/ HTTP/1.1" 200 6475
+INFO 2025-04-22 09:37:45,128 basehttp "GET /admin/ HTTP/1.1" 200 6475
+INFO 2025-04-22 09:37:45,654 basehttp "GET /admin/ HTTP/1.1" 200 6475
+WARNING 2025-04-22 09:37:49,835 log Not Found: /
+WARNING 2025-04-22 09:37:49,836 basehttp "GET / HTTP/1.1" 404 2644
+INFO 2025-04-22 09:37:55,203 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2025-04-22 09:37:55,210 basehttp "GET /admin/ HTTP/1.1" 200 6475
+INFO 2025-04-22 09:38:05,632 basehttp "GET /admin/auth/group/ HTTP/1.1" 200 8038
+INFO 2025-04-22 09:38:05,644 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:38:09,743 basehttp "GET /admin/auth/group/add/ HTTP/1.1" 200 12327
+INFO 2025-04-22 09:38:09,760 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:38:09,897 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-04-22 09:38:09,900 basehttp "GET /static/admin/js/SelectBox.js HTTP/1.1" 200 4530
+INFO 2025-04-22 09:38:09,903 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-04-22 09:38:09,905 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-04-22 09:38:09,905 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 200 11991
+INFO 2025-04-22 09:38:09,906 basehttp "GET /static/admin/js/SelectFilter2.js HTTP/1.1" 200 15709
+INFO 2025-04-22 09:38:09,935 basehttp "GET /static/admin/img/selector-icons.svg HTTP/1.1" 200 3291
+INFO 2025-04-22 09:44:53,102 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:44:59,733 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:01,485 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:02,234 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:02,657 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:03,090 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:05,556 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:07,979 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:15,145 basehttp "GET /admin/ HTTP/1.1" 200 6494
+WARNING 2025-04-22 09:45:17,677 log Not Found: /
+WARNING 2025-04-22 09:45:17,678 basehttp "GET / HTTP/1.1" 404 2644
+INFO 2025-04-22 09:45:22,043 basehttp "GET /admin/ HTTP/1.1" 200 6494
+INFO 2025-04-22 09:45:28,251 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 17363
+INFO 2025-04-22 09:45:28,264 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:47:02,768 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 09:47:03,060 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:47:14,171 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 09:47:14,460 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:47:28,600 autoreload D:\GitHub\integrated_project\tenants\admin.py changed, reloading.
+INFO 2025-04-22 09:47:28,883 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:47:39,164 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:47:44,500 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 19574
+INFO 2025-04-22 09:47:44,518 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:47:49,091 basehttp "GET /admin/tenants/tenant/ HTTP/1.1" 200 12138
+INFO 2025-04-22 09:47:49,106 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:47:52,564 basehttp "GET /admin/tenants/tenant/add/ HTTP/1.1" 200 15470
+INFO 2025-04-22 09:47:52,576 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:48:06,634 autoreload D:\GitHub\integrated_project\core\admin.py changed, reloading.
+INFO 2025-04-22 09:48:06,958 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:48:20,988 basehttp "POST /admin/tenants/tenant/add/ HTTP/1.1" 302 0
+INFO 2025-04-22 09:48:21,014 basehttp "GET /admin/tenants/tenant/add/ HTTP/1.1" 200 15717
+INFO 2025-04-22 09:48:21,027 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:48:21,108 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-04-22 09:48:27,474 basehttp "GET /admin/users/user/ HTTP/1.1" 200 16353
+INFO 2025-04-22 09:48:27,489 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:48:32,850 basehttp "GET /admin/users/user/add/ HTTP/1.1" 200 13966
+INFO 2025-04-22 09:48:32,860 basehttp "GET /static/admin/css/unusable_password_field.css HTTP/1.1" 200 663
+INFO 2025-04-22 09:48:32,864 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 09:48:32,870 basehttp "GET /static/admin/js/unusable_password_field.js HTTP/1.1" 200 1480
+INFO 2025-04-22 09:49:08,521 autoreload D:\GitHub\integrated_project\tenants\admin.py changed, reloading.
+INFO 2025-04-22 09:49:08,824 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:49:15,809 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:52:34,139 autoreload D:\GitHub\integrated_project\common\admin.py changed, reloading.
+INFO 2025-04-22 09:52:34,440 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:52:59,742 autoreload D:\GitHub\integrated_project\tenants\admin.py changed, reloading.
+INFO 2025-04-22 09:53:00,033 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:53:20,213 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 09:53:20,505 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 09:53:42,769 autoreload D:\GitHub\integrated_project\common\admin.py changed, reloading.
+INFO 2025-04-22 09:53:43,057 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 10:41:49,770 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 10:42:00,901 autoreload D:\GitHub\integrated_project\users\admin.py changed, reloading.
+INFO 2025-04-22 10:42:01,196 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 10:42:01,351 autoreload D:\GitHub\integrated_project\tenants\admin.py changed, reloading.
+INFO 2025-04-22 10:42:01,647 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 10:42:06,560 basehttp "GET /admin/users/user/add/ HTTP/1.1" 200 15664
+INFO 2025-04-22 10:42:06,577 basehttp "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,577 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,577 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,578 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,579 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,580 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,580 basehttp "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,581 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,581 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,582 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,583 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,583 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,583 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,584 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:06,596 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,596 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:06,608 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:12,815 basehttp "GET /admin/users/user/add/ HTTP/1.1" 200 15664
+INFO 2025-04-22 10:42:12,827 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:14,354 basehttp "GET /admin/auth/group/add/ HTTP/1.1" 200 14557
+INFO 2025-04-22 10:42:14,366 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:14,408 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:16,940 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:42:16,956 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:29,226 basehttp "GET /admin/tenants/tenant/add/ HTTP/1.1" 200 15470
+INFO 2025-04-22 10:42:29,240 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:33,501 basehttp "GET /admin/users/user/ HTTP/1.1" 200 16353
+INFO 2025-04-22 10:42:33,511 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:33,514 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:33,522 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:33,522 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:42:45,418 basehttp "GET /admin/tenants/tenantquota/ HTTP/1.1" 200 13407
+INFO 2025-04-22 10:42:45,430 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:42:54,228 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:42:54,244 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+ERROR 2025-04-22 10:43:01,377 log Internal Server Error: /admin/tenants/tenantquota/add/
+Traceback (most recent call last):
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\mysql\base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\MySQLdb\connections.py", line 280, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.IntegrityError: (1048, "Column 'tenant_id' cannot be null")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\options.py", line 719, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\sites.py", line 246, in inner
+    return view(request, *args, **kwargs)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\options.py", line 1984, in add_view
+    return self.changeform_view(request, None, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\options.py", line 1843, in changeform_view
+    return self._changeform_view(request, object_id, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\options.py", line 1894, in _changeform_view
+    self.save_model(request, new_object, form, not add)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\GitHub\integrated_project\common\admin.py", line 45, in save_model
+    super().save_model(request, obj, form, change)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\options.py", line 1314, in save_model
+    obj.save()
+    ~~~~~~~~^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\base.py", line 1008, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\base.py", line 1169, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\base.py", line 1210, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\query.py", line 1854, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\sql\compiler.py", line 1881, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\backends\mysql\base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Administrator\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\MySQLdb\connections.py", line 280, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.IntegrityError: (1048, "Column 'tenant_id' cannot be null")
+ERROR 2025-04-22 10:43:01,385 basehttp "POST /admin/tenants/tenantquota/add/ HTTP/1.1" 500 250516
+INFO 2025-04-22 10:43:09,929 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:11,557 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:11,569 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:43:11,969 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:11,984 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:43:12,204 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:12,216 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:43:12,402 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:12,428 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:43:12,593 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:12,618 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:43:12,807 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 15830
+INFO 2025-04-22 10:43:12,826 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:45:04,888 autoreload D:\GitHub\integrated_project\tenants\admin.py changed, reloading.
+INFO 2025-04-22 10:45:05,185 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 10:46:09,989 autoreload Watching for file changes with StatReloader
+INFO 2025-04-22 10:46:25,834 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 17068
+INFO 2025-04-22 10:46:25,850 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:46:25,866 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:46:35,114 basehttp "GET /admin/tenants/tenant/add/?_to_field=id&_popup=1 HTTP/1.1" 200 9095
+INFO 2025-04-22 10:46:35,126 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:46:39,900 basehttp "GET /admin/users/user/ HTTP/1.1" 200 17656
+INFO 2025-04-22 10:46:39,913 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:46:39,923 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:46:50,323 basehttp "GET /admin/users/user/3/change/ HTTP/1.1" 200 31169
+INFO 2025-04-22 10:46:50,336 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:46:50,421 basehttp "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 200 19319
+INFO 2025-04-22 10:46:50,424 basehttp "GET /static/admin/js/calendar.js HTTP/1.1" 200 9141
+INFO 2025-04-22 10:46:50,459 basehttp "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 200 1086
+INFO 2025-04-22 10:46:50,459 basehttp "GET /static/admin/img/icon-clock.svg HTTP/1.1" 200 677
+INFO 2025-04-22 10:47:05,940 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 19962
+INFO 2025-04-22 10:47:05,953 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:09,193 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 19962
+INFO 2025-04-22 10:47:09,208 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:09,760 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 19962
+INFO 2025-04-22 10:47:09,774 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:09,987 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 19962
+INFO 2025-04-22 10:47:10,005 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:10,205 basehttp "GET /admin/common/apilog/ HTTP/1.1" 200 19962
+INFO 2025-04-22 10:47:10,220 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:32,490 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2025-04-22 10:47:32,499 basehttp "GET /admin/ HTTP/1.1" 200 9627
+INFO 2025-04-22 10:47:32,550 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 304 0
+WARNING 2025-04-22 10:47:32,666 log Not Found: /favicon.ico
+WARNING 2025-04-22 10:47:32,667 basehttp "GET /favicon.ico HTTP/1.1" 404 2695
+INFO 2025-04-22 10:47:34,474 basehttp "GET /admin/tenants/tenant/ HTTP/1.1" 200 15145
+INFO 2025-04-22 10:47:34,489 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,491 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,492 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,493 basehttp "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,494 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,495 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:34,495 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,496 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,496 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,497 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,497 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,500 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,506 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:34,507 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:35,960 basehttp "GET /admin/tenants/tenantquota/ HTTP/1.1" 200 13890
+INFO 2025-04-22 10:47:35,973 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:39,953 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 17068
+INFO 2025-04-22 10:47:39,961 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:39,961 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:39,964 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:39,973 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:39,973 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:45,816 basehttp "POST /admin/tenants/tenantquota/add/ HTTP/1.1" 200 17307
+INFO 2025-04-22 10:47:45,828 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:49,756 basehttp "GET /admin/tenants/tenantquota/ HTTP/1.1" 200 13890
+INFO 2025-04-22 10:47:49,768 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:55,051 basehttp "POST /admin/tenants/tenantquota/ HTTP/1.1" 200 10264
+INFO 2025-04-22 10:47:55,060 basehttp "GET /static/admin/js/cancel.js HTTP/1.1" 200 884
+INFO 2025-04-22 10:47:56,033 basehttp "POST /admin/tenants/tenantquota/ HTTP/1.1" 302 0
+INFO 2025-04-22 10:47:56,042 basehttp "GET /admin/tenants/tenantquota/ HTTP/1.1" 200 11256
+INFO 2025-04-22 10:47:56,057 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:47:56,063 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 304 0
+INFO 2025-04-22 10:47:57,983 basehttp "GET /admin/tenants/tenantquota/add/ HTTP/1.1" 200 17068
+INFO 2025-04-22 10:47:57,994 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:48:00,850 basehttp "POST /admin/tenants/tenantquota/add/ HTTP/1.1" 302 0
+INFO 2025-04-22 10:48:00,860 basehttp "GET /admin/tenants/tenantquota/ HTTP/1.1" 200 13620
+INFO 2025-04-22 10:48:00,874 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:48:03,816 basehttp "GET /admin/tenants/tenantquota/ HTTP/1.1" 200 13407
+INFO 2025-04-22 10:48:03,829 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:48:04,535 basehttp "GET /admin/tenants/tenant/ HTTP/1.1" 200 15145
+INFO 2025-04-22 10:48:04,548 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:48:06,024 basehttp "GET /admin/users/user/ HTTP/1.1" 200 17656
+INFO 2025-04-22 10:48:06,037 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+WARNING 2025-04-22 10:48:33,438 log Not Found: /
+WARNING 2025-04-22 10:48:33,438 basehttp "GET / HTTP/1.1" 404 2644
+INFO 2025-04-22 10:49:01,395 basehttp "GET /admin/ HTTP/1.1" 200 10656
+INFO 2025-04-22 10:49:01,414 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:49:01,447 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+WARNING 2025-04-22 10:49:01,573 log Not Found: /favicon.ico
+WARNING 2025-04-22 10:49:01,574 basehttp "GET /favicon.ico HTTP/1.1" 404 2695
+INFO 2025-04-22 10:49:04,088 basehttp "GET /admin/users/user/ HTTP/1.1" 200 17656
+INFO 2025-04-22 10:49:04,100 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:49:08,238 basehttp "GET /admin/users/user/add/ HTTP/1.1" 200 15716
+INFO 2025-04-22 10:49:08,247 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:49:08,247 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:49:08,250 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:49:08,254 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 304 0
+INFO 2025-04-22 10:49:08,254 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
+INFO 2025-04-22 10:49:22,053 basehttp "POST /admin/users/user/add/ HTTP/1.1" 200 16069
+INFO 2025-04-22 10:49:22,064 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:49:34,484 basehttp "POST /admin/users/user/add/ HTTP/1.1" 200 15994
+INFO 2025-04-22 10:49:34,494 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:49:48,118 basehttp "POST /admin/users/user/add/ HTTP/1.1" 200 15961
+INFO 2025-04-22 10:49:48,130 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:50:04,583 basehttp "POST /admin/users/user/add/ HTTP/1.1" 200 15967
+INFO 2025-04-22 10:50:04,595 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-22 10:50:20,715 basehttp "POST /admin/users/user/add/ HTTP/1.1" 302 0
+INFO 2025-04-22 10:50:20,727 basehttp "GET /admin/users/user/add/ HTTP/1.1" 200 15942
+INFO 2025-04-22 10:50:20,742 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327

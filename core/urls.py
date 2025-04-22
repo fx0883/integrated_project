@@ -7,6 +7,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
+# 导入admin模块，确保所有模型被注册
+import core.admin
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     
