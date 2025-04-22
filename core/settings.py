@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_spectacular',
+    'drf_spectacular_sidecar',  # 提供Swagger UI和ReDoc的静态资源
     
     # 自定义应用
     'common',
@@ -194,6 +195,33 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': '用于管理多租户用户系统的REST API',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+    },
+    'SWAGGER_UI_DIST': 'SIDECAR',  # 使用内置的Swagger UI发行版
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',  # 使用内置的Redoc发行版
+    # 调试选项
+    'DISABLE_ERRORS_AND_WARNINGS': False,
+    
+    # 添加认证设置
+    'SECURITY': [{'Bearer': []}],
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': '请输入 "Bearer {token}" 格式的JWT令牌'
+        }
+    },
+    # 添加JWT认证映射
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': False,
+    
+    # 扩展类
+    'EXTENSIONS': ['common.schema.spectacular_extensions.JWTAuthenticationScheme'],
+    # 排除session和basic认证
+    'AUTHENTICATION_WHITELIST': ['common.authentication.jwt_auth.JWTAuthentication'],
 }
 
 # 日志配置
@@ -208,7 +236,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
@@ -223,6 +251,11 @@ LOGGING = {
         'django': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
+            'propagate': True,
+        },
+        'drf_spectacular': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': True,
         },
     },

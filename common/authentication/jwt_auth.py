@@ -88,6 +88,19 @@ class JWTAuthentication(authentication.BaseAuthentication):
             认证头字符串
         """
         return 'Bearer'
+    
+    # 添加drf-spectacular兼容方法
+    @classmethod
+    def extend_schema(cls):
+        """
+        为drf-spectacular提供认证模式信息
+        """
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT',
+            'description': '输入JWT令牌: Bearer [token]'
+        }
 
 
 def generate_jwt_token(user):

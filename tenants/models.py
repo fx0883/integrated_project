@@ -18,6 +18,7 @@ class Tenant(models.Model):
     )
     
     name = models.CharField(_("租户名称"), max_length=100, unique=True)
+    code = models.CharField(_("租户代码"), max_length=50, unique=True, null=True, blank=True, help_text="用于API和集成的唯一标识符")
     status = models.CharField(_("状态"), max_length=20, choices=STATUS_CHOICES, default='active')
     
     # 联系人信息
@@ -47,6 +48,10 @@ class Tenant(models.Model):
             logger.info(f"创建新租户: {self.name}")
         else:
             logger.info(f"更新租户: {self.name}")
+        
+        # 如果没有设置code，使用name的小写版本作为默认code
+        if not self.code and self.name:
+            self.code = self.name.lower().replace(' ', '_')
         
         super().save(*args, **kwargs)
         

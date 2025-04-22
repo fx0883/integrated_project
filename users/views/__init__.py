@@ -5,7 +5,8 @@
 from .auth_views import (
     LoginView,
     TokenRefreshView,
-    TokenVerifyView
+    TokenVerifyView,
+    RegisterView
 )
 
 # 从user_views.py导入用户相关视图

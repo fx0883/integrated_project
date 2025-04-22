@@ -17,6 +17,14 @@ from tenants.serializers import (
 )
 from django.contrib.auth import get_user_model
 from users.serializers import UserListSerializer
+from common.schema import api_schema, common_search_parameter, common_pagination_parameters, tenant_status_parameter
+from tenants.schema import (
+    tenant_list_responses, tenant_create_responses, tenant_detail_responses,
+    tenant_quota_responses, tenant_quota_update_responses, tenant_quota_usage_responses,
+    tenant_suspend_responses, tenant_activate_responses, tenant_users_responses,
+    tenant_create_request_examples, tenant_quota_update_request_examples
+)
+from drf_spectacular.utils import OpenApiParameter
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -34,6 +42,27 @@ class TenantListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return TenantCreateSerializer
         return TenantSerializer
+    
+    @api_schema(
+        summary="获取租户列表",
+        description="获取所有租户的列表，支持搜索和状态过滤，仅超级管理员可访问",
+        responses=tenant_list_responses,
+        parameters=[common_search_parameter, tenant_status_parameter] + common_pagination_parameters,
+        tags=["租户"]
+    )
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    @api_schema(
+        summary="创建新租户",
+        description="创建新的租户，包括租户名称、状态和联系人信息，仅超级管理员可访问",
+        request_body=TenantCreateSerializer,
+        responses=tenant_create_responses,
+        examples=tenant_create_request_examples,
+        tags=["租户"]
+    )
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
     
     def get_queryset(self):
         """
@@ -100,6 +129,44 @@ class TenantRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsSuperAdminUser]
     lookup_field = 'pk'
     
+    @api_schema(
+        summary="获取租户详情",
+        description="获取指定租户的详细信息，包括配额和用户统计，仅超级管理员可访问",
+        responses=tenant_detail_responses,
+        tags=["租户"]
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+    
+    @api_schema(
+        summary="更新租户信息",
+        description="更新指定租户的信息，包括名称、状态和联系人信息，仅超级管理员可访问",
+        request_body=TenantDetailSerializer,
+        responses=tenant_detail_responses,
+        tags=["租户"]
+    )
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    @api_schema(
+        summary="部分更新租户信息",
+        description="部分更新指定租户的信息，仅超级管理员可访问",
+        request_body=TenantDetailSerializer,
+        responses=tenant_detail_responses,
+        tags=["租户"]
+    )
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+    
+    @api_schema(
+        summary="删除租户",
+        description="软删除指定的租户（标记为已删除状态），仅超级管理员可访问",
+        responses={204: None},
+        tags=["租户"]
+    )
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+    
     def get_queryset(self):
         """
         获取租户查询集
@@ -150,10 +217,10 @@ class TenantQuotaUpdateView(APIView):
     """
     permission_classes = [IsAuthenticated, IsSuperAdminUser]
     
-    @extend_schema(
-        responses={200: TenantQuotaSerializer},
-        description="获取租户配额信息",
+    @api_schema(
         summary="获取租户配额",
+        description="获取指定租户的配额信息，包括最大用户数、管理员数量和存储空间等，仅超级管理员可访问",
+        responses=tenant_quota_responses,
         tags=["租户", "配额"]
     )
     def get(self, request, pk):
@@ -171,11 +238,12 @@ class TenantQuotaUpdateView(APIView):
             'data': serializer.data
         })
     
-    @extend_schema(
-        request=TenantQuotaUpdateSerializer,
-        responses={200: TenantQuotaSerializer},
-        description="更新租户配额设置",
+    @api_schema(
         summary="更新租户配额",
+        description="更新指定租户的配额设置，包括最大用户数、管理员数量和存储空间等，仅超级管理员可访问",
+        request_body=TenantQuotaUpdateSerializer,
+        responses=tenant_quota_update_responses,
+        examples=tenant_quota_update_request_examples,
         tags=["租户", "配额"]
     )
     def put(self, request, pk):
@@ -198,20 +266,19 @@ class TenantQuotaUpdateView(APIView):
                         'message': '更新配额成功',
                         'data': TenantQuotaSerializer(updated_quota).data
                     })
-            
             except Exception as e:
                 logger.exception(f"更新租户配额失败: {str(e)}")
                 return Response({
                     'success': False,
                     'code': 5000,
-                    'message': f'更新租户配额失败: {str(e)}',
+                    'message': f'更新配额失败: {str(e)}',
                     'data': None
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({
             'success': False,
             'code': 4000,
-            'message': '更新配额失败',
+            'message': '参数错误',
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -222,10 +289,10 @@ class TenantQuotaUsageView(APIView):
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
     
-    @extend_schema(
-        responses={200: {"type": "object"}},
-        description="获取租户资源配额使用情况",
-        summary="获取配额使用情况",
+    @api_schema(
+        summary="获取租户配额使用情况",
+        description="获取指定租户资源配额使用情况，包括用户数量、存储空间等使用百分比，超级管理员可查看任意租户，租户管理员只能查看自己租户",
+        responses=tenant_quota_usage_responses,
         tags=["租户", "配额"]
     )
     def get(self, request, pk):
@@ -275,10 +342,10 @@ class TenantSuspendView(APIView):
     """
     permission_classes = [IsAuthenticated, IsSuperAdminUser]
     
-    @extend_schema(
-        responses={200: {"type": "object"}},
-        description="暂停指定租户",
+    @api_schema(
         summary="暂停租户",
+        description="暂停指定租户的服务，将租户状态更改为暂停状态，仅超级管理员可访问",
+        responses=tenant_suspend_responses,
         tags=["租户", "状态管理"]
     )
     def post(self, request, pk):
@@ -325,10 +392,10 @@ class TenantActivateView(APIView):
     """
     permission_classes = [IsAuthenticated, IsSuperAdminUser]
     
-    @extend_schema(
-        responses={200: {"type": "object"}},
-        description="激活指定的暂停租户",
+    @api_schema(
         summary="激活租户",
+        description="激活指定的暂停租户，将租户状态更改为活跃状态，仅超级管理员可访问",
+        responses=tenant_activate_responses,
         tags=["租户", "状态管理"]
     )
     def post(self, request, pk):
@@ -376,27 +443,30 @@ class TenantUserListView(generics.ListAPIView):
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     
-    @extend_schema(
-        parameters=[
-            {
-                'name': 'search',
-                'type': 'string',
-                'description': '搜索关键词(用户名/昵称/邮箱)'
-            },
-            {
-                'name': 'is_admin',
-                'type': 'boolean',
-                'description': '是否只显示管理员用户'
-            },
-            {
-                'name': 'status',
-                'type': 'string',
-                'description': '用户状态(active/suspended/inactive)'
-            }
-        ],
-        responses={200: UserListSerializer(many=True)},
-        description="获取指定租户的用户列表，超级管理员可查看任意租户，租户管理员只能查看自己租户",
+    @api_schema(
         summary="获取租户用户列表",
+        description="获取指定租户的用户列表，支持按用户名、邮箱搜索和状态过滤，超级管理员可查看任意租户，租户管理员只能查看自己租户",
+        responses=tenant_users_responses,
+        parameters=[
+            OpenApiParameter(
+                name='search',
+                description='搜索关键词(用户名/昵称/邮箱)',
+                type=str,
+                required=False
+            ),
+            OpenApiParameter(
+                name='is_admin',
+                description='是否只显示管理员用户',
+                type=bool,
+                required=False
+            ),
+            OpenApiParameter(
+                name='status',
+                description='用户状态(active/suspended/inactive)',
+                type=str,
+                required=False
+            )
+        ] + common_pagination_parameters,
         tags=["租户", "用户管理"]
     )
     def get_queryset(self):

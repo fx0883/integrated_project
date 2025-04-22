@@ -1,2 +1,4 @@
 *.pyc
 *.pyc
+/tenants/__pycache__
+*.pyc

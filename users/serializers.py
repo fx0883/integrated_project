@@ -322,7 +322,7 @@ class UserMinimalSerializer(serializers.ModelSerializer):
     """
     用户最小化序列化器，用于嵌套在其他序列化器中
     """
-    display_name = serializers.CharField(source='display_name', read_only=True)
+    display_name = serializers.CharField(read_only=True)
     
     class Meta:
         model = User
@@ -354,4 +354,111 @@ class UserListSerializer(serializers.ModelSerializer):
     
     def get_role(self, obj):
         """获取用户角色"""
-        return obj.display_role 
+        return obj.display_role
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    用户注册序列化器
+    """
+    password_confirm = serializers.CharField(write_only=True, required=True)
+    tenant_id = serializers.IntegerField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = [
+            'username', 'email', 'phone', 'nick_name', 
+            'password', 'password_confirm', 'tenant_id'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True},
+            'phone': {'required': False},
+            'nick_name': {'required': False}
+        }
+    
+    def validate_email(self, value):
+        """
+        验证邮箱是否已被同一租户下使用
+        """
+        tenant_id = self.initial_data.get('tenant_id')
+        if tenant_id:
+            if User.objects.filter(email=value, tenant_id=tenant_id, is_deleted=False).exists():
+                raise serializers.ValidationError("该租户下此邮箱已被注册")
+        else:
+            # 对于没有指定租户的情况，只检查超级管理员（无租户用户）中是否有重复
+            if User.objects.filter(email=value, tenant__isnull=True, is_deleted=False).exists():
+                raise serializers.ValidationError("该邮箱已被注册")
+        return value
+    
+    def validate_username(self, value):
+        """
+        验证用户名是否已被同一租户下使用
+        """
+        tenant_id = self.initial_data.get('tenant_id')
+        if tenant_id:
+            if User.objects.filter(username=value, tenant_id=tenant_id, is_deleted=False).exists():
+                raise serializers.ValidationError("该租户下此用户名已被使用")
+        else:
+            # 对于没有指定租户的情况，只检查超级管理员（无租户用户）中是否有重复
+            if User.objects.filter(username=value, tenant__isnull=True, is_deleted=False).exists():
+                raise serializers.ValidationError("该用户名已被使用")
+        return value
+    
+    def validate_phone(self, value):
+        """
+        验证手机号是否已被同一租户下使用
+        """
+        tenant_id = self.initial_data.get('tenant_id')
+        if value and tenant_id:
+            if User.objects.filter(phone=value, tenant_id=tenant_id, is_deleted=False).exists():
+                raise serializers.ValidationError("该租户下此手机号已被注册")
+        elif value and not tenant_id:
+            # 对于没有指定租户的情况，只检查超级管理员（无租户用户）中是否有重复
+            if User.objects.filter(phone=value, tenant__isnull=True, is_deleted=False).exists():
+                raise serializers.ValidationError("该手机号已被注册")
+        return value
+    
+    def validate(self, data):
+        """
+        验证密码一致性和强度
+        """
+        if data['password'] != data.pop('password_confirm'):
+            raise serializers.ValidationError({"password_confirm": "两次输入的密码不一致"})
+        
+        # 验证密码强度
+        validate_password(data['password'])
+        
+        # 处理租户ID
+        tenant_id = data.pop('tenant_id', None)
+        if tenant_id:
+            try:
+                tenant = Tenant.objects.get(id=tenant_id, status='active', is_deleted=False)
+                data['tenant'] = tenant
+            except Tenant.DoesNotExist:
+                raise serializers.ValidationError({"tenant_id": "无效的租户ID"})
+        
+        return data
+    
+    def create(self, validated_data):
+        """
+        创建用户
+        """
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        
+        # 设置其他字段
+        for field in ['phone', 'nick_name', 'tenant']:
+            if field in validated_data:
+                setattr(user, field, validated_data[field])
+        
+        # 设置为普通会员
+        user.is_member = True
+        user.is_admin = False
+        user.status = 'active'
+        
+        user.save()
+        return user 

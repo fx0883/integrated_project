@@ -7,6 +7,9 @@ from users.views import auth_views
 app_name = 'auth'
 
 urlpatterns = [
+    # 注册
+    path('register/', auth_views.RegisterView.as_view(), name='register'),
+    
     # 登录
     path('login/', auth_views.LoginView.as_view(), name='login'),
     
