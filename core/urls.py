@@ -51,6 +51,9 @@ class LoggingSpectacularRedocView(SpectacularRedocView):
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    # 文档查看应用路由
+    path('', include('docs_view.urls')),
+    
     # API版本1路由
     path('api/v1/', include([
         # 认证相关路由
