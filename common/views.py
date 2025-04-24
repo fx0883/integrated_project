@@ -3,11 +3,13 @@ import logging
 from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
 from common.permissions import IsSuperAdminUser, IsAdminUser
 from common.models import APILog
 from common.serializers import APILogSerializer, APILogDetailSerializer
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 
 logger = logging.getLogger(__name__)
 
@@ -197,3 +199,82 @@ class APILogDetailView(generics.RetrieveAPIView):
             'message': '获取成功',
             'data': serializer.data
         })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@extend_schema(
+    description="测试统一响应格式的API",
+    summary="测试成功响应",
+    tags=["测试"]
+)
+def test_standard_response(request):
+    """
+    测试成功响应的统一格式
+    """
+    data = {
+        'message': '这是一个测试消息',
+        'test_field': 'test_value',
+        'items': [1, 2, 3, 4, 5]
+    }
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@extend_schema(
+    description="测试错误响应的统一格式",
+    summary="测试错误响应",
+    tags=["测试"]
+)
+def test_error_response(request):
+    """
+    测试错误响应的统一格式
+    """
+    error_data = {
+        'detail': '请求参数错误',
+        'fields': {
+            'name': '此字段是必填项',
+            'age': '此字段必须是一个整数',
+        }
+    }
+    return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@extend_schema(
+    description="测试认证失败响应的统一格式",
+    summary="测试认证失败响应",
+    tags=["测试"]
+)
+def test_auth_error_response(request):
+    """
+    测试认证失败响应的统一格式
+    """
+    return Response({'detail': '认证令牌无效'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@extend_schema(
+    description="测试分页响应的统一格式",
+    summary="测试分页响应",
+    tags=["测试"]
+)
+def test_pagination_response(request):
+    """
+    测试分页响应的统一格式
+    """
+    data = [{'id': i, 'name': f'Item {i}'} for i in range(1, 21)]
+    
+    # 手动模拟分页响应
+    paginated_data = {
+        'pagination': {
+            'count': 100,
+            'next': 'http://localhost:8000/api/v1/common/test-pagination/?page=2',
+            'previous': None,
+            'page_size': 20,
+            'current_page': 1,
+            'total_pages': 5,
+        },
+        'results': data
+    }
+    
+    return Response(paginated_data)

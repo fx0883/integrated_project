@@ -3646,3 +3646,450 @@ INFO 2025-04-22 19:42:30,957 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 174242
 INFO 2025-04-22 19:42:41,011 basehttp "POST /api/v1/users/sub-account/create/ HTTP/1.1" 201 401
 WARNING 2025-04-22 19:43:51,322 log Unauthorized: /api/v1/users/sub-account/create/
 WARNING 2025-04-22 19:43:51,322 basehttp "POST /api/v1/users/sub-account/create/ HTTP/1.1" 401 78
+INFO 2025-04-23 11:10:11,017 autoreload Watching for file changes with StatReloader
+INFO 2025-04-23 11:21:27,548 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-23 11:21:27,670 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-04-23 11:21:27,672 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22154
+INFO 2025-04-23 11:21:27,673 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-04-23 11:21:27,673 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-04-23 11:21:27,675 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-04-23 11:21:27,675 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16632
+INFO 2025-04-23 11:21:27,677 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-04-23 11:21:27,680 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-04-23 11:21:27,680 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-04-23 11:21:27,681 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+WARNING 2025-04-23 11:21:27,768 log Not Found: /favicon.ico
+WARNING 2025-04-23 11:21:27,769 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+INFO 2025-04-23 11:21:30,933 basehttp "GET /admin/users/user/ HTTP/1.1" 200 26670
+INFO 2025-04-23 11:21:30,954 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-23 11:21:30,955 basehttp "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+INFO 2025-04-23 11:21:50,030 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-23 11:21:50,383 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 11:58:36,412 log Unauthorized: /api/v1/auth/login/
+WARNING 2025-04-23 11:58:36,413 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 401 78
+WARNING 2025-04-23 11:59:10,233 log Unauthorized: /api/v1/auth/login/
+WARNING 2025-04-23 11:59:10,234 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 401 78
+WARNING 2025-04-23 11:59:14,075 log Unauthorized: /api/v1/auth/login/
+WARNING 2025-04-23 11:59:14,075 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:01:02,587 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 12:17:26,508 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+WARNING 2025-04-23 12:17:26,520 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:17:26,520 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:17:29,032 basehttp "OPTIONS /api/v1/auth/token/refresh/ HTTP/1.1" 200 0
+WARNING 2025-04-23 12:17:29,038 log Not Found: /api/v1/auth/token/refresh/
+WARNING 2025-04-23 12:17:29,039 basehttp "POST /api/v1/auth/token/refresh/ HTTP/1.1" 404 6647
+INFO 2025-04-23 12:17:32,502 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:17:32,536 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:17:32,536 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:17:34,121 log Not Found: /api/v1/auth/token/refresh/
+WARNING 2025-04-23 12:17:34,121 basehttp "POST /api/v1/auth/token/refresh/ HTTP/1.1" 404 6647
+INFO 2025-04-23 12:17:37,177 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:17:37,212 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:17:37,212 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:17:40,390 log Not Found: /api/v1/auth/token/refresh/
+WARNING 2025-04-23 12:17:40,391 basehttp "POST /api/v1/auth/token/refresh/ HTTP/1.1" 404 6647
+INFO 2025-04-23 12:17:52,702 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:17:52,740 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:17:52,741 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:17:54,074 log Not Found: /api/v1/auth/token/refresh/
+WARNING 2025-04-23 12:17:54,074 basehttp "POST /api/v1/auth/token/refresh/ HTTP/1.1" 404 6647
+INFO 2025-04-23 12:18:28,714 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2025-04-23 12:18:28,739 basehttp "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-04-23 12:18:28,748 basehttp "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4217
+INFO 2025-04-23 12:18:28,756 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22154
+INFO 2025-04-23 12:18:28,757 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-04-23 12:18:28,758 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-04-23 12:18:28,759 basehttp "GET /static/admin/css/login.css HTTP/1.1" 200 951
+INFO 2025-04-23 12:18:28,760 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16632
+INFO 2025-04-23 12:18:28,761 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-04-23 12:18:28,778 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+WARNING 2025-04-23 12:18:28,810 log Not Found: /favicon.ico
+WARNING 2025-04-23 12:18:28,810 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+INFO 2025-04-23 12:18:40,834 basehttp "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-04-23 12:18:40,844 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-23 12:18:40,848 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-04-23 12:18:40,853 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-04-23 12:18:40,853 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-04-23 12:18:40,853 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-04-23 12:18:40,854 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+INFO 2025-04-23 12:19:03,025 basehttp "GET /admin/users/user/ HTTP/1.1" 200 26670
+INFO 2025-04-23 12:19:03,032 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-04-23 12:19:03,033 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-04-23 12:19:03,033 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-04-23 12:19:03,033 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-04-23 12:19:03,035 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-04-23 12:19:03,037 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-23 12:19:03,037 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-04-23 12:19:03,037 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-04-23 12:19:03,037 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-04-23 12:19:03,039 basehttp "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+INFO 2025-04-23 12:19:03,039 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-04-23 12:19:03,040 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-04-23 12:19:03,042 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-04-23 12:19:03,043 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-04-23 12:19:03,055 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-04-23 12:19:03,055 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+WARNING 2025-04-23 12:19:31,932 log Not Found: /
+WARNING 2025-04-23 12:19:31,932 basehttp "GET / HTTP/1.1" 404 3729
+INFO 2025-04-23 12:19:41,066 basehttp "GET /api/v1/docs HTTP/1.1" 301 0
+INFO 2025-04-23 12:19:41,073 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-23 12:19:41,081 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 154985
+INFO 2025-04-23 12:19:41,081 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 229223
+INFO 2025-04-23 12:19:41,085 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1466741
+INFO 2025-04-23 12:19:41,197 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 200 628
+INFO 2025-04-23 12:19:41,228 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 174242
+INFO 2025-04-23 12:20:06,620 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:20:49,018 log Unauthorized: /api/v1/auth/refresh/
+WARNING 2025-04-23 12:20:49,019 basehttp "POST /api/v1/auth/refresh/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:21:02,321 log Unauthorized: /api/v1/auth/refresh/
+WARNING 2025-04-23 12:21:02,321 basehttp "POST /api/v1/auth/refresh/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:21:48,326 basehttp "POST /api/v1/auth/refresh/ HTTP/1.1" 200 451
+WARNING 2025-04-23 12:28:42,599 log Unauthorized: /api/v1/auth/refresh/
+WARNING 2025-04-23 12:28:42,600 basehttp "POST /api/v1/auth/refresh/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:31:11,890 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:31:11,943 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:31:11,943 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:33:18,695 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:33:18,695 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:33:19,090 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:33:19,091 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:33:24,390 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:33:24,390 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,583 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,584 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,598 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,599 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,603 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,604 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,609 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,609 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,614 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,614 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,618 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,619 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,623 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,623 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,633 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,633 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,638 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,639 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,643 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,644 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,648 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,648 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,653 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,653 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:05,658 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:05,658 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,598 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,599 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,603 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,604 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,609 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,609 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,614 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,614 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,619 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,619 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,624 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,624 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,628 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,628 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,632 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,632 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,636 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,636 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,640 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,640 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,644 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,644 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,648 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,648 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,651 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,652 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,655 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,655 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,659 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,660 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,664 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,664 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,668 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,668 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,672 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,672 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:19,676 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:19,677 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,903 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,904 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,909 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,910 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,914 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,915 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,919 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,919 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,924 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,925 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,931 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,931 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,936 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,937 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,942 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,943 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,948 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,948 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,953 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,953 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,959 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,959 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,963 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,964 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,968 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,968 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,972 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,972 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,977 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,977 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,981 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,981 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,985 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,985 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,990 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,990 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,994 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,995 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:36,999 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:36,999 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:37,003 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:37,003 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:37,008 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:37,008 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:37,012 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:37,012 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:34:37,016 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:34:37,017 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,782 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,782 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,786 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,787 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,792 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,793 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,798 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,798 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,803 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,803 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,808 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,808 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,812 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,813 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,817 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,817 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,823 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,823 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,828 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,828 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,833 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,833 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,837 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,838 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,842 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,842 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,846 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,846 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,850 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,850 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,854 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,854 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,858 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,858 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,862 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,862 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,866 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,866 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,870 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,871 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,875 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,875 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,879 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,880 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,884 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,884 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,888 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,888 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,892 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,892 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,896 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,897 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,901 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,901 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,905 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,906 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:35:20,909 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:35:20,910 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:39:22,613 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:39:22,613 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:39:25,923 log Not Found: /api/v1/auth/token/refresh/
+WARNING 2025-04-23 12:39:25,923 basehttp "POST /api/v1/auth/token/refresh/ HTTP/1.1" 404 6647
+INFO 2025-04-23 12:39:29,496 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:39:29,534 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:39:29,534 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:39:45,031 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:39:45,075 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:39:45,075 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:39:53,990 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+WARNING 2025-04-23 12:39:54,046 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:39:54,047 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+INFO 2025-04-23 12:44:32,925 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-23 12:44:32,987 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+INFO 2025-04-23 12:44:41,747 basehttp "GET /api/v1/docs HTTP/1.1" 301 0
+INFO 2025-04-23 12:44:41,753 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-23 12:44:41,772 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 154985
+INFO 2025-04-23 12:44:41,781 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1466741
+INFO 2025-04-23 12:44:41,782 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 229223
+INFO 2025-04-23 12:44:41,891 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 174242
+INFO 2025-04-23 12:44:42,068 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 200 628
+WARNING 2025-04-23 12:45:16,923 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:45:16,923 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:45:16,928 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:45:16,928 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:45:16,932 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:45:16,932 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:45:29,387 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:45:29,387 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:45:29,391 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:45:29,392 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:46:02,528 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:46:02,528 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:46:02,533 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:46:02,534 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:46:02,537 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:46:02,537 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:46:02,542 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:46:02,542 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:46:27,801 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:46:27,802 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:48:44,458 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:48:44,458 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:48:44,462 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:48:44,462 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+WARNING 2025-04-23 12:48:44,466 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 12:48:44,466 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+INFO 2025-04-23 14:30:06,837 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+WARNING 2025-04-23 14:30:06,842 log Unauthorized: /api/v1/users/me/
+WARNING 2025-04-23 14:30:06,842 basehttp "GET /api/v1/users/me/ HTTP/1.1" 401 78
+INFO 2025-04-23 14:30:08,085 basehttp "OPTIONS /api/v1/auth/token/refresh/ HTTP/1.1" 200 0
+WARNING 2025-04-23 14:30:08,092 log Not Found: /api/v1/auth/token/refresh/
+WARNING 2025-04-23 14:30:08,092 basehttp "POST /api/v1/auth/token/refresh/ HTTP/1.1" 404 6647
+INFO 2025-04-23 14:30:11,053 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-23 14:30:11,386 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:30:14,843 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:30:15,461 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:30:16,947 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:30:18,592 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:30:24,504 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:30:33,884 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:32:43,146 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 14:32:43,207 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 14:32:45,652 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 14:32:45,665 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 14:32:45,671 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 15:39:14,931 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 15:39:27,882 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 15:39:35,069 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 15:39:47,454 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 15:40:36,681 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 307
+INFO 2025-04-23 15:43:25,939 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 576
+INFO 2025-04-23 16:12:51,676 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 309
+INFO 2025-04-23 16:12:58,753 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-23 16:13:00,869 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 309
+INFO 2025-04-23 16:13:31,567 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 309
+INFO 2025-04-23 16:17:34,400 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 295
+INFO 2025-04-23 16:17:49,739 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 564
+INFO 2025-04-23 16:20:04,757 basehttp "GET /api/v1/users/1/ HTTP/1.1" 200 295
+ERROR 2025-04-23 16:20:29,429 log Internal Server Error: /api/v1/tenants/1/quota/usage/
+ERROR 2025-04-23 16:20:29,429 basehttp "GET /api/v1/tenants/1/quota/usage/ HTTP/1.1" 500 112
+INFO 2025-04-23 18:31:32,889 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-23 18:31:37,449 log Not Found: /
+WARNING 2025-04-23 18:31:37,449 basehttp "GET / HTTP/1.1" 404 3729
+INFO 2025-04-23 18:31:43,716 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-23 18:31:43,725 basehttp "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,725 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,726 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,773 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,774 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,774 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,777 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,791 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,791 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:43,798 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 304 0
+INFO 2025-04-23 18:31:49,250 basehttp "GET /api/docs HTTP/1.1" 301 0
+INFO 2025-04-23 18:31:49,257 basehttp "GET /api/docs/ HTTP/1.1" 200 1992
+WARNING 2025-04-23 18:31:56,673 log Not Found: /v1/api/docs
+WARNING 2025-04-23 18:31:56,674 basehttp "GET /v1/api/docs HTTP/1.1" 404 3780
+WARNING 2025-04-23 18:32:00,802 log Not Found: /v1/api/doc
+WARNING 2025-04-23 18:32:00,802 basehttp "GET /v1/api/doc HTTP/1.1" 404 3777
+INFO 2025-04-23 18:32:07,229 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-23 18:32:11,612 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-23 18:32:11,658 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css HTTP/1.1" 304 0
+INFO 2025-04-23 18:32:11,662 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 304 0
+INFO 2025-04-23 18:32:11,662 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 304 0
+INFO 2025-04-23 18:32:11,806 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177018
+INFO 2025-04-23 18:32:28,946 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-23 18:33:00,375 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 18:33:20,042 basehttp "GET /api/v1/users/tenant/1/?page=1 HTTP/1.1" 200 1155
+INFO 2025-04-23 18:33:42,333 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-23 18:33:42,334 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-23 18:33:42,340 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 18:33:42,348 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 18:33:42,820 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 18:33:50,778 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-23 18:33:51,105 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-23 18:33:51,138 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 21:05:54,826 autoreload Watching for file changes with StatReloader
+INFO 2025-04-23 21:36:59,919 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-23 21:36:59,943 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 21:37:16,666 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-23 21:37:16,993 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-23 22:56:45,630 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-23 22:56:45,639 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-23 22:56:47,129 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-23 22:56:47,452 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 09:57:03,134 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 09:57:37,351 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-24 09:57:37,712 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 09:57:49,418 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 09:57:55,276 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 09:58:09,710 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 09:59:02,619 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 10:00:53,429 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 10:03:55,308 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 10:04:44,564 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 10:09:02,025 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 10:14:36,597 basehttp "OPTIONS /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 10:14:36,615 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:14:40,081 basehttp "OPTIONS /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 10:14:40,102 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:14:41,579 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-24 10:14:41,599 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:28:11,169 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:28:27,406 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:28:28,782 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:28:40,985 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:28:48,166 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:28:49,204 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:28:50,523 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:28:51,443 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:28:52,238 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:28:53,712 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:28:58,374 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:28:59,786 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:29:01,792 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:29:45,125 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:29:47,609 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:29:50,725 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:29:52,082 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 10:29:56,411 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:29:57,318 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:30:01,609 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 10:30:04,759 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:30:07,588 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 10:30:10,633 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661

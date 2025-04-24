@@ -23,14 +23,18 @@ class StandardResultsSetPagination(PageNumberPagination):
         Returns:
             自定义格式的Response对象
         """
+        pagination_info = {
+            'count': self.page.paginator.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'page_size': self.page_size,
+            'current_page': self.page.number,
+            'total_pages': self.page.paginator.num_pages,
+        }
+        
+        # 此处不需要包装为标准格式，因为StandardJSONRenderer会处理
+        # 我们只需将分页信息与结果数据组合成合适的结构
         return Response({
-            'pagination': {
-                'count': self.page.paginator.count,
-                'next': self.get_next_link(),
-                'previous': self.get_previous_link(),
-                'page_size': self.page_size,
-                'current_page': self.page.number,
-                'total_pages': self.page.paginator.num_pages,
-            },
+            'pagination': pagination_info,
             'results': data
         }) 
