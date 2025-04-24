@@ -236,6 +236,14 @@ SPECTACULAR_SETTINGS = {
     'AUTHENTICATION_WHITELIST': ['common.authentication.jwt_auth.JWTAuthentication'],
 }
 
+# 是否启用debug日志文件记录
+DEBUG_LOG_ENABLED = True
+
+# 确保日志目录存在
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR)
+
 # 日志配置
 LOGGING = {
     'version': 1,
@@ -254,19 +262,22 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'debug.log'),
+            'when': 'midnight',  # 每天午夜切换到新的日志文件
+            'interval': 1,       # 间隔为1，与when参数结合表示每1天
+            'backupCount': 30,   # 保留最近30天的日志文件
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'] + (['file'] if DEBUG_LOG_ENABLED else []),
             'level': 'INFO',
             'propagate': True,
         },
         'drf_spectacular': {
-            'handlers': ['console'],
+            'handlers': ['console'] + (['file'] if DEBUG_LOG_ENABLED else []),
             'level': 'DEBUG',
             'propagate': True,
         },
