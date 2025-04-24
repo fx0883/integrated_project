@@ -2,13 +2,17 @@
 用户相关视图
 """
 import logging
+import os
+import uuid
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser
 from drf_spectacular.utils import extend_schema
 
 from common.permissions import IsAdmin, IsSuperAdmin
@@ -29,13 +33,25 @@ logger = logging.getLogger(__name__)
 
 class CurrentUserView(APIView):
     """
-    获取当前登录用户信息
+    获取和更新当前登录用户信息
     """
     def get(self, request, *args, **kwargs):
         # 使用自定义序列化器返回详细用户信息
-        serializer = UserSerializer(request.user)
+        serializer = UserSerializer(request.user, context={'request': request})
         logger.info(f"用户 {request.user.username} 获取了自己的信息")
         return Response(serializer.data)
+    
+    def put(self, request, *args, **kwargs):
+        """
+        更新当前用户的基本信息
+        """
+        serializer = UserSerializer(request.user, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            logger.info(f"用户 {request.user.username} 更新了自己的基本信息")
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserListCreateView(generics.ListCreateAPIView):
     """
@@ -50,6 +66,16 @@ class UserListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return UserCreateSerializer
         return UserSerializer
+    
+    def get_serializer_context(self):
+        """
+        添加请求到序列化器上下文
+        """
+        context = super().get_serializer_context()
+        context.update({
+            'request': self.request,
+        })
+        return context
     
     def get_queryset(self):
         """
@@ -151,6 +177,16 @@ class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     """
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_context(self):
+        """
+        添加请求到序列化器上下文
+        """
+        context = super().get_serializer_context()
+        context.update({
+            'request': self.request,
+        })
+        return context
     
     def get_queryset(self):
         """
@@ -398,3 +434,93 @@ class SubAccountCreateView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+class UserAvatarUploadView(APIView):
+    """
+    用户头像上传视图
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def post(self, request, *args, **kwargs):
+        """
+        上传用户头像
+        """
+        user = request.user
+        avatar_file = request.FILES.get('avatar')
+        
+        if not avatar_file:
+            return Response(
+                {"detail": "未提供头像文件"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 验证文件类型
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+        ext = os.path.splitext(avatar_file.name)[1].lower()
+        if ext not in valid_extensions:
+            return Response(
+                {"detail": "不支持的文件类型，请上传JPG、PNG、GIF、WEBP或BMP格式的图片"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 验证文件大小
+        if avatar_file.size > 2 * 1024 * 1024:  # 2MB
+            return Response(
+                {"detail": "文件太大，头像大小不能超过2MB"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # 删除旧头像文件（如果存在）
+            if user.avatar and user.avatar.startswith(settings.MEDIA_URL):
+                # 获取相对路径
+                avatar_path = user.avatar.replace(settings.MEDIA_URL, '', 1)
+                old_avatar_path = os.path.join(settings.MEDIA_ROOT, avatar_path)
+                
+                # 检查文件是否存在，如果存在则删除
+                if os.path.isfile(old_avatar_path):
+                    try:
+                        os.remove(old_avatar_path)
+                        logger.info(f"删除用户 {user.username} 的旧头像 {old_avatar_path}")
+                    except OSError as e:
+                        logger.warning(f"删除旧头像文件失败: {str(e)}")
+            
+            # 生成唯一文件名，避免覆盖已有文件
+            unique_filename = f"{uuid.uuid4()}{ext}"
+            
+            # 确保媒体目录存在
+            avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+            os.makedirs(avatar_dir, exist_ok=True)
+            
+            # 保存文件
+            file_path = os.path.join(avatar_dir, unique_filename)
+            with open(file_path, 'wb+') as destination:
+                for chunk in avatar_file.chunks():
+                    destination.write(chunk)
+            
+            # 生成相对URL路径（保存到数据库）
+            relative_url = f"{settings.MEDIA_URL}avatars/{unique_filename}"
+            
+            # 更新用户头像URL
+            user.avatar = relative_url
+            user.save(update_fields=['avatar'])
+            
+            # 为响应生成完整URL
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            full_url = f"{protocol}://{domain}{relative_url}"
+            
+            logger.info(f"用户 {user.username} 上传了新头像")
+            
+            return Response({
+                "detail": "头像上传成功",
+                "avatar": full_url  # 返回给前端的是完整URL
+            })
+        
+        except Exception as e:
+            logger.error(f"头像上传失败: {str(e)}")
+            return Response(
+                {"detail": f"头像上传失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

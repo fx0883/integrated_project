@@ -17,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
     tenant_name = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -41,6 +42,32 @@ class UserSerializer(serializers.ModelSerializer):
     def get_role(self, obj):
         """获取用户角色"""
         return obj.display_role
+    
+    def get_avatar(self, obj):
+        """获取完整的头像URL"""
+        if not obj.avatar:
+            return ""
+            
+        # 如果已经是完整URL，直接返回
+        if obj.avatar.startswith(('http://', 'https://')):
+            return obj.avatar
+            
+        # 获取请求对象
+        request = self.context.get('request')
+        if request is not None:
+            # 从请求中获取域名和协议
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            # 确保路径以/开头
+            path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+            return f"{protocol}://{domain}{path}"
+            
+        # 如果无法获取请求对象，使用配置中的BASE_URL
+        from django.conf import settings
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        # 确保路径以/开头
+        path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+        return f"{base_url}{path}"
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -334,11 +361,38 @@ class UserMinimalSerializer(serializers.ModelSerializer):
     用户最小化序列化器，用于嵌套在其他序列化器中
     """
     display_name = serializers.CharField(read_only=True)
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'username', 'display_name', 'avatar']
         read_only_fields = ['id', 'username', 'display_name', 'avatar']
+        
+    def get_avatar(self, obj):
+        """获取完整的头像URL"""
+        if not obj.avatar:
+            return ""
+            
+        # 如果已经是完整URL，直接返回
+        if obj.avatar.startswith(('http://', 'https://')):
+            return obj.avatar
+            
+        # 获取请求对象
+        request = self.context.get('request')
+        if request is not None:
+            # 从请求中获取域名和协议
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            # 确保路径以/开头
+            path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+            return f"{protocol}://{domain}{path}"
+            
+        # 如果无法获取请求对象，使用配置中的BASE_URL
+        from django.conf import settings
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        # 确保路径以/开头
+        path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+        return f"{base_url}{path}"
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -347,6 +401,7 @@ class UserListSerializer(serializers.ModelSerializer):
     """
     tenant_name = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -366,6 +421,32 @@ class UserListSerializer(serializers.ModelSerializer):
     def get_role(self, obj):
         """获取用户角色"""
         return obj.display_role
+        
+    def get_avatar(self, obj):
+        """获取完整的头像URL"""
+        if not obj.avatar:
+            return ""
+            
+        # 如果已经是完整URL，直接返回
+        if obj.avatar.startswith(('http://', 'https://')):
+            return obj.avatar
+            
+        # 获取请求对象
+        request = self.context.get('request')
+        if request is not None:
+            # 从请求中获取域名和协议
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            # 确保路径以/开头
+            path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+            return f"{protocol}://{domain}{path}"
+            
+        # 如果无法获取请求对象，使用配置中的BASE_URL
+        from django.conf import settings
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        # 确保路径以/开头
+        path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+        return f"{base_url}{path}"
 
 
 class RegisterSerializer(serializers.ModelSerializer):

@@ -64,27 +64,6 @@
           </el-button>
         </el-form-item>
         
-        <div class="alternative-login">
-          <div class="alt-text">或者使用以下方式登录</div>
-          <div class="social-login">
-            <a href="#" class="social-btn" @click.prevent="socialLogin('wechat')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8.69,11.71a1,1,0,1,1,1-1A1,1,0,0,1,8.69,11.71Zm3.94-1a1,1,0,1,0-1,1A1,1,0,0,0,12.63,10.68ZM19.09,12a6.62,6.62,0,0,1,.66,2.85c0,3.83-3.79,6.94-8.45,6.94a9.55,9.55,0,0,1-2.34-.3A1,1,0,0,1,8.6,21l-.24-1-.9-.39a5.22,5.22,0,0,1-2.2-2A5.58,5.58,0,0,1,4,14.33c0-3,3-5.44,6.69-5.44a7.39,7.39,0,0,1,4.83,1.69h.22a.86.86,0,0,1,.37,0A6.83,6.83,0,0,0,14,5.5C14,2.87,16.72.5,20.06.5A6.13,6.13,0,0,1,24,1.67a1,1,0,0,1,.51.92.76.76,0,0,1,0,.26L24.32,4,25,4.32a3.09,3.09,0,0,0,1.46,2.92.94.94,0,0,1,.31,1.13A4.29,4.29,0,0,1,24,11,6.89,6.89,0,0,1,19.09,12ZM14.89,6.55a1,1,0,1,0,1,1A1,1,0,0,0,14.89,6.55Zm4.55-3.94a1,1,0,1,0,1,1A1,1,0,0,0,19.44,2.61Z"></path>
-              </svg>
-            </a>
-            <a href="#" class="social-btn" @click.prevent="socialLogin('dingtalk')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor">
-                <path d="M573.7 252.5C422.5 197.4 201.3 96.7 201.3 96.7c-15.7-4.1-17.9 11.1-17.9 11.1-5 61.1 33.6 160.5 53.6 182.8 19.9 22.3 319.1 113.7 319.1 113.7S326 357.9 270.5 341.9c-55.6-16-37.9 17.8-37.9 17.8 11.4 61.7 64.9 131.8 107.2 138.4 42.2 6.6 220.1 4 220.1 4s-35.5 4.1-93.2 11.9c-42.7 5.8-97 12.5-111.1 17.8-33.1 12.5 24 62.6 24 62.6 84.7 76.8 129.7 50.5 129.7 50.5 33.3-10.7 61.4-18.5 85.2-24.2L565 743.1h84.6L603 928l205.3-271.9H700.8l22.3-38.7c0.1 0 127.3-163.2 127.3-399.6 0 0 3.2-37.1-30.2-28.8-33.4 8.2-252.9 69.5-246.5 63.4z"></path>
-              </svg>
-            </a>
-            <a href="#" class="social-btn" @click.prevent="socialLogin('feishu')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor">
-                <path d="M409.048 757.659c-152.15-12.648-271.01-139.246-271.01-294.803 0-163.097 132.274-295.37 295.37-295.37h200.199s186.66-20.094 186.66 177.952v83.675c0 163.097-132.274 295.37-295.37 295.37h-115.85z m3.796-516.825c-122.38 0-221.527 99.147-221.527 221.527s99.148 221.528 221.527 221.528h115.85c122.38 0 221.527-99.148 221.527-221.528V392.06s9.638-50.778-43.168-72.585h-178.36c-35.343 0-115.849 0-115.849-78.64z" fill="#FFFFFF"></path><path d="M510.002 510.087h148.913v73.638H510.002zM399.694 510.087h72.585v73.638h-72.585zM652.062 364.713h73.638v73.638h-73.638zM510.002 364.713h72.585v73.638h-72.585zM399.694 364.713h72.585v73.638h-72.585z" fill="#FFFFFF"></path>
-              </svg>
-            </a>
-          </div>
-        </div>
-        
         <div class="register-link">
           还没有账号? <router-link to="/register">立即注册</router-link>
         </div>
@@ -143,18 +122,6 @@ onMounted(() => {
     // TODO: 如果需要，可以在这里验证token
   }
 })
-
-// 社交登录处理
-const socialLogin = (type) => {
-  console.log(`尝试使用${type}登录`)
-  
-  // 这里可以根据不同社交登录类型进行处理
-  ElMessage({
-    type: 'info',
-    message: `${type}登录功能正在开发中，敬请期待`,
-    duration: 2000
-  })
-}
 
 // 登录处理
 const handleLogin = async () => {
@@ -326,61 +293,5 @@ const handleLogin = async () => {
 
 .register-link a:hover {
   text-decoration: underline;
-}
-
-.alternative-login {
-  margin-top: 25px;
-  text-align: center;
-}
-
-.alt-text {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 15px;
-  position: relative;
-}
-
-.alt-text::before,
-.alt-text::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 30%;
-  height: 1px;
-  background-color: #E8ECF4;
-}
-
-.alt-text::before {
-  left: 0;
-}
-
-.alt-text::after {
-  right: 0;
-}
-
-.social-login {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.social-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background-color: white;
-  border: 1px solid #E8ECF4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #6E7687;
-}
-
-.social-btn:hover {
-  background-color: #e0f5f4;
-  border-color: #0abab5;
-  color: #0abab5;
 }
 </style>

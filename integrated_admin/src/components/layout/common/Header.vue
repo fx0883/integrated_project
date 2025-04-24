@@ -137,7 +137,18 @@ const handleCommand = (command) => {
     })
   } else if (command === 'profile') {
     // 跳转到个人资料页
-    router.push('/profile')
+    console.log('正在导航到个人资料页...')
+    try {
+      router.push('/profile').catch(err => {
+        console.error('导航到个人资料页时出错:', err)
+        // 如果导航失败，尝试重新加载页面
+        window.location.href = '/profile'
+      })
+    } catch (error) {
+      console.error('点击个人资料菜单时出错:', error)
+      // 如果出现错误，尝试重新加载页面
+      window.location.href = '/profile'
+    }
   } else if (command === 'settings') {
     // 跳转到设置页
     router.push('/settings')

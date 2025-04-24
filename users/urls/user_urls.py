@@ -19,6 +19,9 @@ urlpatterns = [
     # 修改密码
     path('change-password/', user_views.ChangePasswordView.as_view(), name='change-password'),
     
+    # 上传头像
+    path('me/upload-avatar/', user_views.UserAvatarUploadView.as_view(), name='upload-avatar'),
+    
     # 超级管理员相关
     path('super-admin/create/', user_views.SuperAdminCreateView.as_view(), name='create-super-admin'),
     path('<int:pk>/grant-super-admin/', user_views.GrantSuperAdminView.as_view(), name='grant-super-admin'),

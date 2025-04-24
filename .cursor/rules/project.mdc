@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+当前目录是django 项目的根目录。
+integrated_admin 是后端管理的前端项目Vue3。

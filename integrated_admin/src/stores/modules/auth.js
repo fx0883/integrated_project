@@ -233,7 +233,8 @@ export const useAuthStore = defineStore('auth', {
       try {
         console.log('获取用户详细信息')
         
-        const response = await authApi.getProfile()
+        const userApi = (await import('../../api/user')).default
+        const response = await userApi.getCurrentUser()
         
         console.log('获取用户详细信息响应:', response)
         

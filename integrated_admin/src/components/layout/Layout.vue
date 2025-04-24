@@ -79,7 +79,7 @@
           <!-- 用户信息 -->
           <el-dropdown trigger="click" @command="handleCommand">
             <div class="user-info">
-              <el-avatar :size="32" :src="userAvatar">{{ userInitials }}</el-avatar>
+              <el-avatar :size="32" :src="avatarUrl">{{ userInitials }}</el-avatar>
               <span class="username">{{ userName }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
@@ -112,7 +112,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../stores'
+import { useAuthStore } from '../../stores/auth'
 import { 
   Odometer, User, Setting, SwitchButton,
   Fold, Expand, ArrowDown, OfficeBuilding 
@@ -161,7 +161,8 @@ const userName = computed(() => {
   return authStore.user?.username || '用户'
 })
 
-const userAvatar = computed(() => {
+// 计算属性
+const avatarUrl = computed(() => {
   return authStore.user?.avatar || ''
 })
 

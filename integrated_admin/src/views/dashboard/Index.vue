@@ -98,7 +98,7 @@
             <div v-for="(item, index) in recentLogins" :key="index" class="activity-item">
               <div class="activity-time">{{ item.time }}</div>
               <div class="activity-content">
-                <el-avatar :size="32" :src="item.avatar">
+                <el-avatar :size="32" :src="processAvatar(item.avatar)">
                   {{ item.name.charAt(0) }}
                 </el-avatar>
                 <div class="activity-info">
@@ -240,6 +240,11 @@ const trendData = reactive({
 const initTrendChart = () => {
   if (!trendChartRef.value) return
   
+  // 先销毁之前可能存在的实例
+  if (trendChart) {
+    trendChart.dispose()
+  }
+  
   // 创建图表实例
   trendChart = echarts.init(trendChartRef.value)
   
@@ -340,9 +345,12 @@ const updateTrendChart = () => {
   console.log(`趋势图更新完成，周期：${trendPeriod.value}`)
 }
 
-// 监听趋势周期变化
-watch(trendPeriod, () => {
-  updateTrendChart()
+// 监听时间周期变化，更新趋势图
+watch(trendPeriod, (newValue) => {
+  console.log('时间周期已变更为:', newValue)
+  nextTick(() => {
+    updateTrendChart()
+  })
 })
 
 // 分布图相关
@@ -378,6 +386,11 @@ const distributionData = reactive({
 // 初始化分布图
 const initPieChart = () => {
   if (!pieChartRef.value) return
+  
+  // 先销毁之前可能存在的实例
+  if (pieChart) {
+    pieChart.dispose()
+  }
   
   // 创建图表实例
   pieChart = echarts.init(pieChartRef.value)
@@ -454,8 +467,11 @@ const handleDistributionChange = (type) => {
 }
 
 // 监听分布类型变化
-watch(distributionType, () => {
-  updatePieChart()
+watch(distributionType, (newValue) => {
+  console.log('分布类型已变更为:', newValue)
+  nextTick(() => {
+    updatePieChart()
+  })
 })
 
 // 最近登录数据
@@ -598,6 +614,11 @@ const initCountData = async () => {
   }
 }
 
+// 解析头像URL
+const processAvatar = (avatar) => {
+  return avatar;
+}
+
 // 组件挂载后初始化图表
 onMounted(() => {
   authStore.getProfile()
@@ -609,22 +630,6 @@ onMounted(() => {
   timer = setInterval(() => {
     refreshTime()
   }, 60000)
-})
-
-// 监听时间周期变化，更新趋势图
-watch(trendPeriod, (newValue) => {
-  console.log('时间周期已变更为:', newValue)
-  nextTick(() => {
-    initTrendChart()
-  })
-})
-
-// 监听分布类型变化，更新饼图
-watch(distributionType, (newValue) => {
-  console.log('分布类型已变更为:', newValue)
-  nextTick(() => {
-    initPieChart()
-  })
 })
 
 // 组件卸载前销毁图表

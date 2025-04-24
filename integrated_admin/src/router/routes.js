@@ -124,7 +124,7 @@ const routes = [
       {
         path: 'profile',
         name: 'Profile',
-        component: () => import('../views/profile/Index.vue'),
+        component: () => import('@/views/profile/Index.vue'),
         meta: { 
           title: '个人设置', 
           icon: 'Setting' 

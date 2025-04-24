@@ -24,10 +24,13 @@
                 :show-file-list="false"
                 :before-upload="beforeAvatarUpload"
                 :http-request="uploadAvatar"
+                accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
               >
-                <el-avatar v-if="basicForm.avatar" :size="100" :src="basicForm.avatar" />
-                <el-avatar v-else :size="100">{{ userInitials }}</el-avatar>
-                <div class="avatar-uploader-text">点击上传</div>
+                <div class="avatar-wrapper">
+                  <img v-if="basicForm.avatar" :src="avatarUrl" class="avatar-image" />
+                  <div v-else class="avatar-placeholder">{{ userInitials }}</div>
+                  <div class="avatar-uploader-text">点击上传</div>
+                </div>
               </el-upload>
             </el-form-item>
             
@@ -103,14 +106,55 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+    
+    <!-- 图片裁剪对话框 -->
+    <el-dialog
+      v-model="cropperVisible"
+      title="裁剪头像"
+      width="600px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+    >
+      <div class="cropper-container">
+        <VueCropper
+          ref="cropperRef"
+          :img="imageUrl"
+          :output-size="1"
+          :output-type="'jpeg'"
+          :info="true"
+          :full="false"
+          :auto-crop="true"
+          :auto-crop-width="200"
+          :auto-crop-height="200"
+          :fixed-box="true"
+          :center-box="true"
+          :fixed="true"
+          :fixed-number="[1, 1]"
+        />
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleCropCancel">取消</el-button>
+          <el-button type="primary" @click="handleCropConfirm">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useAuthStore } from '../../stores'
 import { userApi } from '../../api'
 import { ElMessage } from 'element-plus'
+import config from '../../config'
+
+// 导入vue-cropper
+import 'vue-cropper/dist/index.css'
+import { VueCropper } from 'vue-cropper'
+
+console.log('VueCropper导入状态:', !!VueCropper);
 
 // 认证状态
 const authStore = useAuthStore()
@@ -121,6 +165,7 @@ const activeTab = ref('basic')
 // 表单引用
 const basicFormRef = ref(null)
 const passwordFormRef = ref(null)
+const cropperRef = ref(null)  // 裁剪组件引用
 
 // 加载状态
 const basicLoading = ref(false)
@@ -130,6 +175,11 @@ const passwordLoading = ref(false)
 const userInitials = computed(() => {
   const name = basicForm.real_name || basicForm.username
   return name ? name.charAt(0).toUpperCase() : '?'
+})
+
+// 头像URL计算属性，添加baseUrl
+const avatarUrl = computed(() => {
+  return basicForm.avatar;
 })
 
 // 基本信息表单
@@ -147,6 +197,10 @@ const passwordForm = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+
+// 添加裁剪相关的状态
+const cropperVisible = ref(false)
+const imageUrl = ref('')
 
 // 基本信息验证规则
 const basicRules = {
@@ -214,6 +268,8 @@ const getUserInfo = async () => {
       basicForm.real_name = userInfo.real_name || ''
       basicForm.avatar = userInfo.avatar || ''
       
+      console.log('设置的头像路径:', basicForm.avatar)
+      
       // 更新状态管理中的用户信息
       authStore.setUser(userInfo)
     } else {
@@ -226,42 +282,245 @@ const getUserInfo = async () => {
   }
 }
 
-// 上传头像前的校验
+// 上传头像前的校验 - 修改为打开裁剪对话框
 const beforeAvatarUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
+  // 定义支持的图片类型
+  const acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+  const isAcceptedType = acceptedTypes.includes(file.type);
+  const isLt2M = file.size / 1024 / 1024 < 2;
 
-  if (!isImage) {
-    ElMessage.error('上传头像图片只能是图片格式!')
+  console.log('上传的文件信息:', {
+    名称: file.name,
+    类型: file.type,
+    大小: (file.size / 1024 / 1024).toFixed(2) + 'MB',
+    是否支持类型: isAcceptedType,
+    是否小于2MB: isLt2M
+  });
+
+  if (!isAcceptedType) {
+    ElMessage.error('上传头像只能是 JPG/PNG/GIF/WEBP/BMP 格式!');
+    return false;
   }
   
   if (!isLt2M) {
-    ElMessage.error('上传头像图片大小不能超过 2MB!')
+    ElMessage.error('上传头像图片大小不能超过 2MB!');
+    return false;
   }
   
-  return isImage && isLt2M
+  try {
+    // 创建文件URL用于裁剪
+    imageUrl.value = URL.createObjectURL(file);
+    console.log('创建的图片URL:', imageUrl.value);
+    
+    // 测试图片是否可以正常加载
+    const testImg = new Image();
+    testImg.onload = () => {
+      console.log('测试图片加载成功，尺寸:', testImg.width, 'x', testImg.height);
+    };
+    testImg.onerror = (err) => {
+      console.error('测试图片加载失败:', err);
+    };
+    testImg.src = imageUrl.value;
+    
+    // 打开裁剪对话框
+    cropperVisible.value = true;
+    
+    // 延迟检查裁剪组件是否正确初始化
+    setTimeout(() => {
+      console.log('cropperRef是否存在:', !!cropperRef.value);
+      
+      if (cropperRef.value) {
+        console.log('裁剪组件初始化成功');
+        console.log('裁剪组件方法:', Object.keys(cropperRef.value));
+      } else {
+        console.error('裁剪组件未初始化成功');
+        ElMessage.warning('裁剪组件加载异常，请刷新页面重试');
+      }
+    }, 500);
+    
+    console.log('头像裁剪对话框已打开，图片URL:', imageUrl.value);
+  } catch (error) {
+    console.error('准备图片裁剪时出错:', error);
+    ElMessage.error('准备图片裁剪失败，请重试');
+  }
+  
+  // 阻止默认上传
+  return false;
 }
 
-// 上传头像
-const uploadAvatar = async (options) => {
-  try {
-    const file = options.file
-    console.log('正在上传头像:', file.name)
-    
-    // 调用API上传头像
-    await userApi.uploadAvatar(file)
-    
-    // 上传成功后重新获取用户信息（包含新头像URL）
-    await getUserInfo()
-    
-    ElMessage({
-      type: 'success',
-      message: '头像上传成功'
-    })
-  } catch (error) {
-    console.error('上传头像失败:', error)
-    ElMessage.error('上传头像失败: ' + (error.message || '未知错误'))
+// 确认裁剪
+const handleCropConfirm = () => {
+  console.log('开始确认裁剪...');
+  
+  if (!cropperRef.value) {
+    console.error('裁剪组件引用不存在');
+    ElMessage.error('裁剪组件未加载完成，请重试');
+    return;
   }
+  
+  console.log('裁剪组件当前状态:', cropperRef.value);
+  
+  try {
+    // 获取裁剪后的图片数据
+    console.log('调用getCropData方法获取裁剪数据...');
+    
+    cropperRef.value.getCropData((data) => {
+      console.log('获取到裁剪后的图片数据，数据长度:', data ? data.length : 0);
+      console.log('裁剪数据前缀:', data ? data.substring(0, 50) + '...' : '无数据');
+      
+      if (!data || data.length < 100) {
+        console.error('裁剪数据异常，数据过短或为空');
+        ElMessage.error('裁剪图片失败，请重试');
+        return;
+      }
+      
+      try {
+        // 将base64转换为Blob
+        const base64 = data;
+        console.log('base64数据类型:', typeof base64);
+        
+        // 检查base64数据格式是否正确
+        if (!base64.startsWith('data:image')) {
+          console.error('裁剪数据格式异常，不是有效的base64图像数据:', base64.substring(0, 50));
+          ElMessage.error('裁剪图片数据格式异常，请重试');
+          return;
+        }
+        
+        const byteString = atob(base64.split(',')[1]);
+        const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
+        console.log('解析的MIME类型:', mimeString);
+        
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        
+        console.log('转换后的ArrayBuffer长度:', ab.byteLength);
+        
+        const blob = new Blob([ab], {type: mimeString});
+        console.log('创建的Blob信息:', {
+          大小: (blob.size / 1024).toFixed(2) + 'KB',
+          类型: blob.type
+        });
+        
+        const file = new File([blob], "cropped-avatar.jpg", {type: "image/jpeg"});
+        console.log('创建的File信息:', {
+          名称: file.name,
+          大小: (file.size / 1024).toFixed(2) + 'KB',
+          类型: file.type
+        });
+        
+        // 上传裁剪后的文件
+        console.log('开始上传裁剪后的文件...');
+        uploadAvatarFile(file);
+        cropperVisible.value = false;
+      } catch (error) {
+        console.error('处理裁剪图片数据时出错:', error);
+        console.error('错误详情:', {
+          错误名称: error.name,
+          错误信息: error.message,
+          错误堆栈: error.stack
+        });
+        ElMessage.error('处理裁剪图片数据失败，请重试');
+      }
+    });
+  } catch (error) {
+    console.error('裁剪图片时出错:', error);
+    console.error('错误详情:', {
+      错误名称: error.name,
+      错误信息: error.message,
+      错误堆栈: error.stack
+    });
+    ElMessage.error('裁剪图片失败，请重试');
+  }
+}
+
+// 取消裁剪
+const handleCropCancel = () => {
+  console.log('取消裁剪操作');
+  cropperVisible.value = false;
+  imageUrl.value = '';
+}
+
+// 上传头像文件
+const uploadAvatarFile = async (file) => {
+  try {
+    console.log('正在上传头像:', file.name, '大小:', (file.size / 1024).toFixed(2) + 'KB', '类型:', file.type);
+    
+    // 再次检查文件是否有效
+    if (file.size === 0) {
+      console.error('上传的文件大小为0，可能是空文件');
+      ElMessage.error('文件大小为0，请重新裁剪');
+      return;
+    }
+    
+    // 尝试读取文件内容确认是否有效
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      console.log('文件预览读取成功, 数据长度:', e.target.result.length);
+      
+      if (e.target.result.length > 100) {
+        // 文件内容看起来有效，继续上传
+        try {
+          console.log('开始调用API上传头像...');
+          // 调用API上传头像
+          const result = await userApi.uploadAvatar(file);
+          console.log('头像上传API返回结果:', result);
+          
+          // 如果后端返回了头像URL，直接使用，确保加上baseUrl
+          if (result && result.avatar) {
+            console.log('使用API返回的头像URL:', result.avatar);
+            basicForm.avatar = result.avatar;
+            console.log('设置的头像路径:', basicForm.avatar);
+          } else {
+            console.log('API未返回头像URL，重新获取用户信息');
+            // 否则重新获取用户信息
+            await getUserInfo();
+          }
+          
+          ElMessage({
+            type: 'success',
+            message: '头像上传成功'
+          });
+        } catch (error) {
+          console.error('调用上传头像API失败:', error);
+          console.error('错误详情:', {
+            响应状态: error.response?.status,
+            响应数据: error.response?.data,
+            错误信息: error.message
+          });
+          ElMessage.error('上传头像失败: ' + (error.message || '未知错误'));
+        }
+      } else {
+        console.error('读取的文件内容异常，数据太短:', e.target.result.length);
+        ElMessage.error('裁剪后的图片内容异常，请重试');
+      }
+    };
+    
+    reader.onerror = (error) => {
+      console.error('读取文件内容失败:', error);
+      ElMessage.error('读取文件内容失败，请重试');
+    };
+    
+    // 开始读取文件内容
+    reader.readAsDataURL(file);
+  } catch (error) {
+    console.error('上传头像失败:', error);
+    console.error('错误详情:', {
+      错误名称: error.name,
+      错误信息: error.message,
+      错误堆栈: error.stack
+    });
+    ElMessage.error('上传头像失败: ' + (error.message || '未知错误'));
+  }
+}
+
+// 原来的uploadAvatar方法改为http请求处理
+const uploadAvatar = (options) => {
+  console.log('Element Upload组件触发上传，文件信息:', options.file.name);
+  uploadAvatarFile(options.file);
 }
 
 // 更新基本信息
@@ -357,6 +616,19 @@ onMounted(async () => {
     
     await getUserInfo()
     console.log('用户信息加载完成')
+    
+    // 检查vue-cropper组件是否正常初始化
+    console.log('检查裁剪组件是否可用');
+    setTimeout(() => {
+      try {
+        // 尝试初始化一个临时的vue-cropper来测试是否正常工作
+        const testModule = import('vue-cropper');
+        console.log('裁剪组件导入测试:', testModule ? '成功' : '失败');
+      } catch (error) {
+        console.error('裁剪组件导入测试失败:', error);
+      }
+    }, 1000);
+    
   } catch (error) {
     console.error('初始化失败:', error)
     // 获取用户信息失败，可能是token无效，跳转到登录页
@@ -396,9 +668,58 @@ onMounted(async () => {
   cursor: pointer;
 }
 
+.avatar-wrapper {
+  display: inline-block;
+  text-align: center;
+}
+
+.avatar-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  background-color: #f0f2f5;
+  color: #909399;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  font-weight: bold;
+}
+
 .avatar-uploader-text {
   margin-top: 10px;
   color: #409EFF;
+}
+
+.cropper-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 400px;
+}
+
+.cropper-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .el-tabs {

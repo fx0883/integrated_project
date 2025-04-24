@@ -4129,3 +4129,185 @@ INFO 2025-04-24 12:15:50,696 basehttp "GET /static/drf_spectacular_sidecar/swagg
 INFO 2025-04-24 12:15:50,697 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 304 0
 INFO 2025-04-24 12:15:50,815 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177018
 INFO 2025-04-24 12:16:01,025 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 564
+INFO 2025-04-24 12:28:03,449 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 12:37:31,870 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-24 12:37:31,882 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 12:45:43,477 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-24 12:45:43,766 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 12:48:25,589 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+WARNING 2025-04-24 12:49:38,754 log Method Not Allowed: /api/v1/users/me/
+WARNING 2025-04-24 12:49:38,754 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 405 86
+WARNING 2025-04-24 12:50:09,960 log Method Not Allowed: /api/v1/users/me/
+WARNING 2025-04-24 12:50:09,960 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 405 86
+WARNING 2025-04-24 12:50:10,561 log Method Not Allowed: /api/v1/users/me/
+WARNING 2025-04-24 12:50:10,561 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 405 86
+WARNING 2025-04-24 12:50:10,994 log Method Not Allowed: /api/v1/users/me/
+WARNING 2025-04-24 12:50:10,995 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 405 86
+WARNING 2025-04-24 12:50:15,173 log Method Not Allowed: /api/v1/users/me/
+WARNING 2025-04-24 12:50:15,174 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 405 86
+WARNING 2025-04-24 12:50:38,953 log Method Not Allowed: /api/v1/users/me/
+WARNING 2025-04-24 12:50:38,954 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 405 86
+INFO 2025-04-24 12:56:26,357 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 12:57:29,603 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 12:57:29,914 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 12:58:03,972 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 12:58:28,694 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 12:58:40,551 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 12:58:55,639 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 573
+INFO 2025-04-24 12:58:55,744 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 12:59:04,623 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 370
+INFO 2025-04-24 12:59:31,402 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 12:59:31,408 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 12:59:41,282 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 12:59:41,289 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 12:59:49,858 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 572
+INFO 2025-04-24 12:59:49,998 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 12:59:54,110 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 12:59:56,686 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 13:28:40,430 basehttp "OPTIONS /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 0
+WARNING 2025-04-24 13:28:40,438 log Not Found: /api/v1/users/me/upload-avatar/
+WARNING 2025-04-24 13:28:40,438 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 404 9016
+INFO 2025-04-24 13:29:30,575 autoreload D:\GitHub\integrated_project\users\urls\user_urls.py changed, reloading.
+INFO 2025-04-24 13:29:30,903 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 13:29:56,238 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 13:29:56,548 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 13:36:59,193 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 13:36:59,520 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 13:40:17,054 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 13:40:31,166 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 13:40:34,529 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 378
+INFO 2025-04-24 13:40:42,142 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 136
+INFO 2025-04-24 13:40:42,154 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 13:45:59,854 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 13:46:00,176 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 13:46:33,306 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 13:54:05,620 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 13:54:10,657 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 15:55:41,244 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 16:01:37,539 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-24 16:01:37,549 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:01:46,398 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:01:48,801 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:08:07,792 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-24 16:08:07,798 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:08:14,523 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:10:14,153 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:10:25,293 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:10:46,388 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:13:02,096 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:18:37,733 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:18:40,244 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 434
+INFO 2025-04-24 16:19:03,147 basehttp "OPTIONS /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 0
+INFO 2025-04-24 16:19:03,169 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 156
+INFO 2025-04-24 16:19:03,555 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 200 34182
+INFO 2025-04-24 16:19:07,851 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:20:47,782 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+WARNING 2025-04-24 16:20:47,951 log Not Found: /favicon.ico
+WARNING 2025-04-24 16:20:47,951 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+INFO 2025-04-24 16:21:58,134 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:22:16,366 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:22:16,383 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 16:22:36,555 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:22:54,905 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:23:15,273 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:23:15,293 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 16:23:35,109 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:25:01,684 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 16:25:01,686 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:25:03,067 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:25:10,885 basehttp "OPTIONS /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 16:25:10,898 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 16:25:12,854 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:00,910 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:02,198 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:31,993 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:34,143 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:42,987 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:59,619 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:26:59,627 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 16:27:30,033 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:04,005 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:14,319 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-24 16:32:14,325 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:18,226 basehttp "OPTIONS /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 16:32:18,240 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 16:32:19,325 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:19,648 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 16:32:20,053 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 16:32:23,748 basehttp "OPTIONS /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 16:32:23,759 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 16:32:24,631 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:25,914 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:28,178 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 16:32:29,152 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:32:34,102 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:33:47,941 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 16:33:47,951 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 17:56:10,545 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-24 17:56:10,882 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 627
+INFO 2025-04-24 17:56:11,187 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+INFO 2025-04-24 17:56:11,194 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 17:56:22,017 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 17:56:22,329 basehttp "GET /media/avatars/b68cf575-ea50-4af2-8b7d-d6a91f8b2821.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 17:56:46,568 basehttp "OPTIONS /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 0
+INFO 2025-04-24 17:56:46,588 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 156
+INFO 2025-04-24 17:56:46,595 basehttp "GET /media/avatars/6560e904-2f5b-44d7-a3c0-4b889a1ecc3b.jpg HTTP/1.1" 200 36027
+INFO 2025-04-24 17:56:50,366 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 17:56:50,372 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 17:56:56,797 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 17:56:58,557 basehttp "OPTIONS /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 17:56:58,567 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
+INFO 2025-04-24 17:57:01,244 basehttp "OPTIONS /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 0
+INFO 2025-04-24 17:57:01,250 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 17:57:03,164 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 17:57:05,265 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 18:07:20,721 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 18:07:24,343 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 18:07:24,656 basehttp "GET /media/avatars/6560e904-2f5b-44d7-a3c0-4b889a1ecc3b.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 18:07:37,101 basehttp "OPTIONS /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 0
+INFO 2025-04-24 18:07:37,127 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 156
+INFO 2025-04-24 18:07:37,135 basehttp "GET /media/avatars/6c4b4995-ebd4-406b-80f0-40eb4ece31c8.jpg HTTP/1.1" 200 32221
+INFO 2025-04-24 18:08:00,123 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 156
+INFO 2025-04-24 18:08:00,132 basehttp "GET /media/avatars/532fb36f-54c2-4ada-ac7d-eeea63641f86.jpg HTTP/1.1" 200 43011
+INFO 2025-04-24 18:08:20,478 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 18:08:20,495 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 433
+INFO 2025-04-24 18:12:22,410 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-24 18:12:22,767 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:12:33,821 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 18:12:34,135 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:12:48,235 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 18:12:48,548 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:13:05,741 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-24 18:13:06,057 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:13:23,226 autoreload D:\GitHub\integrated_project\users\serializers.py changed, reloading.
+INFO 2025-04-24 18:13:23,544 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:13:42,752 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 18:13:43,069 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:14:03,866 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:14:13,350 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:14:44,969 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 18:14:55,166 basehttp "GET /media/avatars/532fb36f-54c2-4ada-ac7d-eeea63641f86.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 18:14:55,169 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:14:55,925 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:15:02,705 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:15:08,758 basehttp "POST /api/v1/users/me/upload-avatar/ HTTP/1.1" 200 156
+INFO 2025-04-24 18:15:08,840 basehttp "GET /media/avatars/5e4e5edd-8d5b-46d3-940b-bb49437ef835.jpg HTTP/1.1" 200 26243
+INFO 2025-04-24 18:15:13,356 basehttp "PUT /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:15:13,362 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:15:18,214 basehttp "GET /media/avatars/5e4e5edd-8d5b-46d3-940b-bb49437ef835.jpg HTTP/1.1" 304 0
+INFO 2025-04-24 18:15:18,235 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:15:23,525 basehttp "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-24 18:15:23,855 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 627
+INFO 2025-04-24 18:15:24,021 basehttp "GET /api/v1/users/me/ HTTP/1.1" 200 454
+INFO 2025-04-24 18:15:27,125 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3689
+INFO 2025-04-24 18:15:29,696 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3689
+INFO 2025-04-24 18:15:33,821 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3689
+INFO 2025-04-24 18:15:40,220 basehttp "OPTIONS /api/v1/tenants/?name=&limit=20&page=1 HTTP/1.1" 200 0
+INFO 2025-04-24 18:15:40,227 basehttp "GET /api/v1/tenants/?name=&limit=20&page=1 HTTP/1.1" 200 661
+INFO 2025-04-24 18:15:42,316 basehttp "GET /api/v1/tenants/?name=&limit=20&page=1 HTTP/1.1" 200 661
+INFO 2025-04-24 18:15:43,327 basehttp "GET /api/v1/tenants/?name=&limit=20&page=1 HTTP/1.1" 200 661
+INFO 2025-04-24 18:15:43,755 basehttp "GET /api/v1/tenants/?name=&limit=20&page=1 HTTP/1.1" 200 661
+INFO 2025-04-24 18:16:01,132 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 18:16:23,275 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3689
+INFO 2025-04-24 18:16:26,021 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3689
+INFO 2025-04-24 18:16:29,699 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
