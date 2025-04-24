@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
-from common.permissions import IsSuperAdminUser, IsAdminUser
+from common.permissions import IsSuperAdminUser, IsAdminUser, TenantApiPermission
 from tenants.models import Tenant, TenantQuota
 from tenants.serializers import (
     TenantSerializer, TenantCreateSerializer, TenantDetailSerializer,
@@ -33,7 +33,7 @@ class TenantListCreateView(generics.ListCreateAPIView):
     """
     租户列表和创建视图
     """
-    permission_classes = [IsAuthenticated, IsSuperAdminUser]
+    permission_classes = [IsAuthenticated, TenantApiPermission]
     
     def get_serializer_class(self):
         """
@@ -126,7 +126,7 @@ class TenantRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     租户详情、更新和删除视图
     """
     serializer_class = TenantDetailSerializer
-    permission_classes = [IsAuthenticated, IsSuperAdminUser]
+    permission_classes = [IsAuthenticated, TenantApiPermission]
     lookup_field = 'pk'
     
     @api_schema(
@@ -215,7 +215,7 @@ class TenantQuotaUpdateView(APIView):
     """
     租户配额更新视图
     """
-    permission_classes = [IsAuthenticated, IsSuperAdminUser]
+    permission_classes = [IsAuthenticated, TenantApiPermission]
     
     @api_schema(
         summary="获取租户配额",
@@ -299,23 +299,20 @@ class TenantQuotaUsageView(APIView):
         """
         获取租户配额使用情况
         """
-        user = request.user
+        # 验证租户访问权限
+        tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+        
+        # 如果不是超级管理员，只能查看自己的租户
+        if not request.user.is_super_admin and request.user.tenant.id != tenant.id:
+            logger.warning(f"租户管理员 {request.user.username} 尝试访问其他租户 {tenant.name} 的配额信息")
+            return Response({
+                'success': False,
+                'code': 4003,
+                'message': '没有权限查看其他租户的配额信息',
+                'data': None
+            }, status=status.HTTP_403_FORBIDDEN)
         
         try:
-            # 超级管理员可以查看任何租户的配额
-            if user.is_super_admin:
-                tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
-            # 租户管理员只能查看自己租户的配额
-            elif user.is_admin and user.tenant and user.tenant.id == pk:
-                tenant = user.tenant
-            else:
-                return Response({
-                    'success': False,
-                    'code': 4003,
-                    'message': '您没有权限查看此租户的配额使用情况',
-                    'data': None
-                }, status=status.HTTP_403_FORBIDDEN)
-            
             quota = tenant.quota
             serializer = TenantQuotaUsageSerializer(quota)
             
@@ -340,7 +337,7 @@ class TenantSuspendView(APIView):
     """
     暂停租户视图
     """
-    permission_classes = [IsAuthenticated, IsSuperAdminUser]
+    permission_classes = [IsAuthenticated, TenantApiPermission]
     
     @api_schema(
         summary="暂停租户",
@@ -390,7 +387,7 @@ class TenantActivateView(APIView):
     """
     激活租户视图
     """
-    permission_classes = [IsAuthenticated, IsSuperAdminUser]
+    permission_classes = [IsAuthenticated, TenantApiPermission]
     
     @api_schema(
         summary="激活租户",
@@ -471,26 +468,20 @@ class TenantUserListView(generics.ListAPIView):
     )
     def get_queryset(self):
         """
-        获取租户用户列表
+        获取租户用户查询集
         """
-        user = self.request.user
         tenant_id = self.kwargs.get('pk')
+        tenant = get_object_or_404(Tenant, pk=tenant_id, is_deleted=False)
+        
+        # 如果不是超级管理员，只能查看自己的租户
+        if not self.request.user.is_super_admin and self.request.user.tenant.id != tenant.id:
+            logger.warning(f"租户管理员 {self.request.user.username} 尝试访问其他租户 {tenant.name} 的用户列表")
+            return User.objects.none()  # 返回空查询集
         
         # 获取查询参数
         search = self.request.query_params.get('search', '')
         is_admin = self.request.query_params.get('is_admin', '').lower() == 'true'
         status_filter = self.request.query_params.get('status', '')
-        
-        # 超级管理员可以查看任何租户的用户
-        if user.is_super_admin:
-            tenant = get_object_or_404(Tenant, pk=tenant_id, is_deleted=False)
-        # 租户管理员只能查看自己租户的用户
-        elif user.is_admin and user.tenant and str(user.tenant.id) == str(tenant_id):
-            tenant = user.tenant
-        else:
-            # 无权限的情况返回空查询集
-            logger.warning(f"用户 {user.username} 尝试查看无权限的租户 {tenant_id} 用户列表")
-            return User.objects.none()
         
         # 基础查询集，获取指定租户的用户
         queryset = User.objects.filter(tenant=tenant, is_deleted=False)

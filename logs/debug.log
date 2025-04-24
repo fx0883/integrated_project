@@ -4346,3 +4346,364 @@ INFO 2025-04-24 19:59:17,243 basehttp "GET /static/drf_spectacular_sidecar/swagg
 INFO 2025-04-24 19:59:17,244 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 304 0
 INFO 2025-04-24 19:59:17,366 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177825
 INFO 2025-04-24 19:59:17,567 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 304 0
+WARNING 2025-04-24 19:59:53,713 log Bad Request: /api/v1/tenants/
+WARNING 2025-04-24 19:59:53,713 basehttp "POST /api/v1/tenants/ HTTP/1.1" 400 212
+INFO 2025-04-24 20:00:05,342 basehttp "POST /api/v1/tenants/ HTTP/1.1" 201 301
+INFO 2025-04-24 20:04:55,991 autoreload D:\GitHub\integrated_project\core\settings.py changed, reloading.
+INFO 2025-04-24 20:04:56,313 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 20:45:41,710 autoreload Watching for file changes with StatReloader
+ERROR 2025-04-24 20:45:53,724 log Internal Server Error: /api/v1/docs/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:53,726 basehttp "GET /api/v1/docs/ HTTP/1.1" 500 67798
+ERROR 2025-04-24 20:45:53,958 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:53,959 basehttp "GET /favicon.ico HTTP/1.1" 500 67344
+ERROR 2025-04-24 20:45:54,820 log Internal Server Error: /api/v1/docs/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:54,821 basehttp "GET /api/v1/docs/ HTTP/1.1" 500 67798
+ERROR 2025-04-24 20:45:54,958 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:54,959 basehttp "GET /favicon.ico HTTP/1.1" 500 67344
+ERROR 2025-04-24 20:45:55,503 log Internal Server Error: /api/v1/docs/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:55,504 basehttp "GET /api/v1/docs/ HTTP/1.1" 500 67798
+ERROR 2025-04-24 20:45:55,629 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:55,629 basehttp "GET /favicon.ico HTTP/1.1" 500 67344
+ERROR 2025-04-24 20:45:55,971 log Internal Server Error: /api/v1/docs/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:55,971 basehttp "GET /api/v1/docs/ HTTP/1.1" 500 67798
+ERROR 2025-04-24 20:45:56,107 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:56,108 basehttp "GET /favicon.ico HTTP/1.1" 500 67344
+ERROR 2025-04-24 20:45:56,433 log Internal Server Error: /api/v1/docs/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:56,434 basehttp "GET /api/v1/docs/ HTTP/1.1" 500 67798
+ERROR 2025-04-24 20:45:56,570 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:56,571 basehttp "GET /favicon.ico HTTP/1.1" 500 67344
+ERROR 2025-04-24 20:45:56,819 log Internal Server Error: /api/v1/docs/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:56,820 basehttp "GET /api/v1/docs/ HTTP/1.1" 500 67798
+ERROR 2025-04-24 20:45:57,001 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:45:57,001 basehttp "GET /favicon.ico HTTP/1.1" 500 67344
+ERROR 2025-04-24 20:53:14,589 log Internal Server Error: /media/avatars/5e4e5edd-8d5b-46d3-940b-bb49437ef835.jpg
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:53:14,590 basehttp "GET /media/avatars/5e4e5edd-8d5b-46d3-940b-bb49437ef835.jpg HTTP/1.1" 500 67981
+INFO 2025-04-24 20:53:14,984 basehttp "OPTIONS /api/v1/users/me/ HTTP/1.1" 200 0
+ERROR 2025-04-24 20:53:14,993 log Internal Server Error: /api/v1/users/me/
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:53:14,994 basehttp "GET /api/v1/users/me/ HTTP/1.1" 500 66981
+INFO 2025-04-24 20:53:28,760 autoreload Watching for file changes with StatReloader
+ERROR 2025-04-24 20:53:36,925 log Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:53:36,926 basehttp "GET / HTTP/1.1" 500 67429
+ERROR 2025-04-24 20:53:36,936 log Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:53:36,937 basehttp "GET / HTTP/1.1" 500 67429
+ERROR 2025-04-24 20:53:37,197 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:53:37,197 basehttp "GET /favicon.ico HTTP/1.1" 500 67332
+ERROR 2025-04-24 20:53:37,263 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 115, in __call__
+    if self.async_mode:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'TenantAdminMiddleware' object has no attribute 'async_mode'
+ERROR 2025-04-24 20:53:37,264 basehttp "GET /favicon.ico HTTP/1.1" 500 67332
+INFO 2025-04-24 20:54:41,108 autoreload D:\GitHub\integrated_project\common\middleware\tenant_admin_middleware.py changed, reloading.
+INFO 2025-04-24 20:54:41,428 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 20:55:47,909 autoreload Watching for file changes with StatReloader
+ERROR 2025-04-24 20:55:51,225 log Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 20:55:51,228 basehttp "GET / HTTP/1.1" 500 72062
+ERROR 2025-04-24 20:55:51,239 log Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 20:55:51,239 basehttp "GET / HTTP/1.1" 500 72062
+ERROR 2025-04-24 20:55:51,538 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 20:55:51,538 basehttp "GET /favicon.ico HTTP/1.1" 500 71976
+ERROR 2025-04-24 20:55:51,550 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 20:55:51,550 basehttp "GET /favicon.ico HTTP/1.1" 500 71976
+INFO 2025-04-24 20:57:01,021 autoreload D:\GitHub\integrated_project\common\middleware\enhanced_api_logging_middleware.py changed, reloading.
+INFO 2025-04-24 20:57:01,328 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 20:57:14,373 autoreload D:\GitHub\integrated_project\common\middleware\response_standardization_middleware.py changed, reloading.
+INFO 2025-04-24 20:57:14,678 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 20:57:30,756 autoreload D:\GitHub\integrated_project\common\middleware\tenant_middleware.py changed, reloading.
+INFO 2025-04-24 20:57:31,054 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 21:00:07,066 autoreload Watching for file changes with StatReloader
+ERROR 2025-04-24 21:00:10,422 log Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 21:00:10,424 basehttp "GET / HTTP/1.1" 500 72062
+ERROR 2025-04-24 21:00:10,435 log Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 21:00:10,436 basehttp "GET / HTTP/1.1" 500 72062
+ERROR 2025-04-24 21:00:10,680 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 21:00:10,681 basehttp "GET /favicon.ico HTTP/1.1" 500 71976
+ERROR 2025-04-24 21:00:10,716 log Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\utils\deprecation.py", line 122, in __call__
+    response = self.process_response(request, response)
+  File "D:\GitHub\integrated_project\venv\Lib\site-packages\django\middleware\clickjacking.py", line 27, in process_response
+    if response.get("X-Frame-Options") is not None:
+       ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+ERROR 2025-04-24 21:00:10,716 basehttp "GET /favicon.ico HTTP/1.1" 500 71976
+WARNING 2025-04-24 21:10:01,769 log Unauthorized: /api/v1/tenants/
+WARNING 2025-04-24 21:10:01,771 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:10:01,772 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:10:02,751 log Unauthorized: /api/v1/tenants/
+WARNING 2025-04-24 21:10:02,753 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:10:02,754 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:10:03,712 log Unauthorized: /api/v1/tenants/4/quota/usage/
+WARNING 2025-04-24 21:10:03,714 log Forbidden: /api/v1/tenants/4/quota/usage/
+WARNING 2025-04-24 21:10:03,719 log Forbidden: /api/v1/tenants/5/quota/usage/
+INFO 2025-04-24 21:10:38,778 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-24 21:10:41,695 log Not Found: /
+WARNING 2025-04-24 21:10:41,696 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-24 21:10:41,706 log Not Found: /
+WARNING 2025-04-24 21:10:41,706 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-24 21:10:41,907 log Not Found: /favicon.ico
+WARNING 2025-04-24 21:10:41,907 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+WARNING 2025-04-24 21:10:41,926 log Not Found: /favicon.ico
+WARNING 2025-04-24 21:10:41,926 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+INFO 2025-04-24 21:10:49,142 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 21:10:49,312 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177825
+WARNING 2025-04-24 21:11:18,133 log Bad Request: /api/v1/tenants/
+WARNING 2025-04-24 21:11:18,134 basehttp "POST /api/v1/tenants/ HTTP/1.1" 400 210
+INFO 2025-04-24 21:11:32,189 basehttp "POST /api/v1/tenants/ HTTP/1.1" 201 311
+INFO 2025-04-24 21:13:40,118 autoreload D:\GitHub\integrated_project\common\permissions.py changed, reloading.
+INFO 2025-04-24 21:13:40,437 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 21:15:00,407 autoreload D:\GitHub\integrated_project\common\permissions.py changed, reloading.
+INFO 2025-04-24 21:15:00,735 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 21:17:15,372 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-24 21:17:26,640 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:17:26,640 basehttp "POST /api/v1/tenants/ HTTP/1.1" 403 87
+WARNING 2025-04-24 21:17:29,619 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:17:29,619 basehttp "POST /api/v1/tenants/ HTTP/1.1" 403 87
+INFO 2025-04-24 21:17:52,886 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 627
+INFO 2025-04-24 21:18:10,526 basehttp "POST /api/v1/tenants/ HTTP/1.1" 201 314
+INFO 2025-04-24 21:23:19,578 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-24 21:23:19,586 basehttp "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,586 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,587 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,634 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,634 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,635 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,639 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,642 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,642 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,643 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:19,648 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:22,839 basehttp "GET /admin/users/user/ HTTP/1.1" 200 27017
+INFO 2025-04-24 21:23:22,857 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-24 21:23:23,049 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-04-24 21:23:23,050 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-04-24 21:23:23,051 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-04-24 21:23:23,054 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-04-24 21:23:23,068 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-04-24 21:23:23,073 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-04-24 21:23:23,079 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-04-24 21:23:23,081 basehttp "GET /static/admin/img/icon-no.svg HTTP/1.1" 304 0
+INFO 2025-04-24 21:23:23,081 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-04-24 21:23:23,084 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-04-24 21:23:23,091 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-04-24 21:23:23,092 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-04-24 21:23:23,093 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-04-24 21:23:23,100 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-04-24 21:23:23,100 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-04-24 21:23:37,042 basehttp "GET /admin/users/user/4/change/ HTTP/1.1" 200 33905
+INFO 2025-04-24 21:23:37,055 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-04-24 21:23:37,055 basehttp "GET /static/admin/js/calendar.js HTTP/1.1" 200 9141
+INFO 2025-04-24 21:23:37,059 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-24 21:23:37,059 basehttp "GET /static/admin/js/SelectBox.js HTTP/1.1" 200 4530
+INFO 2025-04-24 21:23:37,059 basehttp "GET /static/admin/js/SelectFilter2.js HTTP/1.1" 200 15709
+INFO 2025-04-24 21:23:37,060 basehttp "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 200 19319
+INFO 2025-04-24 21:23:37,061 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-04-24 21:23:37,064 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 200 11991
+INFO 2025-04-24 21:23:37,064 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-04-24 21:23:37,145 basehttp "GET /static/admin/img/icon-clock.svg HTTP/1.1" 200 677
+INFO 2025-04-24 21:23:37,145 basehttp "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 200 1086
+INFO 2025-04-24 21:23:37,145 basehttp "GET /static/admin/img/selector-icons.svg HTTP/1.1" 200 3291
+INFO 2025-04-24 21:23:51,760 basehttp "GET /admin/users/user/4/password/ HTTP/1.1" 200 11396
+INFO 2025-04-24 21:23:51,774 basehttp "GET /static/admin/css/unusable_password_field.css HTTP/1.1" 200 663
+INFO 2025-04-24 21:23:51,774 basehttp "GET /static/admin/js/unusable_password_field.js HTTP/1.1" 200 1480
+INFO 2025-04-24 21:23:56,483 basehttp "POST /admin/users/user/4/password/ HTTP/1.1" 200 11602
+INFO 2025-04-24 21:24:11,582 basehttp "POST /admin/users/user/4/password/ HTTP/1.1" 200 11602
+INFO 2025-04-24 21:24:23,199 basehttp "POST /admin/users/user/4/password/ HTTP/1.1" 200 11602
+INFO 2025-04-24 21:24:30,913 basehttp "GET /static/admin/img/icon-alert.svg HTTP/1.1" 200 504
+INFO 2025-04-24 21:24:51,199 basehttp "POST /admin/users/user/4/password/ HTTP/1.1" 302 0
+INFO 2025-04-24 21:24:51,220 basehttp "GET /admin/users/user/4/change/ HTTP/1.1" 200 34032
+INFO 2025-04-24 21:24:51,236 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 9327
+INFO 2025-04-24 21:25:13,160 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 638
+WARNING 2025-04-24 21:25:20,321 log Unauthorized: /api/v1/auth/login/
+WARNING 2025-04-24 21:25:20,321 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 401 78
+WARNING 2025-04-24 21:25:33,364 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:25:33,364 basehttp "POST /api/v1/tenants/ HTTP/1.1" 403 87
+WARNING 2025-04-24 21:25:38,378 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 21:25:38,378 basehttp "POST /api/v1/tenants/ HTTP/1.1" 403 87

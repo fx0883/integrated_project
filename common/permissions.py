@@ -181,4 +181,72 @@ class ReadOnly(permissions.BasePermission):
         Returns:
             布尔值，指示用户是否具有权限
         """
-        return request.method in permissions.SAFE_METHODS 
+        return request.method in permissions.SAFE_METHODS
+
+
+class TenantApiPermission(permissions.BasePermission):
+    """
+    专门用于租户相关API的权限控制
+    确保只有超级管理员可以访问租户管理API
+    """
+    def has_permission(self, request, view):
+        """
+        检查用户是否有权限访问租户相关API
+        
+        Args:
+            request: HTTP请求对象
+            view: 视图对象
+        
+        Returns:
+            布尔值，指示用户是否具有权限
+        """
+        # 添加详细日志
+        logger.warning(f"TenantApiPermission.has_permission被调用: 用户={request.user}, 已认证={request.user.is_authenticated}, 路径={request.path}")
+        logger.warning(f"认证信息: {request.auth}")
+        logger.warning(f"请求头: {request.headers}")
+        
+        # 检查Authorization头部
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        logger.warning(f"Authorization头: {auth_header}")
+        
+        if not auth_header or not auth_header.startswith('Bearer '):
+            logger.warning("请求缺少有效的Bearer token")
+            # 返回False表示权限被拒绝
+            return False
+            
+        # 验证用户是否是超级管理员
+        is_super_admin = bool(
+            request.user and 
+            request.user.is_authenticated and 
+            request.user.is_super_admin
+        )
+        
+        logger.warning(f"用户超级管理员状态: {getattr(request.user, 'is_super_admin', False)}")
+        logger.warning(f"权限检查结果: {is_super_admin}")
+        
+        if not is_super_admin:
+            logger.warning(
+                f"用户 {request.user.username if request.user.is_authenticated else 'Anonymous'} "
+                f"尝试访问租户API {request.path}，但不是超级管理员"
+            )
+            
+        return is_super_admin
+    
+    def has_object_permission(self, request, view, obj):
+        """
+        对象级权限检查
+        
+        Args:
+            request: HTTP请求对象
+            view: 视图对象
+            obj: 被访问的对象
+        
+        Returns:
+            布尔值，指示用户是否具有对象级权限
+        """
+        # 对象级别权限同样只允许超级管理员
+        return bool(
+            request.user and 
+            request.user.is_authenticated and 
+            request.user.is_super_admin
+        ) 

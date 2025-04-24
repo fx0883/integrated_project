@@ -60,6 +60,8 @@ Authorization: Bearer <access_token>
 
 其中 `<access_token>` 是用户登录后获取的访问令牌。
 
+详细的JWT认证实现请参考[JWT认证系统文档](../jwt_authentication.md)。
+
 ### 请求格式
 
 所有 POST、PUT、PATCH 请求的内容类型应为 `application/json`。
@@ -135,6 +137,41 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 - `500 Internal Server Error`：服务器内部错误，业务状态码通常为 5000
 
 详细的业务状态码列表请参考 [API 错误码文档](api_error_codes.md)。
+
+#### 权限验证错误示例
+
+访问需要超级管理员权限的API但未提供有效token时，将返回401错误：
+
+```json
+{
+  "success": false,
+  "code": 4001,
+  "message": "认证失败，请登录",
+  "data": null
+}
+```
+
+使用非超级管理员用户的token访问租户管理API时，将返回403错误：
+
+```json
+{
+  "success": false,
+  "code": 4003,
+  "message": "您没有权限执行此操作，需要超级管理员权限",
+  "data": null
+}
+```
+
+提供无效的Authorization头（格式错误或token已过期）时：
+
+```json
+{
+  "success": false,
+  "code": 4001,
+  "message": "无效的令牌",
+  "data": null
+}
+```
 
 ### 分页
 
@@ -610,6 +647,14 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 
 ## 租户管理 API
 
+所有租户管理API都**严格要求**使用超级管理员（is_super_admin=true）的token进行认证，否则将返回403权限错误。请确保在请求头中包含有效的Bearer token：
+
+```
+Authorization: Bearer <super_admin_token>
+```
+
+系统会检查请求中的Authorization头，确认其存在且令牌有效，并验证当前用户是否拥有超级管理员权限。
+
 ### 租户列表
 
 **接口**：`GET /tenants/`
@@ -651,6 +696,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 
 **权限**：需要超级管理员权限
 
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
+
 **请求参数**：
 
 ```json
@@ -684,6 +734,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 
 **权限**：需要超级管理员权限
 
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
+
 **响应**：
 
 ```json
@@ -706,6 +761,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 **接口**：`PUT/PATCH /tenants/{id}/`
 
 **权限**：需要超级管理员权限
+
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
 
 **请求参数**：
 
@@ -740,6 +800,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 
 **权限**：需要超级管理员权限
 
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
+
 **响应**：
 - 成功：`204 No Content`
 
@@ -748,6 +813,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 **接口**：`PUT /tenants/{id}/quota/`
 
 **权限**：需要超级管理员权限
+
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
 
 **请求参数**：
 
@@ -785,6 +855,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 - 超级管理员可以获取任何租户的配额使用情况
 - 租户管理员只能获取自己租户的配额使用情况
 
+**请求头**：必须包含有效的token
+```
+Authorization: Bearer <token>
+```
+
 **响应**：
 
 ```json
@@ -811,6 +886,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 
 **权限**：需要超级管理员权限
 
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
+
 **响应**：
 
 ```json
@@ -834,6 +914,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 **接口**：`POST /tenants/{id}/activate/`
 
 **权限**：需要超级管理员权限
+
+**请求头**：必须包含有效的超级管理员token
+```
+Authorization: Bearer <super_admin_token>
+```
 
 **响应**：
 
@@ -860,6 +945,11 @@ API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求�
 **权限**：
 - 超级管理员可以获取任何租户的用户列表
 - 租户管理员只能获取自己租户的用户列表
+
+**请求头**：必须包含有效的token
+```
+Authorization: Bearer <token>
+```
 
 **查询参数**：
 - `search`：搜索关键词（用户名、邮箱、昵称、手机号）
