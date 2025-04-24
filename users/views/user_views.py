@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 
 from common.permissions import IsAdmin, IsSuperAdmin
 from users.models import User
@@ -26,7 +26,7 @@ from users.serializers import (
     SubAccountCreateSerializer
 )
 from users.schema import sub_account_create_request_examples, sub_account_create_response_examples, sub_account_create_responses
-from common.schema import api_schema
+from common.schema import api_schema, common_search_parameter, user_status_parameter, user_admin_parameter, common_pagination_parameters, common_error_responses
 from tenants.models import Tenant
 
 logger = logging.getLogger(__name__)
@@ -76,6 +76,125 @@ class UserListCreateView(generics.ListCreateAPIView):
             'request': self.request,
         })
         return context
+    
+    @extend_schema(
+        summary="获取用户列表",
+        description="获取系统中的用户列表，支持搜索和分页。权限要求: 超级管理员可查看所有用户；租户管理员只能查看自己租户的用户；普通用户只能查看自己。",
+        responses={
+            200: OpenApiResponse(
+                description="获取用户列表成功",
+                examples=[
+                    OpenApiExample(
+                        name="用户列表示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "获取成功",
+                            "data": {
+                                "count": 10,
+                                "next": "http://example.com/api/users/?page=2",
+                                "previous": None,
+                                "results": [
+                                    {
+                                        "id": 1,
+                                        "username": "admin",
+                                        "email": "admin@example.com",
+                                        "phone": "13800138000",
+                                        "nick_name": "系统管理员",
+                                        "tenant": None,
+                                        "tenant_name": None,
+                                        "is_admin": True,
+                                        "is_member": False,
+                                        "is_super_admin": True,
+                                        "role": "超级管理员"
+                                    }
+                                ]
+                            }
+                        }
+                    )
+                ]
+            ),
+            **common_error_responses
+        },
+        parameters=[
+            OpenApiParameter(
+                name='search',
+                description='搜索关键词，支持用户名、邮箱、昵称和手机号码搜索',
+                required=False,
+                type=str,
+                location=OpenApiParameter.QUERY
+            ), 
+            OpenApiParameter(
+                name='status',
+                description='用户状态筛选',
+                required=False,
+                type=str,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='is_admin',
+                description='是否为管理员 (true/false)',
+                required=False,
+                type=bool,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='is_sub_account',
+                description='是否为子账号 (true/false)',
+                required=False,
+                type=bool,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='parent',
+                description='父账号ID，用于筛选特定父账号下的子账号',
+                required=False,
+                type=int,
+                location=OpenApiParameter.QUERY
+            )
+        ] + common_pagination_parameters,
+        tags=["用户管理"]
+    )
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    @extend_schema(
+        summary="创建新用户",
+        description="创建新用户。权限要求: 超级管理员可创建任意租户下的用户；租户管理员只能创建自己租户的用户，且无法指定其他租户。",
+        request=UserCreateSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="用户创建成功",
+                examples=[
+                    OpenApiExample(
+                        name="创建用户成功示例",
+                        value={
+                            "success": True,
+                            "code": 2001,
+                            "message": "创建成功",
+                            "data": {
+                                "id": 10,
+                                "username": "newuser",
+                                "email": "newuser@example.com",
+                                "phone": "13900139000",
+                                "nick_name": "新用户",
+                                "tenant": 1,
+                                "tenant_name": "测试租户",
+                                "is_admin": False,
+                                "is_member": True,
+                                "is_super_admin": False,
+                                "role": "普通成员"
+                            }
+                        }
+                    )
+                ]
+            ),
+            **common_error_responses
+        },
+        tags=["用户管理"]
+    )
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
     
     def get_queryset(self):
         """
@@ -161,12 +280,21 @@ class UserListCreateView(generics.ListCreateAPIView):
         # 设置租户
         tenant = None
         if not user.is_super_admin:
+            # 非超级管理员只能在自己租户创建用户
             tenant = user.tenant
+            if not tenant:
+                raise PermissionDenied("您没有关联的租户，无法创建用户")
         
         # 如果传入了tenant_id参数并且是超级管理员
         tenant_id = self.request.data.get('tenant_id')
         if tenant_id and user.is_super_admin:
             tenant = get_object_or_404(Tenant, pk=tenant_id)
+        elif tenant_id and not user.is_super_admin:
+            # 非超级管理员尝试指定租户ID
+            requested_tenant = get_object_or_404(Tenant, pk=tenant_id)
+            if requested_tenant.id != user.tenant.id:
+                raise PermissionDenied("您只能在自己的租户下创建用户")
+            tenant = user.tenant
         
         logger.info(f"用户 {user.username} 创建新用户，租户设置为: {tenant.name if tenant else '无租户'}")
         serializer.save(tenant=tenant)
@@ -199,11 +327,40 @@ class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             return User.objects.filter(is_deleted=False)
         
         # 租户管理员只能操作自己租户的用户
-        if user.is_admin and user.tenant:
+        elif user.is_admin and user.tenant:
             return User.objects.filter(tenant=user.tenant, is_deleted=False)
         
         # 普通用户只能操作自己
         return User.objects.filter(pk=user.pk, is_deleted=False)
+    
+    def perform_update(self, serializer):
+        """
+        执行更新操作，确保权限控制
+        """
+        instance = self.get_object()
+        user = self.request.user
+        
+        # 阻止租户管理员修改其他租户的用户
+        if not user.is_super_admin and user.tenant != instance.tenant:
+            raise PermissionDenied("您没有权限修改其他租户的用户")
+        
+        serializer.save()
+        logger.info(f"用户 {user.username} 更新了用户 {instance.username} 的信息")
+    
+    def perform_destroy(self, instance):
+        """
+        执行删除操作，确保权限控制
+        """
+        user = self.request.user
+        
+        # 阻止租户管理员删除其他租户的用户
+        if not user.is_super_admin and user.tenant != instance.tenant:
+            raise PermissionDenied("您没有权限删除其他租户的用户")
+        
+        # 软删除
+        instance.is_deleted = True
+        instance.save()
+        logger.info(f"用户 {user.username} 删除了用户 {instance.username}")
     
     def destroy(self, request, *args, **kwargs):
         """
@@ -218,9 +375,7 @@ class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # 软删除
-        instance.soft_delete()
-        logger.info(f"用户 {request.user.username} 删除了用户 {instance.username}")
+        self.perform_destroy(instance)
         
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -400,12 +555,37 @@ class SubAccountCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SubAccountCreateSerializer
     
-    @api_schema(
+    @extend_schema(
         summary="创建子账号",
         description="创建一个与当前用户关联的子账号，子账号不能登录系统，仅用于数据关联",
-        request_body=SubAccountCreateSerializer,
-        responses=sub_account_create_responses,
-        examples=sub_account_create_request_examples + sub_account_create_response_examples,
+        request=SubAccountCreateSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="子账号创建成功",
+                examples=[
+                    OpenApiExample(
+                        name="子账号创建成功示例",
+                        value={
+                            "success": True,
+                            "code": 2001,
+                            "message": "创建成功",
+                            "data": {
+                                "id": 12,
+                                "username": "subaccount1",
+                                "email": "sub1@example.com",
+                                "phone": "13900139001",
+                                "nick_name": "子账号1",
+                                "parent": 10,
+                                "tenant": 1,
+                                "tenant_name": "测试租户",
+                                "is_sub_account": True
+                            }
+                        }
+                    )
+                ]
+            ),
+            **common_error_responses
+        },
         tags=["用户管理"]
     )
     def post(self, request, *args, **kwargs):
@@ -415,8 +595,18 @@ class SubAccountCreateView(generics.CreateAPIView):
         """
         创建子账号
         """
-        user = serializer.save()
-        logger.info(f"用户 {self.request.user.username} 创建了子账号 {user.username}")
+        parent_user = self.request.user
+        
+        # 创建子账号，并设置租户与父账号一致
+        user = serializer.save(parent=parent_user, tenant=parent_user.tenant)
+        
+        # 如果是管理员创建，确保子账号权限正确
+        if parent_user.is_admin or parent_user.is_super_admin:
+            user.is_admin = False  # 子账号默认不是管理员
+            user.is_member = True  # 子账号是普通成员
+            user.save()
+        
+        logger.info(f"用户 {parent_user.username} 创建了子账号 {user.username}")
         return user
         
     def create(self, request, *args, **kwargs):

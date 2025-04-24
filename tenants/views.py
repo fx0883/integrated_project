@@ -8,7 +8,7 @@ from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 from common.permissions import IsSuperAdminUser, IsAdminUser, TenantApiPermission
 from tenants.models import Tenant, TenantQuota
 from tenants.serializers import (
@@ -43,20 +43,29 @@ class TenantListCreateView(generics.ListCreateAPIView):
             return TenantCreateSerializer
         return TenantSerializer
     
-    @api_schema(
+    @extend_schema(
         summary="获取租户列表",
-        description="获取所有租户的列表，支持搜索和状态过滤，仅超级管理员可访问",
+        description="获取所有租户的列表，支持搜索和状态过滤。可以在租户名称、联系人姓名和联系人邮箱中搜索匹配的内容。权限要求：仅超级管理员可访问此API，其他用户（包括租户管理员）无权访问。",
         responses=tenant_list_responses,
-        parameters=[common_search_parameter, tenant_status_parameter] + common_pagination_parameters,
+        parameters=[
+            OpenApiParameter(
+                name='search',
+                description='搜索关键词，支持租户名称、联系人姓名和联系人邮箱搜索',
+                required=False,
+                type=str,
+                location=OpenApiParameter.QUERY
+            ), 
+            tenant_status_parameter
+        ] + common_pagination_parameters,
         tags=["租户"]
     )
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
     
-    @api_schema(
+    @extend_schema(
         summary="创建新租户",
         description="创建新的租户，包括租户名称、状态和联系人信息，仅超级管理员可访问",
-        request_body=TenantCreateSerializer,
+        request=TenantCreateSerializer,
         responses=tenant_create_responses,
         examples=tenant_create_request_examples,
         tags=["租户"]

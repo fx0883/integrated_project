@@ -4707,3 +4707,76 @@ WARNING 2025-04-24 21:25:33,364 log Forbidden: /api/v1/tenants/
 WARNING 2025-04-24 21:25:33,364 basehttp "POST /api/v1/tenants/ HTTP/1.1" 403 87
 WARNING 2025-04-24 21:25:38,378 log Forbidden: /api/v1/tenants/
 WARNING 2025-04-24 21:25:38,378 basehttp "POST /api/v1/tenants/ HTTP/1.1" 403 87
+INFO 2025-04-24 22:25:15,343 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 22:25:15,724 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:26:13,641 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 22:26:13,955 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:26:37,210 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 22:26:37,531 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:29:41,860 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-24 22:30:11,008 log Not Found: /
+WARNING 2025-04-24 22:30:11,009 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-24 22:30:11,014 log Not Found: /
+WARNING 2025-04-24 22:30:11,014 basehttp "GET / HTTP/1.1" 404 3729
+INFO 2025-04-24 22:30:14,954 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2025-04-24 22:30:14,973 basehttp "GET /admin/ HTTP/1.1" 200 11706
+INFO 2025-04-24 22:30:16,749 basehttp "GET /api/v1/docs HTTP/1.1" 301 0
+INFO 2025-04-24 22:30:16,756 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:30:16,959 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177825
+INFO 2025-04-24 22:42:28,484 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-24 22:42:29,478 log Not Found: /api/v1/
+WARNING 2025-04-24 22:42:29,478 basehttp "GET /api/v1/ HTTP/1.1" 404 5390
+WARNING 2025-04-24 22:42:32,732 log Not Found: /api/v1/
+WARNING 2025-04-24 22:42:32,732 basehttp "GET /api/v1/ HTTP/1.1" 404 5390
+INFO 2025-04-24 22:42:42,650 basehttp "GET /api/v1/redoc HTTP/1.1" 301 0
+INFO 2025-04-24 22:42:42,663 basehttp "GET /api/v1/redoc/ HTTP/1.1" 200 746
+INFO 2025-04-24 22:42:42,761 basehttp "GET /static/drf_spectacular_sidecar/redoc/bundles/redoc.standalone.js HTTP/1.1" 200 910724
+INFO 2025-04-24 22:42:43,061 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 82221
+INFO 2025-04-24 22:48:58,166 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 22:48:58,503 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:50:39,381 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:52:12,670 autoreload D:\GitHub\integrated_project\common\schema\parameters.py changed, reloading.
+INFO 2025-04-24 22:52:13,013 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:52:28,046 autoreload D:\GitHub\integrated_project\common\schema\__init__.py changed, reloading.
+INFO 2025-04-24 22:52:28,370 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:52:56,176 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:53:10,715 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:53:56,275 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 22:53:56,602 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:54:18,894 autoreload D:\GitHub\integrated_project\tenants\views.py changed, reloading.
+INFO 2025-04-24 22:54:19,213 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 22:54:59,356 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-24 22:55:02,954 log Not Found: /
+WARNING 2025-04-24 22:55:02,954 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-24 22:55:02,959 log Not Found: /
+WARNING 2025-04-24 22:55:02,959 basehttp "GET / HTTP/1.1" 404 3729
+INFO 2025-04-24 22:55:06,403 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:06,554 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:55:26,174 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:26,284 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:55:27,287 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:27,361 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:55:28,051 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:28,120 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:55:28,799 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:28,872 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:55:30,182 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:30,255 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:55:41,956 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 22:55:42,094 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 178824
+INFO 2025-04-24 22:56:36,841 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 564
+INFO 2025-04-24 23:11:59,960 autoreload D:\GitHub\integrated_project\common\models.py changed, reloading.
+INFO 2025-04-24 23:12:00,319 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 23:21:06,149 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 23:21:43,168 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 23:21:43,312 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177580
+WARNING 2025-04-24 23:22:15,388 log Forbidden: /api/v1/tenants/
+WARNING 2025-04-24 23:22:15,388 basehttp "GET /api/v1/tenants/?page=1&page_size=10&search=1 HTTP/1.1" 403 87
+INFO 2025-04-24 23:22:35,559 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 627
+WARNING 2025-04-24 23:22:50,353 log Unauthorized: /api/v1/tenants/
+WARNING 2025-04-24 23:22:50,353 basehttp "GET /api/v1/tenants/?page=1&page_size=10&search=1 HTTP/1.1" 401 78
+WARNING 2025-04-24 23:22:55,332 log Unauthorized: /api/v1/tenants/
+WARNING 2025-04-24 23:22:55,332 basehttp "GET /api/v1/tenants/?page=1&page_size=10&search=1 HTTP/1.1" 401 78
+INFO 2025-04-24 23:23:21,515 basehttp "GET /api/v1/tenants/?page=1&page_size=10&search=1 HTTP/1.1" 200 1381
+INFO 2025-04-24 23:23:31,166 basehttp "GET /api/v1/tenants/?page=1&page_size=10&search=2 HTTP/1.1" 200 1146
+INFO 2025-04-24 23:23:45,606 basehttp "GET /api/v1/tenants/?page=1&page_size=10&search=abc HTTP/1.1" 200 176

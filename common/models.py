@@ -80,6 +80,7 @@ class APILog(models.Model):
     ip_address = models.CharField(_("IP地址"), max_length=50)
     request_method = models.CharField(_("请求方法"), max_length=10, choices=REQUEST_METHOD_CHOICES)
     request_path = models.CharField(_("请求路径"), max_length=255)
+    view_name = models.CharField(_("视图名称"), max_length=255, null=True, blank=True)
     query_params = models.JSONField(_("查询参数"), null=True, blank=True)
     request_body = models.JSONField(_("请求体"), null=True, blank=True)
     
@@ -87,6 +88,7 @@ class APILog(models.Model):
     status_code = models.IntegerField(_("状态码"))
     response_time = models.IntegerField(_("响应时间(ms)"))
     status_type = models.CharField(_("状态类型"), max_length=10, choices=STATUS_TYPE_CHOICES)
+    response_body = models.JSONField(_("响应体"), null=True, blank=True)
     error_message = models.TextField(_("错误信息"), null=True, blank=True)
     
     # 其他信息

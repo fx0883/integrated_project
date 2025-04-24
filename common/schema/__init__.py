@@ -5,7 +5,13 @@ Schema相关配置和扩展
 from .responses import common_error_responses 
 
 # 导出通用参数
-from .parameters import common_search_parameter, tenant_status_parameter, common_pagination_parameters
+from .parameters import (
+    common_search_parameter, 
+    tenant_status_parameter, 
+    common_pagination_parameters,
+    user_status_parameter,
+    user_admin_parameter
+)
 
 # 导入JWT认证扩展，确保它被注册到drf-spectacular
 from .spectacular_extensions import JWTAuthenticationScheme
@@ -27,12 +33,15 @@ def api_schema(summary=None, description=None, request_body=None, responses=None
         tags: 标签列表
         parameters: API参数列表
     """
+    # 保持与extend_schema兼容
+    request_param = request_body
+    
     @wraps(extend_schema)
     def decorator(func):
         return extend_schema(
             summary=summary,
             description=description,
-            request=request_body,
+            request=request_param,  # 使用request而不是request_body
             responses=responses,
             examples=examples,
             tags=tags,

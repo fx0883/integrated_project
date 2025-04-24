@@ -2,3 +2,5 @@
 *.pyc
 /tenants/__pycache__
 *.pyc
+users/views/__pycache__/user_views.cpython-313.pyc
+tenants/__pycache__/views.cpython-313.pyc

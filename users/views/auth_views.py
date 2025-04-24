@@ -29,10 +29,10 @@ class RegisterView(APIView):
     """
     permission_classes = [AllowAny]
     
-    @api_schema(
+    @extend_schema(
         summary="用户注册",
         description="新用户注册接口，可选关联到指定租户",
-        request_body=RegisterSerializer,
+        request=RegisterSerializer,
         responses=register_responses,
         examples=register_request_examples + register_response_examples,
         tags=["认证"]
@@ -114,10 +114,10 @@ class LoginView(APIView):
     """
     permission_classes = [AllowAny]
     
-    @api_schema(
+    @extend_schema(
         summary="用户登录",
         description="用户登录接口，验证用户名和密码，返回JWT令牌",
-        request_body=LoginSerializer,
+        request=LoginSerializer,
         responses=login_responses,
         examples=login_request_examples + login_response_examples,
         tags=["认证"]
@@ -198,10 +198,10 @@ class TokenRefreshView(APIView):
     """
     permission_classes = [AllowAny]
     
-    @api_schema(
+    @extend_schema(
         summary="刷新访问令牌",
         description="使用刷新令牌获取新的访问令牌和刷新令牌",
-        request_body=TokenRefreshSerializer,
+        request=TokenRefreshSerializer,
         responses=token_refresh_responses,
         examples=token_refresh_request_examples + token_refresh_response_examples,
         tags=["认证"]
@@ -291,7 +291,7 @@ class TokenVerifyView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
-    @api_schema(
+    @extend_schema(
         summary="验证访问令牌",
         description="验证当前令牌是否有效，返回用户信息",
         responses=token_verify_responses,
