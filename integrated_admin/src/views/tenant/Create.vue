@@ -14,7 +14,7 @@
       <el-card shadow="never" class="info-card">
         <template #header>
           <div class="card-title">
-            <el-icon><Office /></el-icon>
+            <el-icon><OfficeBuilding /></el-icon>
             <span>基本信息</span>
           </div>
         </template>
@@ -183,7 +183,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Office, Setting, Back } from '@element-plus/icons-vue'
+import { OfficeBuilding, Setting, Back } from '@element-plus/icons-vue'
+import { tenantApi } from '../../api'
 
 // 路由
 const router = useRouter()
@@ -282,26 +283,27 @@ const submitForm = async () => {
     submitLoading.value = true
     console.log('提交租户表单', tenantForm)
     
-    // 实际项目中应该调用API创建租户
-    // const response = await tenantApi.createTenant({
-    //   name: tenantForm.name,
-    //   code: tenantForm.code,
-    //   contact_name: tenantForm.contact_name,
-    //   contact_phone: tenantForm.contact_phone,
-    //   contact_email: tenantForm.contact_email,
-    //   industry: tenantForm.industry,
-    //   size: tenantForm.size,
-    //   address: tenantForm.address,
-    //   expire_date: tenantForm.expire_date,
-    //   status: tenantForm.status,
-    //   user_limit: tenantForm.user_limit,
-    //   storage_limit: tenantForm.storage_limit,
-    //   can_customize_theme: tenantForm.can_customize_theme,
-    //   api_access_enabled: tenantForm.api_access_enabled
-    // })
-    
-    // 模拟请求
-    setTimeout(() => {
+    // 调用API创建租户
+    try {
+      const response = await tenantApi.createTenant({
+        name: tenantForm.name,
+        code: tenantForm.code,
+        contact_name: tenantForm.contact_name,
+        contact_phone: tenantForm.contact_phone,
+        contact_email: tenantForm.contact_email,
+        industry: tenantForm.industry,
+        size: tenantForm.size,
+        address: tenantForm.address,
+        expire_date: tenantForm.expire_date,
+        status: tenantForm.status,
+        user_limit: tenantForm.user_limit,
+        storage_limit: tenantForm.storage_limit,
+        can_customize_theme: tenantForm.can_customize_theme,
+        api_access_enabled: tenantForm.api_access_enabled
+      })
+      
+      console.log('租户创建成功:', response)
+      
       submitLoading.value = false
       
       ElMessage({
@@ -311,7 +313,11 @@ const submitForm = async () => {
       
       // 创建成功后返回列表页
       router.push('/tenants')
-    }, 800)
+    } catch (error) {
+      console.error('创建租户失败:', error)
+      submitLoading.value = false
+      ElMessage.error('创建租户失败: ' + (error.message || '未知错误'))
+    }
   } catch (error) {
     console.error('表单验证失败:', error)
     submitLoading.value = false

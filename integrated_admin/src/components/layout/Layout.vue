@@ -38,12 +38,12 @@
         </el-sub-menu>
         
         <!-- 租户管理菜单 -->
-        <el-sub-menu index="/tenants" v-if="hasPermission(['super_admin'])">
+        <el-sub-menu index="tenants" v-if="hasPermission(['super_admin'])">
           <template #title>
             <el-icon><OfficeBuilding /></el-icon>
             <span>租户管理</span>
           </template>
-          <el-menu-item index="/tenants/list">租户列表</el-menu-item>
+          <el-menu-item index="/tenants">租户列表</el-menu-item>
           <el-menu-item index="/tenants/create">创建租户</el-menu-item>
         </el-sub-menu>
         
@@ -112,7 +112,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore } from '../../stores'
 import { 
   Odometer, User, Setting, SwitchButton,
   Fold, Expand, ArrowDown, OfficeBuilding 
