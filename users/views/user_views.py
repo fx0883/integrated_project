@@ -385,15 +385,16 @@ class SubAccountCreateView(generics.CreateAPIView):
         
     def create(self, request, *args, **kwargs):
         """
-        重写创建方法，自定义响应
+        重写创建方法，使用标准响应
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = self.perform_create(serializer)
         
-        return Response({
-            'success': True,
-            'code': 2000,
-            'message': '子账号创建成功',
-            'data': UserSerializer(instance).data
-        }, status=status.HTTP_201_CREATED) 
+        # 使用标准DRF响应，让中间件处理格式化
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            UserSerializer(instance).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )

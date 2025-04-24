@@ -4093,3 +4093,39 @@ INFO 2025-04-24 10:30:01,609 basehttp "GET /api/v1/tenants/?name=&status=&page=1
 INFO 2025-04-24 10:30:04,759 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
 INFO 2025-04-24 10:30:07,588 basehttp "GET /api/v1/users/?username=&email=&status=&tenant_id=&page=1&limit=10 HTTP/1.1" 200 3667
 INFO 2025-04-24 10:30:10,633 basehttp "GET /api/v1/tenants/?name=&status=&page=1&limit=10 HTTP/1.1" 200 661
+INFO 2025-04-24 11:04:19,060 autoreload D:\GitHub\integrated_project\core\settings.py changed, reloading.
+INFO 2025-04-24 11:04:19,382 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 11:56:46,719 autoreload D:\GitHub\integrated_project\users\views\user_views.py changed, reloading.
+INFO 2025-04-24 11:56:47,062 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 11:57:17,387 autoreload D:\GitHub\integrated_project\tenants\views.py changed, reloading.
+INFO 2025-04-24 11:57:17,705 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 11:59:49,549 autoreload D:\GitHub\integrated_project\core\settings.py changed, reloading.
+INFO 2025-04-24 11:59:49,856 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 12:12:34,094 autoreload Watching for file changes with StatReloader
+INFO 2025-04-24 12:13:58,695 autoreload Watching for file changes with StatReloader
+WARNING 2025-04-24 12:15:45,727 log Not Found: /
+WARNING 2025-04-24 12:15:45,727 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-24 12:15:45,733 log Not Found: /
+WARNING 2025-04-24 12:15:45,733 basehttp "GET / HTTP/1.1" 404 3729
+WARNING 2025-04-24 12:15:45,938 log Not Found: /favicon.ico
+WARNING 2025-04-24 12:15:45,938 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+WARNING 2025-04-24 12:15:45,957 log Not Found: /favicon.ico
+WARNING 2025-04-24 12:15:45,958 basehttp "GET /favicon.ico HTTP/1.1" 404 3780
+INFO 2025-04-24 12:15:48,846 basehttp "GET /admin/ HTTP/1.1" 200 11350
+INFO 2025-04-24 12:15:48,854 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,854 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,854 basehttp "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,896 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,896 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,896 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,899 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,910 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,910 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,916 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:48,956 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-04-24 12:15:50,652 basehttp "GET /api/v1/docs/ HTTP/1.1" 200 4651
+INFO 2025-04-24 12:15:50,696 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:50,696 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:50,697 basehttp "GET /static/drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 304 0
+INFO 2025-04-24 12:15:50,815 basehttp "GET /api/v1/schema/ HTTP/1.1" 200 177018
+INFO 2025-04-24 12:16:01,025 basehttp "POST /api/v1/auth/login/ HTTP/1.1" 200 564

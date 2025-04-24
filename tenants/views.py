@@ -517,28 +517,24 @@ class TenantUserListView(generics.ListAPIView):
     
     def list(self, request, *args, **kwargs):
         """
-        重写列表方法，支持返回用户列表
+        重写列表方法，使用标准响应格式
         """
         queryset = self.filter_queryset(self.get_queryset())
         
         if not queryset.exists():
             # 如果查询集为空，则可能是无权限或没有符合条件的用户
             if self.request.user.is_super_admin or (self.request.user.is_admin and self.request.user.tenant):
-                message = "没有找到符合条件的用户"
-                code = 2000
-            else:
-                message = "无权查看此租户的用户列表"
-                code = 4003
-            
-            return Response({
-                'success': True,
-                'code': code,
-                'message': message,
-                'data': {
+                # 返回空列表但不使用自定义响应格式
+                return Response({
                     'count': 0,
                     'results': []
-                }
-            })
+                })
+            else:
+                # 无权限访问，返回权限错误但不使用自定义响应格式
+                return Response(
+                    {"detail": "无权查看此租户的用户列表"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
         
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -546,12 +542,8 @@ class TenantUserListView(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         
         serializer = self.get_serializer(queryset, many=True)
+        # 返回标准响应，让中间件处理格式化
         return Response({
-            'success': True,
-            'code': 2000,
-            'message': '获取成功',
-            'data': {
-                'count': queryset.count(),
-                'results': serializer.data
-            }
+            'count': queryset.count(),
+            'results': serializer.data
         })

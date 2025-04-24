@@ -66,23 +66,75 @@ Authorization: Bearer <access_token>
 
 ### 响应格式
 
-所有 API 的响应均为 JSON 格式，包含以下字段：
+所有 API 响应均为 JSON 格式，遵循统一的标准格式：
 
-- 成功响应：返回相应的数据对象
-- 错误响应：包含错误信息，如 `{"detail": "错误信息"}` 或 `{"field_name": ["字段错误信息"]}`
+```json
+{
+  "success": true,       // 布尔值，表示请求是否成功
+  "code": 2000,          // 业务状态码，2000表示成功，4xxx表示客户端错误，5xxx表示服务器错误
+  "message": "操作成功",  // 操作结果的描述信息
+  "data": {              // 实际返回的数据，可能是对象、数组或null
+    // 具体数据字段...
+  }
+}
+```
+
+**成功响应示例**：
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取成功",
+  "data": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@example.com"
+  }
+}
+```
+
+**错误响应示例**：
+
+```json
+{
+  "success": false,
+  "code": 4001,
+  "message": "认证失败，请登录",
+  "data": null
+}
+```
+
+**分页响应示例**：
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取成功",
+  "data": {
+    "count": 100,               // 总记录数
+    "next": "URL to next page", // 下一页URL，如果没有则为null
+    "previous": null,           // 上一页URL，如果没有则为null
+    "results": []               // 当前页的数据记录
+  }
+}
+```
 
 ### 错误处理
 
-API 使用标准的 HTTP 状态码来表示请求结果：
+API 使用标准的 HTTP 状态码结合自定义业务状态码来表示请求结果：
 
-- `200 OK`：请求成功
-- `201 Created`：资源创建成功
+- `200 OK`：请求成功，业务状态码通常为 2000
+- `201 Created`：资源创建成功，业务状态码通常为 2000
 - `204 No Content`：删除成功
-- `400 Bad Request`：请求参数错误
-- `401 Unauthorized`：认证失败
-- `403 Forbidden`：权限不足
-- `404 Not Found`：资源不存在
-- `500 Internal Server Error`：服务器内部错误
+- `400 Bad Request`：请求参数错误，业务状态码通常为 4000
+- `401 Unauthorized`：认证失败，业务状态码通常为 4001
+- `403 Forbidden`：权限不足，业务状态码通常为 4003
+- `404 Not Found`：资源不存在，业务状态码通常为 4004
+- `500 Internal Server Error`：服务器内部错误，业务状态码通常为 5000
+
+详细的业务状态码列表请参考 [API 错误码文档](api_error_codes.md)。
 
 ### 分页
 
@@ -842,4 +894,3 @@ API 使用标准的 HTTP 状态码来表示请求结果：
     // ... 更多用户
   ]
 }
-``` 

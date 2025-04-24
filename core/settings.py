@@ -68,7 +68,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 自定义租户中间件
     'common.middleware.tenant_middleware.TenantMiddleware',
-    'common.middleware.api_logging_middleware.APILoggingMiddleware',
+    # 增强型API日志中间件（替换旧版）
+    'common.middleware.enhanced_api_logging_middleware.EnhancedAPILoggingMiddleware',
+    # 响应格式标准化中间件(放在最后以确保处理所有其他中间件后的响应)
+    'common.middleware.response_standardization_middleware.ResponseStandardizationMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
