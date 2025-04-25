@@ -21,6 +21,7 @@
    14. [获取租户用户列表](#获取租户用户列表)
    15. [创建子账号](#创建子账号)
    16. [上传用户头像](#上传用户头像)
+   17. [管理员为指定用户上传头像](#管理员为指定用户上传头像)
 2. [租户管理API](#租户管理api)
    1. [获取租户列表](#获取租户列表)
    2. [搜索租户](#搜索租户)
@@ -864,3 +865,121 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
   }
 }
 ```
+
+### 上传用户头像
+
+用户上传自己的头像。
+
+- **URL**: `/api/v1/users/me/upload-avatar/`
+- **方法**: `POST`
+- **权限要求**: 登录用户
+- **Content-Type**: `multipart/form-data`
+
+#### 请求参数
+
+| 参数名 | 类型 | 必填 | 描述 |
+| ----- | ---- | ---- | ---- |
+| avatar | File | 是 | 头像文件，支持JPG、PNG、GIF、WEBP或BMP格式，大小不超过2MB |
+
+#### 请求示例
+
+```
+POST /api/v1/users/me/upload-avatar/ HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
+Content-Type: image/jpeg
+
+[二进制文件内容]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+```
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "上传成功",
+  "data": {
+    "detail": "头像上传成功",
+    "avatar": "https://example.com/media/avatars/1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p.jpg"
+  }
+}
+```
+
+### 管理员为指定用户上传头像
+
+允许租户管理员或超级管理员为其权限范围内的用户上传头像。租户管理员只能为同租户内的用户上传头像，超级管理员可以为任何用户上传头像。
+
+- **URL**: `/api/v1/users/{id}/upload-avatar/`
+- **方法**: `POST`
+- **权限要求**: 租户管理员或超级管理员
+- **Content-Type**: `multipart/form-data`
+
+#### 路径参数
+
+| 参数名 | 类型 | 描述 |
+| ----- | ---- | ---- |
+| id | integer | 用户ID |
+
+#### 请求参数
+
+| 参数名 | 类型 | 必填 | 描述 |
+| ----- | ---- | ---- | ---- |
+| avatar | File | 是 | 头像文件，支持JPG、PNG、GIF、WEBP或BMP格式，大小不超过2MB |
+
+#### 请求示例
+
+```
+POST /api/v1/users/2/upload-avatar/ HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="avatar"; filename="user_avatar.jpg"
+Content-Type: image/jpeg
+
+[二进制文件内容]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+```
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "上传成功",
+  "data": {
+    "detail": "头像上传成功",
+    "avatar": "https://example.com/media/avatars/1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p.jpg"
+  }
+}
+```
+
+#### 错误响应
+
+##### 用户不存在
+
+```json
+{
+  "success": false,
+  "code": 4004,
+  "message": "用户不存在",
+  "data": null
+}
+```
+
+##### 权限不足
+
+```json
+{
+  "success": false,
+  "code": 4003,
+  "message": "您没有权限为该用户上传头像",
+  "data": null
+}
+```
+
+## 租户管理API{{ ... }}

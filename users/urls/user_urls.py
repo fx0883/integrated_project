@@ -22,6 +22,9 @@ urlpatterns = [
     # 上传头像
     path('me/upload-avatar/', user_views.UserAvatarUploadView.as_view(), name='upload-avatar'),
     
+    # 管理员为指定用户上传头像
+    path('<int:pk>/upload-avatar/', user_views.UserSpecificAvatarUploadView.as_view(), name='upload-user-avatar'),
+    
     # 超级管理员相关
     path('super-admin/create/', user_views.SuperAdminCreateView.as_view(), name='create-super-admin'),
     path('<int:pk>/grant-super-admin/', user_views.GrantSuperAdminView.as_view(), name='grant-super-admin'),
@@ -35,4 +38,4 @@ urlpatterns = [
     
     # 子账号管理
     path('sub-account/create/', user_views.SubAccountCreateView.as_view(), name='create-sub-account'),
-] 
+]

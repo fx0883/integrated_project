@@ -298,57 +298,71 @@ const submitForm = async () => {
     
     submitLoading.value = true
     
-    // 准备提交数据
-    const formData = {
-      username: userForm.username,
-      email: userForm.email,
-      password: userForm.password,
-      password_confirm: userForm.password_confirm,
-      phone: userForm.phone,
-      nick_name: userForm.nick_name,
-      first_name: userForm.first_name,
-      last_name: userForm.last_name,
-      is_active: userForm.is_active,
-      send_welcome_email: userForm.send_welcome_email
+    // 创建用户逻辑
+    try {
+      // 准备用户基本信息数据
+      const userData = {
+        username: userForm.username,
+        email: userForm.email,
+        password: userForm.password,
+        password_confirm: userForm.password_confirm,
+        phone: userForm.phone || '',
+        nick_name: userForm.nick_name || '',
+        first_name: userForm.first_name || '',
+        last_name: userForm.last_name || '',
+        is_active: userForm.is_active
+      }
+      
+      // 发送欢迎邮件
+      userData.send_welcome_email = userForm.send_welcome_email
+      
+      // 根据角色设置is_admin和is_super_admin
+      if (userForm.role === 'super_admin') {
+        userData.is_admin = true
+        userData.is_super_admin = true
+      } else if (userForm.role === 'admin') {
+        userData.is_admin = true
+        userData.is_super_admin = false
+      } else {
+        userData.is_admin = false
+        userData.is_super_admin = false
+        userData.is_member = true
+      }
+      
+      // 如果是超级管理员且选择了租户
+      if (isSuperAdmin.value && userForm.tenant_id) {
+        userData.tenant_id = userForm.tenant_id
+      } else if (!isSuperAdmin.value) {
+        // 如果不是超级管理员，使用当前用户的租户
+        userData.tenant_id = userInfo.value.tenant_id
+      }
+      
+      console.log('创建用户数据:', userData)
+      
+      // 调用API创建用户
+      const response = await userApi.createUser(userData)
+      
+      submitLoading.value = false
+      
+      ElMessage({
+        type: 'success',
+        message: '用户创建成功'
+      })
+      
+      // 创建成功后返回列表页
+      router.push('/users')
+    } catch (error) {
+      console.error('创建用户失败:', error)
+      // 打印完整的错误响应以便调试
+      if (error.response) {
+        console.error('错误响应数据:', error.response.data)
+      }
+      submitLoading.value = false
+      ElMessage.error(error.response?.data?.message || error.response?.data || '创建用户失败')
     }
-    
-    // 根据角色设置is_admin和is_super_admin
-    if (userForm.role === 'super_admin') {
-      formData.is_admin = true
-      formData.is_super_admin = true
-    } else if (userForm.role === 'admin') {
-      formData.is_admin = true
-      formData.is_super_admin = false
-    } else {
-      formData.is_admin = false
-      formData.is_super_admin = false
-      formData.is_member = true
-    }
-    
-    // 如果是超级管理员且选择了租户
-    if (isSuperAdmin.value && userForm.tenant_id) {
-      formData.tenant_id = userForm.tenant_id
-    } else if (!isSuperAdmin.value) {
-      // 如果不是超级管理员，使用当前用户的租户
-      formData.tenant_id = userInfo.value.tenant_id
-    }
-    
-    // 调用API创建用户
-    const response = await userApi.createUser(formData)
-    
-    submitLoading.value = false
-    
-    ElMessage({
-      type: 'success',
-      message: '用户创建成功'
-    })
-    
-    // 创建成功后返回列表页
-    router.push('/users')
-  } catch (error) {
-    console.error('创建用户失败:', error)
-    submitLoading.value = false
-    ElMessage.error(error.response?.message || '创建用户失败')
+  } catch (validationError) {
+    console.error('表单验证失败:', validationError)
+    ElMessage.error('请检查表单填写是否正确')
   }
 }
 

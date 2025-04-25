@@ -82,6 +82,18 @@ export const userApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+  
+  // 上传指定用户的头像
+  uploadUserAvatar(id, file) {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    
+    return request.post(`/users/${id}/upload-avatar/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
   }
 }
 

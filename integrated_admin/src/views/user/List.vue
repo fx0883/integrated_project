@@ -54,6 +54,14 @@
         border
       >
         <el-table-column type="index" width="50" label="#" />
+        <el-table-column label="头像" width="80" align="center">
+          <template #default="scope">
+            <div class="avatar-cell">
+              <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-image" />
+              <div v-else class="avatar-placeholder">{{ getUserInitials(scope.row) }}</div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="email" label="邮箱" min-width="150" />
         <el-table-column prop="nick_name" label="昵称" min-width="100" />
@@ -409,6 +417,14 @@ const handleRevokeSuperAdmin = (row) => {
   })
 }
 
+// 获取用户初始字母
+const getUserInitials = (user) => {
+  if (!user) return '?';
+  
+  const name = user.nick_name || user.username;
+  return name ? name.charAt(0).toUpperCase() : '?';
+}
+
 // 生命周期钩子
 onMounted(() => {
   getUserList()
@@ -434,5 +450,34 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+/* 头像样式 */
+.avatar-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #95a5a6;
+  background-color: #ecf0f1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 </style>

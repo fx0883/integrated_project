@@ -65,6 +65,27 @@
             </div>
           </div>
           
+          <div class="form-row">
+            <div class="form-col">
+              <el-form-item label="头像">
+                <el-upload
+                  class="avatar-uploader"
+                  action="#"
+                  :show-file-list="false"
+                  :before-upload="beforeAvatarUpload"
+                  :http-request="uploadAvatar"
+                  accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                >
+                  <div class="avatar-wrapper">
+                    <img v-if="userForm.avatar" :src="userForm.avatar" class="avatar-image" />
+                    <div v-else class="avatar-placeholder">{{ userInitials }}</div>
+                    <div class="avatar-uploader-text">点击上传</div>
+                  </div>
+                </el-upload>
+              </el-form-item>
+            </div>
+          </div>
+          
           <el-form-item label="角色" prop="role">
             <el-radio-group v-model="userForm.role" :disabled="!canChangeRole">
               <el-radio label="user">普通用户</el-radio>
@@ -136,7 +157,7 @@
       
       <!-- 操作按钮 -->
       <div class="form-actions">
-        <el-button type="primary" @click="submitForm" :loading="submitLoading" class="btn-primary">保存更改</el-button>
+        <el-button type="primary" @click="submitBasicForm" :loading="submitLoading" class="btn-primary">保存更改</el-button>
         <el-button @click="resetForm" class="btn-reset">重置</el-button>
       </div>
     </div>
@@ -180,6 +201,40 @@
         </span>
       </template>
     </el-dialog>
+    
+    <!-- 图片裁剪对话框 -->
+    <el-dialog
+      v-model="cropperVisible"
+      title="裁剪头像"
+      width="600px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+    >
+      <div class="cropper-container">
+        <VueCropper
+          ref="cropperRef"
+          :img="imageUrl"
+          :output-size="1"
+          :output-type="'jpeg'"
+          :info="true"
+          :full="false"
+          :auto-crop="true"
+          :auto-crop-width="200"
+          :auto-crop-height="200"
+          :fixed-box="true"
+          :center-box="true"
+          :fixed="true"
+          :fixed-number="[1, 1]"
+        />
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleCropCancel">取消</el-button>
+          <el-button type="primary" @click="handleCropConfirm">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -189,15 +244,18 @@ import { useRouter, useRoute } from 'vue-router'
 import { userApi, tenantApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Back } from '@element-plus/icons-vue'
+import 'vue-cropper/dist/index.css'
+import { VueCropper } from 'vue-cropper'
 
 // 路由
 const router = useRouter()
 const route = useRoute()
-const userId = route.params.id
+const userId = ref(route.params.id)
 
 // 表单引用
 const userFormRef = ref(null)
 const passwordFormRef = ref(null)
+const cropperRef = ref(null)
 
 // 加载状态
 const loading = ref(false)
@@ -238,6 +296,8 @@ const tenantsLoading = ref(false)
 const searchTenants = async (query) => {
   try {
     tenantsLoading.value = true
+    
+    // 调用API获取用户信息
     const response = await tenantApi.getTenants({
       search: query,
       page_size: 20,
@@ -263,8 +323,8 @@ const userForm = reactive({
   role: 'user',
   is_active: true,
   tenant_id: '',
-  is_admin: false,
-  is_super_admin: false
+  avatar: '',
+  avatar_file: null
 })
 
 // 密码表单
@@ -328,12 +388,12 @@ const passwordRules = {
 }
 
 // 获取用户信息
-const getUserInfo = async () => {
+const getUserDetail = async () => {
   try {
     loading.value = true
     
     // 调用API获取用户信息
-    const response = await userApi.getUserById(userId)
+    const response = await userApi.getUserById(userId.value)
     const userInfo = response
     
     // 设置表单数据
@@ -376,44 +436,44 @@ const getUserInfo = async () => {
   }
 }
 
-// 提交表单
-const submitForm = async () => {
+// 提交基本信息表单
+const submitBasicForm = async () => {
   try {
     await userFormRef.value.validate()
     
     submitLoading.value = true
     
-    // 准备提交数据
-    const formData = {
+    // 准备基本用户数据（不含头像）
+    const userData = {
+      username: userForm.username,
       email: userForm.email,
-      phone: userForm.phone,
-      nick_name: userForm.nick_name,
-      first_name: userForm.first_name,
-      last_name: userForm.last_name,
+      phone: userForm.phone || '',
+      nick_name: userForm.nick_name || '',
+      first_name: userForm.first_name || '',
+      last_name: userForm.last_name || '',
       is_active: userForm.is_active
     }
     
-    // 如果可以更改角色
-    if (canChangeRole.value) {
-      if (userForm.role === 'super_admin') {
-        formData.is_admin = true
-        formData.is_super_admin = true
-      } else if (userForm.role === 'admin') {
-        formData.is_admin = true
-        formData.is_super_admin = false
-      } else {
-        formData.is_admin = false
-        formData.is_super_admin = false
-      }
+    // 根据角色设置is_admin和is_super_admin
+    if (userForm.role === 'super_admin') {
+      userData.is_admin = true
+      userData.is_super_admin = true
+    } else if (userForm.role === 'admin') {
+      userData.is_admin = true
+      userData.is_super_admin = false
+    } else {
+      userData.is_admin = false
+      userData.is_super_admin = false
+      userData.is_member = true
     }
     
-    // 如果是超级管理员且更改了租户
-    if (isSuperAdmin.value) {
-      formData.tenant_id = userForm.tenant_id
+    // 如果是超级管理员且选择了租户
+    if (isSuperAdmin.value && userForm.tenant_id) {
+      userData.tenant_id = userForm.tenant_id
     }
     
-    // 调用API更新用户信息
-    await userApi.updateUser(userForm.id, formData)
+    // 调用API更新用户基本信息
+    await userApi.updateUser(userId.value, userData)
     
     submitLoading.value = false
     
@@ -421,17 +481,24 @@ const submitForm = async () => {
       type: 'success',
       message: '用户信息更新成功'
     })
+    
+    // 刷新数据
+    getUserDetail()
   } catch (error) {
     console.error('更新用户信息失败:', error)
+    // 打印完整的错误响应以便调试
+    if (error.response) {
+      console.error('错误响应数据:', error.response.data)
+    }
     submitLoading.value = false
-    ElMessage.error(error.response?.message || '更新用户信息失败')
+    ElMessage.error('更新用户信息失败：' + (error.response?.data?.message || error.response?.data || '未知错误'))
   }
 }
 
 // 重置表单
 const resetForm = () => {
   userFormRef.value.resetFields()
-  getUserInfo()
+  getUserDetail()
 }
 
 // 提交修改密码
@@ -442,7 +509,7 @@ const submitPasswordForm = async () => {
     passwordLoading.value = true
     
     // 调用API更新用户密码
-    await userApi.changePassword(userId, {
+    await userApi.changePassword(userId.value, {
       password: passwordForm.password,
       password_confirm: passwordForm.password_confirm
     })
@@ -461,7 +528,7 @@ const submitPasswordForm = async () => {
   } catch (error) {
     console.error('密码修改失败:', error)
     passwordLoading.value = false
-    ElMessage.error(error.response?.message || '密码修改失败')
+    ElMessage.error('密码修改失败：' + (error.response?.data?.message || error.response?.data || '未知错误'))
   }
 }
 
@@ -472,8 +539,203 @@ const goBack = () => {
 
 // 生命周期钩子
 onMounted(() => {
-  getUserInfo()
+  getUserDetail()
 })
+
+// 用户初始字母
+const userInitials = computed(() => {
+  const name = userForm.nick_name || userForm.username
+  return name ? name.charAt(0).toUpperCase() : '?'
+})
+
+// 头像相关状态
+const cropperVisible = ref(false)
+const imageUrl = ref('')
+
+// 上传头像前的校验 - 打开裁剪对话框
+const beforeAvatarUpload = (file) => {
+  // 定义支持的图片类型
+  const acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+  const isAcceptedType = acceptedTypes.includes(file.type);
+  const isLt2M = file.size / 1024 / 1024 < 2;
+
+  if (!isAcceptedType) {
+    ElMessage.error('上传头像只能是 JPG/PNG/GIF/WEBP/BMP 格式!');
+    return false;
+  }
+  
+  if (!isLt2M) {
+    ElMessage.error('上传头像图片大小不能超过 2MB!');
+    return false;
+  }
+  
+  try {
+    // 创建文件URL用于裁剪
+    imageUrl.value = URL.createObjectURL(file);
+    
+    // 打开裁剪对话框
+    cropperVisible.value = true;
+  } catch (error) {
+    console.error('准备图片裁剪时出错:', error);
+    ElMessage.error('准备图片裁剪失败，请重试');
+  }
+  
+  // 阻止默认上传
+  return false;
+}
+
+// Element Plus Upload 组件的自定义上传方法
+const uploadAvatar = (options) => {
+  console.log('Element Upload组件触发上传，文件信息:', options.file.name);
+  uploadAvatarFile(options.file);
+}
+
+// 上传头像文件
+const uploadAvatarFile = async (file) => {
+  try {
+    console.log('正在上传头像:', file.name, '大小:', (file.size / 1024).toFixed(2) + 'KB', '类型:', file.type);
+    
+    // 再次检查文件是否有效
+    if (file.size === 0) {
+      console.error('上传的文件大小为0，可能是空文件');
+      ElMessage.error('文件大小为0，请重新裁剪');
+      return;
+    }
+    
+    // 尝试读取文件内容确认是否有效
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      console.log('文件预览读取成功, 数据长度:', e.target.result.length);
+      
+      if (e.target.result.length > 100) {
+        // 文件内容看起来有效，继续上传
+        try {
+          console.log('开始调用API上传头像...');
+          // 调用API上传头像
+          const result = await userApi.uploadUserAvatar(userId.value, file);
+          console.log('头像上传API返回结果:', result);
+          
+          // 如果后端返回了头像URL，直接使用
+          if (result && result.avatar) {
+            console.log('使用API返回的头像URL:', result.avatar);
+            userForm.avatar = result.avatar;
+            console.log('设置的头像路径:', userForm.avatar);
+          } else {
+            console.log('API未返回头像URL，重新获取用户信息');
+            // 否则重新获取用户信息
+            await getUserDetail();
+          }
+          
+          ElMessage({
+            type: 'success',
+            message: '头像上传成功'
+          });
+        } catch (error) {
+          console.error('调用上传头像API失败:', error);
+          console.error('错误详情:', {
+            响应状态: error.response?.status,
+            响应数据: error.response?.data,
+            错误信息: error.message
+          });
+          ElMessage.error('上传头像失败: ' + (error.message || '未知错误'));
+        }
+      } else {
+        console.error('读取的文件内容异常，数据太短:', e.target.result.length);
+        ElMessage.error('裁剪后的图片内容异常，请重试');
+      }
+    };
+    
+    reader.onerror = (error) => {
+      console.error('读取文件内容失败:', error);
+      ElMessage.error('读取文件内容失败，请重试');
+    };
+    
+    // 开始读取文件内容
+    reader.readAsDataURL(file);
+  } catch (error) {
+    console.error('上传头像失败:', error);
+    console.error('错误详情:', {
+      错误名称: error.name,
+      错误信息: error.message,
+      错误堆栈: error.stack
+    });
+    ElMessage.error('上传头像失败: ' + (error.message || '未知错误'));
+  }
+}
+
+// 确认裁剪
+const handleCropConfirm = () => {
+  if (!cropperRef.value) {
+    ElMessage.error('裁剪组件未加载完成，请重试');
+    return;
+  }
+  
+  try {
+    // 获取裁剪后的图片数据
+    cropperRef.value.getCropData((data) => {
+      try {
+        // 将base64转换为Blob
+        const base64 = data;
+        
+        // 检查base64数据格式是否正确
+        if (!base64.startsWith('data:image')) {
+          ElMessage.error('裁剪图片数据格式异常，请重试');
+          return;
+        }
+        
+        const byteString = atob(base64.split(',')[1]);
+        const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
+        
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([ab], {type: mimeString});
+        console.log('创建的Blob信息:', {
+          大小: (blob.size / 1024).toFixed(2) + 'KB',
+          类型: blob.type
+        });
+        
+        const file = new File([blob], "cropped-avatar.jpg", {type: "image/jpeg"});
+        console.log('创建的File信息:', {
+          名称: file.name,
+          大小: (file.size / 1024).toFixed(2) + 'KB',
+          类型: file.type
+        });
+        
+        // 上传裁剪后的文件
+        console.log('开始上传裁剪后的文件...');
+        uploadAvatarFile(file);
+        cropperVisible.value = false;
+      } catch (error) {
+        console.error('处理裁剪图片数据时出错:', error);
+        console.error('错误详情:', {
+          错误名称: error.name,
+          错误信息: error.message,
+          错误堆栈: error.stack
+        });
+        ElMessage.error('处理裁剪图片数据失败，请重试');
+      }
+    });
+  } catch (error) {
+    console.error('裁剪图片时出错:', error);
+    console.error('错误详情:', {
+      错误名称: error.name,
+      错误信息: error.message,
+      错误堆栈: error.stack
+    });
+    ElMessage.error('裁剪图片失败，请重试');
+  }
+}
+
+// 取消裁剪
+const handleCropCancel = () => {
+  cropperVisible.value = false;
+  imageUrl.value = '';
+}
 </script>
 
 <style scoped>
@@ -600,5 +862,72 @@ onMounted(() => {
   justify-content: flex-start;
   gap: 10px;
   margin-top: 10px;
+}
+
+/* 头像上传样式 */
+.avatar-uploader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.avatar-wrapper:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-wrapper:hover .avatar-uploader-text {
+  opacity: 1;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 500;
+  color: #95a5a6;
+  background-color: #ecf0f1;
+}
+
+.avatar-uploader-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  line-height: 36px;
+  font-size: 12px;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* 裁剪组件容器 */
+.cropper-container {
+  height: 400px;
 }
 </style>
