@@ -209,6 +209,8 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
     },
     'SWAGGER_UI_DIST': 'SIDECAR',  # 使用内置的Swagger UI发行版
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
@@ -229,6 +231,9 @@ SPECTACULAR_SETTINGS = {
     # 添加JWT认证映射
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_NO_READ_ONLY_REQUIRED': False,
+    
+    # 设置API路径预处理器，对所有路径应用安全要求
+    'PREPROCESSING_HOOKS': ['common.schema.spectacular_hooks.add_security_requirement'],
     
     # 扩展类
     'EXTENSIONS': ['common.schema.spectacular_extensions.JWTAuthenticationScheme'],

@@ -186,6 +186,11 @@ const tenantsLoading = ref(false)
 
 // 搜索租户
 const searchTenants = async (query) => {
+  // 如果不是超级管理员，不调用租户API
+  if (!isSuperAdmin.value) {
+    return;
+  }
+  
   try {
     tenantsLoading.value = true
     const response = await tenantApi.getTenants({
@@ -210,7 +215,7 @@ const canManageUser = (user) => {
   if (user.is_super_admin) return false
   
   // 租户管理员只能管理自己租户的用户
-  return user.tenant_id === userInfo.value.tenant_id
+  return user.tenant === userInfo.value.tenant
 }
 
 // 获取用户列表
@@ -219,20 +224,38 @@ const getUserList = async () => {
     loading.value = true
     
     // 如果是租户管理员，强制只查询本租户的用户
-    if (!isSuperAdmin.value) {
-      queryParams.tenant_id = userInfo.value.tenant_id
+    if (!isSuperAdmin.value && userInfo.value.tenant) {
+      queryParams.tenant_id = userInfo.value.tenant
     }
+    
+    console.log('获取用户列表，查询参数:', queryParams);
     
     // 调用API获取用户列表
     const response = await userApi.getUsers(queryParams)
     userList.value = response.results || []
     total.value = response.count || 0
     
+    console.log('获取用户列表成功:', response);
     loading.value = false
   } catch (error) {
     console.error('获取用户列表失败:', error)
     loading.value = false
-    ElMessage.error('获取用户列表失败')
+    
+    // 错误处理增强，显示更详细的错误信息
+    let errorMessage = '获取用户列表失败';
+    
+    if (error.response) {
+      console.error('错误响应状态:', error.response.status);
+      console.error('错误响应数据:', error.response.data);
+      
+      if (error.response.data && error.response.data.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+    }
+    
+    ElMessage.error(errorMessage)
   }
 }
 
@@ -246,8 +269,8 @@ const handleQuery = () => {
 const resetQuery = () => {
   queryForm.value.resetFields()
   // 如果是租户管理员，重置后仍然只显示自己租户的用户
-  if (!isSuperAdmin.value) {
-    queryParams.tenant_id = userInfo.value.tenant_id
+  if (!isSuperAdmin.value && userInfo.value.tenant) {
+    queryParams.tenant_id = userInfo.value.tenant
   }
   handleQuery()
 }

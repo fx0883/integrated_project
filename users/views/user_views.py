@@ -35,12 +35,40 @@ class CurrentUserView(APIView):
     """
     获取和更新当前登录用户信息
     """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @extend_schema(
+        summary="获取当前用户信息",
+        description="获取当前登录用户的详细信息。需要用户认证。",
+        responses={
+            200: OpenApiResponse(
+                description="成功获取用户信息",
+                response=UserSerializer
+            ),
+            401: OpenApiResponse(description="未认证")
+        },
+        tags=["用户管理"]
+    )
     def get(self, request, *args, **kwargs):
         # 使用自定义序列化器返回详细用户信息
         serializer = UserSerializer(request.user, context={'request': request})
         logger.info(f"用户 {request.user.username} 获取了自己的信息")
         return Response(serializer.data)
     
+    @extend_schema(
+        summary="更新当前用户信息",
+        description="更新当前登录用户的基本信息。需要用户认证。",
+        request=UserSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="成功更新用户信息",
+                response=UserSerializer
+            ),
+            400: OpenApiResponse(description="请求参数错误"),
+            401: OpenApiResponse(description="未认证")
+        },
+        tags=["用户管理"]
+    )
     def put(self, request, *args, **kwargs):
         """
         更新当前用户的基本信息
@@ -151,12 +179,26 @@ class UserListCreateView(generics.ListCreateAPIView):
                 required=False,
                 type=int,
                 location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='tenant_id',
+                description='租户ID，用于筛选特定租户下的用户',
+                required=False,
+                type=int,
+                location=OpenApiParameter.QUERY
             )
         ] + common_pagination_parameters,
         tags=["用户管理"]
     )
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        try:
+            return self.list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"获取用户列表失败: {str(e)}")
+            return Response(
+                {"detail": f"获取用户列表失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @extend_schema(
         summary="创建新用户",
@@ -268,6 +310,15 @@ class UserListCreateView(generics.ListCreateAPIView):
                         queryset = queryset.filter(parent_id=parent_id)
             except ValueError:
                 queryset = User.objects.none()
+        
+        # 租户ID过滤 (仅超级管理员可使用此过滤)
+        tenant_id = self.request.query_params.get('tenant_id', None)
+        if tenant_id and user.is_super_admin:
+            try:
+                tenant_id = int(tenant_id)
+                queryset = queryset.filter(tenant_id=tenant_id)
+            except ValueError:
+                pass
         
         return queryset
     

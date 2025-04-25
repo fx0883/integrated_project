@@ -1493,7 +1493,7 @@ paths:
         name: is_admin
         schema:
           type: boolean
-        description: 是否为管理员用户
+        description: 是否为管理员 (true/false)
       - in: query
         name: is_sub_account
         schema:
@@ -1520,16 +1520,17 @@ paths:
         name: search
         schema:
           type: string
-        description: 通用搜索参数，可用于搜索多个字段
+        description: 搜索关键词，支持用户名、邮箱、昵称和手机号码搜索
       - in: query
         name: status
         schema:
           type: string
-          enum:
-          - active
-          - inactive
-          - suspended
-        description: 用户状态过滤参数
+        description: 用户状态筛选
+      - in: query
+        name: tenant_id
+        schema:
+          type: integer
+        description: 租户ID，用于筛选特定租户下的用户
       tags:
       - 用户管理
       security:
@@ -1740,6 +1741,66 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/users/{id}/upload-avatar/:
+    post:
+      operationId: api_v1_users_upload_avatar_create
+      description: 允许租户管理员和超级管理员为特定用户上传头像。租户管理员只能为其所属租户的用户上传头像，超级管理员可以为任何用户上传头像。
+      summary: 为特定用户上传头像
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - 用户管理
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: 要上传的头像文件，支持JPG、PNG、GIF、WEBP或BMP格式
+              required:
+              - avatar
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 头像上传成功
+                  avatar:
+                    type: string
+                    example: https://example.com/media/avatars/user-avatar.jpg
+          description: 头像上传成功
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 未提供头像文件/不支持的文件类型/文件太大
+          description: 请求错误
+        '401':
+          description: 未认证
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
+        '500':
+          description: 服务器内部错误
   /api/v1/users/change-password/:
     put:
       operationId: api_v1_users_change_password_update
@@ -1789,26 +1850,54 @@ paths:
   /api/v1/users/me/:
     get:
       operationId: api_v1_users_me_retrieve
-      description: 获取和更新当前登录用户信息
+      description: 获取当前登录用户的详细信息。需要用户认证。
+      summary: 获取当前用户信息
       tags:
-      - api
+      - 用户管理
       security:
       - Bearer: []
       - Bearer: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: 成功获取用户信息
+        '401':
+          description: 未认证
     put:
       operationId: api_v1_users_me_update
-      description: 更新当前用户的基本信息
+      description: 更新当前登录用户的基本信息。需要用户认证。
+      summary: 更新当前用户信息
       tags:
-      - api
+      - 用户管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
       security:
       - Bearer: []
       - Bearer: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: 成功更新用户信息
+        '400':
+          description: 请求参数错误
+        '401':
+          description: 未认证
   /api/v1/users/me/upload-avatar/:
     post:
       operationId: api_v1_users_me_upload_avatar_create
@@ -1833,26 +1922,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SubAccountCreateRequest'
-            examples:
-              创建子账号（指定密码）:
-                value:
-                  username: subaccount
-                  email: subaccount@example.com
-                  password: Secure@Password123
-                  nick_name: 子账号
-                  phone: '13800138001'
-                  first_name: ''
-                  last_name: ''
-                  avatar: ''
-              创建子账号（使用默认密码）:
-                value:
-                  username: subaccount2
-                  email: subaccount2@example.com
-                  nick_name: 子账号2
-                  phone: '13800138002'
-                  first_name: ''
-                  last_name: ''
-                  avatar: ''
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/SubAccountCreateRequest'
@@ -1867,9 +1936,15 @@ paths:
         '201':
           description: 子账号创建成功
         '400':
-          description: 创建失败，输入数据无效
+          description: 输入数据验证错误
         '401':
           description: 未认证或认证失败
+        '403':
+          description: 没有权限执行该操作
+        '404':
+          description: 请求的资源不存在
+        '500':
+          description: 服务器内部错误
   /api/v1/users/super-admin/create/:
     post:
       operationId: api_v1_users_super_admin_create_create
