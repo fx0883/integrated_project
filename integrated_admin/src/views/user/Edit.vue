@@ -243,7 +243,7 @@ const searchTenants = async (query) => {
       page_size: 20,
       page: 1
     })
-    tenantOptions.value = response.data.results || []
+    tenantOptions.value = response.results || []
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
@@ -334,7 +334,7 @@ const getUserInfo = async () => {
     
     // 调用API获取用户信息
     const response = await userApi.getUserById(userId)
-    const userInfo = response.data
+    const userInfo = response
     
     // 设置表单数据
     userForm.id = userInfo.id
@@ -362,7 +362,7 @@ const getUserInfo = async () => {
     if (userInfo.tenant && isSuperAdmin.value) {
       try {
         const tenantResponse = await tenantApi.getTenantById(userInfo.tenant)
-        tenantOptions.value = [{ id: tenantResponse.data.id, name: tenantResponse.data.name }]
+        tenantOptions.value = [{ id: tenantResponse.id, name: tenantResponse.name }]
       } catch (error) {
         console.error('获取租户信息失败:', error)
       }
@@ -372,7 +372,7 @@ const getUserInfo = async () => {
   } catch (error) {
     console.error('获取用户信息失败:', error)
     loading.value = false
-    ElMessage.error(error.response?.data?.message || '获取用户信息失败')
+    ElMessage.error(error.response?.message || '获取用户信息失败')
   }
 }
 
@@ -424,7 +424,7 @@ const submitForm = async () => {
   } catch (error) {
     console.error('更新用户信息失败:', error)
     submitLoading.value = false
-    ElMessage.error(error.response?.data?.message || '更新用户信息失败')
+    ElMessage.error(error.response?.message || '更新用户信息失败')
   }
 }
 
@@ -461,7 +461,7 @@ const submitPasswordForm = async () => {
   } catch (error) {
     console.error('密码修改失败:', error)
     passwordLoading.value = false
-    ElMessage.error(error.response?.data?.message || '密码修改失败')
+    ElMessage.error(error.response?.message || '密码修改失败')
   }
 }
 

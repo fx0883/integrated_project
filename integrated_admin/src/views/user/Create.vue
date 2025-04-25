@@ -205,7 +205,7 @@ const searchTenants = async (query) => {
       page_size: 20,
       page: 1
     })
-    tenantOptions.value = response.data.results || []
+    tenantOptions.value = response.results || []
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
@@ -348,7 +348,7 @@ const submitForm = async () => {
   } catch (error) {
     console.error('创建用户失败:', error)
     submitLoading.value = false
-    ElMessage.error(error.response?.data?.message || '创建用户失败')
+    ElMessage.error(error.response?.message || '创建用户失败')
   }
 }
 
