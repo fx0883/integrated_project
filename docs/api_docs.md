@@ -83,7 +83,7 @@ Authorization: Bearer {token}
 
 获取当前登录用户的详细信息。
 
-- **URL**: `/api/users/current/`
+- **URL**: `/api/v1/users/me/`
 - **方法**: `GET`
 - **权限要求**: 已登录用户
 
@@ -140,7 +140,7 @@ Authorization: Bearer {token}
 
 更新当前登录用户的基本信息。
 
-- **URL**: `/api/users/current/`
+- **URL**: `/api/v1/users/me/`
 - **方法**: `PUT`
 - **权限要求**: 已登录用户
 
@@ -195,14 +195,11 @@ Authorization: Bearer {token}
 
 ### 获取用户列表
 
-获取系统中的用户列表，支持搜索和分页。
+获取系统中的用户列表，支持分页和过滤。
 
-- **URL**: `/api/users/`
+- **URL**: `/api/v1/users/`
 - **方法**: `GET`
 - **权限要求**: 管理员用户
-  - 超级管理员：可查看所有用户
-  - 租户管理员：只能查看自己租户的用户
-  - 普通用户：只能查看自己
 
 #### 请求参数
 
@@ -211,19 +208,9 @@ Authorization: Bearer {token}
 | search | String | 否 | 搜索关键词，支持用户名、邮箱、昵称和手机号搜索 |
 | status | String | 否 | 用户状态过滤 |
 | is_admin | Boolean | 否 | 是否为管理员 |
-| is_sub_account | Boolean | 否 | 是否为子账号 |
-| parent | Integer | 否 | 父账号ID |
+| is_member | Boolean | 否 | 是否为成员 |
 | page | Integer | 否 | 页码，默认为1 |
 | page_size | Integer | 否 | 每页数量，默认为10 |
-
-#### 返回参数
-
-| 参数名 | 类型 | 说明 |
-|-------|------|-----|
-| count | Integer | 总记录数 |
-| next | String | 下一页URL |
-| previous | String | 上一页URL |
-| results | Array | 用户列表 |
 
 #### 响应示例
 
@@ -234,7 +221,7 @@ Authorization: Bearer {token}
   "message": "获取成功",
   "data": {
     "count": 10,
-    "next": "http://example.com/api/users/?page=2",
+    "next": "http://example.com/api/v1/users/?page=2",
     "previous": null,
     "results": [
       {
@@ -265,29 +252,14 @@ Authorization: Bearer {token}
 
 通过关键字搜索用户，可在用户名、邮箱、昵称和手机号中匹配。
 
-- **URL**: `/api/users/?search={关键词}`
+- **URL**: `/api/v1/users/?search={关键词}`
 - **方法**: `GET`
 - **权限要求**: 管理员用户
-  - 超级管理员：可搜索所有用户
-  - 租户管理员：只能搜索自己租户的用户
-  - 普通用户：只能查看自己
-
-#### 请求参数
-
-| 参数名 | 类型 | 必填 | 说明 |
-|-------|------|-----|-----|
-| search | String | 是 | 搜索关键词，支持用户名、邮箱、昵称和手机号搜索 |
-| page | Integer | 否 | 页码，默认为1 |
-| page_size | Integer | 否 | 每页数量，默认为10 |
-| status | String | 否 | 用户状态过滤 |
-| is_admin | Boolean | 否 | 是否为管理员 |
-| is_sub_account | Boolean | 否 | 是否为子账号 |
-| parent | Integer | 否 | 父账号ID |
 
 #### 请求示例
 
 ```
-GET /api/users/?search=test&page=1&page_size=10
+GET /api/v1/users/?search=test&page=1&page_size=10
 ```
 
 #### 响应示例
@@ -345,13 +317,11 @@ GET /api/users/?search=test&page=1&page_size=10
 
 ### 创建用户
 
-创建新用户。
+创建新用户，可以指定租户和角色。
 
-- **URL**: `/api/users/`
+- **URL**: `/api/v1/users/`
 - **方法**: `POST`
 - **权限要求**: 管理员用户
-  - 超级管理员：可创建任意租户下的用户
-  - 租户管理员：只能创建自己租户的用户，且无法指定其他租户
 
 #### 请求参数
 
@@ -419,14 +389,14 @@ GET /api/users/?search=test&page=1&page_size=10
 ## 租户管理API
 
 > **权限说明**：
-> - 所有租户相关API只能由超级管理员调用
-> - 其他类型用户（包括租户管理员）无权访问租户管理API
+> - 租户管理API仅供超级管理员使用
+> - 普通租户管理员和成员无权访问租户管理API
 
 ### 获取租户列表
 
 获取系统中所有租户的列表。
 
-- **URL**: `/api/tenants/`
+- **URL**: `/api/v1/tenants/`
 - **方法**: `GET`
 - **权限要求**: 超级管理员
 
@@ -434,9 +404,19 @@ GET /api/users/?search=test&page=1&page_size=10
 
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|-----|-----|
-| status | String | 否 | 租户状态过滤 |
+| search | String | 否 | 搜索关键词，支持租户名称、联系人姓名和联系人邮箱搜索 |
+| status | String | 否 | 租户状态过滤，可选值：active（活跃）、suspended（已暂停）|
 | page | Integer | 否 | 页码，默认为1 |
 | page_size | Integer | 否 | 每页数量，默认为10 |
+
+#### 返回参数
+
+| 参数名 | 类型 | 说明 |
+|-------|------|-----|
+| count | Integer | 总记录数 |
+| next | String | 下一页URL |
+| previous | String | 上一页URL |
+| results | Array | 租户列表 |
 
 #### 响应示例
 
@@ -453,24 +433,24 @@ GET /api/users/?search=test&page=1&page_size=10
       {
         "id": 1,
         "name": "测试租户",
-        "code": "TEST001",
+        "description": "这是一个测试租户",
         "status": "active",
         "contact_name": "测试联系人",
         "contact_email": "test@example.com",
         "contact_phone": "13800138000",
-        "date_created": "2023-01-01T00:00:00Z",
-        "user_count": 5
+        "created_at": "2023-01-01T00:00:00Z",
+        "updated_at": "2023-01-10T00:00:00Z"
       },
       {
-        "id": 3,
-        "name": "测试租户2",
-        "code": "TEST003",
+        "id": 2,
+        "name": "示例企业",
+        "description": "示例企业租户",
         "status": "active",
-        "contact_name": "测试联系人2",
-        "contact_email": "test2@example.com",
-        "contact_phone": "13800138002",
-        "date_created": "2023-01-03T00:00:00Z",
-        "user_count": 2
+        "contact_name": "企业联系人",
+        "contact_email": "enterprise@example.com",
+        "contact_phone": "13900139000",
+        "created_at": "2023-01-02T00:00:00Z",
+        "updated_at": "2023-01-10T00:00:00Z"
       }
     ]
   }
@@ -481,7 +461,7 @@ GET /api/users/?search=test&page=1&page_size=10
 
 通过关键字搜索租户，可在租户名称、联系人姓名和联系人邮箱中匹配。
 
-- **URL**: `/api/tenants/?search={关键词}`
+- **URL**: `/api/v1/tenants/?search={关键词}`
 - **方法**: `GET`
 - **权限要求**: 超级管理员
 
@@ -489,15 +469,14 @@ GET /api/users/?search=test&page=1&page_size=10
 
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|-----|-----|
-| search | String | 是 | 搜索关键词，支持租户名称、联系人姓名和联系人邮箱搜索 |
-| status | String | 否 | 租户状态过滤 |
+| search | String | 是 | 搜索关键词 |
 | page | Integer | 否 | 页码，默认为1 |
 | page_size | Integer | 否 | 每页数量，默认为10 |
 
 #### 请求示例
 
 ```
-GET /api/tenants/?search=测试&page=1&page_size=10
+GET /api/v1/tenants/?search=测试&page=1&page_size=10
 ```
 
 #### 响应示例
@@ -508,51 +487,85 @@ GET /api/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "获取成功",
   "data": {
-    "count": 2,
+    "count": 1,
     "next": null,
     "previous": null,
     "results": [
       {
         "id": 1,
         "name": "测试租户",
-        "code": "TEST001",
+        "description": "这是一个测试租户",
         "status": "active",
         "contact_name": "测试联系人",
         "contact_email": "test@example.com",
         "contact_phone": "13800138000",
-        "date_created": "2023-01-01T00:00:00Z",
-        "user_count": 5
-      },
-      {
-        "id": 3,
-        "name": "测试租户2",
-        "code": "TEST003",
-        "status": "active",
-        "contact_name": "测试联系人2",
-        "contact_email": "test2@example.com",
-        "contact_phone": "13800138002",
-        "date_created": "2023-01-03T00:00:00Z",
-        "user_count": 2
+        "created_at": "2023-01-01T00:00:00Z",
+        "updated_at": "2023-01-10T00:00:00Z"
       }
     ]
   }
 }
 ```
 
-### 获取用户详情
+### 创建租户
 
-获取指定用户的详细信息。
+创建新的租户。
 
-- **URL**: `/api/users/{id}/`
+- **URL**: `/api/v1/tenants/`
+- **方法**: `POST`
+- **权限要求**: 超级管理员
+
+#### 请求参数
+
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|-----|-----|
+| name | String | 是 | 租户名称，唯一 |
+| description | String | 否 | 租户描述 |
+| status | String | 否 | 租户状态，可选值：active（活跃）、suspended（已暂停），默认为active |
+| contact_name | String | 是 | 联系人姓名 |
+| contact_email | String | 是 | 联系人邮箱 |
+| contact_phone | String | 否 | 联系人电话 |
+
+#### 请求示例
+
+```json
+{
+  "name": "新租户",
+  "description": "这是一个新创建的租户",
+  "contact_name": "新联系人",
+  "contact_email": "new@example.com",
+  "contact_phone": "13900139001"
+}
+```
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2001,
+  "message": "创建成功",
+  "data": {
+    "id": 3,
+    "name": "新租户",
+    "description": "这是一个新创建的租户",
+    "status": "active",
+    "contact_name": "新联系人",
+    "contact_email": "new@example.com",
+    "contact_phone": "13900139001",
+    "created_at": "2023-01-11T00:00:00Z",
+    "updated_at": "2023-01-11T00:00:00Z"
+  }
+}
+```
+
+### 获取租户详情
+
+获取指定租户的详细信息。
+
+- **URL**: `/api/v1/tenants/{id}/`
 - **方法**: `GET`
-- **权限要求**:
-  - 超级管理员：可查看任何用户
-  - 租户管理员：只能查看自己租户的用户
-  - 普通用户：只能查看自己
-
-#### 返回参数
-
-同[获取当前用户信息](#获取当前用户信息)的返回参数。
+- **权限要求**: 超级管理员
 
 #### 响应示例
 
@@ -562,56 +575,49 @@ GET /api/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "获取成功",
   "data": {
-    "id": 2,
-    "username": "newuser",
-    "email": "newuser@example.com",
-    "phone": "13800138001",
-    "nick_name": "新用户",
-    "first_name": "New",
-    "last_name": "User",
-    "is_active": true,
-    "avatar": "",
-    "tenant": 1,
-    "tenant_name": "测试租户",
-    "is_admin": false,
-    "is_member": true,
-    "is_super_admin": false,
-    "role": "普通用户",
-    "date_joined": "2023-01-02T00:00:00Z"
+    "id": 1,
+    "name": "测试租户",
+    "description": "这是一个测试租户",
+    "status": "active",
+    "contact_name": "测试联系人",
+    "contact_email": "test@example.com",
+    "contact_phone": "13800138000",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-10T00:00:00Z",
+    "quota": {
+      "max_users": 100,
+      "max_storage": 10240,
+      "current_users": 5,
+      "current_storage": 1024
+    }
   }
 }
 ```
 
-### 更新用户信息
+### 更新租户信息
 
-更新指定用户的信息。
+更新指定租户的信息。
 
-- **URL**: `/api/users/{id}/`
+- **URL**: `/api/v1/tenants/{id}/`
 - **方法**: `PUT`
-- **权限要求**:
-  - 超级管理员：可更新任何用户
-  - 租户管理员：只能更新自己租户内用户的信息
-  - 普通用户：只能更新自己
+- **权限要求**: 超级管理员
 
 #### 请求参数
 
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|-----|-----|
-| phone | String | 否 | 手机号码 |
-| nick_name | String | 否 | 昵称 |
-| first_name | String | 否 | 名 |
-| last_name | String | 否 | 姓 |
-| avatar | String | 否 | 头像URL |
-| is_active | Boolean | 否 | 是否激活 |
-| status | String | 否 | 用户状态 |
+| name | String | 否 | 租户名称 |
+| description | String | 否 | 租户描述 |
+| contact_name | String | 否 | 联系人姓名 |
+| contact_email | String | 否 | 联系人邮箱 |
+| contact_phone | String | 否 | 联系人电话 |
 
 #### 请求示例
 
 ```json
 {
-  "nick_name": "更新后的昵称",
-  "is_active": true,
-  "phone": "13900139001"
+  "description": "更新后的租户描述",
+  "contact_name": "更新后的联系人"
 }
 ```
 
@@ -623,36 +629,26 @@ GET /api/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "更新成功",
   "data": {
-    "id": 2,
-    "username": "newuser",
-    "email": "newuser@example.com",
-    "phone": "13900139001",
-    "nick_name": "更新后的昵称",
-    "first_name": "New",
-    "last_name": "User",
-    "is_active": true,
-    "avatar": "",
-    "tenant": 1,
-    "tenant_name": "测试租户",
-    "is_admin": false,
-    "is_member": true,
-    "is_super_admin": false,
-    "role": "普通用户",
-    "date_joined": "2023-01-02T00:00:00Z"
+    "id": 1,
+    "name": "测试租户",
+    "description": "更新后的租户描述",
+    "status": "active",
+    "contact_name": "更新后的联系人",
+    "contact_email": "test@example.com",
+    "contact_phone": "13800138000",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-11T00:00:00Z"
   }
 }
 ```
 
-### 删除用户
+### 删除租户
 
-软删除指定用户（标记为已删除状态）。
+软删除指定租户（标记为已删除状态）。
 
-- **URL**: `/api/users/{id}/`
+- **URL**: `/api/v1/tenants/{id}/`
 - **方法**: `DELETE`
-- **权限要求**:
-  - 超级管理员：可删除任何用户
-  - 租户管理员：只能删除自己租户的用户
-  - 普通用户：不能删除用户
+- **权限要求**: 超级管理员
 
 #### 响应示例
 
@@ -665,165 +661,52 @@ GET /api/tenants/?search=测试&page=1&page_size=10
 }
 ```
 
-### 修改密码
+### 获取租户配额
 
-修改当前用户或指定用户的密码。
+获取指定租户的配额信息。
 
-- **URL**: `/api/users/{id}/change-password/`
-- **方法**: `POST`
-- **权限要求**: 已登录用户（只能修改自己的密码）
-
-#### 请求参数
-
-| 参数名 | 类型 | 必填 | 说明 |
-|-------|------|-----|-----|
-| old_password | String | 是 | 旧密码 |
-| new_password | String | 是 | 新密码 |
-| new_password_confirm | String | 是 | 确认新密码 |
-
-#### 请求示例
-
-```json
-{
-  "old_password": "OldPassword123",
-  "new_password": "NewSecureP@ssw0rd",
-  "new_password_confirm": "NewSecureP@ssw0rd"
-}
-```
-
-#### 响应示例
-
-```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "密码修改成功",
-  "data": null
-}
-```
-
-### 创建超级管理员
-
-创建具有超级管理员权限的用户。
-
-- **URL**: `/api/users/super-admin/create/`
-- **方法**: `POST`
+- **URL**: `/api/v1/tenants/{id}/quota/`
+- **方法**: `GET`
 - **权限要求**: 超级管理员
 
-#### 请求参数
-
-| 参数名 | 类型 | 必填 | 说明 |
-|-------|------|-----|-----|
-| username | String | 是 | 用户名，唯一 |
-| email | String | 是 | 电子邮箱 |
-| password | String | 是 | 密码 |
-| password_confirm | String | 是 | 确认密码 |
-| phone | String | 否 | 手机号码 |
-| nick_name | String | 否 | 昵称 |
-| first_name | String | 否 | 名 |
-| last_name | String | 否 | 姓 |
-| avatar | String | 否 | 头像URL |
-
-#### 请求示例
-
-```json
-{
-  "username": "superadmin2",
-  "email": "superadmin2@example.com",
-  "password": "SuperAdminP@ss123",
-  "password_confirm": "SuperAdminP@ss123",
-  "nick_name": "超级管理员2",
-  "phone": "13800138002"
-}
-```
-
 #### 响应示例
 
 ```json
 {
   "success": true,
   "code": 2000,
-  "message": "创建超级管理员成功",
+  "message": "获取成功",
   "data": {
-    "id": 3,
-    "username": "superadmin2",
-    "email": "superadmin2@example.com",
-    "phone": "13800138002",
-    "nick_name": "超级管理员2",
-    "first_name": "",
-    "last_name": "",
-    "is_active": true,
-    "avatar": "",
-    "tenant": null,
-    "tenant_name": null,
-    "is_admin": true,
-    "is_member": true,
-    "is_super_admin": true,
-    "role": "超级管理员",
-    "date_joined": "2023-01-03T00:00:00Z"
+    "tenant_id": 1,
+    "max_users": 100,
+    "max_storage": 10240,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-10T00:00:00Z"
   }
 }
 ```
 
-### 授予超级管理员权限
+### 更新租户配额
 
-授予指定用户超级管理员权限。
+更新指定租户的配额信息。
 
-- **URL**: `/api/users/{id}/grant-super-admin/`
-- **方法**: `POST`
+- **URL**: `/api/v1/tenants/{id}/quota/`
+- **方法**: `PUT`
 - **权限要求**: 超级管理员
-
-#### 响应示例
-
-```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "已授予用户超级管理员权限",
-  "data": null
-}
-```
-
-### 撤销超级管理员权限
-
-撤销指定用户的超级管理员权限。
-
-- **URL**: `/api/users/{id}/revoke-super-admin/`
-- **方法**: `POST`
-- **权限要求**: 超级管理员
-
-#### 响应示例
-
-```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "已撤销用户的超级管理员权限",
-  "data": null
-}
-```
-
-### 更新用户角色
-
-更新指定用户的角色（普通用户或管理员）。
-
-- **URL**: `/api/users/{id}/update-role/`
-- **方法**: `POST`
-- **权限要求**: 管理员用户
-  - 超级管理员：可更新任何用户的角色
-  - 租户管理员：只能更新自己租户内用户的角色
 
 #### 请求参数
 
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|-----|-----|
-| is_admin | Boolean | 是 | 是否设为管理员 |
+| max_users | Integer | 是 | 最大用户数量 |
+| max_storage | Integer | 是 | 最大存储空间（MB） |
 
 #### 请求示例
 
 ```json
 {
-  "is_admin": true
+  "max_users": 150,
+  "max_storage": 20480
 }
 ```
 
@@ -833,11 +716,88 @@ GET /api/tenants/?search=测试&page=1&page_size=10
 {
   "success": true,
   "code": 2000,
-  "message": "用户角色更新成功",
+  "message": "更新成功",
   "data": {
-    "id": 2,
-    "is_admin": true,
-    "is_member": true
+    "tenant_id": 1,
+    "max_users": 150,
+    "max_storage": 20480,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-11T00:00:00Z"
+  }
+}
+```
+
+### 获取租户配额使用情况
+
+获取指定租户的配额使用情况。
+
+- **URL**: `/api/v1/tenants/{id}/quota/usage/`
+- **方法**: `GET`
+- **权限要求**: 超级管理员
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取成功",
+  "data": {
+    "tenant_id": 1,
+    "max_users": 150,
+    "current_users": 5,
+    "users_usage_percent": 3.33,
+    "max_storage": 20480,
+    "current_storage": 1024,
+    "storage_usage_percent": 5.0
+  }
+}
+```
+
+### 暂停租户
+
+暂停指定租户，使其下的所有用户无法登录。
+
+- **URL**: `/api/v1/tenants/{id}/suspend/`
+- **方法**: `POST`
+- **权限要求**: 超级管理员
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "租户已暂停",
+  "data": {
+    "id": 1,
+    "name": "测试租户",
+    "status": "suspended",
+    "updated_at": "2023-01-11T00:00:00Z"
+  }
+}
+```
+
+### 激活租户
+
+激活已暂停的租户。
+
+- **URL**: `/api/v1/tenants/{id}/activate/`
+- **方法**: `POST`
+- **权限要求**: 超级管理员
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "租户已激活",
+  "data": {
+    "id": 1,
+    "name": "测试租户",
+    "status": "active",
+    "updated_at": "2023-01-11T00:00:00Z"
   }
 }
 ```
@@ -846,16 +806,15 @@ GET /api/tenants/?search=测试&page=1&page_size=10
 
 获取指定租户下的所有用户列表。
 
-- **URL**: `/api/tenants/{tenant_id}/users/`
+- **URL**: `/api/v1/tenants/{id}/users/`
 - **方法**: `GET`
-- **权限要求**: 管理员用户
-  - 超级管理员：可查看任何租户的用户
-  - 租户管理员：只能查看自己租户的用户
+- **权限要求**: 超级管理员
 
 #### 请求参数
 
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|-----|-----|
+| search | String | 否 | 搜索关键词 |
 | page | Integer | 否 | 页码，默认为1 |
 | page_size | Integer | 否 | 每页数量，默认为10 |
 
@@ -867,16 +826,16 @@ GET /api/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "获取成功",
   "data": {
-    "count": 3,
+    "count": 2,
     "next": null,
     "previous": null,
     "results": [
       {
-        "id": 2,
+        "id": 4,
         "username": "tenant_admin",
         "nick_name": "租户管理员",
         "email": "tenant_admin@example.com",
-        "phone": "13800138002",
+        "phone": "13800138004",
         "is_active": true,
         "avatar": "",
         "tenant": 1,
@@ -884,28 +843,13 @@ GET /api/tenants/?search=测试&page=1&page_size=10
         "is_admin": true,
         "is_member": false,
         "role": "租户管理员",
-        "date_joined": "2023-01-02T00:00:00Z"
-      },
-      {
-        "id": 4,
-        "username": "tenant_user1",
-        "nick_name": "租户用户1",
-        "email": "tenant_user1@example.com",
-        "phone": "13800138004",
-        "is_active": true,
-        "avatar": "",
-        "tenant": 1,
-        "tenant_name": "测试租户",
-        "is_admin": false,
-        "is_member": true,
-        "role": "普通用户",
         "date_joined": "2023-01-04T00:00:00Z"
       },
       {
         "id": 5,
-        "username": "tenant_user2",
-        "nick_name": "租户用户2",
-        "email": "tenant_user2@example.com",
+        "username": "tenant_user",
+        "nick_name": "租户用户",
+        "email": "tenant_user@example.com",
         "phone": "13800138005",
         "is_active": true,
         "avatar": "",
@@ -917,95 +861,6 @@ GET /api/tenants/?search=测试&page=1&page_size=10
         "date_joined": "2023-01-05T00:00:00Z"
       }
     ]
-  }
-}
-```
-
-### 创建子账号
-
-创建关联到当前用户的子账号。
-
-- **URL**: `/api/users/sub-account/create/`
-- **方法**: `POST`
-- **权限要求**: 已登录用户
-  - 创建的子账号将自动关联到创建者的租户
-
-#### 请求参数
-
-| 参数名 | 类型 | 必填 | 说明 |
-|-------|------|-----|-----|
-| username | String | 是 | 用户名，唯一 |
-| email | String | 是 | 电子邮箱 |
-| password | String | 否 | 密码，如不提供将自动生成 |
-| phone | String | 否 | 手机号码 |
-| nick_name | String | 否 | 昵称 |
-| first_name | String | 否 | 名 |
-| last_name | String | 否 | 姓 |
-| avatar | String | 否 | 头像URL |
-
-#### 请求示例
-
-```json
-{
-  "username": "sub_account1",
-  "email": "sub_account1@example.com",
-  "nick_name": "子账号1",
-  "phone": "13800138011"
-}
-```
-
-#### 响应示例
-
-```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "创建子账号成功",
-  "data": {
-    "id": 11,
-    "username": "sub_account1",
-    "email": "sub_account1@example.com",
-    "phone": "13800138011",
-    "nick_name": "子账号1",
-    "first_name": "",
-    "last_name": "",
-    "is_active": true,
-    "avatar": "",
-    "tenant": 1,
-    "tenant_name": "测试租户",
-    "is_admin": false,
-    "is_member": true,
-    "is_super_admin": false,
-    "role": "普通用户",
-    "date_joined": "2023-01-11T00:00:00Z"
-  }
-}
-```
-
-### 上传用户头像
-
-上传或更新用户头像。
-
-- **URL**: `/api/users/avatar/upload/`
-- **方法**: `POST`
-- **权限要求**: 已登录用户
-- **请求格式**: `multipart/form-data`
-
-#### 请求参数
-
-| 参数名 | 类型 | 必填 | 说明 |
-|-------|------|-----|-----|
-| avatar | File | 是 | 头像图片文件，支持jpg、jpeg、png格式 |
-
-#### 响应示例
-
-```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "头像上传成功",
-  "data": {
-    "avatar_url": "https://example.com/media/avatars/user_1_abc123.jpg"
   }
 }
 ```

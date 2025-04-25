@@ -237,7 +237,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # 是否启用debug日志文件记录
-DEBUG_LOG_ENABLED = True
+DEBUG_LOG_ENABLED = False
 
 # 确保日志目录存在
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')

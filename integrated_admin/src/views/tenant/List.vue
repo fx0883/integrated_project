@@ -11,13 +11,12 @@
       <!-- 搜索栏 -->
       <div class="search-bar">
         <el-form :inline="true" :model="queryParams" ref="queryForm">
-          <el-form-item label="租户名称">
-            <el-input v-model="queryParams.name" placeholder="请输入租户名称" clearable />
+          <el-form-item label="搜索关键词">
+            <el-input v-model="queryParams.search" placeholder="租户名称/联系人/邮箱" clearable />
           </el-form-item>
           <el-form-item label="状态">
             <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
               <el-option label="激活" value="active" />
-              <el-option label="禁用" value="disabled" />
               <el-option label="暂停" value="suspended" />
             </el-select>
           </el-form-item>
@@ -37,12 +36,10 @@
       >
         <el-table-column type="index" width="50" label="#" />
         <el-table-column prop="name" label="租户名称" min-width="120" />
-        <el-table-column prop="domain" label="域名" min-width="150" />
-        <el-table-column prop="industry" label="行业" min-width="100" />
+        <el-table-column prop="description" label="描述" min-width="150" show-overflow-tooltip />
         <el-table-column prop="contact_name" label="联系人" min-width="100" />
         <el-table-column prop="contact_phone" label="联系电话" min-width="120" />
-        <el-table-column prop="admin_email" label="管理员邮箱" min-width="150" />
-        <el-table-column prop="user_count" label="用户数" width="80" align="center" />
+        <el-table-column prop="contact_email" label="联系邮箱" min-width="150" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="scope">
             <el-tag v-if="scope.row.status === 'active'" type="success">激活</el-tag>
@@ -66,6 +63,7 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item @click="handleViewUsers(scope.row.id)">查看用户</el-dropdown-item>
+                  <el-dropdown-item @click="handleViewQuota(scope.row.id)">查看配额</el-dropdown-item>
                   <el-dropdown-item 
                     v-if="scope.row.status === 'active'" 
                     @click="handleSuspend(scope.row)"
@@ -88,12 +86,64 @@
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           v-model:current-page="queryParams.page"
-          v-model:page-size="queryParams.limit"
+          v-model:page-size="queryParams.page_size"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
+
+    <!-- 配额详情对话框 -->
+    <el-dialog
+      v-model="quotaDialogVisible"
+      title="租户配额信息"
+      width="600px"
+    >
+      <div v-loading="quotaLoading">
+        <el-descriptions :column="1" border v-if="quotaInfo">
+          <el-descriptions-item label="最大用户数">
+            <el-tag>{{ quotaInfo.max_users }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="当前用户数">
+            <el-tag type="info">{{ quotaInfo.current_users }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="用户使用率">
+            <el-progress :percentage="quotaInfo.users_usage_percent" :format="percentFormat" />
+          </el-descriptions-item>
+          <el-descriptions-item label="最大存储空间(MB)">
+            <el-tag>{{ quotaInfo.max_storage }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="当前使用空间(MB)">
+            <el-tag type="info">{{ quotaInfo.current_storage }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="存储使用率">
+            <el-progress :percentage="quotaInfo.storage_usage_percent" :format="percentFormat" />
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <div class="quota-actions" v-if="quotaInfo">
+          <el-button type="primary" @click="handleUpdateQuota">更新配额</el-button>
+        </div>
+
+        <el-form
+          v-if="editingQuota"
+          :model="quotaForm"
+          label-width="120px"
+          class="quota-form"
+        >
+          <el-form-item label="最大用户数">
+            <el-input-number v-model="quotaForm.max_users" :min="5" :max="1000" />
+          </el-form-item>
+          <el-form-item label="最大存储空间(MB)">
+            <el-input-number v-model="quotaForm.max_storage" :min="100" :max="102400" />
+          </el-form-item>
+          <div class="quota-form-actions">
+            <el-button type="primary" @click="submitQuotaForm" :loading="quotaSubmitting">保存</el-button>
+            <el-button @click="cancelQuotaEdit">取消</el-button>
+          </div>
+        </el-form>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -109,10 +159,10 @@ const router = useRouter()
 
 // 查询参数
 const queryParams = reactive({
-  name: '',
+  search: '',
   status: '',
   page: 1,
-  limit: 10
+  page_size: 10
 })
 
 // 租户列表数据
@@ -120,6 +170,23 @@ const tenantList = ref([])
 const total = ref(0)
 const loading = ref(false)
 const queryForm = ref(null)
+
+// 配额相关
+const quotaDialogVisible = ref(false)
+const quotaLoading = ref(false)
+const quotaInfo = ref(null)
+const currentTenantId = ref(null)
+const editingQuota = ref(false)
+const quotaSubmitting = ref(false)
+const quotaForm = reactive({
+  max_users: 100,
+  max_storage: 10240
+})
+
+// 百分比格式化
+const percentFormat = (percentage) => {
+  return percentage ? `${percentage}%` : '0%'
+}
 
 // 获取租户列表
 const getTenantList = async () => {
@@ -129,8 +196,15 @@ const getTenantList = async () => {
     
     // 调用API获取租户列表
     const response = await tenantApi.getTenants(queryParams)
-    tenantList.value = response.items || []
-    total.value = response.total || 0
+    
+    // 检查响应格式
+    if (response && response.results) {
+      tenantList.value = response.results
+      total.value = response.count || 0
+    } else {
+      tenantList.value = Array.isArray(response) ? response : []
+      total.value = tenantList.value.length
+    }
     
     loading.value = false
     console.log('租户列表加载完成')
@@ -155,7 +229,7 @@ const resetQuery = () => {
 
 // 分页大小变化
 const handleSizeChange = (size) => {
-  queryParams.limit = size
+  queryParams.page_size = size
   getTenantList()
 }
 
@@ -207,6 +281,61 @@ const handleViewUsers = (id) => {
       tenant_id: id
     }
   })
+}
+
+// 查看租户配额
+const handleViewQuota = async (id) => {
+  try {
+    currentTenantId.value = id
+    quotaDialogVisible.value = true
+    quotaLoading.value = true
+    editingQuota.value = false
+    
+    // 获取配额使用情况
+    const quotaData = await tenantApi.getTenantQuotaUsage(id)
+    quotaInfo.value = quotaData
+    
+    quotaLoading.value = false
+  } catch (error) {
+    console.error('获取租户配额失败:', error)
+    ElMessage.error('获取租户配额失败')
+    quotaLoading.value = false
+  }
+}
+
+// 更新配额
+const handleUpdateQuota = () => {
+  editingQuota.value = true
+  // 初始化表单数据
+  quotaForm.max_users = quotaInfo.value.max_users
+  quotaForm.max_storage = quotaInfo.value.max_storage
+}
+
+// 取消编辑配额
+const cancelQuotaEdit = () => {
+  editingQuota.value = false
+}
+
+// 提交配额表单
+const submitQuotaForm = async () => {
+  try {
+    quotaSubmitting.value = true
+    
+    await tenantApi.updateTenantQuota(currentTenantId.value, quotaForm)
+    
+    ElMessage.success('更新租户配额成功')
+    
+    // 重新获取配额信息
+    await handleViewQuota(currentTenantId.value)
+    
+    // 恢复表单状态
+    editingQuota.value = false
+    quotaSubmitting.value = false
+  } catch (error) {
+    console.error('更新租户配额失败:', error)
+    ElMessage.error('更新租户配额失败')
+    quotaSubmitting.value = false
+  }
 }
 
 // 暂停租户
@@ -282,5 +411,21 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.quota-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.quota-form {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.quota-form-actions {
+  text-align: right;
+  margin-top: 20px;
 }
 </style>

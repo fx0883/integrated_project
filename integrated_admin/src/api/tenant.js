@@ -27,9 +27,19 @@ export const tenantApi = {
     return request.delete(`/tenants/${id}/`)
   },
   
+  // 获取租户配额
+  getTenantQuota(id) {
+    return request.get(`/tenants/${id}/quota/`)
+  },
+  
   // 更新租户配额
   updateTenantQuota(id, data) {
     return request.put(`/tenants/${id}/quota/`, data)
+  },
+  
+  // 获取租户配额使用情况
+  getTenantQuotaUsage(id) {
+    return request.get(`/tenants/${id}/quota/usage/`)
   },
   
   // 获取租户用户列表
@@ -48,4 +58,4 @@ export const tenantApi = {
   }
 }
 
-export default tenantApi 
+export default tenantApi

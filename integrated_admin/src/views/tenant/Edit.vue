@@ -22,37 +22,23 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="域名" prop="domain">
-              <el-input v-model="form.domain" placeholder="请输入域名" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="行业" prop="industry">
-              <el-select v-model="form.industry" placeholder="请选择行业" style="width: 100%">
-                <el-option label="互联网/IT" value="互联网/IT" />
-                <el-option label="金融" value="金融" />
-                <el-option label="教育" value="教育" />
-                <el-option label="医疗" value="医疗" />
-                <el-option label="制造业" value="制造业" />
-                <el-option label="零售" value="零售" />
-                <el-option label="政府机构" value="政府机构" />
-                <el-option label="其他" value="其他" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
             <el-form-item label="状态" prop="status">
               <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
                 <el-option label="激活" value="active" />
-                <el-option label="禁用" value="disabled" />
                 <el-option label="暂停" value="suspended" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
+        
+        <el-form-item label="描述" prop="description">
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            placeholder="请输入租户描述"
+            :rows="3"
+          />
+        </el-form-item>
         
         <el-divider content-position="left">联系人信息</el-divider>
         
@@ -69,72 +55,48 @@
           </el-col>
         </el-row>
         
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="联系邮箱" prop="contact_email">
-              <el-input v-model="form.contact_email" placeholder="请输入联系邮箱" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="联系地址" prop="contact_address">
-              <el-input v-model="form.contact_address" placeholder="请输入联系地址" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-divider content-position="left">管理员信息</el-divider>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="管理员邮箱" prop="admin_email">
-              <el-input v-model="form.admin_email" placeholder="请输入管理员邮箱" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="管理员姓名" prop="admin_name">
-              <el-input v-model="form.admin_name" placeholder="请输入管理员姓名" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-row v-if="isCreate">
-          <el-col :span="12">
-            <el-form-item label="管理员密码" prop="admin_password">
-              <el-input v-model="form.admin_password" type="password" placeholder="请设置管理员密码" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-divider content-position="left">配置信息</el-divider>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="许可证数" prop="license_count">
-              <el-input-number v-model="form.license_count" :min="1" :max="10000" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="过期时间" prop="expiry_date">
-              <el-date-picker
-                v-model="form.expiry_date"
-                type="date"
-                placeholder="选择过期日期"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-form-item label="备注" prop="notes">
-          <el-input
-            v-model="form.notes"
-            type="textarea"
-            placeholder="请输入备注信息"
-            :rows="3"
-            maxlength="500"
-            show-word-limit
-          />
+        <el-form-item label="联系邮箱" prop="contact_email">
+          <el-input v-model="form.contact_email" placeholder="请输入联系邮箱" />
         </el-form-item>
+        
+        <el-divider content-position="left">配额信息</el-divider>
+        
+        <div v-if="!quotaLoading">
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="最大用户数" prop="max_users">
+                <el-input-number v-model="quotaForm.max_users" :min="5" :max="1000" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="最大存储(MB)" prop="max_storage">
+                <el-input-number v-model="quotaForm.max_storage" :min="100" :max="102400" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          
+          <el-row v-if="quotaUsage">
+            <el-col :span="12">
+              <el-form-item label="当前用户数">
+                <el-tag size="medium">{{ quotaUsage.current_users || 0 }}</el-tag>
+                <span class="usage-percent ml-10">
+                  ({{ quotaUsage.users_usage_percent || 0 }}%)
+                </span>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="当前存储(MB)">
+                <el-tag size="medium">{{ quotaUsage.current_storage || 0 }}</el-tag>
+                <span class="usage-percent ml-10">
+                  ({{ quotaUsage.storage_usage_percent || 0 }}%)
+                </span>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+        <div v-else class="quota-loading-placeholder">
+          <el-skeleton :rows="2" animated />
+        </div>
         
         <el-form-item>
           <el-button type="primary" @click="submitForm" :loading="submitting">{{ isCreate ? '创建' : '保存' }}</el-button>
@@ -161,22 +123,24 @@ const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
 
+// 配额相关
+const quotaLoading = ref(false)
+const quotaUsage = ref(null)
+
 // 表单数据
 const form = reactive({
   name: '',
-  domain: '',
-  industry: '',
+  description: '',
   status: 'active',
   contact_name: '',
   contact_phone: '',
-  contact_email: '',
-  contact_address: '',
-  admin_email: '',
-  admin_name: '',
-  admin_password: '',
-  license_count: 10,
-  expiry_date: '',
-  notes: ''
+  contact_email: ''
+})
+
+// 配额表单数据
+const quotaForm = reactive({
+  max_users: 100,
+  max_storage: 10240
 })
 
 // 表单验证规则
@@ -184,13 +148,6 @@ const rules = {
   name: [
     { required: true, message: '请输入租户名称', trigger: 'blur' },
     { min: 2, max: 50, message: '长度在2到50个字符之间', trigger: 'blur' }
-  ],
-  domain: [
-    { required: true, message: '请输入域名', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/, message: '请输入有效的域名', trigger: 'blur' }
-  ],
-  industry: [
-    { required: true, message: '请选择行业', trigger: 'change' }
   ],
   status: [
     { required: true, message: '请选择状态', trigger: 'change' }
@@ -205,23 +162,6 @@ const rules = {
   contact_email: [
     { required: true, message: '请输入联系邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
-  ],
-  admin_email: [
-    { required: true, message: '请输入管理员邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
-  ],
-  admin_name: [
-    { required: true, message: '请输入管理员姓名', trigger: 'blur' }
-  ],
-  admin_password: [
-    { required: isCreate, message: '请设置管理员密码', trigger: 'blur' },
-    { min: 8, message: '密码长度不能少于8个字符', trigger: 'blur' }
-  ],
-  license_count: [
-    { required: true, message: '请输入许可证数量', trigger: 'blur' }
-  ],
-  expiry_date: [
-    { required: true, message: '请选择过期日期', trigger: 'change' }
   ]
 }
 
@@ -233,26 +173,56 @@ const getTenantDetail = async () => {
     loading.value = true
     console.log('获取租户详情，ID:', tenantId.value)
     
-    const data = await tenantApi.getTenant(tenantId.value)
+    const data = await tenantApi.getTenantById(tenantId.value)
     console.log('租户详情:', data)
     
     // 填充表单数据
-    Object.keys(form).forEach(key => {
-      if (data[key] !== undefined) {
-        // 处理日期类型
-        if (key === 'expiry_date' && data[key]) {
-          form[key] = new Date(data[key])
-        } else {
-          form[key] = data[key]
-        }
-      }
-    })
+    form.name = data.name || ''
+    form.description = data.description || ''
+    form.status = data.status || 'active'
+    form.contact_name = data.contact_name || ''
+    form.contact_phone = data.contact_phone || ''
+    form.contact_email = data.contact_email || ''
+    
+    // 获取配额信息
+    await getQuotaInfo()
     
     loading.value = false
   } catch (error) {
     console.error('获取租户详情失败:', error)
     loading.value = false
     ElMessage.error('获取租户详情失败')
+  }
+}
+
+// 获取配额信息
+const getQuotaInfo = async () => {
+  if (isCreate.value) return
+  
+  try {
+    quotaLoading.value = true
+    
+    // 获取配额使用情况
+    const data = await tenantApi.getTenantQuotaUsage(tenantId.value)
+    console.log('租户配额使用情况:', data)
+    
+    // 设置配额表单
+    quotaForm.max_users = data.max_users || 100
+    quotaForm.max_storage = data.max_storage || 10240
+    
+    // 设置使用情况
+    quotaUsage.value = {
+      current_users: data.current_users || 0,
+      current_storage: data.current_storage || 0,
+      users_usage_percent: data.users_usage_percent || 0,
+      storage_usage_percent: data.storage_usage_percent || 0
+    }
+    
+    quotaLoading.value = false
+  } catch (error) {
+    console.error('获取租户配额信息失败:', error)
+    quotaLoading.value = false
+    ElMessage.error('获取租户配额信息失败')
   }
 }
 
@@ -269,28 +239,30 @@ const submitForm = async () => {
     try {
       submitting.value = true
       
-      // 克隆表单数据进行处理
-      const formData = { ...form }
-      
-      // 处理日期格式
-      if (formData.expiry_date && formData.expiry_date instanceof Date) {
-        formData.expiry_date = formData.expiry_date.toISOString().split('T')[0]
+      // 处理租户基本信息
+      const tenantData = {
+        name: form.name,
+        description: form.description,
+        status: form.status,
+        contact_name: form.contact_name,
+        contact_phone: form.contact_phone,
+        contact_email: form.contact_email
       }
       
-      // 如果是编辑模式且没有设置密码，移除password字段
-      if (!isCreate.value && !formData.admin_password) {
-        delete formData.admin_password
+      // 更新租户
+      await tenantApi.updateTenant(tenantId.value, tenantData)
+      console.log('租户信息更新成功')
+      
+      // 更新配额信息
+      const quotaData = {
+        max_users: quotaForm.max_users,
+        max_storage: quotaForm.max_storage
       }
       
-      if (isCreate.value) {
-        // 创建租户
-        await tenantApi.createTenant(formData)
-        ElMessage.success('创建租户成功')
-      } else {
-        // 更新租户
-        await tenantApi.updateTenant(tenantId.value, formData)
-        ElMessage.success('更新租户成功')
-      }
+      await tenantApi.updateTenantQuota(tenantId.value, quotaData)
+      console.log('租户配额更新成功')
+      
+      ElMessage.success('更新租户成功')
       
       // 返回租户列表页
       router.push('/tenants')
@@ -338,5 +310,18 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   color: var(--el-text-color-primary);
+}
+
+.quota-loading-placeholder {
+  padding: 10px 0 20px;
+}
+
+.usage-percent {
+  color: #909399;
+  font-size: 13px;
+}
+
+.ml-10 {
+  margin-left: 10px;
 }
 </style>
