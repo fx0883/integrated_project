@@ -11,11 +11,8 @@
       <!-- 搜索栏 -->
       <div class="search-bar">
         <el-form :inline="true" :model="queryParams" ref="queryForm">
-          <el-form-item label="用户名">
-            <el-input v-model="queryParams.username" placeholder="请输入用户名" clearable />
-          </el-form-item>
-          <el-form-item label="邮箱">
-            <el-input v-model="queryParams.email" placeholder="请输入邮箱" clearable />
+          <el-form-item label="搜索关键词">
+            <el-input v-model="queryParams.search" placeholder="用户名/邮箱/昵称/手机号" clearable />
           </el-form-item>
           <el-form-item label="状态">
             <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
@@ -59,7 +56,7 @@
         <el-table-column type="index" width="50" label="#" />
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="email" label="邮箱" min-width="150" />
-        <el-table-column prop="name" label="姓名" min-width="100" />
+        <el-table-column prop="nick_name" label="昵称" min-width="100" />
         <el-table-column prop="phone" label="电话" min-width="120" />
         <el-table-column prop="tenant_name" label="所属租户" min-width="150" v-if="isSuperAdmin" />
         <el-table-column prop="role" label="角色" width="120">
@@ -71,12 +68,11 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="80">
           <template #default="scope">
-            <el-tag v-if="scope.row.status === 'active'" type="success">活跃</el-tag>
-            <el-tag v-else-if="scope.row.status === 'pending'" type="warning">未激活</el-tag>
-            <el-tag v-else type="info">禁用</el-tag>
+            <el-tag v-if="scope.row.is_active" type="success">活跃</el-tag>
+            <el-tag v-else-if="!scope.row.is_active" type="info">禁用</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="last_login" label="最后登录" min-width="160" />
+        <el-table-column prop="date_joined" label="注册时间" min-width="160" />
         <el-table-column fixed="right" label="操作" width="220">
           <template #default="scope">
             <el-button size="small" @click="handleEdit(scope.row.id)">编辑</el-button>
@@ -93,14 +89,22 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item 
-                    v-if="scope.row.status !== 'active'" 
+                    v-if="!scope.row.is_active" 
                     @click="handleActivate(scope.row)"
                   >激活账号</el-dropdown-item>
                   <el-dropdown-item 
-                    v-if="scope.row.status === 'active'" 
+                    v-if="scope.row.is_active" 
                     @click="handleDisable(scope.row)"
                   >禁用账号</el-dropdown-item>
                   <el-dropdown-item @click="handleResetPassword(scope.row)">重置密码</el-dropdown-item>
+                  <el-dropdown-item 
+                    v-if="isSuperAdmin && !scope.row.is_super_admin" 
+                    @click="handleGrantSuperAdmin(scope.row)"
+                  >设为超管</el-dropdown-item>
+                  <el-dropdown-item 
+                    v-if="isSuperAdmin && scope.row.is_super_admin && scope.row.username !== userInfo.username" 
+                    @click="handleRevokeSuperAdmin(scope.row)"
+                  >撤销超管</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -115,7 +119,7 @@
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           v-model:current-page="queryParams.page"
-          v-model:page-size="queryParams.limit"
+          v-model:page-size="queryParams.page_size"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -146,12 +150,11 @@ const isSuperAdmin = computed(() => userInfo.value.is_super_admin)
 
 // 查询参数
 const queryParams = reactive({
-  username: '',
-  email: '',
+  search: '',
   status: '',
   tenant_id: '',
   page: 1,
-  limit: 10
+  page_size: 10
 })
 
 // 如果路由查询参数中有tenant_id，设置初始值
@@ -178,11 +181,11 @@ const searchTenants = async (query) => {
   try {
     tenantsLoading.value = true
     const response = await tenantApi.getTenants({
-      name: query,
-      limit: 20,
+      search: query,
+      page_size: 20,
       page: 1
     })
-    tenantOptions.value = response.items || []
+    tenantOptions.value = response.results || []
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
@@ -206,7 +209,6 @@ const canManageUser = (user) => {
 const getUserList = async () => {
   try {
     loading.value = true
-    console.log('获取用户列表，参数:', queryParams)
     
     // 如果是租户管理员，强制只查询本租户的用户
     if (!isSuperAdmin.value) {
@@ -215,11 +217,10 @@ const getUserList = async () => {
     
     // 调用API获取用户列表
     const response = await userApi.getUsers(queryParams)
-    userList.value = response.items || []
-    total.value = response.total || 0
+    userList.value = response.results || []
+    total.value = response.count || 0
     
     loading.value = false
-    console.log('用户列表加载完成')
   } catch (error) {
     console.error('获取用户列表失败:', error)
     loading.value = false
@@ -245,7 +246,7 @@ const resetQuery = () => {
 
 // 分页大小变化
 const handleSizeChange = (size) => {
-  queryParams.limit = size
+  queryParams.page_size = size
   getUserList()
 }
 
@@ -282,7 +283,7 @@ const handleDelete = (row) => {
       getUserList()
     } catch (error) {
       console.error('删除用户失败:', error)
-      ElMessage.error('删除用户失败')
+      ElMessage.error(error.response?.data?.message || '删除用户失败')
     }
   }).catch(() => {
     // 取消删除
@@ -306,7 +307,7 @@ const handleActivate = (row) => {
       getUserList()
     } catch (error) {
       console.error('激活用户失败:', error)
-      ElMessage.error('激活用户失败')
+      ElMessage.error(error.response?.data?.message || '激活用户失败')
     }
   }).catch(() => {
     // 取消操作
@@ -330,7 +331,7 @@ const handleDisable = (row) => {
       getUserList()
     } catch (error) {
       console.error('禁用用户失败:', error)
-      ElMessage.error('禁用用户失败')
+      ElMessage.error(error.response?.data?.message || '禁用用户失败')
     }
   }).catch(() => {
     // 取消操作
@@ -353,7 +354,55 @@ const handleResetPassword = (row) => {
       ElMessage.success('密码重置成功，新密码已发送到用户邮箱')
     } catch (error) {
       console.error('重置密码失败:', error)
-      ElMessage.error('重置密码失败')
+      ElMessage.error(error.response?.data?.message || '重置密码失败')
+    }
+  }).catch(() => {
+    // 取消操作
+  })
+}
+
+// 授予超级管理员权限
+const handleGrantSuperAdmin = (row) => {
+  ElMessageBox.confirm(
+    `确定要将用户"${row.username}"设为超级管理员吗？此操作将授予该用户所有权限。`,
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      await userApi.grantSuperAdmin(row.id)
+      ElMessage.success('已成功设置为超级管理员')
+      getUserList()
+    } catch (error) {
+      console.error('设置超级管理员失败:', error)
+      ElMessage.error(error.response?.data?.message || '设置超级管理员失败')
+    }
+  }).catch(() => {
+    // 取消操作
+  })
+}
+
+// 撤销超级管理员权限
+const handleRevokeSuperAdmin = (row) => {
+  ElMessageBox.confirm(
+    `确定要撤销用户"${row.username}"的超级管理员权限吗？`,
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      await userApi.revokeSuperAdmin(row.id)
+      ElMessage.success('已成功撤销超级管理员权限')
+      getUserList()
+    } catch (error) {
+      console.error('撤销超级管理员权限失败:', error)
+      ElMessage.error(error.response?.data?.message || '撤销超级管理员权限失败')
     }
   }).catch(() => {
     // 取消操作

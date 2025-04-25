@@ -51,9 +51,9 @@
               </el-form-item>
             </div>
             <div class="form-col">
-              <el-form-item label="确认密码" prop="confirmPassword">
+              <el-form-item label="确认密码" prop="password_confirm">
                 <el-input 
-                  v-model="userForm.confirmPassword" 
+                  v-model="userForm.password_confirm" 
                   type="password" 
                   placeholder="请再次输入密码"
                   show-password
@@ -69,8 +69,21 @@
               </el-form-item>
             </div>
             <div class="form-col">
-              <el-form-item label="真实姓名" prop="real_name">
-                <el-input v-model="userForm.real_name" placeholder="请输入真实姓名" />
+              <el-form-item label="昵称" prop="nick_name">
+                <el-input v-model="userForm.nick_name" placeholder="请输入昵称" />
+              </el-form-item>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <el-form-item label="名" prop="first_name">
+                <el-input v-model="userForm.first_name" placeholder="请输入名" />
+              </el-form-item>
+            </div>
+            <div class="form-col">
+              <el-form-item label="姓" prop="last_name">
+                <el-input v-model="userForm.last_name" placeholder="请输入姓" />
               </el-form-item>
             </div>
           </div>
@@ -79,20 +92,37 @@
             <el-radio-group v-model="userForm.role">
               <el-radio label="user">普通用户</el-radio>
               <el-radio label="admin">管理员</el-radio>
-              <el-radio label="super_admin">超级管理员</el-radio>
+              <el-radio v-if="isSuperAdmin" label="super_admin">超级管理员</el-radio>
             </el-radio-group>
+          </el-form-item>
+          
+          <el-form-item label="所属租户" prop="tenant_id" v-if="isSuperAdmin">
+            <el-select 
+              v-model="userForm.tenant_id" 
+              placeholder="请选择租户" 
+              filterable
+              remote
+              :remote-method="searchTenants"
+              :loading="tenantsLoading"
+              clearable
+            >
+              <el-option
+                v-for="item in tenantOptions"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
           
           <el-form-item label="状态">
             <div class="switch-wrapper">
               <el-switch 
-                v-model="userForm.status" 
-                active-value="active" 
-                inactive-value="disabled"
+                v-model="userForm.is_active" 
                 :active-color="variables.primaryColor"
                 :inactive-color="variables.borderColor"
               />
-              <span class="switch-label">{{ userForm.status === 'active' ? '已激活' : '已禁用' }}</span>
+              <span class="switch-label">{{ userForm.is_active ? '已激活' : '已禁用' }}</span>
             </div>
           </el-form-item>
         </el-form>
@@ -109,23 +139,11 @@
         
         <div class="security-option">
           <div class="security-content">
-            <div class="security-title">双因素认证</div>
-            <div class="security-desc">增强账户安全性，需要额外验证</div>
-          </div>
-          <el-switch 
-            v-model="userForm.twoFactorEnabled" 
-            :active-color="variables.primaryColor"
-            :inactive-color="variables.borderColor"
-          />
-        </div>
-        
-        <div class="security-option">
-          <div class="security-content">
             <div class="security-title">发送欢迎邮件</div>
             <div class="security-desc">向用户邮箱发送欢迎邮件和登录指南</div>
           </div>
           <el-switch 
-            v-model="userForm.sendWelcomeEmail" 
+            v-model="userForm.send_welcome_email" 
             :active-color="variables.primaryColor"
             :inactive-color="variables.borderColor"
           />
@@ -142,9 +160,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { userApi } from '../../api'
+import { userApi, tenantApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Back } from '@element-plus/icons-vue'
 
@@ -158,6 +176,15 @@ const userFormRef = ref(null)
 const loading = ref(false)
 const submitLoading = ref(false)
 
+// 当前用户信息
+const userInfo = computed(() => {
+  const info = JSON.parse(localStorage.getItem('user_info') || '{}')
+  return info
+})
+
+// 判断是否为超级管理员
+const isSuperAdmin = computed(() => userInfo.value.is_super_admin)
+
 // 全局样式变量
 const variables = {
   primaryColor: '#0abab5',
@@ -165,18 +192,41 @@ const variables = {
   borderColor: '#E8ECF4'
 }
 
+// 租户选项
+const tenantOptions = ref([])
+const tenantsLoading = ref(false)
+
+// 搜索租户
+const searchTenants = async (query) => {
+  try {
+    tenantsLoading.value = true
+    const response = await tenantApi.getTenants({
+      search: query,
+      page_size: 20,
+      page: 1
+    })
+    tenantOptions.value = response.data.results || []
+    tenantsLoading.value = false
+  } catch (error) {
+    console.error('搜索租户失败:', error)
+    tenantsLoading.value = false
+  }
+}
+
 // 表单数据
 const userForm = reactive({
   username: '',
   email: '',
   password: '',
-  confirmPassword: '',
+  password_confirm: '',
   phone: '',
-  real_name: '',
+  nick_name: '',
+  first_name: '',
+  last_name: '',
   role: 'user',
-  status: 'active',
-  twoFactorEnabled: false,
-  sendWelcomeEmail: true
+  is_active: true,
+  tenant_id: '',
+  send_welcome_email: true
 })
 
 // 密码校验
@@ -184,8 +234,8 @@ const validatePass = (rule, value, callback) => {
   if (value === '') {
     callback(new Error('请输入密码'))
   } else {
-    if (userForm.confirmPassword !== '') {
-      userFormRef.value.validateField('confirmPassword')
+    if (userForm.password_confirm !== '') {
+      userFormRef.value.validateField('password_confirm')
     }
     callback()
   }
@@ -216,7 +266,7 @@ const rules = {
     { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' },
     { validator: validatePass, trigger: 'blur' }
   ],
-  confirmPassword: [
+  password_confirm: [
     { required: true, message: '请再次输入密码', trigger: 'blur' },
     { validator: validatePass2, trigger: 'blur' }
   ],
@@ -226,6 +276,18 @@ const rules = {
   ],
   role: [
     { required: true, message: '请选择角色', trigger: 'change' }
+  ],
+  tenant_id: [
+    { required: true, message: '请选择所属租户', trigger: 'change', 
+      validator: (rule, value, callback) => {
+        // 如果不是超级管理员或者已选择租户，通过验证
+        if (!isSuperAdmin.value || value) {
+          callback()
+        } else {
+          callback(new Error('请选择所属租户'))
+        }
+      }
+    }
   ]
 }
 
@@ -235,37 +297,58 @@ const submitForm = async () => {
     await userFormRef.value.validate()
     
     submitLoading.value = true
-    console.log('提交用户表单', userForm)
     
-    // 实际项目中应该调用API创建用户
-    // const response = await userApi.createUser({
-    //   username: userForm.username,
-    //   email: userForm.email,
-    //   password: userForm.password,
-    //   phone: userForm.phone,
-    //   real_name: userForm.real_name,
-    //   is_admin: userForm.role === 'admin' || userForm.role === 'super_admin',
-    //   is_super_admin: userForm.role === 'super_admin',
-    //   status: userForm.status,
-    //   two_factor_enabled: userForm.twoFactorEnabled,
-    //   send_welcome_email: userForm.sendWelcomeEmail
-    // })
+    // 准备提交数据
+    const formData = {
+      username: userForm.username,
+      email: userForm.email,
+      password: userForm.password,
+      password_confirm: userForm.password_confirm,
+      phone: userForm.phone,
+      nick_name: userForm.nick_name,
+      first_name: userForm.first_name,
+      last_name: userForm.last_name,
+      is_active: userForm.is_active,
+      send_welcome_email: userForm.send_welcome_email
+    }
     
-    // 模拟请求
-    setTimeout(() => {
-      submitLoading.value = false
-      
-      ElMessage({
-        type: 'success',
-        message: '用户创建成功'
-      })
-      
-      // 创建成功后返回列表页
-      router.push('/users')
-    }, 800)
-  } catch (error) {
-    console.error('表单验证失败:', error)
+    // 根据角色设置is_admin和is_super_admin
+    if (userForm.role === 'super_admin') {
+      formData.is_admin = true
+      formData.is_super_admin = true
+    } else if (userForm.role === 'admin') {
+      formData.is_admin = true
+      formData.is_super_admin = false
+    } else {
+      formData.is_admin = false
+      formData.is_super_admin = false
+      formData.is_member = true
+    }
+    
+    // 如果是超级管理员且选择了租户
+    if (isSuperAdmin.value && userForm.tenant_id) {
+      formData.tenant_id = userForm.tenant_id
+    } else if (!isSuperAdmin.value) {
+      // 如果不是超级管理员，使用当前用户的租户
+      formData.tenant_id = userInfo.value.tenant_id
+    }
+    
+    // 调用API创建用户
+    const response = await userApi.createUser(formData)
+    
     submitLoading.value = false
+    
+    ElMessage({
+      type: 'success',
+      message: '用户创建成功'
+    })
+    
+    // 创建成功后返回列表页
+    router.push('/users')
+  } catch (error) {
+    console.error('创建用户失败:', error)
+    submitLoading.value = false
+    ElMessage.error(error.response?.data?.message || '创建用户失败')
   }
 }
 
@@ -405,10 +488,4 @@ const goBack = () => {
   gap: 10px;
   margin-top: 10px;
 }
-
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-  }
-}
-</style> 
+</style>

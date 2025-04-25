@@ -42,6 +42,36 @@ export const userApi = {
     return request.post('/users/me/change-password/', data)
   },
   
+  // 重置用户密码
+  resetPassword(id) {
+    return request.post(`/users/${id}/reset-password/`)
+  },
+  
+  // 激活用户
+  activateUser(id) {
+    return request.post(`/users/${id}/activate/`)
+  },
+  
+  // 禁用用户
+  disableUser(id) {
+    return request.post(`/users/${id}/disable/`)
+  },
+  
+  // 更新用户角色
+  updateUserRole(id, data) {
+    return request.post(`/users/${id}/role/`, data)
+  },
+  
+  // 授予超级管理员权限
+  grantSuperAdmin(id) {
+    return request.post(`/users/${id}/grant-super-admin/`)
+  },
+  
+  // 撤销超级管理员权限
+  revokeSuperAdmin(id) {
+    return request.post(`/users/${id}/revoke-super-admin/`)
+  },
+  
   // 上传头像
   uploadAvatar(file) {
     const formData = new FormData()
@@ -55,4 +85,4 @@ export const userApi = {
   }
 }
 
-export default userApi 
+export default userApi

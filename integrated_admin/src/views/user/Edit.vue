@@ -46,31 +46,61 @@
               </el-form-item>
             </div>
             <div class="form-col">
-              <el-form-item label="真实姓名" prop="real_name">
-                <el-input v-model="userForm.real_name" placeholder="请输入真实姓名" />
+              <el-form-item label="昵称" prop="nick_name">
+                <el-input v-model="userForm.nick_name" placeholder="请输入昵称" />
+              </el-form-item>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <el-form-item label="名" prop="first_name">
+                <el-input v-model="userForm.first_name" placeholder="请输入名" />
+              </el-form-item>
+            </div>
+            <div class="form-col">
+              <el-form-item label="姓" prop="last_name">
+                <el-input v-model="userForm.last_name" placeholder="请输入姓" />
               </el-form-item>
             </div>
           </div>
           
           <el-form-item label="角色" prop="role">
-            <el-radio-group v-model="userForm.role" :disabled="userForm.username === 'admin'">
+            <el-radio-group v-model="userForm.role" :disabled="!canChangeRole">
               <el-radio label="user">普通用户</el-radio>
               <el-radio label="admin">管理员</el-radio>
-              <el-radio label="super_admin">超级管理员</el-radio>
+              <el-radio v-if="isSuperAdmin" label="super_admin">超级管理员</el-radio>
             </el-radio-group>
+          </el-form-item>
+          
+          <el-form-item label="所属租户" prop="tenant_id" v-if="isSuperAdmin">
+            <el-select 
+              v-model="userForm.tenant_id" 
+              placeholder="请选择租户" 
+              filterable
+              remote
+              :remote-method="searchTenants"
+              :loading="tenantsLoading"
+              clearable
+            >
+              <el-option
+                v-for="item in tenantOptions"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
           
           <el-form-item label="状态">
             <div class="switch-wrapper">
               <el-switch 
-                v-model="userForm.status" 
-                active-value="active" 
-                inactive-value="disabled"
+                v-model="userForm.is_active" 
                 :active-color="variables.primaryColor"
                 :inactive-color="variables.borderColor"
                 :disabled="userForm.username === 'admin'"
               />
-              <span class="switch-label">{{ userForm.status === 'active' ? '已激活' : '已禁用' }}</span>
+              <span class="switch-label">{{ userForm.is_active ? '已激活' : '已禁用' }}</span>
             </div>
           </el-form-item>
         </el-form>
@@ -91,18 +121,6 @@
             <div class="security-desc">重置用户的登录密码</div>
           </div>
           <el-button type="primary" @click="showChangePassword = true" plain>修改密码</el-button>
-        </div>
-        
-        <div class="security-option">
-          <div class="security-content">
-            <div class="security-title">双因素认证</div>
-            <div class="security-desc">增强账户安全性，需要额外验证</div>
-          </div>
-          <el-switch 
-            v-model="userForm.twoFactorEnabled" 
-            :active-color="variables.primaryColor"
-            :inactive-color="variables.borderColor"
-          />
         </div>
         
         <div class="security-option">
@@ -145,9 +163,9 @@
           />
         </el-form-item>
         
-        <el-form-item label="确认密码" prop="confirmPassword">
+        <el-form-item label="确认密码" prop="password_confirm">
           <el-input
-            v-model="passwordForm.confirmPassword"
+            v-model="passwordForm.password_confirm"
             type="password"
             placeholder="请再次输入新密码"
             show-password
@@ -166,9 +184,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { userApi } from '../../api'
+import { userApi, tenantApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Back } from '@element-plus/icons-vue'
 
@@ -189,11 +207,48 @@ const passwordLoading = ref(false)
 // 修改密码对话框
 const showChangePassword = ref(false)
 
+// 当前用户信息
+const userInfo = computed(() => {
+  const info = JSON.parse(localStorage.getItem('user_info') || '{}')
+  return info
+})
+
+// 判断是否为超级管理员
+const isSuperAdmin = computed(() => userInfo.value.is_super_admin)
+
+// 判断是否可以更改角色（不能更改自己的角色，admin用户不能被降级）
+const canChangeRole = computed(() => {
+  if (userForm.username === 'admin') return false
+  if (userForm.id === userInfo.value.id) return false
+  return true
+})
+
 // 全局样式变量
 const variables = {
   primaryColor: '#0abab5',
   secondaryColor: '#ff6600',
   borderColor: '#E8ECF4'
+}
+
+// 租户选项
+const tenantOptions = ref([])
+const tenantsLoading = ref(false)
+
+// 搜索租户
+const searchTenants = async (query) => {
+  try {
+    tenantsLoading.value = true
+    const response = await tenantApi.getTenants({
+      search: query,
+      page_size: 20,
+      page: 1
+    })
+    tenantOptions.value = response.data.results || []
+    tenantsLoading.value = false
+  } catch (error) {
+    console.error('搜索租户失败:', error)
+    tenantsLoading.value = false
+  }
 }
 
 // 表单数据
@@ -202,16 +257,20 @@ const userForm = reactive({
   username: '',
   email: '',
   phone: '',
-  real_name: '',
+  nick_name: '',
+  first_name: '',
+  last_name: '',
   role: 'user',
-  status: 'active',
-  twoFactorEnabled: false
+  is_active: true,
+  tenant_id: '',
+  is_admin: false,
+  is_super_admin: false
 })
 
 // 密码表单
 const passwordForm = reactive({
   password: '',
-  confirmPassword: ''
+  password_confirm: ''
 })
 
 // 密码校验
@@ -219,8 +278,8 @@ const validatePass = (rule, value, callback) => {
   if (value === '') {
     callback(new Error('请输入新密码'))
   } else {
-    if (passwordForm.confirmPassword !== '') {
-      passwordFormRef.value.validateField('confirmPassword')
+    if (passwordForm.password_confirm !== '') {
+      passwordFormRef.value.validateField('password_confirm')
     }
     callback()
   }
@@ -262,7 +321,7 @@ const passwordRules = {
     { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' },
     { validator: validatePass, trigger: 'blur' }
   ],
-  confirmPassword: [
+  password_confirm: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
     { validator: validatePass2, trigger: 'blur' }
   ]
@@ -272,51 +331,48 @@ const passwordRules = {
 const getUserInfo = async () => {
   try {
     loading.value = true
-    console.log('获取用户信息, ID:', userId)
     
-    // 实际项目中应该调用API获取用户信息
-    // const userInfo = await userApi.getUserById(userId)
+    // 调用API获取用户信息
+    const response = await userApi.getUserById(userId)
+    const userInfo = response.data
     
-    // 模拟数据
-    setTimeout(() => {
-      const userInfo = {
-        id: userId,
-        username: userId === '1' ? 'admin' : 'test',
-        email: userId === '1' ? 'admin@example.com' : 'test@example.com',
-        phone: userId === '1' ? '13800138000' : '13800138001',
-        real_name: userId === '1' ? '管理员' : '测试用户',
-        is_super_admin: userId === '1',
-        is_admin: userId === '1',
-        status: 'active',
-        twoFactorEnabled: false
+    // 设置表单数据
+    userForm.id = userInfo.id
+    userForm.username = userInfo.username
+    userForm.email = userInfo.email
+    userForm.phone = userInfo.phone || ''
+    userForm.nick_name = userInfo.nick_name || ''
+    userForm.first_name = userInfo.first_name || ''
+    userForm.last_name = userInfo.last_name || ''
+    userForm.is_active = userInfo.is_active
+    userForm.tenant_id = userInfo.tenant
+    userForm.is_admin = userInfo.is_admin
+    userForm.is_super_admin = userInfo.is_super_admin
+    
+    // 设置角色
+    if (userInfo.is_super_admin) {
+      userForm.role = 'super_admin'
+    } else if (userInfo.is_admin) {
+      userForm.role = 'admin'
+    } else {
+      userForm.role = 'user'
+    }
+    
+    // 如果有租户，需要获取租户信息以显示名称
+    if (userInfo.tenant && isSuperAdmin.value) {
+      try {
+        const tenantResponse = await tenantApi.getTenantById(userInfo.tenant)
+        tenantOptions.value = [{ id: tenantResponse.data.id, name: tenantResponse.data.name }]
+      } catch (error) {
+        console.error('获取租户信息失败:', error)
       }
-      
-      // 根据API返回的数据结构设置表单
-      userForm.id = userInfo.id
-      userForm.username = userInfo.username
-      userForm.email = userInfo.email
-      userForm.phone = userInfo.phone
-      userForm.real_name = userInfo.real_name
-      
-      // 设置角色
-      if (userInfo.is_super_admin) {
-        userForm.role = 'super_admin'
-      } else if (userInfo.is_admin) {
-        userForm.role = 'admin'
-      } else {
-        userForm.role = 'user'
-      }
-      
-      userForm.status = userInfo.status
-      userForm.twoFactorEnabled = userInfo.twoFactorEnabled
-      
-      loading.value = false
-      console.log('用户信息加载完成')
-    }, 500)
+    }
+    
+    loading.value = false
   } catch (error) {
     console.error('获取用户信息失败:', error)
     loading.value = false
-    ElMessage.error('获取用户信息失败')
+    ElMessage.error(error.response?.data?.message || '获取用户信息失败')
   }
 }
 
@@ -326,23 +382,49 @@ const submitForm = async () => {
     await userFormRef.value.validate()
     
     submitLoading.value = true
-    console.log('提交用户表单', userForm)
     
-    // 实际项目中应该调用API更新用户信息
-    // await userApi.updateUser(userForm.id, userForm)
+    // 准备提交数据
+    const formData = {
+      email: userForm.email,
+      phone: userForm.phone,
+      nick_name: userForm.nick_name,
+      first_name: userForm.first_name,
+      last_name: userForm.last_name,
+      is_active: userForm.is_active
+    }
     
-    // 模拟请求
-    setTimeout(() => {
-      submitLoading.value = false
-      
-      ElMessage({
-        type: 'success',
-        message: '用户信息更新成功'
-      })
-    }, 800)
-  } catch (error) {
-    console.error('表单验证失败:', error)
+    // 如果可以更改角色
+    if (canChangeRole.value) {
+      if (userForm.role === 'super_admin') {
+        formData.is_admin = true
+        formData.is_super_admin = true
+      } else if (userForm.role === 'admin') {
+        formData.is_admin = true
+        formData.is_super_admin = false
+      } else {
+        formData.is_admin = false
+        formData.is_super_admin = false
+      }
+    }
+    
+    // 如果是超级管理员且更改了租户
+    if (isSuperAdmin.value) {
+      formData.tenant_id = userForm.tenant_id
+    }
+    
+    // 调用API更新用户信息
+    await userApi.updateUser(userForm.id, formData)
+    
     submitLoading.value = false
+    
+    ElMessage({
+      type: 'success',
+      message: '用户信息更新成功'
+    })
+  } catch (error) {
+    console.error('更新用户信息失败:', error)
+    submitLoading.value = false
+    ElMessage.error(error.response?.data?.message || '更新用户信息失败')
   }
 }
 
@@ -358,28 +440,28 @@ const submitPasswordForm = async () => {
     await passwordFormRef.value.validate()
     
     passwordLoading.value = true
-    console.log('提交密码修改', userId, passwordForm.password)
     
-    // 实际项目中应该调用API更新用户密码
-    // await userApi.updateUserPassword(userId, passwordForm.password)
+    // 调用API更新用户密码
+    await userApi.changePassword(userId, {
+      password: passwordForm.password,
+      password_confirm: passwordForm.password_confirm
+    })
     
-    // 模拟请求
-    setTimeout(() => {
-      passwordLoading.value = false
-      showChangePassword.value = false
-      
-      ElMessage({
-        type: 'success',
-        message: '密码修改成功'
-      })
-      
-      // 清空密码表单
-      passwordForm.password = ''
-      passwordForm.confirmPassword = ''
-    }, 800)
-  } catch (error) {
-    console.error('密码表单验证失败:', error)
     passwordLoading.value = false
+    showChangePassword.value = false
+    
+    ElMessage({
+      type: 'success',
+      message: '密码修改成功'
+    })
+    
+    // 清空密码表单
+    passwordForm.password = ''
+    passwordForm.password_confirm = ''
+  } catch (error) {
+    console.error('密码修改失败:', error)
+    passwordLoading.value = false
+    ElMessage.error(error.response?.data?.message || '密码修改失败')
   }
 }
 
@@ -518,11 +600,5 @@ onMounted(() => {
   justify-content: flex-start;
   gap: 10px;
   margin-top: 10px;
-}
-
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-  }
 }
 </style>
