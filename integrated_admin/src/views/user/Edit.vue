@@ -396,6 +396,8 @@ const getUserDetail = async () => {
     const response = await userApi.getUserById(userId.value)
     const userInfo = response
     
+    console.log('获取到的用户详情:', userInfo);
+    
     // 设置表单数据
     userForm.id = userInfo.id
     userForm.username = userInfo.username
@@ -408,6 +410,7 @@ const getUserDetail = async () => {
     userForm.tenant_id = userInfo.tenant
     userForm.is_admin = userInfo.is_admin
     userForm.is_super_admin = userInfo.is_super_admin
+    userForm.avatar = userInfo.avatar || ''  // 确保设置头像URL
     
     // 设置角色
     if (userInfo.is_super_admin) {
