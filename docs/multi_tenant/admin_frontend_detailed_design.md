@@ -71,63 +71,64 @@
 
 #### 2.1 用户列表页面 (List.vue)
 
-**功能描述**：显示系统中所有用户列表，支持分页、搜索、排序和筛选，以及导出数据功能。
+**功能描述**：显示系统中所有用户列表，支持分页、搜索、排序和筛选，以及导出数据功能。租户管理员只能查看其所属租户内的用户。
 
 **UI设计**：
 - 顶部搜索和筛选区域
-- 导出按钮
-- 数据表格，显示用户基本信息
+- 创建用户按钮（仅对有权限的用户显示）
+- 数据表格，显示用户基本信息、头像和状态
 - 操作列，包含编辑、删除等按钮
 - 分页控件
 
 **数据模型**：
 ```javascript
 {
-  users: [],
+  userList: [],
   loading: false,
   total: 0,
-  query: {
-    page: 1,
-    pageSize: 10,
+  queryParams: {
     search: '',
-    ordering: '-date_joined',
-    is_admin: null,
-    is_active: true,
-    tenant: null
+    status: '',
+    tenant_id: '',
+    page: 1,
+    page_size: 10
   },
-  selectedRows: [],
-  tenants: [] // 用于筛选下拉框
+  tenantOptions: [], // 租户下拉选项（仅超级管理员可见）
+  tenantsLoading: false
 }
 ```
 
 **主要方法**：
-- `fetchUsers()`: 获取用户列表数据
-- `handleFilter()`: 处理筛选条件变化
-- `handleSort()`: 处理排序变化
-- `handlePageChange()`: 处理分页变化
-- `handleEdit(row)`: 编辑用户
+- `getUserList()`: 获取用户列表数据，租户管理员自动筛选同租户用户
+- `handleQuery()`: 处理搜索和筛选
+- `resetQuery()`: 重置搜索条件
+- `handleSizeChange()`: 处理分页大小变化
+- `handleCurrentChange()`: 处理页码变化
+- `handleEdit(id)`: 编辑用户
 - `handleDelete(row)`: 删除用户
-- `handleBatchDelete()`: 批量删除用户
-- `exportData()`: 导出用户数据
+- `handleCreate()`: 创建新用户
+- `searchTenants()`: 搜索租户（仅超级管理员可用）
+- `getUserInitials()`: 获取用户头像占位符的首字母显示
 
 **API接口**：
 - 获取列表：`/api/v1/users/`
 - 删除用户：`/api/v1/users/{id}/`
+- 获取租户列表：`/api/v1/tenants/` （仅超级管理员调用）
 
 #### 2.2 创建用户页面 (Create.vue)
 
-**功能描述**：创建新用户。
+**功能描述**：创建新用户。租户管理员只能在自己的租户内创建用户，超级管理员可以在任意租户下创建用户。根据系统设计，用户创建时不支持上传头像，头像功能仅在用户编辑页面可用。
 
 **UI设计**：
 - 用户信息表单
-- 基本信息区域
+- 基本信息区域（用户名、邮箱、姓名等）
 - 权限设置区域
 - 提交和取消按钮
 
 **数据模型**：
 ```javascript
 {
-  form: {
+  userForm: {
     username: '',
     email: '',
     phone: '',
@@ -138,39 +139,43 @@
     password_confirm: '',
     tenant_id: null,
     is_admin: false,
-    is_member: true,
-    avatar: ''
+    is_member: true
   },
   loading: false,
-  tenants: [], // 租户下拉选项
+  submitLoading: false,
+  tenantOptions: [], // 租户下拉选项（仅超级管理员可见）
+  tenantsLoading: false,
   rules: { /* Element Plus表单验证规则 */ }
 }
 ```
 
 **主要方法**：
-- `fetchTenants()`: 获取租户列表数据（用于下拉选择）
-- `handleSubmit()`: 处理表单提交
-- `validatePass2()`: 二次密码验证
+- `searchTenants()`: 搜索租户（仅超级管理员可用）
+- `submitForm()`: 处理表单提交
 - `resetForm()`: 重置表单
-- `cancel()`: 取消创建，返回列表页
+- `goBack()`: 返回列表页
 
 **API接口**：
 - 创建用户：`/api/v1/users/`
-- 获取租户列表：`/api/v1/tenants/`
+- 获取租户列表：`/api/v1/tenants/` （仅超级管理员调用）
 
 #### 2.3 编辑用户页面 (Edit.vue)
 
-**功能描述**：编辑现有用户信息。
+**功能描述**：编辑现有用户信息。租户管理员只能编辑自己租户内的用户，超级管理员可以编辑任意用户。该页面包含头像上传功能，允许管理员为用户设置或更改头像。
 
 **UI设计**：
-- 用户信息表单（与创建用户页面类似）
-- 显示用户已有信息
+- 用户信息表单
+- 基本信息区域
+- 头像上传区域，包含图片裁剪功能
+- 权限设置区域
 - 提交和取消按钮
+- 修改密码功能（通过对话框实现）
 
 **数据模型**：
 ```javascript
 {
-  form: {
+  userForm: {
+    id: '',
     username: '',
     email: '',
     phone: '',
@@ -180,27 +185,49 @@
     tenant_id: null,
     is_admin: false,
     is_member: true,
+    is_super_admin: false,
+    is_active: true,
     avatar: '',
-    is_active: true
+    avatar_file: null
   },
   userId: null, // 从路由参数获取
   loading: false,
-  tenants: [], // 租户下拉选项
+  submitLoading: false,
+  tenantOptions: [], // 租户下拉选项（仅超级管理员可见）
+  tenantsLoading: false,
+  
+  // 头像上传相关
+  imageUrl: '',
+  cropperVisible: false,
+  
+  // 密码修改相关
+  showChangePassword: false,
+  passwordForm: {
+    password: '',
+    password_confirm: ''
+  },
+  passwordLoading: false,
+  
   rules: { /* Element Plus表单验证规则 */ }
 }
 ```
 
 **主要方法**：
-- `fetchUserData()`: 获取用户详情数据
-- `fetchTenants()`: 获取租户列表数据
-- `handleSubmit()`: 处理表单提交
-- `resetForm()`: 重置表单
-- `cancel()`: 取消编辑，返回列表页
+- `getUserDetail()`: 获取用户详情数据，包含头像URL
+- `searchTenants()`: 搜索租户（仅超级管理员可用）
+- `submitBasicForm()`: 处理基本信息表单提交
+- `beforeAvatarUpload()`: 头像上传前的验证
+- `uploadAvatar()`: 上传头像
+- `handleCropConfirm()`: 确认图片裁剪
+- `changePassword()`: 修改用户密码
+- `goBack()`: 返回列表页
 
 **API接口**：
 - 获取用户详情：`/api/v1/users/{id}/`
 - 更新用户：`/api/v1/users/{id}/`
-- 获取租户列表：`/api/v1/tenants/`
+- 上传头像：`/api/v1/users/{id}/upload-avatar/`
+- 修改密码：`/api/v1/users/{id}/change-password/`
+- 获取租户列表：`/api/v1/tenants/` （仅超级管理员调用）
 
 ### 3. 租户管理模块
 
@@ -711,4 +738,3 @@ export const exportToCSV = (data, filename, options = {}) => { /* 实现 */ };
 
 // 通用导出函数
 export const exportData = (data, filename, format = 'xlsx', options = {}) => { /* 实现 */ };
-``` 
