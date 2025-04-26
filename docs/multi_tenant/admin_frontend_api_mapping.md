@@ -23,7 +23,9 @@
 | profile/Index.vue | `/api/v1/users/me/` | GET | 获取当前用户信息 |
 | profile/Index.vue | `/api/v1/users/me/` | PUT | 更新当前用户信息 |
 | profile/Index.vue | `/api/v1/users/me/change-password/` | POST | 修改当前用户密码 |
+| profile/Index.vue | `/api/v1/users/me/upload-avatar/` | POST | 上传当前用户头像 |
 | user/Edit.vue | `/api/v1/users/{id}/change-password/` | POST | 管理员修改用户密码 |
+| user/Edit.vue | `/api/v1/users/{id}/upload-avatar/` | POST | 管理员上传用户头像（仅编辑页面可用，创建页面不可用） |
 
 ## 租户管理模块接口映射
 
@@ -251,4 +253,3 @@ const exportUsers = async (params) => {
     throw error;
   }
 };
-``` 

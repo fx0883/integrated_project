@@ -153,7 +153,6 @@ Authorization: Bearer {token}
 | nick_name | String | 否 | 昵称 |
 | first_name | String | 否 | 名 |
 | last_name | String | 否 | 姓 |
-| avatar | String | 否 | 头像URL |
 
 #### 请求示例
 
@@ -336,10 +335,12 @@ GET /api/v1/users/?search=test&page=1&page_size=10
 | nick_name | String | 否 | 昵称 |
 | first_name | String | 否 | 名 |
 | last_name | String | 否 | 姓 |
-| avatar | String | 否 | 头像URL |
 | tenant_id | Integer | 否 | 所属租户ID（仅超级管理员可设置） |
 | is_admin | Boolean | 否 | 是否为管理员 |
 | is_member | Boolean | 否 | 是否为成员 |
+| send_welcome_email | Boolean | 否 | 是否发送欢迎邮件，默认false |
+
+**注意**：根据系统最新设计，用户创建时不支持上传头像，头像只能在用户创建后通过编辑功能上传。
 
 #### 请求示例
 
@@ -364,7 +365,7 @@ GET /api/v1/users/?search=test&page=1&page_size=10
 ```json
 {
   "success": true,
-  "code": 2000,
+  "code": 2001,
   "message": "创建成功",
   "data": {
     "id": 2,
@@ -911,7 +912,7 @@ Content-Type: image/jpeg
 
 ### 管理员为指定用户上传头像
 
-允许租户管理员或超级管理员为其权限范围内的用户上传头像。租户管理员只能为同租户内的用户上传头像，超级管理员可以为任何用户上传头像。
+允许租户管理员或超级管理员为其权限范围内的用户上传头像。租户管理员只能为同租户内的用户上传头像，超级管理员可以为任何用户上传头像。**注意：此功能只能在用户编辑页面使用，不能在用户创建时使用。**
 
 - **URL**: `/api/v1/users/{id}/upload-avatar/`
 - **方法**: `POST`
