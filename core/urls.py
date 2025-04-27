@@ -68,6 +68,9 @@ urlpatterns = [
         # 通用功能路由
         path('common/', include('common.urls', namespace='common')),
         
+        # 打卡系统路由
+        path('check-system/', include('check_system.urls', namespace='check-system')),
+        
         # API 文档
         path('schema/', LoggingSpectacularAPIView.as_view(), name='schema'),
         path('docs/', LoggingSpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

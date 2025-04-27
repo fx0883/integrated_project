@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'tenants',
     'users',
     'docs_view',  # 新添加的文档查看应用
+    'check_system',  # 打卡系统应用
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,281 @@
+"""
+打卡系统模型定义
+"""
+import logging
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
+
+from users.models import User
+from tenants.models import Tenant
+
+logger = logging.getLogger(__name__)
+
+
+class TaskCategory(models.Model):
+    """
+    打卡类型模型，用于对打卡任务进行分类
+    """
+    name = models.CharField(_("类型名称"), max_length=50)
+    description = models.CharField(_("类型描述"), max_length=200, blank=True)
+    is_system = models.BooleanField(_("是否系统预设"), default=False)
+    icon = models.CharField(_("图标"), max_length=50, blank=True)
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="task_categories",
+        verbose_name=_("创建用户")
+    )
+    tenant = models.ForeignKey(
+        Tenant, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        related_name="task_categories",
+        verbose_name=_("所属租户")
+    )
+    translations = models.JSONField(_("多语言翻译"), default=dict, blank=True)
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    
+    class Meta:
+        verbose_name = _('打卡类型')
+        verbose_name_plural = _('打卡类型')
+        db_table = 'task_category'
+        ordering = ['-created_at']
+        unique_together = [['name', 'user', 'tenant']]
+    
+    def __str__(self):
+        if self.is_system:
+            return f"{self.name} (系统)"
+        return f"{self.name}"
+    
+    def clean(self):
+        """
+        数据验证：系统预设类型的user和tenant必须为空
+        """
+        if self.is_system and (self.user or self.tenant):
+            raise ValidationError(_("系统预设类型不能关联用户或租户"))
+    
+    def save(self, *args, **kwargs):
+        """
+        重写保存方法，添加验证和日志
+        """
+        self.clean()
+        is_new = self.pk is None
+        if is_new:
+            if self.is_system:
+                logger.info(f"创建系统预设类型: {self.name}")
+            else:
+                user_name = self.user.username if self.user else "未知用户"
+                logger.info(f"用户 {user_name} 创建自定义类型: {self.name}")
+        
+        super().save(*args, **kwargs)
+    
+    def get_translated_name(self, language_code='zh-hans'):
+        """
+        获取指定语言的名称
+        """
+        translations = self.translations.get('name', {})
+        return translations.get(language_code, self.name)
+    
+    def get_translated_description(self, language_code='zh-hans'):
+        """
+        获取指定语言的描述
+        """
+        translations = self.translations.get('description', {})
+        return translations.get(language_code, self.description)
+
+
+class Task(models.Model):
+    """
+    打卡任务模型，记录用户需要打卡的具体任务
+    """
+    STATUS_CHOICES = (
+        ('active', '进行中'),
+        ('completed', '已完成'),
+        ('paused', '已暂停'),
+        ('archived', '已归档'),
+    )
+    
+    name = models.CharField(_("任务名称"), max_length=100)
+    description = models.TextField(_("任务描述"), blank=True)
+    category = models.ForeignKey(
+        TaskCategory, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name="tasks",
+        verbose_name=_("所属类型")
+    )
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name="tasks",
+        verbose_name=_("所属用户")
+    )
+    tenant = models.ForeignKey(
+        Tenant, 
+        on_delete=models.CASCADE, 
+        null=True,
+        related_name="tasks",
+        verbose_name=_("所属租户")
+    )
+    start_date = models.DateField(_("开始日期"))
+    end_date = models.DateField(_("结束日期"), null=True, blank=True)
+    status = models.CharField(_("状态"), max_length=20, choices=STATUS_CHOICES, default='active')
+    reminder = models.BooleanField(_("是否启用提醒"), default=False)
+    reminder_time = models.TimeField(_("提醒时间"), null=True, blank=True)
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    
+    class Meta:
+        verbose_name = _('打卡任务')
+        verbose_name_plural = _('打卡任务')
+        db_table = 'task'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
+    
+    def save(self, *args, **kwargs):
+        """
+        重写保存方法，添加日志和自动关联租户
+        """
+        is_new = self.pk is None
+        
+        # 如果用户关联了租户，自动设置任务的租户
+        if self.user and self.user.tenant and not self.tenant:
+            self.tenant = self.user.tenant
+        
+        if is_new:
+            logger.info(f"用户 {self.user.username} 创建任务: {self.name}")
+        else:
+            logger.info(f"更新任务: {self.name}")
+        
+        super().save(*args, **kwargs)
+
+
+class CheckRecord(models.Model):
+    """
+    打卡记录模型，记录用户的打卡情况
+    """
+    task = models.ForeignKey(
+        Task, 
+        on_delete=models.CASCADE,
+        related_name="check_records",
+        verbose_name=_("所属任务")
+    )
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name="check_records",
+        verbose_name=_("所属用户")
+    )
+    check_date = models.DateField(_("打卡日期"))
+    check_time = models.TimeField(_("打卡时间"))
+    remarks = models.TextField(_("备注"), blank=True)
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    
+    class Meta:
+        verbose_name = _('打卡记录')
+        verbose_name_plural = _('打卡记录')
+        db_table = 'check_record'
+        ordering = ['-check_date', '-check_time']
+        unique_together = [['user', 'task', 'check_date']]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.task.name} - {self.check_date}"
+    
+    def save(self, *args, **kwargs):
+        """
+        重写保存方法，添加日志
+        """
+        is_new = self.pk is None
+        if is_new:
+            logger.info(f"用户 {self.user.username} 为任务 {self.task.name} 创建打卡记录")
+        
+        super().save(*args, **kwargs)
+
+
+class TaskTemplate(models.Model):
+    """
+    任务模板模型，用于快速创建常用任务
+    """
+    name = models.CharField(_("模板名称"), max_length=100)
+    description = models.TextField(_("模板描述"), blank=True)
+    category = models.ForeignKey(
+        TaskCategory, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name="templates",
+        verbose_name=_("所属类型")
+    )
+    is_system = models.BooleanField(_("是否系统预设"), default=False)
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="task_templates",
+        verbose_name=_("创建用户")
+    )
+    tenant = models.ForeignKey(
+        Tenant, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        related_name="task_templates",
+        verbose_name=_("所属租户")
+    )
+    translations = models.JSONField(_("多语言翻译"), default=dict, blank=True)
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    
+    class Meta:
+        verbose_name = _('任务模板')
+        verbose_name_plural = _('任务模板')
+        db_table = 'task_template'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_system:
+            return f"{self.name} (系统)"
+        return f"{self.name}"
+    
+    def clean(self):
+        """
+        数据验证：系统预设模板的user和tenant必须为空
+        """
+        if self.is_system and (self.user or self.tenant):
+            raise ValidationError(_("系统预设模板不能关联用户或租户"))
+    
+    def save(self, *args, **kwargs):
+        """
+        重写保存方法，添加验证和日志
+        """
+        self.clean()
+        is_new = self.pk is None
+        if is_new:
+            if self.is_system:
+                logger.info(f"创建系统预设模板: {self.name}")
+            else:
+                user_name = self.user.username if self.user else "未知用户"
+                logger.info(f"用户 {user_name} 创建自定义模板: {self.name}")
+        
+        super().save(*args, **kwargs)
+    
+    def get_translated_name(self, language_code='zh-hans'):
+        """
+        获取指定语言的名称
+        """
+        translations = self.translations.get('name', {})
+        return translations.get(language_code, self.name)
+    
+    def get_translated_description(self, language_code='zh-hans'):
+        """
+        获取指定语言的描述
+        """
+        translations = self.translations.get('description', {})
+        return translations.get(language_code, self.description)
