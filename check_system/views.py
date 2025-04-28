@@ -11,10 +11,16 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiPara
 
 from common.permissions import IsSuperAdmin, IsAdmin
 from common.pagination import StandardResultsSetPagination
+from common.authentication.jwt_auth import JWTAuthentication
+from users.models import User
 from .models import TaskCategory, Task, CheckRecord, TaskTemplate
 from .serializers import (
     TaskCategorySerializer, TaskSerializer, 
     CheckRecordSerializer, TaskTemplateSerializer
+)
+from .permissions import (
+    TaskCategoryPermission, TaskPermission,
+    CheckRecordPermission, TaskTemplatePermission
 )
 
 
@@ -189,6 +195,10 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name']
     ordering = ['-created_at']
     
+    # 添加认证和权限类
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [TaskCategoryPermission]
+    
     def get_queryset(self):
         """
         获取查询集，根据用户角色过滤
@@ -199,46 +209,111 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # 基础查询：系统预设类型 + 用户自己的类型
-        base_query = Q(is_system=True) | Q(user=user)
+        queryset = TaskCategory.objects.filter(
+            Q(is_system=True) | Q(user=user)
+        )
         
-        # 管理员可以查看本租户的所有类型
-        if user.is_admin and not user.is_super_admin and user.tenant:
-            base_query |= Q(tenant=user.tenant)
+        # 租户管理员: 添加查看租户内所有类型的权限
+        if user.is_admin and user.tenant:
+            queryset = queryset | TaskCategory.objects.filter(tenant=user.tenant)
         
-        # 超级管理员可以查看所有类型
+        # 超级管理员: 查看所有类型
         if user.is_super_admin:
-            return TaskCategory.objects.all()
+            queryset = TaskCategory.objects.all()
+            
+        # 主member: 可以查看子账号创建的类型
+        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
+            queryset = queryset | TaskCategory.objects.filter(user_id__in=sub_account_ids)
+            
+        return queryset.distinct()
         
-        return TaskCategory.objects.filter(base_query)
-    
     def perform_create(self, serializer):
         """
-        创建打卡类型时自动关联当前用户
+        创建类型时自动关联当前用户
+        根据角色处理user_id参数
         """
-        # 设置用户和租户
         user = self.request.user
-        serializer.save(
-            user=user,
-            tenant=user.tenant
-        )
+        data = self.request.data
+        
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
+        
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以指定用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户创建类型"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号创建类型"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=target_user.tenant
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(
+                    user=user, 
+                    tenant=user.tenant
+                )
+        else:
+            # 普通member：只能为自己创建
+            serializer.save(
+                user=user, 
+                tenant=user.tenant
+            )
     
     def perform_update(self, serializer):
         """
-        更新打卡类型时进行权限检查
+        更新类型时进行权限检查
+        根据角色处理user_id参数
         """
-        instance = self.get_object()
         user = self.request.user
+        data = self.request.data
+        instance = self.get_object()
         
-        # 检查权限
-        if instance.user != user and not user.is_admin:
-            raise permissions.PermissionDenied(_("您没有权限修改此打卡类型"))
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
         
-        # 设置租户（如果用户变更）
-        if 'user' in serializer.validated_data:
-            new_user = serializer.validated_data['user']
-            serializer.validated_data['tenant'] = new_user.tenant
-        
-        serializer.save()
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以修改用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户修改类型"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改类型"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=target_user.tenant
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样
+                serializer.save()
+        else:
+            # 普通member：只能修改自己的
+            if instance.user != user:
+                raise serializers.ValidationError(_("无法修改其他用户的类型"))
+            serializer.save()
 
 
 @extend_schema_view(
@@ -395,6 +470,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name', 'start_date', 'end_date']
     ordering = ['-created_at']
     
+    # 添加认证和权限类
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [TaskPermission]
+    
     def get_queryset(self):
         """
         获取查询集，根据用户角色过滤
@@ -405,205 +484,142 @@ class TaskViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # 基础查询：用户自己的任务
-        base_query = Q(user=user)
+        queryset = Task.objects.filter(user=user)
         
-        # 管理员可以查看本租户的所有任务
-        if user.is_admin and not user.is_super_admin and user.tenant:
-            base_query |= Q(tenant=user.tenant)
+        # 租户管理员: 添加查看租户内所有任务的权限
+        if user.is_admin and user.tenant:
+            queryset = queryset | Task.objects.filter(tenant=user.tenant)
         
-        # 超级管理员可以查看所有任务
+        # 超级管理员: 查看所有任务
         if user.is_super_admin:
-            return Task.objects.all()
-        
-        return Task.objects.filter(base_query)
+            queryset = Task.objects.all()
+            
+        # 主member: 可以查看子账号的任务
+        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
+            queryset = queryset | Task.objects.filter(user_id__in=sub_account_ids)
+            
+        return queryset.distinct()
     
     def perform_create(self, serializer):
         """
         创建任务时自动关联当前用户
+        根据角色处理user_id参数
         """
-        # 设置用户和租户
         user = self.request.user
-        serializer.save(
-            user=user,
-            tenant=user.tenant
-        )
+        data = self.request.data
+        
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
+        
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以指定用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户创建任务"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号创建任务"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=target_user.tenant
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(
+                    user=user, 
+                    tenant=user.tenant
+                )
+        else:
+            # 普通member：只能为自己创建
+            serializer.save(
+                user=user, 
+                tenant=user.tenant
+            )
     
     def perform_update(self, serializer):
         """
         更新任务时进行权限检查
+        根据角色处理user_id参数
         """
-        instance = self.get_object()
         user = self.request.user
+        data = self.request.data
+        instance = self.get_object()
         
-        # 检查权限
-        if instance.user != user and not user.is_admin:
-            raise permissions.PermissionDenied(_("您没有权限修改此任务"))
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
         
-        # 设置租户（如果用户变更）
-        if 'user' in serializer.validated_data:
-            new_user = serializer.validated_data['user']
-            serializer.validated_data['tenant'] = new_user.tenant
-        
-        serializer.save()
-    
-    @extend_schema(
-        summary="打卡接口",
-        description="为指定任务创建打卡记录",
-        tags=["打卡系统-任务管理"],
-        request=CheckRecordSerializer,
-        responses={201: CheckRecordSerializer},
-        examples=[
-            OpenApiExample(
-                'Check-in Example',
-                summary='打卡示例',
-                description='为指定任务创建打卡记录',
-                value={
-                    'check_date': '2025-05-01',
-                    'check_time': '06:00:00',
-                    'remarks': '今天起得很早，感觉很棒！'
-                }
-            )
-        ]
-    )
-    @action(detail=True, methods=['post'])
-    def check_in(self, request, pk=None):
-        """
-        任务打卡接口
-        """
-        task = self.get_object()
-        user = request.user
-        
-        # 检查权限
-        if task.user != user and not user.is_admin:
-            return Response(
-                {"detail": _("您没有权限为此任务打卡")},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # 创建打卡记录
-        serializer = CheckRecordSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(task=task, user=user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以修改用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户修改任务"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改任务"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=target_user.tenant
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样
+                serializer.save()
+        else:
+            # 普通member：只能修改自己的
+            if instance.user != user:
+                raise serializers.ValidationError(_("无法修改其他用户的任务"))
+            serializer.save()
 
 
 @extend_schema_view(
     list=extend_schema(
         summary="获取打卡记录列表",
         description="获取打卡记录列表，支持分页、过滤和搜索",
-        tags=["打卡系统-打卡记录"],
-        parameters=[
-            OpenApiParameter(name="task", description="任务ID", required=False, type=int),
-            OpenApiParameter(name="check_date", description="打卡日期", required=False, type=str),
-            OpenApiParameter(name="search", description="搜索关键词", required=False, type=str),
-        ],
-        examples=[
-            OpenApiExample(
-                'List Records Example',
-                summary='获取打卡记录列表示例',
-                description='获取打卡记录列表，支持分页、过滤和搜索',
-                value={
-                    'page': 1,
-                    'page_size': 10,
-                    'task': 1,
-                    'check_date': '2025-05-01',
-                    'search': '早起'
-                }
-            )
-        ]
+        tags=["打卡系统-记录管理"],
     ),
     retrieve=extend_schema(
         summary="获取打卡记录详情",
         description="获取单个打卡记录的详细信息",
-        tags=["打卡系统-打卡记录"],
-        examples=[
-            OpenApiExample(
-                'Retrieve Record Example',
-                summary='获取打卡记录详情示例',
-                description='获取单个打卡记录的详细信息',
-                value={
-                    'id': 1
-                }
-            )
-        ]
+        tags=["打卡系统-记录管理"],
     ),
     create=extend_schema(
         summary="创建打卡记录",
         description="创建新的打卡记录",
-        tags=["打卡系统-打卡记录"],
-        examples=[
-            OpenApiExample(
-                'Create Record Example',
-                summary='创建打卡记录示例',
-                description='为特定任务创建一条打卡记录',
-                value={
-                    'task': 1,
-                    'check_date': '2025-05-01',
-                    'check_time': '06:00:00',
-                    'remarks': '今天起得很早，感觉很棒！'
-                }
-            ),
-            OpenApiExample(
-                'Create Simple Record Example',
-                summary='创建简单打卡记录示例',
-                description='仅记录打卡日期和时间',
-                value={
-                    'task': 2,
-                    'check_date': '2025-05-01',
-                    'check_time': '20:00:00'
-                }
-            )
-        ]
+        tags=["打卡系统-记录管理"],
     ),
     update=extend_schema(
         summary="更新打卡记录",
-        description="更新现有打卡记录的所有字段",
-        tags=["打卡系统-打卡记录"],
-        examples=[
-            OpenApiExample(
-                'Update Record Example',
-                summary='更新打卡记录示例',
-                description='更新打卡记录的所有字段',
-                value={
-                    'task': 1,
-                    'check_date': '2025-05-01',
-                    'check_time': '05:45:00',
-                    'remarks': '今天起得比计划还早，很有成就感！'
-                }
-            )
-        ]
+        description="更新现有的打卡记录",
+        tags=["打卡系统-记录管理"],
     ),
     partial_update=extend_schema(
         summary="部分更新打卡记录",
-        description="更新现有打卡记录的部分字段",
-        tags=["打卡系统-打卡记录"],
-        examples=[
-            OpenApiExample(
-                'Update Record Remarks Example',
-                summary='更新打卡记录备注示例',
-                description='仅更新打卡记录的备注内容',
-                value={
-                    'remarks': '补充说明：今天起床后完成了晨读计划'
-                }
-            )
-        ]
+        description="部分更新现有的打卡记录",
+        tags=["打卡系统-记录管理"],
     ),
     destroy=extend_schema(
         summary="删除打卡记录",
-        description="删除现有打卡记录",
-        tags=["打卡系统-打卡记录"],
-        examples=[
-            OpenApiExample(
-                'Delete Record Example',
-                summary='删除打卡记录示例',
-                description='删除一条现有打卡记录',
-                value={
-                    'id': 1
-                }
-            )
-        ]
-    ),
+        description="删除现有的打卡记录",
+        tags=["打卡系统-记录管理"],
+    )
 )
 class CheckRecordViewSet(viewsets.ModelViewSet):
     """
@@ -622,6 +638,10 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
     ordering_fields = ['check_date', 'check_time', 'created_at']
     ordering = ['-check_date', '-check_time']
     
+    # 添加认证和权限类
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [CheckRecordPermission]
+    
     def get_queryset(self):
         """
         获取查询集，根据用户角色过滤
@@ -632,37 +652,99 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # 基础查询：用户自己的打卡记录
-        base_query = Q(user=user)
+        queryset = CheckRecord.objects.filter(user=user)
         
-        # 管理员可以查看本租户的所有打卡记录
-        if user.is_admin and not user.is_super_admin and user.tenant:
-            tenant_users = user.tenant.users.all()
-            base_query |= Q(user__in=tenant_users)
+        # 租户管理员: 查看租户内所有打卡记录
+        if user.is_admin and user.tenant:
+            # 获取租户内的所有用户ID
+            tenant_user_ids = User.objects.filter(tenant=user.tenant).values_list('id', flat=True)
+            queryset = CheckRecord.objects.filter(user_id__in=tenant_user_ids)
         
-        # 超级管理员可以查看所有打卡记录
+        # 超级管理员: 查看所有打卡记录
         if user.is_super_admin:
-            return CheckRecord.objects.all()
-        
-        return CheckRecord.objects.filter(base_query)
+            queryset = CheckRecord.objects.all()
+            
+        # 主member: 可以查看子账号的打卡记录
+        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
+            queryset = queryset | CheckRecord.objects.filter(user_id__in=sub_account_ids)
+            
+        return queryset.distinct()
     
     def perform_create(self, serializer):
         """
         创建打卡记录时自动关联当前用户
+        根据角色处理user_id参数
         """
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        data = self.request.data
+        
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
+        
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以指定用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户创建打卡记录"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号创建打卡记录"))
+                    
+                    # 设置用户
+                    serializer.save(user=target_user)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(user=user)
+        else:
+            # 普通member：只能为自己创建
+            serializer.save(user=user)
     
     def perform_update(self, serializer):
         """
         更新打卡记录时进行权限检查
+        根据角色处理user_id参数
         """
-        instance = self.get_object()
         user = self.request.user
+        data = self.request.data
+        instance = self.get_object()
         
-        # 检查权限
-        if instance.user != user and not user.is_admin:
-            raise permissions.PermissionDenied(_("您没有权限修改此打卡记录"))
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
         
-        serializer.save()
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以修改用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户修改打卡记录"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改打卡记录"))
+                    
+                    # 设置用户
+                    serializer.save(user=target_user)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样
+                serializer.save()
+        else:
+            # 普通member：只能修改自己的
+            if instance.user != user:
+                raise serializers.ValidationError(_("无法修改其他用户的打卡记录"))
+            serializer.save()
 
 
 @extend_schema_view(
@@ -670,156 +752,32 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         summary="获取任务模板列表",
         description="获取任务模板列表，支持分页、过滤和搜索",
         tags=["打卡系统-模板管理"],
-        parameters=[
-            OpenApiParameter(name="category", description="打卡类型ID", required=False, type=int),
-            OpenApiParameter(name="is_system", description="是否为系统预设模板", required=False, type=bool),
-            OpenApiParameter(name="search", description="搜索关键词", required=False, type=str),
-        ],
-        examples=[
-            OpenApiExample(
-                'List Templates Example',
-                summary='获取任务模板列表示例',
-                description='获取任务模板列表，支持分页、过滤和搜索',
-                value={
-                    'page': 1,
-                    'page_size': 10,
-                    'category': 1,
-                    'is_system': True,
-                    'search': '健身'
-                }
-            )
-        ]
     ),
     retrieve=extend_schema(
         summary="获取任务模板详情",
         description="获取单个任务模板的详细信息",
         tags=["打卡系统-模板管理"],
-        examples=[
-            OpenApiExample(
-                'Retrieve Template Example',
-                summary='获取任务模板详情示例',
-                description='获取单个任务模板的详细信息',
-                value={
-                    'id': 1
-                }
-            )
-        ]
     ),
     create=extend_schema(
         summary="创建任务模板",
         description="创建新的任务模板",
         tags=["打卡系统-模板管理"],
-        examples=[
-            OpenApiExample(
-                'Custom Template Example',
-                summary='自定义任务模板示例',
-                description='创建一个自定义的任务模板',
-                value={
-                    'name': '晨跑计划',
-                    'description': '每天早上进行30分钟晨跑',
-                    'category': 1,
-                    'is_system': False,
-                    'translations': {
-                        'en': {
-                            'name': 'Morning Run Plan',
-                            'description': '30 minutes morning run every day'
-                        },
-                        'zh-hans': {
-                            'name': '晨跑计划',
-                            'description': '每天早上进行30分钟晨跑'
-                        }
-                    }
-                }
-            ),
-            OpenApiExample(
-                'System Template Example',
-                summary='系统预设模板示例',
-                description='创建一个系统预设的任务模板（仅供超级管理员使用）',
-                value={
-                    'name': '阅读习惯养成',
-                    'description': '每天阅读30分钟，培养阅读习惯',
-                    'category': 2,
-                    'is_system': True,
-                    'translations': {
-                        'en': {
-                            'name': 'Reading Habit',
-                            'description': 'Read for 30 minutes every day to develop reading habits'
-                        },
-                        'zh-hans': {
-                            'name': '阅读习惯养成',
-                            'description': '每天阅读30分钟，培养阅读习惯'
-                        }
-                    }
-                }
-            )
-        ]
     ),
     update=extend_schema(
         summary="更新任务模板",
-        description="更新现有任务模板的所有字段",
+        description="更新现有任务模板",
         tags=["打卡系统-模板管理"],
-        examples=[
-            OpenApiExample(
-                'Update Template Example',
-                summary='更新任务模板示例',
-                description='更新现有任务模板的所有字段',
-                value={
-                    'name': '晨跑计划',
-                    'description': '每天早上进行45分钟晨跑，提高身体素质',
-                    'category': 1,
-                    'is_system': False,
-                    'translations': {
-                        'en': {
-                            'name': 'Morning Run Plan',
-                            'description': '45 minutes morning run every day to improve fitness'
-                        },
-                        'zh-hans': {
-                            'name': '晨跑计划',
-                            'description': '每天早上进行45分钟晨跑，提高身体素质'
-                        }
-                    }
-                }
-            )
-        ]
     ),
     partial_update=extend_schema(
         summary="部分更新任务模板",
-        description="更新现有任务模板的部分字段",
+        description="部分更新现有任务模板",
         tags=["打卡系统-模板管理"],
-        examples=[
-            OpenApiExample(
-                'Partial Update Template Example',
-                summary='部分更新任务模板示例',
-                description='仅更新任务模板的描述字段',
-                value={
-                    'description': '每天早上进行30-45分钟晨跑，提高身体素质和耐力',
-                    'translations': {
-                        'en': {
-                            'description': '30-45 minutes morning run every day to improve fitness and endurance'
-                        },
-                        'zh-hans': {
-                            'description': '每天早上进行30-45分钟晨跑，提高身体素质和耐力'
-                        }
-                    }
-                }
-            )
-        ]
     ),
     destroy=extend_schema(
         summary="删除任务模板",
         description="删除现有任务模板",
         tags=["打卡系统-模板管理"],
-        examples=[
-            OpenApiExample(
-                'Delete Template Example',
-                summary='删除任务模板示例',
-                description='删除现有任务模板',
-                value={
-                    'id': 1
-                }
-            )
-        ]
-    ),
+    )
 )
 class TaskTemplateViewSet(viewsets.ModelViewSet):
     """
@@ -838,6 +796,10 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'name']
     ordering = ['-created_at']
     
+    # 添加认证和权限类
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [TaskTemplatePermission]
+    
     def get_queryset(self):
         """
         获取查询集，根据用户角色过滤
@@ -848,104 +810,108 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # 基础查询：系统预设模板 + 用户自己的模板
-        base_query = Q(is_system=True) | Q(user=user)
+        queryset = TaskTemplate.objects.filter(
+            Q(is_system=True) | Q(user=user)
+        )
         
-        # 管理员可以查看本租户的所有模板
-        if user.is_admin and not user.is_super_admin and user.tenant:
-            base_query |= Q(tenant=user.tenant)
+        # 租户管理员: 添加查看租户内所有模板的权限
+        if user.is_admin and user.tenant:
+            queryset = queryset | TaskTemplate.objects.filter(tenant=user.tenant)
         
-        # 超级管理员可以查看所有模板
+        # 超级管理员: 查看所有模板
         if user.is_super_admin:
-            return TaskTemplate.objects.all()
-        
-        return TaskTemplate.objects.filter(base_query)
+            queryset = TaskTemplate.objects.all()
+            
+        # 主member: 可以查看子账号创建的模板
+        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
+            queryset = queryset | TaskTemplate.objects.filter(user_id__in=sub_account_ids)
+            
+        return queryset.distinct()
     
     def perform_create(self, serializer):
         """
         创建模板时自动关联当前用户
+        根据角色处理user_id参数
         """
-        # 设置用户和租户
         user = self.request.user
-        serializer.save(
-            user=user,
-            tenant=user.tenant
-        )
+        data = self.request.data
+        
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
+        
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以指定用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户创建模板"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号创建模板"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=target_user.tenant
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(
+                    user=user, 
+                    tenant=user.tenant
+                )
+        else:
+            # 普通member：只能为自己创建
+            serializer.save(
+                user=user, 
+                tenant=user.tenant
+            )
     
     def perform_update(self, serializer):
         """
         更新模板时进行权限检查
+        根据角色处理user_id参数
         """
-        instance = self.get_object()
         user = self.request.user
+        data = self.request.data
+        instance = self.get_object()
         
-        # 检查权限
-        if instance.user != user and not user.is_admin:
-            raise permissions.PermissionDenied(_("您没有权限修改此模板"))
+        # 获取user_id
+        user_id = data.get('user_id') or data.get('user')
         
-        # 设置租户（如果用户变更）
-        if 'user' in serializer.validated_data:
-            new_user = serializer.validated_data['user']
-            serializer.validated_data['tenant'] = new_user.tenant
-        
-        serializer.save()
-    
-    @extend_schema(
-        summary="基于模板创建任务",
-        description="使用指定的模板创建新任务",
-        tags=["打卡系统-模板管理"],
-        request=TaskSerializer,
-        responses={201: TaskSerializer},
-        examples=[
-            OpenApiExample(
-                'Create Task From Template Example',
-                summary='基于模板创建任务示例',
-                description='使用指定的模板创建新任务',
-                value={
-                    'start_date': '2025-05-01',
-                    'end_date': '2025-05-31',
-                    'reminder': True,
-                    'reminder_time': '06:00:00'
-                }
-            ),
-            OpenApiExample(
-                'Create Task With Custom Name Example',
-                summary='创建自定义名称的任务示例',
-                description='基于模板创建任务并自定义任务名称',
-                value={
-                    'name': '我的晨跑打卡',
-                    'start_date': '2025-05-01',
-                    'reminder': True,
-                    'reminder_time': '05:30:00'
-                }
-            )
-        ]
-    )
-    @action(detail=True, methods=['post'])
-    def create_task(self, request, pk=None):
-        """
-        基于模板创建任务
-        """
-        template = self.get_object()
-        user = request.user
-        
-        # 获取请求数据，如果没有则使用空字典
-        data = request.data if request.data else {}
-        
-        # 从模板中获取基本信息
-        task_data = {
-            'name': data.get('name', template.name),
-            'description': data.get('description', template.description),
-            'category': template.category.id,
-            'status': 'active',
-            'start_date': data.get('start_date'),
-            'end_date': data.get('end_date'),
-            'reminder': data.get('reminder', False),
-            'reminder_time': data.get('reminder_time'),
-        }
-        
-        # 创建任务
-        serializer = TaskSerializer(data=task_data)
-        if serializer.is_valid():
-            serializer.save(user=user, tenant=user.tenant)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
+            # 租户管理员或主member：可以修改用户
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 如果是租户管理员，检查目标用户是否属于同一租户
+                    if user.is_admin and target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("无法为其他租户的用户修改模板"))
+                    
+                    # 如果是主member，检查目标用户是否为自己的子账号
+                    if not user.is_admin and target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改模板"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=target_user.tenant
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样
+                serializer.save()
+        else:
+            # 普通member：只能修改自己的
+            if instance.user != user:
+                raise serializers.ValidationError(_("无法修改其他用户的模板"))
+            serializer.save()
