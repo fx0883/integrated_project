@@ -1,10 +1,10 @@
 from django.shortcuts import render
 import logging
 from django.db.models import Q
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample, inline_serializer
 from common.permissions import IsSuperAdminUser, IsAdminUser
 from common.models import APILog
 from common.serializers import APILogSerializer, APILogDetailSerializer
@@ -200,13 +200,138 @@ class APILogDetailView(generics.RetrieveAPIView):
             'data': serializer.data
         })
 
+# 定义测试用序列化器
+class TestStandardResponseSerializer(serializers.Serializer):
+    message = serializers.CharField(help_text="测试消息")
+    test_field = serializers.CharField(help_text="测试字段")
+    items = serializers.ListField(child=serializers.IntegerField(), help_text="测试列表")
+
+class TestErrorResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField(help_text="错误详情")
+    fields = serializers.DictField(child=serializers.CharField(), help_text="字段错误信息")
+
+class TestAuthErrorResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField(help_text="认证错误详情")
+
+class PaginationInfoSerializer(serializers.Serializer):
+    count = serializers.IntegerField(help_text="总数")
+    next = serializers.CharField(help_text="下一页链接", allow_null=True)
+    previous = serializers.CharField(help_text="上一页链接", allow_null=True)
+    page_size = serializers.IntegerField(help_text="每页大小")
+    current_page = serializers.IntegerField(help_text="当前页码")
+    total_pages = serializers.IntegerField(help_text="总页数")
+
+class ResultItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField(help_text="项目ID")
+    name = serializers.CharField(help_text="项目名称")
+
+class TestPaginationResponseSerializer(serializers.Serializer):
+    pagination = PaginationInfoSerializer(help_text="分页信息")
+    results = serializers.ListField(child=ResultItemSerializer(), help_text="结果列表")
+
+# 将函数视图转换为基于类的视图
+class TestStandardResponseView(APIView):
+    """
+    测试成功响应的统一格式
+    """
+    permission_classes = [AllowAny]
+    serializer_class = TestStandardResponseSerializer  # 添加序列化器类
+    
+    @extend_schema(
+        description="测试统一响应格式的API",
+        summary="测试成功响应",
+        responses={
+            200: TestStandardResponseSerializer
+        },
+        tags=["测试"]
+    )
+    def get(self, request):
+        data = {
+            'message': '这是一个测试消息',
+            'test_field': 'test_value',
+            'items': [1, 2, 3, 4, 5]
+        }
+        return Response(data)
+
+class TestErrorResponseView(APIView):
+    """
+    测试错误响应的统一格式
+    """
+    permission_classes = [AllowAny]
+    serializer_class = TestErrorResponseSerializer  # 添加序列化器类
+    
+    @extend_schema(
+        description="测试错误响应的统一格式",
+        summary="测试错误响应",
+        responses={
+            400: TestErrorResponseSerializer
+        },
+        tags=["测试"]
+    )
+    def get(self, request):
+        error_data = {
+            'detail': '请求参数错误',
+            'fields': {
+                'name': '此字段是必填项',
+                'age': '此字段必须是一个整数',
+            }
+        }
+        return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+
+class TestAuthErrorResponseView(APIView):
+    """
+    测试认证失败响应的统一格式
+    """
+    permission_classes = [AllowAny]
+    serializer_class = TestAuthErrorResponseSerializer  # 添加序列化器类
+    
+    @extend_schema(
+        description="测试认证失败响应的统一格式",
+        summary="测试认证失败响应",
+        responses={
+            401: TestAuthErrorResponseSerializer
+        },
+        tags=["测试"]
+    )
+    def get(self, request):
+        return Response({'detail': '认证令牌无效'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class TestPaginationResponseView(APIView):
+    """
+    测试分页响应的统一格式
+    """
+    permission_classes = [AllowAny]
+    serializer_class = TestPaginationResponseSerializer  # 添加序列化器类
+    
+    @extend_schema(
+        description="测试分页响应的统一格式",
+        summary="测试分页响应",
+        responses={
+            200: TestPaginationResponseSerializer
+        },
+        tags=["测试"]
+    )
+    def get(self, request):
+        data = [{'id': i, 'name': f'Item {i}'} for i in range(1, 21)]
+        
+        # 手动模拟分页响应
+        paginated_data = {
+            'pagination': {
+                'count': 100,
+                'next': 'http://localhost:8000/api/v1/common/test-pagination/?page=2',
+                'previous': None,
+                'page_size': 20,
+                'current_page': 1,
+                'total_pages': 5,
+            },
+            'results': data
+        }
+        
+        return Response(paginated_data)
+
+# 保留原来的函数视图用于向后兼容，但不再使用@extend_schema
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@extend_schema(
-    description="测试统一响应格式的API",
-    summary="测试成功响应",
-    tags=["测试"]
-)
 def test_standard_response(request):
     """
     测试成功响应的统一格式
@@ -220,11 +345,6 @@ def test_standard_response(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@extend_schema(
-    description="测试错误响应的统一格式",
-    summary="测试错误响应",
-    tags=["测试"]
-)
 def test_error_response(request):
     """
     测试错误响应的统一格式
@@ -240,11 +360,6 @@ def test_error_response(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@extend_schema(
-    description="测试认证失败响应的统一格式",
-    summary="测试认证失败响应",
-    tags=["测试"]
-)
 def test_auth_error_response(request):
     """
     测试认证失败响应的统一格式
@@ -253,11 +368,6 @@ def test_auth_error_response(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@extend_schema(
-    description="测试分页响应的统一格式",
-    summary="测试分页响应",
-    tags=["测试"]
-)
 def test_pagination_response(request):
     """
     测试分页响应的统一格式

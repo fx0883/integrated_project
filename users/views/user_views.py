@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import serializers
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 
 from common.permissions import IsAdmin, IsSuperAdmin
@@ -476,12 +477,34 @@ class SuperAdminCreateView(generics.CreateAPIView):
         user = serializer.save(is_super_admin=True, is_admin=True, is_staff=True)
         logger.info(f"超级管理员 {self.request.user.username} 创建了新的超级管理员账号 {user.username}")
 
+# 添加简单的响应序列化器，用于解决DRF Spectacular的错误
+class SimpleResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField(help_text="响应消息")
+
 class GrantSuperAdminView(APIView):
     """
     授予超级管理员权限视图
     """
     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+    serializer_class = SimpleResponseSerializer  # 添加序列化器类
     
+    @extend_schema(
+        summary="授予超级管理员权限",
+        description="将指定用户提升为超级管理员。只有现有的超级管理员可以执行此操作。",
+        responses={
+            200: OpenApiResponse(
+                description="授权成功",
+                response=SimpleResponseSerializer
+            ),
+            400: OpenApiResponse(
+                description="操作失败",
+                response=SimpleResponseSerializer
+            ),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理", "权限管理"]
+    )
     def post(self, request, pk):
         user = get_object_or_404(User, pk=pk)
         
@@ -510,7 +533,25 @@ class RevokeSuperAdminView(APIView):
     撤销超级管理员权限视图
     """
     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+    serializer_class = SimpleResponseSerializer  # 添加序列化器类
     
+    @extend_schema(
+        summary="撤销超级管理员权限",
+        description="撤销指定用户的超级管理员权限。只有超级管理员可以执行此操作，并且不能撤销自己的权限。",
+        responses={
+            200: OpenApiResponse(
+                description="撤销成功",
+                response=SimpleResponseSerializer
+            ),
+            400: OpenApiResponse(
+                description="操作失败",
+                response=SimpleResponseSerializer
+            ),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理", "权限管理"]
+    )
     def post(self, request, pk):
         user = get_object_or_404(User, pk=pk)
         
@@ -545,6 +586,30 @@ class UserRoleUpdateView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     
+    @extend_schema(
+        summary="更新用户角色",
+        description="更新指定用户的角色（管理员/普通成员）。超级管理员可以更新任何用户的角色；租户管理员只能更新同一租户内的普通用户角色。",
+        request=UserRoleSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="角色更新成功",
+                response=UserRoleSerializer
+            ),
+            400: OpenApiResponse(
+                description="请求参数错误",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '不能修改超级管理员的角色'},
+                        'is_admin': {'type': 'array', 'items': {'type': 'string'}}
+                    }
+                }
+            ),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理"]
+    )
     def post(self, request, pk):
         # 获取用户
         user = self.request.user
@@ -683,6 +748,47 @@ class UserAvatarUploadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
     
+    @extend_schema(
+        summary="上传当前用户头像",
+        description="上传并更新当前登录用户的头像图片",
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'avatar': {
+                        'type': 'string',
+                        'format': 'binary',
+                        'description': '要上传的头像文件，支持JPG、PNG、GIF、WEBP或BMP格式',
+                    },
+                },
+                'required': ['avatar']
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description="头像上传成功",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '头像上传成功'},
+                        'avatar': {'type': 'string', 'example': 'https://example.com/media/avatars/user-avatar.jpg'},
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="请求错误",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '未提供头像文件/不支持的文件类型/文件太大'},
+                    }
+                }
+            ),
+            401: OpenApiResponse(description="未认证"),
+            500: OpenApiResponse(description="服务器内部错误")
+        },
+        tags=["用户管理"]
+    )
     def post(self, request, *args, **kwargs):
         """
         上传用户头像

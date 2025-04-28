@@ -7,6 +7,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from drf_spectacular.utils import extend_schema
 
 # 导入admin模块，确保所有模型被注册
 import core.admin
@@ -15,6 +16,12 @@ import core.admin
 logger = logging.getLogger(__name__)
 
 # 定义Spectacular视图类，添加日志记录
+@extend_schema(
+    summary="获取OpenAPI模式",
+    description="获取API的OpenAPI 3.0标准模式定义",
+    tags=["API文档"],
+    responses={200: {}}
+)
 class LoggingSpectacularAPIView(SpectacularAPIView):
     def get(self, request, *args, **kwargs):
         logger.info("访问 SpectacularAPIView schema endpoint")
@@ -26,6 +33,12 @@ class LoggingSpectacularAPIView(SpectacularAPIView):
             logger.error(f"Schema生成失败: {str(e)}", exc_info=True)
             raise
 
+@extend_schema(
+    summary="Swagger UI文档",
+    description="使用Swagger UI展示API文档",
+    tags=["API文档"],
+    responses={200: {}}
+)
 class LoggingSpectacularSwaggerView(SpectacularSwaggerView):
     def get(self, request, *args, **kwargs):
         logger.info("访问 Swagger UI 文档页面")
@@ -37,6 +50,12 @@ class LoggingSpectacularSwaggerView(SpectacularSwaggerView):
             logger.error(f"Swagger UI页面渲染失败: {str(e)}", exc_info=True)
             raise
 
+@extend_schema(
+    summary="ReDoc文档",
+    description="使用ReDoc展示API文档",
+    tags=["API文档"],
+    responses={200: {}}
+)
 class LoggingSpectacularRedocView(SpectacularRedocView):
     def get(self, request, *args, **kwargs):
         logger.info("访问 ReDoc 文档页面")

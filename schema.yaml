@@ -214,6 +214,986 @@ paths:
       responses:
         '200':
           description: 令牌验证成功
+  /api/v1/check-system/check-records/:
+    get:
+      operationId: api_v1_check_system_check_records_list
+      description: 获取打卡记录列表，支持分页、过滤和搜索
+      summary: 获取打卡记录列表
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - 打卡系统-记录管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCheckRecordList'
+          description: ''
+    post:
+      operationId: api_v1_check_system_check_records_create
+      description: 创建新的打卡记录
+      summary: 创建打卡记录
+      tags:
+      - 打卡系统-记录管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckRecordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckRecordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckRecordRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckRecord'
+          description: ''
+  /api/v1/check-system/check-records/{id}/:
+    get:
+      operationId: api_v1_check_system_check_records_retrieve
+      description: 获取单个打卡记录的详细信息
+      summary: 获取打卡记录详情
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-记录管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckRecord'
+          description: ''
+    put:
+      operationId: api_v1_check_system_check_records_update
+      description: 更新现有的打卡记录
+      summary: 更新打卡记录
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-记录管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckRecordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckRecordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckRecordRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckRecord'
+          description: ''
+    patch:
+      operationId: api_v1_check_system_check_records_partial_update
+      description: 部分更新现有的打卡记录
+      summary: 部分更新打卡记录
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-记录管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckRecordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckRecordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckRecordRequest'
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckRecord'
+          description: ''
+    delete:
+      operationId: api_v1_check_system_check_records_destroy
+      description: 删除现有的打卡记录
+      summary: 删除打卡记录
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-记录管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/check-system/task-categories/:
+    get:
+      operationId: api_v1_check_system_task_categories_list
+      description: 获取打卡类型列表，支持分页、过滤和搜索
+      summary: 获取打卡类型列表
+      parameters:
+      - in: query
+        name: is_system
+        schema:
+          type: boolean
+        description: 是否为系统预设类型
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: 搜索关键词
+      tags:
+      - 打卡系统-类型管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskCategoryList'
+              examples:
+                ListCategoriesExample:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - page: 1
+                      page_size: 10
+                      is_system: true
+                      search: 早起
+                  summary: 获取打卡类型列表示例
+                  description: 获取打卡类型列表，支持分页、过滤和搜索
+          description: ''
+    post:
+      operationId: api_v1_check_system_task_categories_create
+      description: 创建新的打卡类型
+      summary: 创建打卡类型
+      tags:
+      - 打卡系统-类型管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCategoryRequest'
+            examples:
+              CustomCategoryExample:
+                value:
+                  name: 早起打卡
+                  description: 每天早上6点前起床打卡
+                  is_system: false
+                  icon: sunrise
+                  translations:
+                    en:
+                      name: Early Rising
+                      description: Check in before 6:00 AM every day
+                    zh-hans:
+                      name: 早起打卡
+                      description: 每天早上6点前起床打卡
+                summary: 自定义打卡类型示例
+                description: 创建一个自定义的打卡类型
+              SystemCategoryExample:
+                value:
+                  name: 健身打卡
+                  description: 记录每天的健身情况
+                  is_system: true
+                  icon: dumbbell
+                  translations:
+                    en:
+                      name: Fitness
+                      description: Record daily workout activities
+                    zh-hans:
+                      name: 健身打卡
+                      description: 记录每天的健身情况
+                summary: 系统预设类型示例
+                description: 创建一个系统预设的打卡类型（仅供超级管理员使用）
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCategoryRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCategory'
+              examples:
+                CustomCategoryExample:
+                  value:
+                    name: 早起打卡
+                    description: 每天早上6点前起床打卡
+                    is_system: false
+                    icon: sunrise
+                    translations:
+                      en:
+                        name: Early Rising
+                        description: Check in before 6:00 AM every day
+                      zh-hans:
+                        name: 早起打卡
+                        description: 每天早上6点前起床打卡
+                  summary: 自定义打卡类型示例
+                  description: 创建一个自定义的打卡类型
+                SystemCategoryExample:
+                  value:
+                    name: 健身打卡
+                    description: 记录每天的健身情况
+                    is_system: true
+                    icon: dumbbell
+                    translations:
+                      en:
+                        name: Fitness
+                        description: Record daily workout activities
+                      zh-hans:
+                        name: 健身打卡
+                        description: 记录每天的健身情况
+                  summary: 系统预设类型示例
+                  description: 创建一个系统预设的打卡类型（仅供超级管理员使用）
+          description: ''
+  /api/v1/check-system/task-categories/{id}/:
+    get:
+      operationId: api_v1_check_system_task_categories_retrieve
+      description: 获取单个打卡类型的详细信息
+      summary: 获取打卡类型详情
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-类型管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCategory'
+              examples:
+                RetrieveCategoryExample:
+                  value:
+                    id: 1
+                  summary: 获取打卡类型详情示例
+                  description: 获取单个打卡类型的详细信息
+          description: ''
+    put:
+      operationId: api_v1_check_system_task_categories_update
+      description: 更新现有打卡类型的所有字段
+      summary: 更新打卡类型
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-类型管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCategoryRequest'
+            examples:
+              UpdateCategoryExample:
+                value:
+                  name: 早起打卡
+                  description: 每天早上6点前起床打卡，养成早起好习惯
+                  is_system: false
+                  icon: sunrise
+                  translations:
+                    en:
+                      name: Early Rising
+                      description: Check in before 6:00 AM every day, develop a habit
+                        of early rising
+                    zh-hans:
+                      name: 早起打卡
+                      description: 每天早上6点前起床打卡，养成早起好习惯
+                summary: 更新打卡类型示例
+                description: 更新现有打卡类型的所有字段
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCategoryRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCategory'
+              examples:
+                UpdateCategoryExample:
+                  value:
+                    name: 早起打卡
+                    description: 每天早上6点前起床打卡，养成早起好习惯
+                    is_system: false
+                    icon: sunrise
+                    translations:
+                      en:
+                        name: Early Rising
+                        description: Check in before 6:00 AM every day, develop a
+                          habit of early rising
+                      zh-hans:
+                        name: 早起打卡
+                        description: 每天早上6点前起床打卡，养成早起好习惯
+                  summary: 更新打卡类型示例
+                  description: 更新现有打卡类型的所有字段
+          description: ''
+    patch:
+      operationId: api_v1_check_system_task_categories_partial_update
+      description: 更新现有打卡类型的部分字段
+      summary: 部分更新打卡类型
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-类型管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCategoryRequest'
+            examples:
+              PartialUpdateCategoryExample:
+                value:
+                  description: 每天早上6点前起床打卡，养成早起好习惯，提高效率
+                  translations:
+                    en:
+                      description: Check in before 6:00 AM every day, develop a habit
+                        of early rising, improve efficiency
+                    zh-hans:
+                      description: 每天早上6点前起床打卡，养成早起好习惯，提高效率
+                summary: 部分更新打卡类型示例
+                description: 仅更新打卡类型的描述字段
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCategoryRequest'
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCategory'
+              examples:
+                PartialUpdateCategoryExample:
+                  value:
+                    description: 每天早上6点前起床打卡，养成早起好习惯，提高效率
+                    translations:
+                      en:
+                        description: Check in before 6:00 AM every day, develop a
+                          habit of early rising, improve efficiency
+                      zh-hans:
+                        description: 每天早上6点前起床打卡，养成早起好习惯，提高效率
+                  summary: 部分更新打卡类型示例
+                  description: 仅更新打卡类型的描述字段
+          description: ''
+    delete:
+      operationId: api_v1_check_system_task_categories_destroy
+      description: 删除现有打卡类型
+      summary: 删除打卡类型
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-类型管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/check-system/task-templates/:
+    get:
+      operationId: api_v1_check_system_task_templates_list
+      description: 获取任务模板列表，支持分页、过滤和搜索
+      summary: 获取任务模板列表
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - 打卡系统-模板管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskTemplateList'
+          description: ''
+    post:
+      operationId: api_v1_check_system_task_templates_create
+      description: 创建新的任务模板
+      summary: 创建任务模板
+      tags:
+      - 打卡系统-模板管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTemplate'
+          description: ''
+  /api/v1/check-system/task-templates/{id}/:
+    get:
+      operationId: api_v1_check_system_task_templates_retrieve
+      description: 获取单个任务模板的详细信息
+      summary: 获取任务模板详情
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-模板管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTemplate'
+          description: ''
+    put:
+      operationId: api_v1_check_system_task_templates_update
+      description: 更新现有任务模板
+      summary: 更新任务模板
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-模板管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskTemplateRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTemplate'
+          description: ''
+    patch:
+      operationId: api_v1_check_system_task_templates_partial_update
+      description: 部分更新现有任务模板
+      summary: 部分更新任务模板
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-模板管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskTemplateRequest'
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTemplate'
+          description: ''
+    delete:
+      operationId: api_v1_check_system_task_templates_destroy
+      description: 删除现有任务模板
+      summary: 删除任务模板
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-模板管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/check-system/tasks/:
+    get:
+      operationId: api_v1_check_system_tasks_list
+      description: 获取打卡任务列表，支持分页、过滤和搜索
+      summary: 获取打卡任务列表
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: integer
+        description: 打卡类型ID
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: 搜索关键词
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: 任务状态
+      tags:
+      - 打卡系统-任务管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+              examples:
+                ListTasksExample:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - page: 1
+                      page_size: 10
+                      category: 1
+                      status: active
+                      search: 早起
+                  summary: 获取打卡任务列表示例
+                  description: 获取打卡任务列表，支持分页、过滤和搜索
+          description: ''
+    post:
+      operationId: api_v1_check_system_tasks_create
+      description: 创建新的打卡任务
+      summary: 创建打卡任务
+      tags:
+      - 打卡系统-任务管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+            examples:
+              CreateTaskExample:
+                value:
+                  name: 每日早起
+                  description: 每天早上6点前起床，培养良好作息习惯
+                  category: 1
+                  start_date: '2025-05-01'
+                  end_date: '2025-05-31'
+                  status: active
+                  reminder: true
+                  reminder_time: 05:30:00
+                summary: 创建打卡任务示例
+                description: 创建一个新的打卡任务
+              CreateLong-termTaskExample:
+                value:
+                  name: 健身打卡
+                  description: 每天健身30分钟，保持健康体魄
+                  category: 2
+                  start_date: '2025-05-01'
+                  status: active
+                  reminder: false
+                summary: 创建长期打卡任务示例
+                description: 创建一个没有结束日期的长期打卡任务
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                CreateTaskExample:
+                  value:
+                    name: 每日早起
+                    description: 每天早上6点前起床，培养良好作息习惯
+                    category: 1
+                    start_date: '2025-05-01'
+                    end_date: '2025-05-31'
+                    status: active
+                    reminder: true
+                    reminder_time: 05:30:00
+                  summary: 创建打卡任务示例
+                  description: 创建一个新的打卡任务
+                CreateLong-termTaskExample:
+                  value:
+                    name: 健身打卡
+                    description: 每天健身30分钟，保持健康体魄
+                    category: 2
+                    start_date: '2025-05-01'
+                    status: active
+                    reminder: false
+                  summary: 创建长期打卡任务示例
+                  description: 创建一个没有结束日期的长期打卡任务
+          description: ''
+  /api/v1/check-system/tasks/{id}/:
+    get:
+      operationId: api_v1_check_system_tasks_retrieve
+      description: 获取单个打卡任务的详细信息
+      summary: 获取打卡任务详情
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-任务管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                RetrieveTaskExample:
+                  value:
+                    id: 1
+                  summary: 获取打卡任务详情示例
+                  description: 获取单个打卡任务的详细信息
+          description: ''
+    put:
+      operationId: api_v1_check_system_tasks_update
+      description: 更新现有打卡任务的所有字段
+      summary: 更新打卡任务
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-任务管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+            examples:
+              UpdateTaskExample:
+                value:
+                  name: 每日早起
+                  description: 每天早上6点前起床，培养良好作息习惯，提高工作效率
+                  category: 1
+                  start_date: '2025-05-01'
+                  end_date: '2025-06-30'
+                  status: active
+                  reminder: true
+                  reminder_time: 05:45:00
+                summary: 更新打卡任务示例
+                description: 更新现有打卡任务的所有字段
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                UpdateTaskExample:
+                  value:
+                    name: 每日早起
+                    description: 每天早上6点前起床，培养良好作息习惯，提高工作效率
+                    category: 1
+                    start_date: '2025-05-01'
+                    end_date: '2025-06-30'
+                    status: active
+                    reminder: true
+                    reminder_time: 05:45:00
+                  summary: 更新打卡任务示例
+                  description: 更新现有打卡任务的所有字段
+          description: ''
+    patch:
+      operationId: api_v1_check_system_tasks_partial_update
+      description: 更新现有打卡任务的部分字段
+      summary: 部分更新打卡任务
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-任务管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+            examples:
+              ChangeTaskStatusExample:
+                value:
+                  status: paused
+                summary: 更改任务状态示例
+                description: 暂停一个正在进行的打卡任务
+              UpdateReminderExample:
+                value:
+                  reminder: true
+                  reminder_time: 06:00:00
+                summary: 更新提醒设置示例
+                description: 修改任务提醒时间
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                ChangeTaskStatusExample:
+                  value:
+                    status: paused
+                  summary: 更改任务状态示例
+                  description: 暂停一个正在进行的打卡任务
+                UpdateReminderExample:
+                  value:
+                    reminder: true
+                    reminder_time: 06:00:00
+                  summary: 更新提醒设置示例
+                  description: 修改任务提醒时间
+          description: ''
+    delete:
+      operationId: api_v1_check_system_tasks_destroy
+      description: 删除现有打卡任务
+      summary: 删除打卡任务
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - 打卡系统-任务管理
+      security:
+      - Bearer: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/common/api-logs/:
     get:
       operationId: api_v1_common_api_logs_list
@@ -280,6 +1260,24 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/common/test-auth-error-class/:
+    get:
+      operationId: api_v1_common_test_auth_error_class_retrieve
+      description: 测试认证失败响应的统一格式
+      summary: 测试认证失败响应
+      tags:
+      - 测试
+      security:
+      - Bearer: []
+      - Bearer: []
+      - {}
+      responses:
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestAuthErrorResponse'
+          description: ''
   /api/v1/common/test-error/:
     get:
       operationId: api_v1_common_test_error_retrieve
@@ -293,6 +1291,24 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/common/test-error-class/:
+    get:
+      operationId: api_v1_common_test_error_class_retrieve
+      description: 测试错误响应的统一格式
+      summary: 测试错误响应
+      tags:
+      - 测试
+      security:
+      - Bearer: []
+      - Bearer: []
+      - {}
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestErrorResponse'
+          description: ''
   /api/v1/common/test-format/:
     get:
       operationId: api_v1_common_test_format_retrieve
@@ -306,6 +1322,24 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/common/test-format-class/:
+    get:
+      operationId: api_v1_common_test_format_class_retrieve
+      description: 测试统一响应格式的API
+      summary: 测试成功响应
+      tags:
+      - 测试
+      security:
+      - Bearer: []
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestStandardResponse'
+          description: ''
   /api/v1/common/test-pagination/:
     get:
       operationId: api_v1_common_test_pagination_retrieve
@@ -319,11 +1353,31 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/common/test-pagination-class/:
+    get:
+      operationId: api_v1_common_test_pagination_class_retrieve
+      description: 测试分页响应的统一格式
+      summary: 测试分页响应
+      tags:
+      - 测试
+      security:
+      - Bearer: []
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestPaginationResponse'
+          description: ''
   /api/v1/docs/:
     get:
       operationId: api_v1_docs_retrieve
+      description: 使用Swagger UI展示API文档
+      summary: Swagger UI文档
       tags:
-      - api
+      - API文档
       security:
       - Bearer: []
       - Bearer: []
@@ -334,8 +1388,10 @@ paths:
   /api/v1/redoc/:
     get:
       operationId: api_v1_redoc_retrieve
+      description: 使用ReDoc展示API文档
+      summary: ReDoc文档
       tags:
-      - api
+      - API文档
       security:
       - Bearer: []
       - Bearer: []
@@ -346,11 +1402,8 @@ paths:
   /api/v1/schema/:
     get:
       operationId: api_v1_schema_retrieve
-      description: |-
-        OpenApi3 schema for this API. Format can be selected via content negotiation.
-
-        - YAML: application/vnd.oai.openapi
-        - JSON: application/vnd.oai.openapi+json
+      description: 获取API的OpenAPI 3.0标准模式定义
+      summary: 获取OpenAPI模式
       parameters:
       - in: query
         name: format
@@ -360,7 +1413,7 @@ paths:
           - json
           - yaml
       tags:
-      - api
+      - API文档
       security:
       - Bearer: []
       - Bearer: []
@@ -1690,7 +2743,8 @@ paths:
   /api/v1/users/{id}/change-role/:
     post:
       operationId: api_v1_users_change_role_create
-      description: 更新用户角色视图
+      description: 更新指定用户的角色（管理员/普通成员）。超级管理员可以更新任何用户的角色；租户管理员只能更新同一租户内的普通用户角色。
+      summary: 更新用户角色
       parameters:
       - in: path
         name: id
@@ -1698,17 +2752,51 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - 用户管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRoleRequest'
       security:
       - Bearer: []
       - Bearer: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+          description: 角色更新成功
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 不能修改超级管理员的角色
+                  is_admin:
+                    type: array
+                    items:
+                      type: string
+          description: 请求参数错误
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
   /api/v1/users/{id}/grant-super-admin/:
     post:
       operationId: api_v1_users_grant_super_admin_create
-      description: 授予超级管理员权限视图
+      description: 将指定用户提升为超级管理员。只有现有的超级管理员可以执行此操作。
+      summary: 授予超级管理员权限
       parameters:
       - in: path
         name: id
@@ -1716,17 +2804,45 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - 用户管理
+      - 权限管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimpleResponseRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimpleResponseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimpleResponseRequest'
+        required: true
       security:
       - Bearer: []
       - Bearer: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleResponse'
+          description: 授权成功
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleResponse'
+          description: 操作失败
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
   /api/v1/users/{id}/revoke-super-admin/:
     post:
       operationId: api_v1_users_revoke_super_admin_create
-      description: 撤销超级管理员权限视图
+      description: 撤销指定用户的超级管理员权限。只有超级管理员可以执行此操作，并且不能撤销自己的权限。
+      summary: 撤销超级管理员权限
       parameters:
       - in: path
         name: id
@@ -1734,13 +2850,40 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - 用户管理
+      - 权限管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimpleResponseRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimpleResponseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimpleResponseRequest'
+        required: true
       security:
       - Bearer: []
       - Bearer: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleResponse'
+          description: 撤销成功
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleResponse'
+          description: 操作失败
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
   /api/v1/users/{id}/upload-avatar/:
     post:
       operationId: api_v1_users_upload_avatar_create
@@ -1901,15 +3044,53 @@ paths:
   /api/v1/users/me/upload-avatar/:
     post:
       operationId: api_v1_users_me_upload_avatar_create
-      description: 上传用户头像
+      description: 上传并更新当前登录用户的头像图片
+      summary: 上传当前用户头像
       tags:
-      - api
+      - 用户管理
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: 要上传的头像文件，支持JPG、PNG、GIF、WEBP或BMP格式
+              required:
+              - avatar
       security:
       - Bearer: []
       - Bearer: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 头像上传成功
+                  avatar:
+                    type: string
+                    example: https://example.com/media/avatars/user-avatar.jpg
+          description: 头像上传成功
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 未提供头像文件/不支持的文件类型/文件太大
+          description: 请求错误
+        '401':
+          description: 未认证
+        '500':
+          description: 服务器内部错误
   /api/v1/users/sub-account/create/:
     post:
       operationId: api_v1_users_sub_account_create_create
@@ -2145,6 +3326,72 @@ components:
       - new_password
       - new_password_confirm
       - old_password
+    CheckRecord:
+      type: object
+      description: 打卡记录序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        task:
+          type: integer
+          title: 所属任务
+        task_name:
+          type: string
+          readOnly: true
+        user:
+          type: integer
+          title: 所属用户
+        check_date:
+          type: string
+          format: date
+          title: 打卡日期
+        check_time:
+          type: string
+          format: time
+          title: 打卡时间
+        remarks:
+          type: string
+          title: 备注
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 创建时间
+      required:
+      - check_date
+      - check_time
+      - created_at
+      - id
+      - task
+      - task_name
+      - user
+    CheckRecordRequest:
+      type: object
+      description: 打卡记录序列化器
+      properties:
+        task:
+          type: integer
+          title: 所属任务
+        user:
+          type: integer
+          title: 所属用户
+        check_date:
+          type: string
+          format: date
+          title: 打卡日期
+        check_time:
+          type: string
+          format: time
+          title: 打卡时间
+        remarks:
+          type: string
+          title: 备注
+      required:
+      - check_date
+      - check_time
+      - task
+      - user
     LoginRequest:
       type: object
       description: 登录序列化器
@@ -2181,6 +3428,98 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/APILog'
+    PaginatedCheckRecordList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckRecord'
+    PaginatedTaskCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskCategory'
+    PaginatedTaskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    PaginatedTaskTemplateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskTemplate'
     PaginatedUserList:
       type: object
       required:
@@ -2227,6 +3566,36 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserList'
+    PaginationInfo:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: 总数
+        next:
+          type: string
+          nullable: true
+          description: 下一页链接
+        previous:
+          type: string
+          nullable: true
+          description: 上一页链接
+        page_size:
+          type: integer
+          description: 每页大小
+        current_page:
+          type: integer
+          description: 当前页码
+        total_pages:
+          type: integer
+          description: 总页数
+      required:
+      - count
+      - current_page
+      - next
+      - page_size
+      - previous
+      - total_pages
     PatchedChangePasswordRequest:
       type: object
       description: 修改密码序列化器
@@ -2243,6 +3612,130 @@ components:
           type: string
           writeOnly: true
           minLength: 1
+    PatchedCheckRecordRequest:
+      type: object
+      description: 打卡记录序列化器
+      properties:
+        task:
+          type: integer
+          title: 所属任务
+        user:
+          type: integer
+          title: 所属用户
+        check_date:
+          type: string
+          format: date
+          title: 打卡日期
+        check_time:
+          type: string
+          format: time
+          title: 打卡时间
+        remarks:
+          type: string
+          title: 备注
+    PatchedTaskCategoryRequest:
+      type: object
+      description: 打卡类型序列化器
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: 类型名称
+          maxLength: 50
+        description:
+          type: string
+          title: 类型描述
+          maxLength: 200
+        is_system:
+          type: boolean
+          title: 是否系统预设
+        icon:
+          type: string
+          title: 图标
+          maxLength: 50
+        user:
+          type: integer
+          nullable: true
+          title: 创建用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        translations:
+          title: 多语言翻译
+    PatchedTaskRequest:
+      type: object
+      description: 打卡任务序列化器
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: 任务名称
+          maxLength: 100
+        description:
+          type: string
+          title: 任务描述
+        category:
+          type: integer
+          nullable: true
+          title: 所属类型
+        user:
+          type: integer
+          title: 所属用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        start_date:
+          type: string
+          format: date
+          title: 开始日期
+        end_date:
+          type: string
+          format: date
+          nullable: true
+          title: 结束日期
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          title: 状态
+        reminder:
+          type: boolean
+          title: 是否启用提醒
+        reminder_time:
+          type: string
+          format: time
+          nullable: true
+          title: 提醒时间
+    PatchedTaskTemplateRequest:
+      type: object
+      description: 任务模板序列化器
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: 模板名称
+          maxLength: 100
+        description:
+          type: string
+          title: 模板描述
+        category:
+          type: integer
+          nullable: true
+          title: 所属类型
+        is_system:
+          type: boolean
+          title: 是否系统预设
+        user:
+          type: integer
+          nullable: true
+          title: 创建用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        translations:
+          title: 多语言翻译
     PatchedTenantDetailRequest:
       type: object
       description: 租户详情序列化器，包含完整信息
@@ -2254,7 +3747,7 @@ components:
           maxLength: 100
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/StatusA95Enum'
           title: 状态
         contact_name:
           type: string
@@ -2378,7 +3871,36 @@ components:
         * `DELETE` - DELETE
         * `OPTIONS` - OPTIONS
         * `HEAD` - HEAD
-    StatusEnum:
+    ResultItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 项目ID
+        name:
+          type: string
+          description: 项目名称
+      required:
+      - id
+      - name
+    SimpleResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: 响应消息
+      required:
+      - detail
+    SimpleResponseRequest:
+      type: object
+      properties:
+        detail:
+          type: string
+          minLength: 1
+          description: 响应消息
+      required:
+      - detail
+    StatusA95Enum:
       enum:
       - active
       - suspended
@@ -2540,6 +4062,309 @@ components:
       - password
       - password_confirm
       - username
+    Task:
+      type: object
+      description: 打卡任务序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 任务名称
+          maxLength: 100
+        description:
+          type: string
+          title: 任务描述
+        category:
+          type: integer
+          nullable: true
+          title: 所属类型
+        category_name:
+          type: string
+          readOnly: true
+        user:
+          type: integer
+          title: 所属用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        start_date:
+          type: string
+          format: date
+          title: 开始日期
+        end_date:
+          type: string
+          format: date
+          nullable: true
+          title: 结束日期
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          title: 状态
+        reminder:
+          type: boolean
+          title: 是否启用提醒
+        reminder_time:
+          type: string
+          format: time
+          nullable: true
+          title: 提醒时间
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 创建时间
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 更新时间
+      required:
+      - category_name
+      - created_at
+      - id
+      - name
+      - start_date
+      - updated_at
+      - user
+    TaskCategory:
+      type: object
+      description: 打卡类型序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 类型名称
+          maxLength: 50
+        description:
+          type: string
+          title: 类型描述
+          maxLength: 200
+        is_system:
+          type: boolean
+          title: 是否系统预设
+        icon:
+          type: string
+          title: 图标
+          maxLength: 50
+        user:
+          type: integer
+          nullable: true
+          title: 创建用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        translations:
+          title: 多语言翻译
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 创建时间
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 更新时间
+        translated_name:
+          type: string
+          readOnly: true
+        translated_description:
+          type: string
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - translated_description
+      - translated_name
+      - updated_at
+    TaskCategoryRequest:
+      type: object
+      description: 打卡类型序列化器
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: 类型名称
+          maxLength: 50
+        description:
+          type: string
+          title: 类型描述
+          maxLength: 200
+        is_system:
+          type: boolean
+          title: 是否系统预设
+        icon:
+          type: string
+          title: 图标
+          maxLength: 50
+        user:
+          type: integer
+          nullable: true
+          title: 创建用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        translations:
+          title: 多语言翻译
+      required:
+      - name
+    TaskRequest:
+      type: object
+      description: 打卡任务序列化器
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: 任务名称
+          maxLength: 100
+        description:
+          type: string
+          title: 任务描述
+        category:
+          type: integer
+          nullable: true
+          title: 所属类型
+        user:
+          type: integer
+          title: 所属用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        start_date:
+          type: string
+          format: date
+          title: 开始日期
+        end_date:
+          type: string
+          format: date
+          nullable: true
+          title: 结束日期
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          title: 状态
+        reminder:
+          type: boolean
+          title: 是否启用提醒
+        reminder_time:
+          type: string
+          format: time
+          nullable: true
+          title: 提醒时间
+      required:
+      - name
+      - start_date
+      - user
+    TaskStatusEnum:
+      enum:
+      - active
+      - completed
+      - paused
+      - archived
+      type: string
+      description: |-
+        * `active` - 进行中
+        * `completed` - 已完成
+        * `paused` - 已暂停
+        * `archived` - 已归档
+    TaskTemplate:
+      type: object
+      description: 任务模板序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 模板名称
+          maxLength: 100
+        description:
+          type: string
+          title: 模板描述
+        category:
+          type: integer
+          nullable: true
+          title: 所属类型
+        category_name:
+          type: string
+          readOnly: true
+        is_system:
+          type: boolean
+          title: 是否系统预设
+        user:
+          type: integer
+          nullable: true
+          title: 创建用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        translations:
+          title: 多语言翻译
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 创建时间
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 更新时间
+        translated_name:
+          type: string
+          readOnly: true
+        translated_description:
+          type: string
+          readOnly: true
+      required:
+      - category_name
+      - created_at
+      - id
+      - name
+      - translated_description
+      - translated_name
+      - updated_at
+    TaskTemplateRequest:
+      type: object
+      description: 任务模板序列化器
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: 模板名称
+          maxLength: 100
+        description:
+          type: string
+          title: 模板描述
+        category:
+          type: integer
+          nullable: true
+          title: 所属类型
+        is_system:
+          type: boolean
+          title: 是否系统预设
+        user:
+          type: integer
+          nullable: true
+          title: 创建用户
+        tenant:
+          type: integer
+          nullable: true
+          title: 所属租户
+        translations:
+          title: 多语言翻译
+      required:
+      - name
     TenantCreateRequest:
       type: object
       description: 租户创建序列化器
@@ -2567,7 +4392,7 @@ components:
           maxLength: 20
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/StatusA95Enum'
           title: 状态
       required:
       - name
@@ -2582,7 +4407,7 @@ components:
           maxLength: 100
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/StatusA95Enum'
           title: 状态
         contact_name:
           type: string
@@ -2626,6 +4451,61 @@ components:
           maximum: 2147483647
           minimum: -2147483648
           title: 最大产品数
+    TestAuthErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: 认证错误详情
+      required:
+      - detail
+    TestErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: 错误详情
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+          description: 字段错误信息
+      required:
+      - detail
+      - fields
+    TestPaginationResponse:
+      type: object
+      properties:
+        pagination:
+          allOf:
+          - $ref: '#/components/schemas/PaginationInfo'
+          description: 分页信息
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultItem'
+          description: 结果列表
+      required:
+      - pagination
+      - results
+    TestStandardResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: 测试消息
+        test_field:
+          type: string
+          description: 测试字段
+        items:
+          type: array
+          items:
+            type: integer
+          description: 测试列表
+      required:
+      - items
+      - message
+      - test_field
     TokenRefreshRequest:
       type: object
       description: Token刷新序列化器
@@ -2921,6 +4801,31 @@ components:
       required:
       - email
       - username
+    UserRole:
+      type: object
+      description: 用户角色序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        is_admin:
+          type: boolean
+          title: 是否管理员
+        is_member:
+          type: boolean
+          title: 是否普通成员
+      required:
+      - id
+    UserRoleRequest:
+      type: object
+      description: 用户角色序列化器
+      properties:
+        is_admin:
+          type: boolean
+          title: 是否管理员
+        is_member:
+          type: boolean
+          title: 是否普通成员
   securitySchemes:
     Bearer:
       type: http
