@@ -23,13 +23,13 @@ class TaskCategorySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def get_translated_name(self, obj):
+    def get_translated_name(self, obj) -> str:
         """获取当前语言的名称"""
         request = self.context.get('request')
         language = request.headers.get('Accept-Language', 'zh-hans').split(',')[0]
         return obj.get_translated_name(language)
     
-    def get_translated_description(self, obj):
+    def get_translated_description(self, obj) -> str:
         """获取当前语言的描述"""
         request = self.context.get('request')
         language = request.headers.get('Accept-Language', 'zh-hans').split(',')[0]
@@ -50,7 +50,7 @@ class TaskSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def get_category_name(self, obj):
+    def get_category_name(self, obj) -> str:
         """获取类型名称"""
         if obj.category:
             request = self.context.get('request')
@@ -74,7 +74,7 @@ class CheckRecordSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
     
-    def get_task_name(self, obj):
+    def get_task_name(self, obj) -> str:
         """获取任务名称"""
         return obj.task.name if obj.task else None
     
@@ -109,24 +109,24 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'category', 'category_name',
             'is_system', 'user', 'tenant', 'translations', 
-            'created_at', 'updated_at', 'translated_name', 
-            'translated_description'
+            'reminder', 'reminder_time', 'created_at', 'updated_at', 
+            'translated_name', 'translated_description'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def get_translated_name(self, obj):
+    def get_translated_name(self, obj) -> str:
         """获取当前语言的名称"""
         request = self.context.get('request')
         language = request.headers.get('Accept-Language', 'zh-hans').split(',')[0]
         return obj.get_translated_name(language)
     
-    def get_translated_description(self, obj):
+    def get_translated_description(self, obj) -> str:
         """获取当前语言的描述"""
         request = self.context.get('request')
         language = request.headers.get('Accept-Language', 'zh-hans').split(',')[0]
         return obj.get_translated_description(language)
     
-    def get_category_name(self, obj):
+    def get_category_name(self, obj) -> str:
         """获取类型名称"""
         if obj.category:
             request = self.context.get('request')

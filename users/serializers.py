@@ -33,17 +33,17 @@ class UserSerializer(serializers.ModelSerializer):
             'is_super_admin': {'read_only': True},
         }
     
-    def get_tenant_name(self, obj):
+    def get_tenant_name(self, obj) -> str:
         """获取租户名称"""
         if obj.tenant:
             return obj.tenant.name
         return None
     
-    def get_role(self, obj):
+    def get_role(self, obj) -> str:
         """获取用户角色"""
         return obj.display_role
     
-    def get_avatar(self, obj):
+    def get_avatar(self, obj) -> str:
         """获取完整的头像URL"""
         if not obj.avatar:
             return ""
@@ -368,7 +368,7 @@ class UserMinimalSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'display_name', 'avatar']
         read_only_fields = ['id', 'username', 'display_name', 'avatar']
         
-    def get_avatar(self, obj):
+    def get_avatar(self, obj) -> str:
         """获取完整的头像URL"""
         if not obj.avatar:
             return ""
@@ -412,17 +412,17 @@ class UserListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
     
-    def get_tenant_name(self, obj):
+    def get_tenant_name(self, obj) -> str:
         """获取租户名称"""
         if obj.tenant:
             return obj.tenant.name
         return None
     
-    def get_role(self, obj):
+    def get_role(self, obj) -> str:
         """获取用户角色"""
         return obj.display_role
         
-    def get_avatar(self, obj):
+    def get_avatar(self, obj) -> str:
         """获取完整的头像URL"""
         if not obj.avatar:
             return ""

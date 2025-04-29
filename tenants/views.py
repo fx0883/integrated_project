@@ -449,32 +449,89 @@ class TenantUserListView(generics.ListAPIView):
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     
-    @api_schema(
+    @extend_schema(
         summary="获取租户用户列表",
-        description="获取指定租户的用户列表，支持按用户名、邮箱搜索和状态过滤，超级管理员可查看任意租户，租户管理员只能查看自己租户",
-        responses=tenant_users_responses,
+        description="获取指定租户下的所有用户。超级管理员可以查看任何租户的用户；租户管理员只能查看自己租户的用户。",
         parameters=[
             OpenApiParameter(
                 name='search',
-                description='搜索关键词(用户名/昵称/邮箱)',
+                description='搜索关键词，支持用户名、邮箱和昵称搜索',
+                required=False,
                 type=str,
-                required=False
+                location=OpenApiParameter.QUERY
             ),
             OpenApiParameter(
                 name='is_admin',
-                description='是否只显示管理员用户',
+                description='是否为管理员 (true/false)',
+                required=False,
                 type=bool,
-                required=False
+                location=OpenApiParameter.QUERY
             ),
             OpenApiParameter(
                 name='status',
-                description='用户状态(active/suspended/inactive)',
+                description='用户状态筛选',
+                required=False,
                 type=str,
-                required=False
+                location=OpenApiParameter.QUERY
             )
         ] + common_pagination_parameters,
+        responses={
+            200: OpenApiResponse(
+                description="用户列表获取成功",
+                examples=[
+                    OpenApiExample(
+                        name="租户用户列表示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "获取成功",
+                            "data": {
+                                "count": 5,
+                                "next": "http://example.com/api/tenants/1/users/?page=2",
+                                "previous": None,
+                                "results": [
+                                    {
+                                        "id": 2,
+                                        "username": "tenant_admin",
+                                        "email": "admin@tenant.com",
+                                        "phone": "13800138001",
+                                        "nick_name": "租户管理员",
+                                        "tenant": 1,
+                                        "tenant_name": "测试租户",
+                                        "is_admin": True,
+                                        "is_member": False,
+                                        "is_super_admin": False,
+                                        "role": "租户管理员"
+                                    }
+                                ]
+                            }
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="租户不存在")
+        },
         tags=["租户", "用户管理"]
     )
+    def get(self, request, *args, **kwargs):
+        """
+        获取租户用户列表
+        """
+        try:
+            # 记录日志
+            tenant_id = self.kwargs.get('pk')
+            logger.info(f"用户 {request.user.username} 请求获取租户ID {tenant_id} 的用户列表")
+            return super().get(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"获取租户用户列表失败: {str(e)}")
+            return Response({
+                'success': False,
+                'code': 5000,
+                'message': f'获取租户用户列表失败: {str(e)}',
+                'data': None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def get_queryset(self):
         """
         获取租户用户查询集

@@ -7,7 +7,7 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, OpenApiResponse
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiTypes
 
 from common.permissions import IsSuperAdmin, IsAdmin
 from common.pagination import StandardResultsSetPagination
@@ -51,6 +51,9 @@ from .permissions import (
         summary="获取打卡类型详情",
         description="获取单个打卡类型的详细信息",
         tags=["打卡系统-类型管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Retrieve Category Example',
@@ -115,6 +118,9 @@ from .permissions import (
         summary="更新打卡类型",
         description="更新现有打卡类型的所有字段",
         tags=["打卡系统-类型管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Update Category Example',
@@ -143,6 +149,9 @@ from .permissions import (
         summary="部分更新打卡类型",
         description="更新现有打卡类型的部分字段",
         tags=["打卡系统-类型管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Partial Update Category Example',
@@ -166,6 +175,9 @@ from .permissions import (
         summary="删除打卡类型",
         description="删除现有打卡类型",
         tags=["打卡系统-类型管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Delete Category Example',
@@ -202,31 +214,30 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         获取查询集，根据用户角色过滤
-        - 普通用户: 只能查看系统预设类型和自己创建的类型
+        - 普通用户: 可以查看系统预设类型和自己创建的类型
         - 租户管理员: 可以查看系统预设类型和该租户下的所有类型
         - 超级管理员: 可以查看所有类型
         """
+        # 检查是否是drf-spectacular的假视图调用
+        if getattr(self, 'swagger_fake_view', False):
+            return TaskCategory.objects.none()
+            
         user = self.request.user
         
-        # 基础查询：系统预设类型 + 用户自己的类型
-        queryset = TaskCategory.objects.filter(
+        # 超级管理员可以查看所有任务类型
+        if user.is_superuser:
+            return TaskCategory.objects.all()
+        
+        # 租户管理员可以查看所属租户的所有任务类型
+        if user.is_staff:
+            return TaskCategory.objects.filter(
+                Q(is_system=True) | Q(tenant=user.tenant)
+            )
+        
+        # 普通用户只能查看系统预设类型和自己创建的类型
+        return TaskCategory.objects.filter(
             Q(is_system=True) | Q(user=user)
         )
-        
-        # 租户管理员: 添加查看租户内所有类型的权限
-        if user.is_admin and user.tenant:
-            queryset = queryset | TaskCategory.objects.filter(tenant=user.tenant)
-        
-        # 超级管理员: 查看所有类型
-        if user.is_super_admin:
-            queryset = TaskCategory.objects.all()
-            
-        # 主member: 可以查看子账号创建的类型
-        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
-            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
-            queryset = queryset | TaskCategory.objects.filter(user_id__in=sub_account_ids)
-            
-        return queryset.distinct()
         
     def perform_create(self, serializer):
         """
@@ -345,6 +356,9 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         summary="获取打卡任务详情",
         description="获取单个打卡任务的详细信息",
         tags=["打卡系统-任务管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡任务ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Retrieve Task Example',
@@ -395,6 +409,9 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         summary="更新打卡任务",
         description="更新现有打卡任务的所有字段",
         tags=["打卡系统-任务管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡任务ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Update Task Example',
@@ -417,6 +434,9 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         summary="部分更新打卡任务",
         description="更新现有打卡任务的部分字段",
         tags=["打卡系统-任务管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡任务ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Change Task Status Example',
@@ -441,6 +461,9 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         summary="删除打卡任务",
         description="删除现有打卡任务",
         tags=["打卡系统-任务管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡任务ID", required=True, type=OpenApiTypes.INT),
+        ],
         examples=[
             OpenApiExample(
                 'Delete Task Example',
@@ -481,25 +504,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         - 租户管理员: 可以查看该租户下的所有任务
         - 超级管理员: 可以查看所有任务
         """
+        # 检查是否是drf-spectacular的假视图调用
+        if getattr(self, 'swagger_fake_view', False):
+            return Task.objects.none()
+            
         user = self.request.user
         
-        # 基础查询：用户自己的任务
-        queryset = Task.objects.filter(user=user)
+        # 超级管理员可以查看所有任务
+        if user.is_superuser:
+            return Task.objects.all()
         
-        # 租户管理员: 添加查看租户内所有任务的权限
-        if user.is_admin and user.tenant:
-            queryset = queryset | Task.objects.filter(tenant=user.tenant)
+        # 租户管理员可以查看该租户下的所有任务
+        if user.is_staff and user.tenant:
+            return Task.objects.filter(tenant=user.tenant)
         
-        # 超级管理员: 查看所有任务
-        if user.is_super_admin:
-            queryset = Task.objects.all()
-            
-        # 主member: 可以查看子账号的任务
-        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
-            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
-            queryset = queryset | Task.objects.filter(user_id__in=sub_account_ids)
-            
-        return queryset.distinct()
+        # 普通用户只能查看自己的任务
+        return Task.objects.filter(user=user)
     
     def perform_create(self, serializer):
         """
@@ -599,6 +619,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         summary="获取打卡记录详情",
         description="获取单个打卡记录的详细信息",
         tags=["打卡系统-记录管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡记录ID", required=True, type=OpenApiTypes.INT),
+        ],
     ),
     create=extend_schema(
         summary="创建打卡记录",
@@ -609,16 +632,25 @@ class TaskViewSet(viewsets.ModelViewSet):
         summary="更新打卡记录",
         description="更新现有的打卡记录",
         tags=["打卡系统-记录管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡记录ID", required=True, type=OpenApiTypes.INT),
+        ],
     ),
     partial_update=extend_schema(
         summary="部分更新打卡记录",
         description="部分更新现有的打卡记录",
         tags=["打卡系统-记录管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡记录ID", required=True, type=OpenApiTypes.INT),
+        ],
     ),
     destroy=extend_schema(
         summary="删除打卡记录",
         description="删除现有的打卡记录",
         tags=["打卡系统-记录管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="打卡记录ID", required=True, type=OpenApiTypes.INT),
+        ],
     )
 )
 class CheckRecordViewSet(viewsets.ModelViewSet):
@@ -649,27 +681,24 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         - 租户管理员: 可以查看该租户下的所有打卡记录
         - 超级管理员: 可以查看所有打卡记录
         """
+        # 检查是否是drf-spectacular的假视图调用
+        if getattr(self, 'swagger_fake_view', False):
+            return CheckRecord.objects.none()
+            
         user = self.request.user
         
-        # 基础查询：用户自己的打卡记录
-        queryset = CheckRecord.objects.filter(user=user)
+        # 超级管理员可以查看所有打卡记录
+        if user.is_superuser:
+            return CheckRecord.objects.all()
         
-        # 租户管理员: 查看租户内所有打卡记录
-        if user.is_admin and user.tenant:
-            # 获取租户内的所有用户ID
-            tenant_user_ids = User.objects.filter(tenant=user.tenant).values_list('id', flat=True)
-            queryset = CheckRecord.objects.filter(user_id__in=tenant_user_ids)
+        # 租户管理员可以查看该租户下的所有打卡记录
+        if user.is_staff and user.tenant:
+            return CheckRecord.objects.filter(
+                Q(user__tenant=user.tenant) | Q(task__tenant=user.tenant)
+            )
         
-        # 超级管理员: 查看所有打卡记录
-        if user.is_super_admin:
-            queryset = CheckRecord.objects.all()
-            
-        # 主member: 可以查看子账号的打卡记录
-        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
-            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
-            queryset = queryset | CheckRecord.objects.filter(user_id__in=sub_account_ids)
-            
-        return queryset.distinct()
+        # 普通用户只能查看自己的打卡记录
+        return CheckRecord.objects.filter(user=user)
     
     def perform_create(self, serializer):
         """
@@ -757,26 +786,59 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         summary="获取任务模板详情",
         description="获取单个任务模板的详细信息",
         tags=["打卡系统-模板管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+        ],
     ),
     create=extend_schema(
         summary="创建任务模板",
-        description="创建新的任务模板",
+        description="创建新的任务模板，需要提供模板名称、描述和所属类型等信息",
         tags=["打卡系统-模板管理"],
+        request=TaskTemplateSerializer,
+        responses={
+            201: TaskTemplateSerializer,
+            400: OpenApiResponse(description="请求参数错误"),
+            403: OpenApiResponse(description="权限不足"),
+        },
+        examples=[
+            OpenApiExample(
+                "创建模板示例",
+                value={
+                    "name": "每日阅读",
+                    "description": "每天阅读30分钟",
+                    "category": 1,
+                    "is_system": False,
+                    "reminder": True,
+                    "reminder_time": "20:00:00",
+                    "translations": {"en": {"name": "Daily Reading"}}
+                },
+                request_only=True,
+            )
+        ],
     ),
     update=extend_schema(
         summary="更新任务模板",
         description="更新现有任务模板",
         tags=["打卡系统-模板管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+        ],
     ),
     partial_update=extend_schema(
         summary="部分更新任务模板",
         description="部分更新现有任务模板",
         tags=["打卡系统-模板管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+        ],
     ),
     destroy=extend_schema(
         summary="删除任务模板",
         description="删除现有任务模板",
         tags=["打卡系统-模板管理"],
+        parameters=[
+            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+        ],
     )
 )
 class TaskTemplateViewSet(viewsets.ModelViewSet):
@@ -807,27 +869,26 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
         - 租户管理员: 可以查看系统预设模板和该租户下的所有模板
         - 超级管理员: 可以查看所有模板
         """
+        # 检查是否是drf-spectacular的假视图调用
+        if getattr(self, 'swagger_fake_view', False):
+            return TaskTemplate.objects.none()
+            
         user = self.request.user
         
-        # 基础查询：系统预设模板 + 用户自己的模板
-        queryset = TaskTemplate.objects.filter(
+        # 超级管理员可以查看所有模板
+        if user.is_superuser:
+            return TaskTemplate.objects.all()
+        
+        # 租户管理员可以查看系统预设模板和该租户下的所有模板
+        if user.is_staff and user.tenant:
+            return TaskTemplate.objects.filter(
+                Q(is_system=True) | Q(tenant=user.tenant)
+            )
+        
+        # 普通用户只能查看系统预设模板和自己创建的模板
+        return TaskTemplate.objects.filter(
             Q(is_system=True) | Q(user=user)
         )
-        
-        # 租户管理员: 添加查看租户内所有模板的权限
-        if user.is_admin and user.tenant:
-            queryset = queryset | TaskTemplate.objects.filter(tenant=user.tenant)
-        
-        # 超级管理员: 查看所有模板
-        if user.is_super_admin:
-            queryset = TaskTemplate.objects.all()
-            
-        # 主member: 可以查看子账号创建的模板
-        if hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
-            sub_account_ids = user.sub_accounts.values_list('id', flat=True)
-            queryset = queryset | TaskTemplate.objects.filter(user_id__in=sub_account_ids)
-            
-        return queryset.distinct()
     
     def perform_create(self, serializer):
         """

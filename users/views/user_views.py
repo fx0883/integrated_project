@@ -14,7 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiResponse, OpenApiExample
 
 from common.permissions import IsAdmin, IsSuperAdmin
 from users.models import User
@@ -351,13 +351,71 @@ class UserListCreateView(generics.ListCreateAPIView):
         logger.info(f"用户 {user.username} 创建新用户，租户设置为: {tenant.name if tenant else '无租户'}")
         serializer.save(tenant=tenant)
 
+
 class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     """
     用户详情、更新和删除视图
     """
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
+    @extend_schema(
+        summary="获取用户详情",
+        description="获取单个用户的详细信息。权限要求：超级管理员可查看任何用户；租户管理员只能查看自己租户的用户；普通用户只能查看自己。",
+        responses={
+            200: OpenApiResponse(description="成功获取用户详情", response=UserSerializer),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理"]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="更新用户信息",
+        description="更新指定用户的信息。权限要求：超级管理员可更新任何用户；租户管理员只能更新自己租户的用户；普通用户只能更新自己。",
+        request=UserSerializer,
+        responses={
+            200: OpenApiResponse(description="成功更新用户信息", response=UserSerializer),
+            400: OpenApiResponse(description="请求参数错误"),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理"]
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="部分更新用户信息",
+        description="部分更新指定用户的信息。权限要求：超级管理员可更新任何用户；租户管理员只能更新自己租户的用户；普通用户只能更新自己。",
+        request=UserSerializer,
+        responses={
+            200: OpenApiResponse(description="成功更新用户信息", response=UserSerializer),
+            400: OpenApiResponse(description="请求参数错误"),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理"]
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="删除用户",
+        description="删除指定用户（软删除）。权限要求：超级管理员可删除任何用户；租户管理员只能删除自己租户的用户；普通用户不能删除任何用户。不能删除当前登录的用户账号。",
+        responses={
+            204: OpenApiResponse(description="成功删除用户"),
+            400: OpenApiResponse(description="请求参数错误，例如尝试删除当前登录账号"),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="用户不存在")
+        },
+        tags=["用户管理"]
+    )
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
     def get_serializer_context(self):
         """
         添加请求到序列化器上下文
@@ -367,7 +425,7 @@ class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             'request': self.request,
         })
         return context
-    
+
     def get_queryset(self):
         """
         获取查询集
@@ -431,6 +489,8 @@ class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+
 class ChangePasswordView(generics.UpdateAPIView):
     """
     修改密码视图
@@ -441,6 +501,45 @@ class ChangePasswordView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user
     
+    @extend_schema(
+        summary="修改用户密码",
+        description="允许已认证用户修改自己的密码，需要提供旧密码和新密码",
+        responses={
+            200: OpenApiResponse(
+                description="密码修改成功",
+                examples=[
+                    OpenApiExample(
+                        name="密码修改成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "密码修改成功",
+                            "data": {
+                                "detail": "密码修改成功"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="请求数据无效或旧密码不正确",
+                examples=[
+                    OpenApiExample(
+                        name="密码修改成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "密码修改成功",
+                            "data": {
+                                "detail": "密码修改成功"
+                            }
+                        }
+                    )
+                ]
+            ),
+        },
+        tags=["用户管理"]
+    )
     def update(self, request, *args, **kwargs):
         user = self.get_object()
         serializer = self.get_serializer(data=request.data)
@@ -464,6 +563,14 @@ class ChangePasswordView(generics.UpdateAPIView):
             )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 去掉 put 方法的 DRF 注解
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    # 去掉 patch 方法的 DRF 注解
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 class SuperAdminCreateView(generics.CreateAPIView):
     """
@@ -643,6 +750,25 @@ class TenantUserListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     pagination_class = PageNumberPagination
     
+    @extend_schema(
+        summary="获取租户用户列表",
+        description="获取指定租户下的所有用户。超级管理员可以查看任何租户的用户；租户管理员只能查看自己租户的用户。",
+        parameters=[
+            OpenApiParameter(name="tenant_id", location=OpenApiParameter.PATH, description="租户ID", required=True, type=int)
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="用户列表获取成功",
+                response=UserSerializer(many=True)
+            ),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="租户不存在")
+        },
+        tags=["用户管理"]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+    
     def get_queryset(self):
         """
         获取查询集
@@ -655,13 +781,16 @@ class TenantUserListView(generics.ListAPIView):
         
         # 超级管理员可以查看任何租户的用户
         if user.is_super_admin:
+            logger.info(f"超级管理员 {user.username} 查看租户 {tenant.name} 的用户列表")
             return User.objects.filter(tenant=tenant, is_deleted=False)
         
         # 非超级管理员只能查看自己租户的用户
         if user.tenant and user.tenant.pk == tenant.pk and user.is_admin:
+            logger.info(f"租户管理员 {user.username} 查看自己租户的用户列表")
             return User.objects.filter(tenant=tenant, is_deleted=False)
         
         # 其他情况无权限
+        logger.warning(f"用户 {user.username} 尝试查看无权限的租户 {tenant.name} 用户列表")
         raise PermissionDenied("无权限查看其他租户的用户列表")
 
 class SubAccountCreateView(generics.CreateAPIView):

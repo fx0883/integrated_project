@@ -46,13 +46,13 @@ class TenantDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_count', 'admin_count']
     
-    def get_user_count(self, obj):
+    def get_user_count(self, obj) -> int:
         """获取租户用户数量"""
         return obj.users.filter(is_deleted=False).count()
     
-    def get_admin_count(self, obj):
+    def get_admin_count(self, obj) -> int:
         """获取租户管理员数量"""
-        return obj.users.filter(is_admin=True, is_deleted=False).count()
+        return obj.users.filter(is_deleted=False, is_admin=True).count()
 
 
 class TenantQuotaSerializer(serializers.ModelSerializer):

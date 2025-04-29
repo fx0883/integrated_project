@@ -218,7 +218,10 @@ SPECTACULAR_SETTINGS = {
     'REDOC_DIST': 'SIDECAR',  # 使用内置的Redoc发行版
     # 调试选项
     'DISABLE_ERRORS_AND_WARNINGS': False,
-    
+    # 忽略某些特定警告
+    'DISABLE_WARNINGS': {
+        'enum_collision': True,
+    },
     # 添加认证设置
     'SECURITY': [{'Bearer': []}],
     'SECURITY_DEFINITIONS': {
@@ -240,6 +243,11 @@ SPECTACULAR_SETTINGS = {
     'EXTENSIONS': ['common.schema.spectacular_extensions.JWTAuthenticationScheme'],
     # 排除session和basic认证
     'AUTHENTICATION_WHITELIST': ['common.authentication.jwt_auth.JWTAuthentication'],
+    
+    # 解决枚举命名冲突
+    'ENUM_NAME_OVERRIDES': {
+        # 使用空字典来忽略这个设置，我们将在模型或schema中直接添加装饰器来处理
+    },
 }
 
 # 是否启用debug日志文件记录

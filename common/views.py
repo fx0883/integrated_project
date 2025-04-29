@@ -330,6 +330,14 @@ class TestPaginationResponseView(APIView):
         return Response(paginated_data)
 
 # 保留原来的函数视图用于向后兼容，但不再使用@extend_schema
+@extend_schema(
+    responses={
+        200: TestStandardResponseSerializer,
+    },
+    tags=["测试接口"],
+    summary="测试标准响应格式",
+    description="测试API成功响应的标准格式",
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def test_standard_response(request):
@@ -343,6 +351,14 @@ def test_standard_response(request):
     }
     return Response(data)
 
+@extend_schema(
+    responses={
+        400: TestErrorResponseSerializer,
+    },
+    tags=["测试接口"],
+    summary="测试错误响应格式",
+    description="测试API错误响应的标准格式",
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def test_error_response(request):
@@ -358,6 +374,14 @@ def test_error_response(request):
     }
     return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
+@extend_schema(
+    responses={
+        401: TestAuthErrorResponseSerializer,
+    },
+    tags=["测试接口"],
+    summary="测试认证错误响应格式",
+    description="测试API认证错误响应的标准格式",
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def test_auth_error_response(request):
@@ -366,6 +390,14 @@ def test_auth_error_response(request):
     """
     return Response({'detail': '认证令牌无效'}, status=status.HTTP_401_UNAUTHORIZED)
 
+@extend_schema(
+    responses={
+        200: TestPaginationResponseSerializer,
+    },
+    tags=["测试接口"],
+    summary="测试分页响应格式",
+    description="测试API分页响应的标准格式",
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def test_pagination_response(request):

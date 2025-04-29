@@ -229,6 +229,8 @@ class TaskTemplate(models.Model):
         related_name="task_templates",
         verbose_name=_("所属租户")
     )
+    reminder = models.BooleanField(_("是否启用提醒"), default=False)
+    reminder_time = models.TimeField(_("提醒时间"), null=True, blank=True)
     translations = models.JSONField(_("多语言翻译"), default=dict, blank=True)
     created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
     updated_at = models.DateTimeField(_("更新时间"), auto_now=True)

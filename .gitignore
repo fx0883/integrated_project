@@ -2,5 +2,29 @@
 *.pyc
 /tenants/__pycache__
 *.pyc
-users/views/__pycache__/user_views.cpython-313.pyc
-tenants/__pycache__/views.cpython-313.pyc
+users/views/__pycache__
+users/__pycache__/*.pyc
+/users/__pycache__
+users/__pycache__/
+
+
+
+# 忽略所有目录下的.pyc文件
+**/*.pyc
+
+# 忽略所有__pycache__目录
+**/__pycache__/
+
+# 忽略Python编译缓存
+*.py[cod]
+*$py.class
+
+# 忽略日志文件
+*.log
+
+# 忽略本地配置文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

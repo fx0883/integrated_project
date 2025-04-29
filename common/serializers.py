@@ -19,7 +19,7 @@ class APILogSerializer(serializers.ModelSerializer):
             'status_code', 'response_time', 'status_type', 'created_at'
         ]
     
-    def get_tenant_name(self, obj):
+    def get_tenant_name(self, obj) -> str:
         """获取租户名称"""
         if obj.tenant:
             return obj.tenant.name
@@ -42,8 +42,8 @@ class APILogDetailSerializer(serializers.ModelSerializer):
             'created_at'
         ]
     
-    def get_tenant_name(self, obj):
+    def get_tenant_name(self, obj) -> str:
         """获取租户名称"""
         if obj.tenant:
             return obj.tenant.name
-        return None 
+        return None

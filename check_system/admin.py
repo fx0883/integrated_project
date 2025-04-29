@@ -76,8 +76,8 @@ class CheckRecordAdmin(admin.ModelAdmin):
 @admin.register(TaskTemplate)
 class TaskTemplateAdmin(admin.ModelAdmin):
     """任务模板管理配置"""
-    list_display = ('name', 'is_system', 'category', 'user', 'tenant', 'created_at')
-    list_filter = ('is_system', 'category', 'created_at')
+    list_display = ('name', 'is_system', 'category', 'user', 'tenant', 'reminder', 'created_at')
+    list_filter = ('is_system', 'category', 'reminder', 'created_at')
     search_fields = ('name', 'description', 'user__username')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
@@ -86,6 +86,9 @@ class TaskTemplateAdmin(admin.ModelAdmin):
         }),
         (_('关联信息'), {
             'fields': ('user', 'tenant')
+        }),
+        (_('提醒设置'), {
+            'fields': ('reminder', 'reminder_time')
         }),
         (_('多语言翻译'), {
             'fields': ('translations',)
