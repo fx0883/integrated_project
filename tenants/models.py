@@ -57,7 +57,22 @@ class Tenant(models.Model):
         
         # 如果是新创建的租户，自动创建配额记录
         if is_new:
-            TenantQuota.objects.create(tenant=self)
+            try:
+                # 检查配额是否已存在，避免重复创建
+                TenantQuota.objects.get(tenant=self)
+                logger.info(f"租户 {self.name} 的配额记录已存在")
+            except TenantQuota.DoesNotExist:
+                # 创建默认配额记录
+                TenantQuota.objects.create(
+                    tenant=self,
+                    max_users=10,
+                    max_admins=2,
+                    max_storage_mb=1024,
+                    max_products=100
+                )
+                logger.info(f"已为租户 {self.name} 创建默认配额记录")
+            except Exception as e:
+                logger.error(f"为租户 {self.name} 创建配额时发生错误: {str(e)}")
     
     def soft_delete(self):
         """
@@ -74,6 +89,22 @@ class Tenant(models.Model):
         判断租户是否处于活跃状态
         """
         return self.status == 'active' and not self.is_deleted
+
+    def ensure_quota(self):
+        """
+        确保租户有配额记录，如果没有则创建
+        """
+        try:
+            return self.quota
+        except TenantQuota.DoesNotExist:
+            logger.warning(f"租户 {self.name} 没有配额记录，正在创建默认配额")
+            return TenantQuota.objects.create(
+                tenant=self,
+                max_users=10,
+                max_admins=2,
+                max_storage_mb=1024,
+                max_products=100
+            )
 
 
 class TenantQuota(models.Model):

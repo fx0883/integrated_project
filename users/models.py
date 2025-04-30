@@ -78,11 +78,16 @@ class User(AbstractUser):
         is_new = self.pk is None
         # 如果是新用户且关联了租户，检查配额
         if is_new and self.tenant:
-            # 检查配额
-            quota = self.tenant.quota
-            if not quota.can_add_user(is_admin=self.is_admin):
-                logger.warning(f"租户 {self.tenant.name} 的用户配额已满，无法创建用户")
-                raise PermissionDenied("租户用户配额已满，无法创建更多用户")
+            try:
+                # 确保配额存在
+                quota = self.tenant.ensure_quota()
+                # 检查配额
+                if not quota.can_add_user(is_admin=self.is_admin):
+                    logger.warning(f"租户 {self.tenant.name} 的用户配额已满，无法创建用户")
+                    raise PermissionDenied("租户用户配额已满，无法创建更多用户")
+            except Exception as e:
+                logger.error(f"检查租户 {self.tenant.name} 的配额时发生错误: {str(e)}")
+                # 出现错误时不阻止用户创建，但记录错误
         
         # 记录日志
         if is_new:

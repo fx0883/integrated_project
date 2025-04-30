@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 class CheckSystemBasePermission(permissions.BasePermission):
     """
     打卡系统基础权限类
-    - 超级管理员有全部权限
+    - 超级管理员不允许操作打卡系统业务
+    - 用户必须关联租户才能访问API
     - 租户管理员可以查看和管理其租户内的所有资源
     - 主member可以管理自己和子账号的资源
     - 普通member只能操作自己的资源
@@ -21,7 +22,7 @@ class CheckSystemBasePermission(permissions.BasePermission):
         """
         检查用户是否有权限访问该视图
         
-        所有已认证用户都可以访问列表和详情视图
+        所有已认证且关联了租户的用户都可以访问列表和详情视图
         创建/更新/删除操作需要检查角色和参数
         """
         user = request.user
@@ -31,13 +32,19 @@ class CheckSystemBasePermission(permissions.BasePermission):
             logger.warning(f"未认证用户尝试访问 {request.path}")
             return False
         
-        # 超级管理员有全部权限
+        # 检查用户是否关联租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            logger.warning(f"用户 {user.username} 未关联租户，拒绝访问 {request.path}")
+            raise PermissionDenied("用户未关联租户，无法访问打卡系统")
+        
+        # 超级管理员不允许操作打卡系统业务
         if user.is_super_admin:
-            return True
+            logger.warning(f"超级管理员 {user.username} 尝试访问打卡系统 {request.path}")
+            raise PermissionDenied("超级管理员不允许操作打卡系统业务")
         
         # 区分安全方法和非安全方法
         if request.method in permissions.SAFE_METHODS:
-            # 安全方法(GET, HEAD, OPTIONS)，所有认证用户都可以访问
+            # 安全方法(GET, HEAD, OPTIONS)，所有认证且关联租户的用户都可以访问
             return True
         else:
             # 非安全方法(POST, PUT, PATCH, DELETE)，需要检查参数和角色
@@ -88,16 +95,27 @@ class CheckSystemBasePermission(permissions.BasePermission):
         """
         检查用户是否有权限操作特定对象
         
-        - 超级管理员有全部权限
+        - 超级管理员不允许操作打卡系统业务
         - 租户管理员可以操作其租户内的所有资源
         - 主member可以操作自己和子账号的资源
         - 普通member只能操作自己的资源
         """
         user = request.user
         
-        # 超级管理员有全部权限
+        # 检查用户是否关联租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            logger.warning(f"用户 {user.username} 未关联租户，拒绝访问对象 {obj.__class__.__name__} #{getattr(obj, 'id', 'unknown')}")
+            raise PermissionDenied("用户未关联租户，无法访问打卡系统")
+        
+        # 超级管理员不允许操作打卡系统业务
         if user.is_super_admin:
-            return True
+            logger.warning(f"超级管理员 {user.username} 尝试操作打卡系统对象 {obj.__class__.__name__} #{getattr(obj, 'id', 'unknown')}")
+            raise PermissionDenied("超级管理员不允许操作打卡系统业务")
+        
+        # 验证对象所属租户与用户租户一致
+        if hasattr(obj, 'tenant') and obj.tenant != user.tenant:
+            logger.warning(f"用户 {user.username} 尝试操作不属于其租户的对象 {obj.__class__.__name__} #{getattr(obj, 'id', 'unknown')}")
+            raise PermissionDenied("不能操作其他租户的资源")
         
         # 租户管理员可以操作其租户内的所有资源
         if user.is_admin and hasattr(obj, 'tenant') and obj.tenant == user.tenant:

@@ -241,33 +241,60 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         
     def perform_create(self, serializer):
         """
-        创建类型时自动关联当前用户
+        创建类型时自动关联当前用户和租户
         根据角色处理user_id参数
         """
         user = self.request.user
         data = self.request.data
         
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法创建类型"))
+        
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以指定用户
+        if user.is_admin:
+            # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户创建类型"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
+                    # 设置用户和租户(始终使用目标用户的租户)
+                    serializer.save(
+                        user=target_user, 
+                        tenant=user.tenant  # 强制使用当前租户管理员的租户
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(
+                    user=user, 
+                    tenant=user.tenant
+                )
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以为子账号创建
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
                         raise serializers.ValidationError(_("只能为自己的子账号创建类型"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
                     
                     # 设置用户和租户
                     serializer.save(
                         user=target_user, 
-                        tenant=target_user.tenant
+                        tenant=user.tenant  # 强制使用当前用户的租户
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
@@ -288,43 +315,68 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         """
         更新类型时进行权限检查
         根据角色处理user_id参数
+        强制使用用户所属的租户ID
         """
         user = self.request.user
         data = self.request.data
         instance = self.get_object()
         
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法更新类型"))
+        
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以修改用户
+        if user.is_admin:
+            # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户修改类型"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号修改类型"))
-                    
-                    # 设置用户和租户
+                    # 设置用户和租户(始终使用当前租户)
                     serializer.save(
                         user=target_user, 
-                        tenant=target_user.tenant
+                        tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
             else:
-                # 未指定用户，保持原样
-                serializer.save()
+                # 未指定用户，保持原样，但确保租户正确
+                serializer.save(tenant=user.tenant)
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以修改子账号的资源
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改类型"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=user.tenant  # 强制使用当前用户的租户
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样，但确保租户正确
+                serializer.save(tenant=user.tenant)
         else:
             # 普通member：只能修改自己的
             if instance.user != user:
                 raise serializers.ValidationError(_("无法修改其他用户的类型"))
-            serializer.save()
+            serializer.save(tenant=user.tenant)  # 确保租户正确
 
 
 @extend_schema_view(
@@ -523,33 +575,60 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        创建任务时自动关联当前用户
+        创建任务时自动关联当前用户和租户
         根据角色处理user_id参数
         """
         user = self.request.user
         data = self.request.data
         
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法创建任务"))
+        
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以指定用户
+        if user.is_admin:
+            # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户创建任务"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
+                    # 设置用户和租户(始终使用当前租户)
+                    serializer.save(
+                        user=target_user, 
+                        tenant=user.tenant  # 强制使用当前租户管理员的租户
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(
+                    user=user, 
+                    tenant=user.tenant
+                )
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以为子账号创建
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
                         raise serializers.ValidationError(_("只能为自己的子账号创建任务"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
                     
                     # 设置用户和租户
                     serializer.save(
                         user=target_user, 
-                        tenant=target_user.tenant
+                        tenant=user.tenant  # 强制使用当前用户的租户
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
@@ -570,43 +649,68 @@ class TaskViewSet(viewsets.ModelViewSet):
         """
         更新任务时进行权限检查
         根据角色处理user_id参数
+        强制使用用户所属的租户ID
         """
         user = self.request.user
         data = self.request.data
         instance = self.get_object()
         
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法更新任务"))
+        
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以修改用户
+        if user.is_admin:
+            # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户修改任务"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号修改任务"))
-                    
-                    # 设置用户和租户
+                    # 设置用户和租户(始终使用当前租户)
                     serializer.save(
                         user=target_user, 
-                        tenant=target_user.tenant
+                        tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
             else:
-                # 未指定用户，保持原样
-                serializer.save()
+                # 未指定用户，保持原样，但确保租户正确
+                serializer.save(tenant=user.tenant)
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以修改子账号的资源
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改任务"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=user.tenant  # 强制使用当前用户的租户
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样，但确保租户正确
+                serializer.save(tenant=user.tenant)
         else:
             # 普通member：只能修改自己的
             if instance.user != user:
                 raise serializers.ValidationError(_("无法修改其他用户的任务"))
-            serializer.save()
+            serializer.save(tenant=user.tenant)  # 确保租户正确
 
 
 @extend_schema_view(
@@ -704,26 +808,58 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         """
         创建打卡记录时自动关联当前用户
         根据角色处理user_id参数
+        检查任务和用户所属租户是否一致
         """
         user = self.request.user
         data = self.request.data
         
-        # 获取user_id
-        user_id = data.get('user_id') or data.get('user')
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法创建打卡记录"))
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以指定用户
+        # 获取user_id和task_id
+        user_id = data.get('user_id') or data.get('user')
+        task_id = data.get('task_id') or data.get('task')
+        
+        # 检查任务所属租户与用户租户是否一致
+        if task_id:
+            try:
+                task = Task.objects.get(id=task_id)
+                if task.tenant != user.tenant:
+                    raise serializers.ValidationError(_("不能为其他租户的任务创建打卡记录"))
+            except Task.DoesNotExist:
+                raise serializers.ValidationError(_("指定的任务不存在"))
+        
+        if user.is_admin:
+            # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户创建打卡记录"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
+                    # 设置用户
+                    serializer.save(user=target_user)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(user=user)
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以为子账号创建
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
                         raise serializers.ValidationError(_("只能为自己的子账号创建打卡记录"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
                     
                     # 设置用户
                     serializer.save(user=target_user)
@@ -740,27 +876,59 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         """
         更新打卡记录时进行权限检查
         根据角色处理user_id参数
+        检查任务和用户所属租户是否一致
         """
         user = self.request.user
         data = self.request.data
         instance = self.get_object()
         
-        # 获取user_id
-        user_id = data.get('user_id') or data.get('user')
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法更新打卡记录"))
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以修改用户
+        # 获取user_id和task_id
+        user_id = data.get('user_id') or data.get('user')
+        task_id = data.get('task_id') or data.get('task')
+        
+        # 检查任务所属租户与用户租户是否一致
+        if task_id:
+            try:
+                task = Task.objects.get(id=task_id)
+                if task.tenant != user.tenant:
+                    raise serializers.ValidationError(_("不能为其他租户的任务更新打卡记录"))
+            except Task.DoesNotExist:
+                raise serializers.ValidationError(_("指定的任务不存在"))
+        
+        if user.is_admin:
+            # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户修改打卡记录"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
+                    # 设置用户
+                    serializer.save(user=target_user)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样
+                serializer.save()
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以修改子账号的资源
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
                         raise serializers.ValidationError(_("只能为自己的子账号修改打卡记录"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
                     
                     # 设置用户
                     serializer.save(user=target_user)
@@ -892,33 +1060,60 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        创建模板时自动关联当前用户
+        创建模板时自动关联当前用户和租户
         根据角色处理user_id参数
         """
         user = self.request.user
         data = self.request.data
         
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法创建模板"))
+        
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以指定用户
+        if user.is_admin:
+            # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户创建模板"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
+                    # 设置用户和租户(始终使用当前租户)
+                    serializer.save(
+                        user=target_user, 
+                        tenant=user.tenant  # 强制使用当前租户管理员的租户
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，使用当前用户
+                serializer.save(
+                    user=user, 
+                    tenant=user.tenant
+                )
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以为子账号创建
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
                         raise serializers.ValidationError(_("只能为自己的子账号创建模板"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
                     
                     # 设置用户和租户
                     serializer.save(
                         user=target_user, 
-                        tenant=target_user.tenant
+                        tenant=user.tenant  # 强制使用当前用户的租户
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
@@ -939,40 +1134,65 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
         """
         更新模板时进行权限检查
         根据角色处理user_id参数
+        强制使用用户所属的租户ID
         """
         user = self.request.user
         data = self.request.data
         instance = self.get_object()
         
+        # 确保用户关联了租户
+        if not hasattr(user, 'tenant') or not user.tenant:
+            raise serializers.ValidationError(_("用户未关联租户，无法更新模板"))
+        
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
-        if user.is_admin or (hasattr(user, 'sub_accounts') and user.sub_accounts.exists()):
-            # 租户管理员或主member：可以修改用户
+        if user.is_admin:
+            # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
                     
-                    # 如果是租户管理员，检查目标用户是否属于同一租户
-                    if user.is_admin and target_user.tenant != user.tenant:
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
                         raise serializers.ValidationError(_("无法为其他租户的用户修改模板"))
                     
-                    # 如果是主member，检查目标用户是否为自己的子账号
-                    if not user.is_admin and target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号修改模板"))
-                    
-                    # 设置用户和租户
+                    # 设置用户和租户(始终使用当前租户)
                     serializer.save(
                         user=target_user, 
-                        tenant=target_user.tenant
+                        tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
             else:
-                # 未指定用户，保持原样
-                serializer.save()
+                # 未指定用户，保持原样，但确保租户正确
+                serializer.save(tenant=user.tenant)
+        elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            # 主member：可以修改子账号的资源
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                    
+                    # 检查目标用户是否为自己的子账号
+                    if target_user.parent_id != user.id:
+                        raise serializers.ValidationError(_("只能为自己的子账号修改模板"))
+                    
+                    # 检查目标用户是否属于同一租户
+                    if target_user.tenant != user.tenant:
+                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                    
+                    # 设置用户和租户
+                    serializer.save(
+                        user=target_user, 
+                        tenant=user.tenant  # 强制使用当前用户的租户
+                    )
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(_("指定的用户不存在"))
+            else:
+                # 未指定用户，保持原样，但确保租户正确
+                serializer.save(tenant=user.tenant)
         else:
             # 普通member：只能修改自己的
             if instance.user != user:
                 raise serializers.ValidationError(_("无法修改其他用户的模板"))
-            serializer.save()
+            serializer.save(tenant=user.tenant)  # 确保租户正确

@@ -31,8 +31,6 @@ class TaskCategory(models.Model):
     tenant = models.ForeignKey(
         Tenant, 
         on_delete=models.CASCADE, 
-        null=True, 
-        blank=True,
         related_name="task_categories",
         verbose_name=_("所属租户")
     )
@@ -54,10 +52,11 @@ class TaskCategory(models.Model):
     
     def clean(self):
         """
-        数据验证：系统预设类型的user和tenant必须为空
+        数据验证：系统预设类型必须由租户管理员创建
         """
-        if self.is_system and (self.user or self.tenant):
-            raise ValidationError(_("系统预设类型不能关联用户或租户"))
+        # 系统预设类型允许关联租户，但创建者可以为空
+        if self.is_system and self.user:
+            raise ValidationError(_("系统预设类型不能关联用户"))
     
     def save(self, *args, **kwargs):
         """
@@ -118,7 +117,6 @@ class Task(models.Model):
     tenant = models.ForeignKey(
         Tenant, 
         on_delete=models.CASCADE, 
-        null=True,
         related_name="tasks",
         verbose_name=_("所属租户")
     )
@@ -224,8 +222,6 @@ class TaskTemplate(models.Model):
     tenant = models.ForeignKey(
         Tenant, 
         on_delete=models.CASCADE, 
-        null=True, 
-        blank=True,
         related_name="task_templates",
         verbose_name=_("所属租户")
     )
@@ -248,10 +244,11 @@ class TaskTemplate(models.Model):
     
     def clean(self):
         """
-        数据验证：系统预设模板的user和tenant必须为空
+        数据验证：系统预设模板必须由租户管理员创建
         """
-        if self.is_system and (self.user or self.tenant):
-            raise ValidationError(_("系统预设模板不能关联用户或租户"))
+        # 系统预设模板允许关联租户，但创建者可以为空
+        if self.is_system and self.user:
+            raise ValidationError(_("系统预设模板不能关联用户"))
     
     def save(self, *args, **kwargs):
         """
