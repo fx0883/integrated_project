@@ -16,3 +16,18 @@ DRF自动将user对象设置到request.user
 权限类利用request.user检查用户是否有权限访问资源
 这种机制使得开发者无需手动管理用户认证流程，只需配置好认证类，然后在视图中直接使用request.user即可获取当前认证的用户。
 当你在视图中使用self.request.user时，就是在访问JWT认证系统成功验证并返回的那个用户对象。
+
+
+
+
+
+
+
+
+
+
+figma token
+
+figd_W5ubUG740b_gdv59wqHXY8k-sTcMeI0ggcaVAQkm
+
+figd_ZyEF62EhTjMzmqo3S3qvfOJT0jOgUqIO2SYQQEL4
