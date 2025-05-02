@@ -7,6 +7,7 @@
       <div class="error-actions">
         <el-button type="primary" @click="goHome">返回首页</el-button>
         <el-button @click="goBack">返回上一页</el-button>
+        <el-button type="warning" @click="goLogin">登录/切换账号</el-button>
       </div>
     </div>
   </div>
@@ -14,8 +15,24 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores'
+import { onMounted } from 'vue'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
+// 组件挂载时检查用户是否已认证
+onMounted(() => {
+  console.log('403页面加载，检查用户认证状态')
+  
+  // 如果用户未登录，自动跳转到登录页面
+  if (!authStore.isAuthenticated) {
+    console.log('用户未认证，自动跳转到登录页面')
+    goLogin()
+  } else {
+    console.log('用户已认证，显示403页面')
+  }
+})
 
 const goHome = () => {
   router.push('/')
@@ -23,6 +40,19 @@ const goHome = () => {
 
 const goBack = () => {
   router.go(-1)
+}
+
+const goLogin = () => {
+  // 跳转到登录页面，并记录当前路径
+  console.log('跳转到登录页面')
+  authStore.logout() // 清除现有登录状态
+  router.push({ 
+    path: '/login', 
+    query: { 
+      redirect: router.currentRoute.value.query.redirect || '/',
+      from: '/403'  // 添加来源标记
+    } 
+  })
 }
 </script>
 
@@ -70,5 +100,6 @@ const goBack = () => {
   display: flex;
   justify-content: center;
   gap: 15px;
+  flex-wrap: wrap;
 }
 </style> 

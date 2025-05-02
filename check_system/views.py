@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiTypes
+import logging
 
 from common.permissions import IsSuperAdmin, IsAdmin
 from common.pagination import StandardResultsSetPagination
@@ -22,6 +23,8 @@ from .permissions import (
     TaskCategoryPermission, TaskPermission,
     CheckRecordPermission, TaskTemplatePermission
 )
+
+logger = logging.getLogger(__name__)
 
 
 @extend_schema_view(
@@ -229,7 +232,7 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
             return TaskCategory.objects.all()
         
         # 租户管理员可以查看所属租户的所有任务类型
-        if user.is_staff:
+        if user.is_admin:
             return TaskCategory.objects.filter(
                 Q(is_system=True) | Q(tenant=user.tenant)
             )
@@ -247,69 +250,112 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         user = self.request.user
         data = self.request.data
         
+        logger.info(f"【开始创建打卡类型】用户ID: {user.id}，用户名: {user.username}，请求数据: {data}")
+        
         # 确保用户关联了租户
         if not hasattr(user, 'tenant') or not user.tenant:
-            raise serializers.ValidationError(_("用户未关联租户，无法创建类型"))
+            error_msg = "用户未关联租户，无法创建类型"
+            logger.error(f"【创建打卡类型失败】{error_msg}，用户ID: {user.id}")
+            raise serializers.ValidationError(_(error_msg))
+        
+        logger.debug(f"【创建打卡类型】用户关联的租户: {user.tenant.name} (ID: {user.tenant.id})")
+        
+        # 检查是否为系统预设类型
+        is_system = data.get('is_system', False)
+        if is_system:
+            logger.info(f"【创建打卡类型】创建系统预设类型，不关联用户")
+            # 系统预设类型不关联用户，只关联租户
+            instance = serializer.save(
+                user=None,  # 不关联用户
+                tenant=user.tenant
+            )
+            logger.info(f"【创建打卡类型成功】ID: {instance.id}，名称: {instance.name}，系统预设类型，租户: {user.tenant.name}")
+            return
         
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
+        logger.debug(f"【创建打卡类型】指定的用户ID: {user_id}")
         
         if user.is_admin:
+            logger.debug(f"【创建打卡类型】用户是租户管理员，可以为租户内的任意用户创建")
             # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【创建打卡类型】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("无法为其他租户的用户创建类型"))
+                        error_msg = "无法为其他租户的用户创建类型"
+                        logger.error(f"【创建打卡类型失败】{error_msg}，目标用户租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【创建打卡类型】即将创建打卡类型，关联用户: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户(始终使用目标用户的租户)
-                    serializer.save(
+                    instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
+                    logger.info(f"【创建打卡类型成功】ID: {instance.id}，名称: {instance.name}，用户: {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【创建打卡类型失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，使用当前用户
-                serializer.save(
+                logger.info(f"【创建打卡类型】未指定用户，即将创建打卡类型关联当前用户: {user.username}，租户: {user.tenant.name}")
+                instance = serializer.save(
                     user=user, 
                     tenant=user.tenant
                 )
+                logger.info(f"【创建打卡类型成功】ID: {instance.id}，名称: {instance.name}，用户: {user.username}，租户: {user.tenant.name}")
         elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            logger.debug(f"【创建打卡类型】用户是主账号，有子账号权限，可以为子账号创建")
             # 主member：可以为子账号创建
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【创建打卡类型】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否为自己的子账号
                     if target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号创建类型"))
+                        error_msg = "只能为自己的子账号创建类型"
+                        logger.error(f"【创建打卡类型失败】{error_msg}，目标用户父账号ID: {target_user.parent_id}，当前用户ID: {user.id}")
+                        raise serializers.ValidationError(_(error_msg))
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                        error_msg = "子账号必须属于同一租户"
+                        logger.error(f"【创建打卡类型失败】{error_msg}，子账号租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【创建打卡类型】即将创建打卡类型，关联子账号: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户
-                    serializer.save(
+                    instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前用户的租户
                     )
+                    logger.info(f"【创建打卡类型成功】ID: {instance.id}，名称: {instance.name}，用户(子账号): {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【创建打卡类型失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，使用当前用户
-                serializer.save(
+                logger.info(f"【创建打卡类型】未指定用户，即将创建打卡类型关联当前用户: {user.username}，租户: {user.tenant.name}")
+                instance = serializer.save(
                     user=user, 
                     tenant=user.tenant
                 )
+                logger.info(f"【创建打卡类型成功】ID: {instance.id}，名称: {instance.name}，用户: {user.username}，租户: {user.tenant.name}")
         else:
+            logger.debug(f"【创建打卡类型】普通用户，只能为自己创建")
             # 普通member：只能为自己创建
-            serializer.save(
+            instance = serializer.save(
                 user=user, 
                 tenant=user.tenant
             )
+            logger.info(f"【创建打卡类型成功】ID: {instance.id}，名称: {instance.name}，用户: {user.username}，租户: {user.tenant.name}")
     
     def perform_update(self, serializer):
         """
@@ -321,62 +367,95 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
         data = self.request.data
         instance = self.get_object()
         
+        logger.info(f"【开始更新打卡类型】ID: {instance.id}，名称: {instance.name}，用户ID: {user.id}，用户名: {user.username}，请求数据: {data}")
+        
         # 确保用户关联了租户
         if not hasattr(user, 'tenant') or not user.tenant:
-            raise serializers.ValidationError(_("用户未关联租户，无法更新类型"))
+            error_msg = "用户未关联租户，无法更新类型"
+            logger.error(f"【更新打卡类型失败】{error_msg}，用户ID: {user.id}")
+            raise serializers.ValidationError(_(error_msg))
+        
+        logger.debug(f"【更新打卡类型】用户关联的租户: {user.tenant.name} (ID: {user.tenant.id})")
         
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
+        logger.debug(f"【更新打卡类型】指定的用户ID: {user_id}")
         
         if user.is_admin:
+            logger.debug(f"【更新打卡类型】用户是租户管理员，可以修改租户内的任意用户的类型")
             # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【更新打卡类型】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("无法为其他租户的用户修改类型"))
+                        error_msg = "无法为其他租户的用户修改类型"
+                        logger.error(f"【更新打卡类型失败】{error_msg}，目标用户租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【更新打卡类型】即将更新打卡类型，关联用户: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户(始终使用当前租户)
-                    serializer.save(
+                    updated_instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
+                    logger.info(f"【更新打卡类型成功】ID: {updated_instance.id}，名称: {updated_instance.name}，用户: {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【更新打卡类型失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，保持原样，但确保租户正确
-                serializer.save(tenant=user.tenant)
+                logger.info(f"【更新打卡类型】未指定用户，保持原有用户: {instance.user.username}，确保租户正确: {user.tenant.name}")
+                updated_instance = serializer.save(tenant=user.tenant)
+                logger.info(f"【更新打卡类型成功】ID: {updated_instance.id}，名称: {updated_instance.name}，租户: {user.tenant.name}")
         elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            logger.debug(f"【更新打卡类型】用户是主账号，有子账号权限，可以修改子账号的资源")
             # 主member：可以修改子账号的资源
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【更新打卡类型】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否为自己的子账号
                     if target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号修改类型"))
+                        error_msg = "只能为自己的子账号修改类型"
+                        logger.error(f"【更新打卡类型失败】{error_msg}，目标用户父账号ID: {target_user.parent_id}，当前用户ID: {user.id}")
+                        raise serializers.ValidationError(_(error_msg))
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                        error_msg = "子账号必须属于同一租户"
+                        logger.error(f"【更新打卡类型失败】{error_msg}，子账号租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【更新打卡类型】即将更新打卡类型，关联子账号: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户
-                    serializer.save(
+                    updated_instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前用户的租户
                     )
+                    logger.info(f"【更新打卡类型成功】ID: {updated_instance.id}，名称: {updated_instance.name}，用户(子账号): {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【更新打卡类型失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，保持原样，但确保租户正确
-                serializer.save(tenant=user.tenant)
+                logger.info(f"【更新打卡类型】未指定用户，保持原有用户: {instance.user.username}，确保租户正确: {user.tenant.name}")
+                updated_instance = serializer.save(tenant=user.tenant)
+                logger.info(f"【更新打卡类型成功】ID: {updated_instance.id}，名称: {updated_instance.name}，租户: {user.tenant.name}")
         else:
+            logger.debug(f"【更新打卡类型】普通用户，只能修改自己的类型")
             # 普通member：只能修改自己的
             if instance.user != user:
-                raise serializers.ValidationError(_("无法修改其他用户的类型"))
-            serializer.save(tenant=user.tenant)  # 确保租户正确
+                error_msg = "无法修改其他用户的类型"
+                logger.error(f"【更新打卡类型失败】{error_msg}，当前用户ID: {user.id}，类型所属用户ID: {instance.user.id}")
+                raise serializers.ValidationError(_(error_msg))
+            updated_instance = serializer.save(tenant=user.tenant)  # 确保租户正确
+            logger.info(f"【更新打卡类型成功】ID: {updated_instance.id}，名称: {updated_instance.name}，用户: {user.username}，租户: {user.tenant.name}")
 
 
 @extend_schema_view(
@@ -1066,69 +1145,112 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
         user = self.request.user
         data = self.request.data
         
+        logger.info(f"【开始创建任务模板】用户ID: {user.id}，用户名: {user.username}，请求数据: {data}")
+        
         # 确保用户关联了租户
         if not hasattr(user, 'tenant') or not user.tenant:
-            raise serializers.ValidationError(_("用户未关联租户，无法创建模板"))
+            error_msg = "用户未关联租户，无法创建模板"
+            logger.error(f"【创建任务模板失败】{error_msg}，用户ID: {user.id}")
+            raise serializers.ValidationError(_(error_msg))
+        
+        logger.debug(f"【创建任务模板】用户关联的租户: {user.tenant.name} (ID: {user.tenant.id})")
+        
+        # 检查是否为系统预设类型
+        is_system = data.get('is_system', False)
+        if is_system:
+            logger.info(f"【创建任务模板】创建系统预设类型，不关联用户")
+            # 系统预设类型不关联用户，只关联租户
+            instance = serializer.save(
+                user=None,  # 不关联用户
+                tenant=user.tenant
+            )
+            logger.info(f"【创建任务模板成功】ID: {instance.id}，名称: {instance.name}，系统预设类型，租户: {user.tenant.name}")
+            return
         
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
+        logger.debug(f"【创建任务模板】指定的用户ID: {user_id}")
         
         if user.is_admin:
+            logger.debug(f"【创建任务模板】用户是租户管理员，可以为租户内的任意用户创建")
             # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【创建任务模板】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("无法为其他租户的用户创建模板"))
+                        error_msg = "无法为其他租户的用户创建模板"
+                        logger.error(f"【创建任务模板失败】{error_msg}，目标用户租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【创建任务模板】即将创建任务模板，关联用户: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户(始终使用当前租户)
-                    serializer.save(
+                    instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
+                    logger.info(f"【创建任务模板成功】ID: {instance.id}，名称: {instance.name}，用户: {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【创建任务模板失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，使用当前用户
-                serializer.save(
+                logger.info(f"【创建任务模板】未指定用户，即将创建任务模板关联当前用户: {user.username}，租户: {user.tenant.name}")
+                instance = serializer.save(
                     user=user, 
                     tenant=user.tenant
                 )
+                logger.info(f"【创建任务模板成功】ID: {instance.id}，名称: {instance.name}，用户: {user.username}，租户: {user.tenant.name}")
         elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            logger.debug(f"【创建任务模板】用户是主账号，有子账号权限，可以为子账号创建")
             # 主member：可以为子账号创建
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【创建任务模板】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否为自己的子账号
                     if target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号创建模板"))
+                        error_msg = "只能为自己的子账号创建模板"
+                        logger.error(f"【创建任务模板失败】{error_msg}，目标用户父账号ID: {target_user.parent_id}，当前用户ID: {user.id}")
+                        raise serializers.ValidationError(_(error_msg))
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                        error_msg = "子账号必须属于同一租户"
+                        logger.error(f"【创建任务模板失败】{error_msg}，子账号租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【创建任务模板】即将创建任务模板，关联子账号: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户
-                    serializer.save(
+                    instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前用户的租户
                     )
+                    logger.info(f"【创建任务模板成功】ID: {instance.id}，名称: {instance.name}，用户(子账号): {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【创建任务模板失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，使用当前用户
-                serializer.save(
+                logger.info(f"【创建任务模板】未指定用户，即将创建任务模板关联当前用户: {user.username}，租户: {user.tenant.name}")
+                instance = serializer.save(
                     user=user, 
                     tenant=user.tenant
                 )
+                logger.info(f"【创建任务模板成功】ID: {instance.id}，名称: {instance.name}，用户: {user.username}，租户: {user.tenant.name}")
         else:
+            logger.debug(f"【创建任务模板】普通用户，只能为自己创建")
             # 普通member：只能为自己创建
-            serializer.save(
+            instance = serializer.save(
                 user=user, 
                 tenant=user.tenant
             )
+            logger.info(f"【创建任务模板成功】ID: {instance.id}，名称: {instance.name}，用户: {user.username}，租户: {user.tenant.name}")
     
     def perform_update(self, serializer):
         """
@@ -1140,59 +1262,92 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
         data = self.request.data
         instance = self.get_object()
         
+        logger.info(f"【开始更新任务模板】ID: {instance.id}，名称: {instance.name}，用户ID: {user.id}，用户名: {user.username}，请求数据: {data}")
+        
         # 确保用户关联了租户
         if not hasattr(user, 'tenant') or not user.tenant:
-            raise serializers.ValidationError(_("用户未关联租户，无法更新模板"))
+            error_msg = "用户未关联租户，无法更新模板"
+            logger.error(f"【更新任务模板失败】{error_msg}，用户ID: {user.id}")
+            raise serializers.ValidationError(_(error_msg))
+        
+        logger.debug(f"【更新任务模板】用户关联的租户: {user.tenant.name} (ID: {user.tenant.id})")
         
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
+        logger.debug(f"【更新任务模板】指定的用户ID: {user_id}")
         
         if user.is_admin:
+            logger.debug(f"【更新任务模板】用户是租户管理员，可以修改租户内的任意用户的模板")
             # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【更新任务模板】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("无法为其他租户的用户修改模板"))
+                        error_msg = "无法为其他租户的用户修改模板"
+                        logger.error(f"【更新任务模板失败】{error_msg}，目标用户租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【更新任务模板】即将更新任务模板，关联用户: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户(始终使用当前租户)
-                    serializer.save(
+                    updated_instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前租户管理员的租户
                     )
+                    logger.info(f"【更新任务模板成功】ID: {updated_instance.id}，名称: {updated_instance.name}，用户: {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【更新任务模板失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，保持原样，但确保租户正确
-                serializer.save(tenant=user.tenant)
+                logger.info(f"【更新任务模板】未指定用户，保持原有用户: {instance.user.username}，确保租户正确: {user.tenant.name}")
+                updated_instance = serializer.save(tenant=user.tenant)
+                logger.info(f"【更新任务模板成功】ID: {updated_instance.id}，名称: {updated_instance.name}，租户: {user.tenant.name}")
         elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
+            logger.debug(f"【更新任务模板】用户是主账号，有子账号权限，可以修改子账号的模板")
             # 主member：可以修改子账号的资源
             if user_id:
                 try:
                     target_user = User.objects.get(id=user_id)
+                    logger.debug(f"【更新任务模板】找到目标用户: {target_user.username} (ID: {target_user.id})")
                     
                     # 检查目标用户是否为自己的子账号
                     if target_user.parent_id != user.id:
-                        raise serializers.ValidationError(_("只能为自己的子账号修改模板"))
+                        error_msg = "只能为自己的子账号修改模板"
+                        logger.error(f"【更新任务模板失败】{error_msg}，目标用户父账号ID: {target_user.parent_id}，当前用户ID: {user.id}")
+                        raise serializers.ValidationError(_(error_msg))
                     
                     # 检查目标用户是否属于同一租户
                     if target_user.tenant != user.tenant:
-                        raise serializers.ValidationError(_("子账号必须属于同一租户"))
+                        error_msg = "子账号必须属于同一租户"
+                        logger.error(f"【更新任务模板失败】{error_msg}，子账号租户: {target_user.tenant.name if target_user.tenant else 'None'}")
+                        raise serializers.ValidationError(_(error_msg))
                     
+                    logger.info(f"【更新任务模板】即将更新任务模板，关联子账号: {target_user.username}，租户: {user.tenant.name}")
                     # 设置用户和租户
-                    serializer.save(
+                    updated_instance = serializer.save(
                         user=target_user, 
                         tenant=user.tenant  # 强制使用当前用户的租户
                     )
+                    logger.info(f"【更新任务模板成功】ID: {updated_instance.id}，名称: {updated_instance.name}，用户(子账号): {target_user.username}，租户: {user.tenant.name}")
                 except User.DoesNotExist:
-                    raise serializers.ValidationError(_("指定的用户不存在"))
+                    error_msg = "指定的用户不存在"
+                    logger.error(f"【更新任务模板失败】{error_msg}，指定的用户ID: {user_id}")
+                    raise serializers.ValidationError(_(error_msg))
             else:
                 # 未指定用户，保持原样，但确保租户正确
-                serializer.save(tenant=user.tenant)
+                logger.info(f"【更新任务模板】未指定用户，保持原有用户: {instance.user.username}，确保租户正确: {user.tenant.name}")
+                updated_instance = serializer.save(tenant=user.tenant)
+                logger.info(f"【更新任务模板成功】ID: {updated_instance.id}，名称: {updated_instance.name}，租户: {user.tenant.name}")
         else:
+            logger.debug(f"【更新任务模板】普通用户，只能修改自己的模板")
             # 普通member：只能修改自己的
             if instance.user != user:
-                raise serializers.ValidationError(_("无法修改其他用户的模板"))
-            serializer.save(tenant=user.tenant)  # 确保租户正确
+                error_msg = "无法修改其他用户的模板"
+                logger.error(f"【更新任务模板失败】{error_msg}，当前用户ID: {user.id}，模板所属用户ID: {instance.user.id}")
+                raise serializers.ValidationError(_(error_msg))
+            updated_instance = serializer.save(tenant=user.tenant)  # 确保租户正确
+            logger.info(f"【更新任务模板成功】ID: {updated_instance.id}，名称: {updated_instance.name}，用户: {user.username}，租户: {user.tenant.name}")

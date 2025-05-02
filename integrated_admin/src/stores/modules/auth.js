@@ -97,28 +97,58 @@ export const useAuthStore = defineStore('auth', {
         
         // 保存Token和用户信息
         // 处理不同的返回格式
-        let accessToken, refreshToken
+        let accessToken, refreshToken, userData;
         
-        if (response.token && typeof response.token === 'string') {
+        // 检查标准API响应格式: {success, code, message, data}
+        if (response.success && response.data) {
+          console.log('检测到标准API响应格式: {success, code, message, data}')
+          
+          // 从data中获取token、refresh_token和user
+          if (response.data.token && response.data.refresh_token && response.data.user) {
+            accessToken = response.data.token
+            refreshToken = response.data.refresh_token
+            userData = response.data.user
+            console.log('成功解析标准API响应格式的token和用户信息')
+          } else {
+            console.error('API响应中缺少token、refresh_token或user字段', response.data)
+            throw new Error('登录响应缺少必要字段')
+          }
+        } 
+        // 兼容旧格式
+        else if (response.token && typeof response.token === 'string') {
           // 服务端直接返回token字符串的情况
           accessToken = response.token
           refreshToken = response.refresh_token
+          userData = response.user
           console.log('检测到服务端返回的token格式: token和refresh_token是独立字段')
         } else if (response.token && response.token.access) {
           // 服务端返回token对象的情况
           accessToken = response.token.access
           refreshToken = response.token.refresh
+          userData = response.user
           console.log('检测到服务端返回的token格式: token是包含access和refresh字段的对象')
         } else {
           console.error('不支持的token返回格式:', response)
           throw new Error('服务器返回的数据格式不正确')
         }
         
+        // 确认获取到了必要的信息
+        if (!accessToken || !refreshToken) {
+          console.error('缺少必要的token信息:', { accessToken, refreshToken })
+          throw new Error('登录响应中缺少access_token或refresh_token')
+        }
+        
+        if (!userData) {
+          console.error('缺少用户信息:', userData)
+          throw new Error('登录响应中缺少用户信息')
+        }
+        
+        // 设置token和用户信息
         this.setToken(accessToken, refreshToken)
-        this.setUser(response.user)
+        this.setUser(userData)
         
         // 设置权限
-        this.permissions = response.permissions || []
+        this.permissions = response.data?.permissions || response.permissions || []
         console.log('设置用户权限:', this.permissions)
         
         // 登录成功提示
@@ -128,7 +158,7 @@ export const useAuthStore = defineStore('auth', {
           duration: 2000
         })
         
-        return response.user
+        return userData
       } catch (error) {
         console.error('登录失败:', error)
         
@@ -146,7 +176,15 @@ export const useAuthStore = defineStore('auth', {
         console.log('注册API响应:', response)
         
         // 注册成功后自动登录
-        if (response.token) {
+        // 处理标准API响应格式: {success, code, message, data}
+        if (response.success && response.data) {
+          if (response.data.token && response.data.refresh_token && response.data.user) {
+            this.setToken(response.data.token, response.data.refresh_token)
+            this.setUser(response.data.user)
+          }
+        }
+        // 兼容旧格式
+        else if (response.token) {
           this.setToken(response.token, response.refresh_token)
           this.setUser(response.user)
         }
@@ -195,18 +233,32 @@ export const useAuthStore = defineStore('auth', {
         
         console.log('刷新token响应:', response)
         
+        let accessToken = null;
+        
+        // 处理标准API响应格式: {success, code, message, data}
+        if (response.success && response.data) {
+          if (response.data.access || response.data.token) {
+            accessToken = response.data.access || response.data.token
+            console.log('从标准API响应中解析到新token')
+          }
+        }
+        // 兼容旧格式
+        else if (response.access) {
+          accessToken = response.access
+        }
+        
         // 判断是否成功
-        if (!response.access) {
-          console.error('刷新token失败，返回格式不正确')
-          throw new Error('刷新Token失败，服务端返回格式错误')
+        if (!accessToken) {
+          console.error('刷新token失败，返回格式不正确或缺少access token')
+          throw new Error('刷新Token失败，服务端未返回新token')
         }
         
         // 更新access_token
-        this.setToken(response.access, this.refreshToken)
+        this.setToken(accessToken, this.refreshToken)
         
         console.log('Access token刷新成功')
         
-        return response.access
+        return accessToken
       } catch (error) {
         console.error('刷新token失败:', error)
         
@@ -238,10 +290,22 @@ export const useAuthStore = defineStore('auth', {
         
         console.log('获取用户详细信息响应:', response)
         
-        // 更新用户信息
-        this.setUser(response)
+        let userData = null;
         
-        return response
+        // 处理标准API响应格式: {success, code, message, data}
+        if (response.success && response.data) {
+          userData = response.data
+          console.log('从标准API响应中获取用户信息')
+        } 
+        // 兼容旧格式，直接使用响应作为用户数据
+        else {
+          userData = response
+        }
+        
+        // 更新用户信息
+        this.setUser(userData)
+        
+        return userData
       } catch (error) {
         console.error('获取用户信息失败:', error)
         throw error

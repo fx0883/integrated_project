@@ -38,9 +38,17 @@ service.interceptors.response.use(
   response => {
     const res = response.data
     
-    // 请求成功
-    if (res.code === 0 || res.code === 2000 || (res.code >= 2000 && res.code < 3000)) {
-      return res.data
+    console.log('响应数据结构:', res)
+    
+    // 请求成功 - 处理自定义API响应格式
+    if (res.success && (res.code === 0 || res.code === 2000 || (res.code >= 2000 && res.code < 3000))) {
+      // 直接返回完整响应，让业务代码决定如何处理
+      return res
+    }
+    
+    // 如果没有success字段，可能是标准RESTful响应，直接返回
+    if (res.success === undefined) {
+      return res
     }
     
     // 处理业务错误
@@ -220,6 +228,14 @@ export const request = {
   put(url, data, config = {}) {
     return service({
       method: 'put',
+      url,
+      data,
+      ...config
+    })
+  },
+  patch(url, data, config = {}) {
+    return service({
+      method: 'patch',
       url,
       data,
       ...config

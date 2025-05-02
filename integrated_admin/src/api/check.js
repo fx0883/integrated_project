@@ -6,27 +6,41 @@ import { request } from '@/utils/request'
 
 // 获取打卡类型列表
 export function getTaskCategories(params) {
-  return request.get('/task-categories/', params)
+  return request.get('/check-system/task-categories/', params)
 }
 
 // 创建打卡类型
 export function createTaskCategory(data) {
-  return request.post('/task-categories/', data)
+  console.log('【API调用】开始创建打卡类型:', data)
+  return request.post('/check-system/task-categories/', data)
+    .then(response => {
+      console.log('【API响应】创建打卡类型成功:', response)
+      return response
+    })
+    .catch(error => {
+      console.error('【API错误】创建打卡类型失败:', error)
+      throw error
+    })
 }
 
 // 获取打卡类型详情
 export function getTaskCategory(id) {
-  return request.get(`/task-categories/${id}/`)
+  return request.get(`/check-system/task-categories/${id}/`)
 }
 
 // 更新打卡类型
 export function updateTaskCategory(id, data) {
-  return request.put(`/task-categories/${id}/`, data)
+  return request.put(`/check-system/task-categories/${id}/`, data)
+}
+
+// 部分更新打卡类型
+export function patchTaskCategory(id, data) {
+  return request.patch(`/check-system/task-categories/${id}/`, data)
 }
 
 // 删除打卡类型
 export function deleteTaskCategory(id) {
-  return request.delete(`/task-categories/${id}/`)
+  return request.delete(`/check-system/task-categories/${id}/`)
 }
 
 /**

@@ -107,9 +107,15 @@ const rules = {
 // 初始化
 onMounted(() => {
   console.log('Login页面已加载')
+  
+  // 通过URL来源判断重定向消息
+  const fromPath = route.query.from || ''
+  
   // 检查是否有重定向消息
   if (route.params.message) {
     redirectMessage.value = route.params.message
+  } else if (fromPath === '/403') {
+    redirectMessage.value = '您没有权限访问该页面，请登录或切换帐号'
   } else if (route.query.redirect) {
     redirectMessage.value = '您需要登录才能访问该页面'
   }
@@ -119,7 +125,13 @@ onMounted(() => {
   if (token) {
     console.log('登录页检测到存在token，检查其有效性')
     
-    // TODO: 如果需要，可以在这里验证token
+    // 如果来源是403页面，清除现有登录状态
+    if (fromPath === '/403') {
+      console.log('来源是403页面，清除现有登录状态')
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user_info')
+    }
   }
 })
 
@@ -158,31 +170,29 @@ const handleLogin = async () => {
     const redirect = route.query.redirect || '/dashboard'
     console.log('准备重定向到:', redirect)
     
-    // 解决方法：使用单一方法重定向，确保状态更新完成后再导航
-    // 延迟50ms让Pinia状态完全更新
-    console.log('使用延迟重定向方法')
-    setTimeout(() => {
-      console.log('重定向执行: 清空loading状态')
-      loading.value = false
-      
-      console.log('重定向执行: 使用router.replace跳转到', redirect)
-      router.replace(redirect).then(() => {
-        console.log('router.replace导航完成')
-      }).catch(err => {
-        console.error('router.replace导航失败，错误:', err)
-        
-        // 如果router导航失败，尝试使用window.location
-        console.log('尝试使用window.location.href跳转')
-        const baseUrl = window.location.origin
-        const fullUrl = baseUrl + (redirect.startsWith('/') ? redirect : '/' + redirect)
-        window.location.href = fullUrl
-      })
-    }, 50)
-    
+    // 先显示成功消息
     ElMessage({
       type: 'success',
       message: '登录成功'
     })
+    
+    // 确保在重定向前重置loading状态
+    loading.value = false
+    
+    // 使用更安全的重定向方法
+    console.log('执行重定向到', redirect)
+    
+    // 直接使用router.replace，简化流程
+    try {
+      await router.replace(redirect)
+      console.log('导航完成')
+    } catch (navError) {
+      console.error('导航失败，尝试使用备用方法:', navError)
+      // 如果路由导航失败，使用location.href作为备用
+      const baseUrl = window.location.origin
+      const fullUrl = baseUrl + (redirect.startsWith('/') ? redirect : '/' + redirect)
+      window.location.href = fullUrl
+    }
   } catch (error) {
     console.error('登录失败:', error)
     

@@ -12,8 +12,8 @@ login_request_examples = [
         summary="使用用户名和密码登录",
         description="提供用户名和密码进行登录",
         value={
-            "username": "admin",
-            "password": "Passw0rd!"
+            "username": "check_admin",
+            "password": "admin_main"
         },
         request_only=True
     )

@@ -52,9 +52,10 @@ class CheckSystemBasePermission(permissions.BasePermission):
             # 租户管理员
             if user.is_admin:
                 # 租户管理员必须提供user_id
-                if 'user_id' not in request.data and 'user' not in request.data:
+                if 'user_id' not in request.data and 'user' not in request.data and request.data.get('is_system') is False:
                     logger.warning(f"租户管理员 {user.username} 尝试创建/修改资源时未提供user_id")
                     return False
+                
                 return True
             
             # 主member(有子账号的普通成员)

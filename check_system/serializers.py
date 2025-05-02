@@ -21,7 +21,7 @@ class TaskCategorySerializer(serializers.ModelSerializer):
             'user', 'tenant', 'translations', 'created_at', 
             'updated_at', 'translated_name', 'translated_description'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'tenant']
     
     def get_translated_name(self, obj) -> str:
         """获取当前语言的名称"""
@@ -48,7 +48,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'user', 'tenant', 'start_date', 'end_date', 'status',
             'reminder', 'reminder_time', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'tenant']
     
     def get_category_name(self, obj) -> str:
         """获取类型名称"""
@@ -112,7 +112,7 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
             'reminder', 'reminder_time', 'created_at', 'updated_at', 
             'translated_name', 'translated_description'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'tenant']
     
     def get_translated_name(self, obj) -> str:
         """获取当前语言的名称"""

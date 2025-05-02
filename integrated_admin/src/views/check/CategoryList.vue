@@ -47,7 +47,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="180" />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="scope">
             <el-button
               size="small"
@@ -62,9 +62,18 @@
               type="success"
               plain
               @click="handleEditCategory(scope.row)"
-              :disabled="scope.row.is_system && !isSuperAdmin"
+              :disabled="scope.row.is_system && !isSystemAdmin"
             >
               编辑
+            </el-button>
+            <el-button
+              size="small"
+              type="danger"
+              plain
+              @click="handleDeleteCategory(scope.row)"
+              :disabled="scope.row.is_system && !isSystemAdmin"
+            >
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -108,10 +117,10 @@
             placeholder="请输入类型描述"
           />
         </el-form-item>
-        <el-form-item label="类型图标" prop="icon" v-if="isSuperAdmin || dialogType === 'view'">
+        <el-form-item label="类型图标" prop="icon" v-if="isSystemAdmin || dialogType === 'view'">
           <el-input v-model="categoryForm.icon" placeholder="请输入图标名称" />
         </el-form-item>
-        <el-form-item label="类型" prop="is_system" v-if="isSuperAdmin || dialogType === 'view'">
+        <el-form-item label="类型" prop="is_system" v-if="isSystemAdmin || dialogType === 'view'">
           <el-radio-group v-model="categoryForm.is_system">
             <el-radio :label="false">自定义</el-radio>
             <el-radio :label="true">系统预设</el-radio>
@@ -137,7 +146,8 @@ import { Search } from '@element-plus/icons-vue'
 import { 
   getTaskCategories, 
   createTaskCategory, 
-  updateTaskCategory, 
+  updateTaskCategory,
+  patchTaskCategory,
   deleteTaskCategory 
 } from '@/api/check'
 
@@ -149,7 +159,7 @@ const __componentName = 'CategoryList'
 
 // 认证信息
 const authStore = useAuthStore()
-const isSuperAdmin = computed(() => authStore.isSuperAdmin)
+const isSystemAdmin = computed(() => authStore.isAdmin)
 
 // 表格相关数据
 const loading = ref(false)
@@ -215,13 +225,8 @@ onMounted(() => {
   console.log(`[${__componentName}] 当前组件路径: /check/categories`)
   console.log(`[${__componentName}] DOM元素加载状态:`, document.querySelector('.category-list') ? '已找到' : '未找到')
   
-  // 添加错误处理，确保页面不会因为API错误而无法正常运行
-  try {
-    fetchCategories()
-  } catch (error) {
-    console.error(`[${__componentName}] 获取数据出错:`, error)
-    useMockData() // 如果获取数据失败，使用模拟数据
-  }
+  // 请求数据
+  fetchCategories()
 })
 
 // 生命周期钩子 - 更新后
@@ -229,70 +234,68 @@ onUpdated(() => {
   console.log(`[${__componentName}] 组件已更新`)
 })
 
-// 使用模拟数据
-const useMockData = () => {
-  console.log('使用模拟数据')
-  categories.value = [
-    {
-      id: 1,
-      name: '习惯养成',
-      description: '培养良好的生活习惯和自律能力',
-      is_system: true,
-      created_at: '2023-05-15 10:30:00'
-    },
-    {
-      id: 2,
-      name: '学习提升',
-      description: '学习知识、提升技能和自我成长',
-      is_system: true,
-      created_at: '2023-05-15 10:35:00'
-    },
-    {
-      id: 3,
-      name: '团队会议',
-      description: '跟踪记录团队日常会议情况',
-      is_system: false,
-      created_at: '2023-06-20 14:15:00'
-    }
-  ]
-  totalItems.value = categories.value.length
-}
-
 // 获取打卡类型列表
 const fetchCategories = async () => {
   loading.value = true
+  console.log('开始获取打卡类型列表，当前页:', currentPage.value, '每页条数:', pageSize.value)
+  
   try {
     // 使用API服务获取数据
     const response = await getTaskCategories({
       page: currentPage.value,
-      page_size: pageSize.value
+      page_size: pageSize.value,
+      search: searchKeyword.value || undefined
     })
     
-    console.log('API响应:', response)
+    console.log('API原始响应:', response)
     
-    // 处理不同的响应格式
-    if (response.results && typeof response.count === 'number') {
+    // 检查API返回格式
+    if (response.success && response.code === 2000 && response.data) {
+      // 当前后端返回格式: {success, code, message, data: {pagination, results}}
+      console.log('识别到自定义返回格式')
+      
+      // 从data中获取结果
+      const { pagination, results } = response.data
+      categories.value = results || []
+      totalItems.value = pagination?.count || 0
+      
+      console.log('解析后的数据:', {
+        categories: categories.value,
+        totalItems: totalItems.value,
+        pagination: pagination
+      })
+    } else if (response.results && typeof response.count === 'number') {
       // DRF标准分页格式: {count, next, previous, results}
+      console.log('识别到Django REST Framework标准分页格式')
       categories.value = response.results
       totalItems.value = response.count
     } else if (Array.isArray(response)) {
       // 直接返回数组格式
+      console.log('识别到数组格式响应')
       categories.value = response
       totalItems.value = response.length
     } else {
       // 其他格式，作为对象处理
-      categories.value = Object.values(response || {})
+      console.log('识别到其他格式响应，尝试作为对象处理')
+      categories.value = Array.isArray(response) ? response : []
       totalItems.value = categories.value.length
+      
+      // 如果没有数据，输出警告但不使用模拟数据
+      if (categories.value.length === 0) {
+        console.warn('接口未返回数据或数据格式不符合预期')
+      }
     }
     
     // 调试日志
-    console.log('获取打卡类型列表成功:', categories.value)
+    console.log('获取打卡类型列表成功，数据条数:', categories.value.length)
   } catch (error) {
     console.error('获取打卡类型列表失败:', error)
-    ElMessage.error('获取打卡类型列表失败，使用模拟数据')
+    console.error('错误详情:', error.response?.data || error.message)
+    ElMessage.error('获取打卡类型列表失败')
     
-    // 使用模拟数据
-    useMockData()
+    // 不使用模拟数据，确保显示真实数据状态
+    categories.value = []
+    totalItems.value = 0
   } finally {
     loading.value = false
   }
@@ -342,6 +345,36 @@ const handleEditCategory = (row) => {
   dialogVisible.value = true
 }
 
+// 删除类型
+const handleDeleteCategory = (row) => {
+  ElMessageBox.confirm(
+    `确定要删除打卡类型 "${row.name}" 吗？此操作不可恢复。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  )
+  .then(async () => {
+    loading.value = true
+    try {
+      console.log('删除打卡类型:', row.id)
+      await deleteTaskCategory(row.id)
+      ElMessage.success('删除成功')
+      fetchCategories() // 刷新数据
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      loading.value = false
+    }
+  })
+  .catch(() => {
+    ElMessage.info('已取消删除')
+  })
+}
+
 // 提交表单
 const submitForm = async () => {
   console.log('提交表单', categoryFormRef.value)
@@ -373,20 +406,48 @@ const submitForm = async () => {
 const submitFormData = async () => {
   loading.value = true
   try {
+    console.log(`提交类型数据: ${dialogType.value}`, categoryForm)
+    
     if (dialogType.value === 'create') {
       // 创建新类型
-      await createTaskCategory(categoryForm)
+      console.log('【前端操作】准备创建新打卡类型，数据:', JSON.stringify(categoryForm))
+      const response = await createTaskCategory(categoryForm)
+      console.log('【前端操作】创建打卡类型成功，响应:', response)
       ElMessage.success('创建类型成功')
     } else if (dialogType.value === 'edit') {
       // 更新类型
-      await updateTaskCategory(categoryForm.id, categoryForm)
-      ElMessage.success('更新类型成功')
+      if (Object.keys(categoryForm).length === 1 && categoryForm.id) {
+        // 如果只有ID字段，说明没有任何修改，直接关闭弹窗
+        console.log('【前端操作】没有修改任何内容，取消更新')
+        ElMessage.info('没有修改任何内容')
+        dialogVisible.value = false
+        return
+      }
+      
+      // 确定是全量更新还是部分更新
+      const changedFields = { ...categoryForm }
+      
+      if (Object.keys(changedFields).length <= 3) {
+        // 如果修改的字段较少，使用PATCH进行部分更新
+        console.log('【前端操作】使用PATCH进行部分更新，数据:', JSON.stringify(changedFields))
+        const response = await patchTaskCategory(categoryForm.id, changedFields)
+        console.log('【前端操作】部分更新成功，响应:', response)
+        ElMessage.success('更新类型成功 (部分更新)')
+      } else {
+        // 否则使用PUT进行全量更新
+        console.log('【前端操作】使用PUT进行全量更新，数据:', JSON.stringify(categoryForm))
+        const response = await updateTaskCategory(categoryForm.id, categoryForm)
+        console.log('【前端操作】全量更新成功，响应:', response)
+        ElMessage.success('更新类型成功 (全量更新)')
+      }
     }
     
+    console.log('【前端操作】关闭弹窗并刷新数据')
     dialogVisible.value = false
     fetchCategories() // 刷新数据
   } catch (error) {
-    console.error('操作失败:', error)
+    console.error('【前端错误】操作失败:', error)
+    console.error('【前端错误】详细信息:', error.response?.data || error.message)
     ElMessage.error('操作失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     loading.value = false
