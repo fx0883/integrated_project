@@ -404,6 +404,8 @@ const submitFormData = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .title {
@@ -417,12 +419,14 @@ const submitFormData = async () => {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .filter-section {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .filter-select {
@@ -437,7 +441,47 @@ const submitFormData = async () => {
   background-color: #fff;
   border-radius: 4px;
   border: 1px solid #e6e6e6;
-  overflow: hidden;
+  overflow-x: auto; /* 添加水平滚动 */
+}
+
+/* 表格容器样式 */
+.el-table {
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+/* 小屏幕下调整表格列宽 */
+@media screen and (max-width: 768px) {
+  .el-table .el-table__header th {
+    padding: 8px 0;
+  }
+  .el-table .el-table__body td {
+    padding: 8px;
+  }
+  
+  /* 确保表格可横向滚动 */
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  .el-table__header-wrapper {
+    overflow-x: auto !important;
+  }
+}
+
+/* 超小屏幕适配 */
+@media screen and (max-width: 576px) {
+  .el-table .el-button {
+    padding: 6px 10px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+  
+  .el-table-column--action .cell {
+    display: flex;
+    flex-wrap: wrap;
+  }
 }
 
 .category-tag {
@@ -449,5 +493,48 @@ const submitFormData = async () => {
   padding: 15px;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 1200px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .filter-select, .search-input {
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .pagination-container {
+    justify-content: center;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .title {
+    font-size: 20px;
+  }
 }
 </style> 

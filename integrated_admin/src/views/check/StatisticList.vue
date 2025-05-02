@@ -493,6 +493,8 @@ const handleCurrentChange = (val) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-header h1 {
@@ -520,6 +522,8 @@ const handleCurrentChange = (val) => {
 .filter-row {
   display: flex;
   margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .filter-row:last-child {
@@ -530,6 +534,7 @@ const handleCurrentChange = (val) => {
   display: flex;
   align-items: center;
   margin-right: 20px;
+  flex: 1;
 }
 
 .filter-item label {
@@ -540,6 +545,8 @@ const handleCurrentChange = (val) => {
 .date-range {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .date-separator {
@@ -618,12 +625,19 @@ const handleCurrentChange = (val) => {
 /* 数据表格 */
 .data-table-card {
   margin-bottom: 20px;
+  overflow-x: hidden;
 }
 
 .table-header {
   font-size: 16px;
   font-weight: bold;
   color: #4d4d4d;
+}
+
+/* 表格容器样式 */
+.el-table {
+  overflow-x: auto;
+  margin-bottom: 10px;
 }
 
 .pagination-container {
@@ -638,33 +652,126 @@ const handleCurrentChange = (val) => {
   font-size: 14px;
 }
 
-/* 响应式布局 */
-@media (max-width: 1200px) {
+/* 响应式布局 - 大屏幕 */
+@media screen and (max-width: 1200px) {
   .stat-card {
     width: calc(50% - 10px);
   }
-}
-
-@media (max-width: 768px) {
-  .stat-card {
-    width: 100%;
+  
+  .el-col {
+    width: 100% !important;
   }
   
+  .chart-card {
+    margin-bottom: 20px;
+  }
+}
+
+/* 响应式布局 - 中等屏幕 */
+@media screen and (max-width: 992px) {
   .filter-row {
     flex-direction: column;
+    align-items: flex-start;
   }
   
   .filter-item {
+    width: 100%;
+    margin-right: 0;
     margin-bottom: 10px;
   }
   
   .date-range {
+    width: 100%;
     flex-direction: column;
     align-items: flex-start;
   }
   
   .date-separator {
-    margin: 10px 0;
+    display: none;
+  }
+  
+  .el-select,
+  .el-date-picker {
+    width: 100% !important;
+  }
+}
+
+/* 响应式布局 - 平板 */
+@media screen and (max-width: 768px) {
+  .stat-card {
+    width: 100%;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .pagination-info {
+    margin-bottom: 10px;
+  }
+  
+  .page-header h1 {
+    font-size: 20px;
+  }
+  
+  .filter-panel {
+    padding: 10px 15px;
+  }
+  
+  .chart-content {
+    height: 250px;
+  }
+  
+  /* 表格响应式 */
+  .el-table .el-table__header th {
+    padding: 8px 0;
+  }
+  
+  .el-table .el-table__body td {
+    padding: 8px;
+  }
+  
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  .el-table__header-wrapper {
+    overflow-x: auto !important;
+  }
+}
+
+/* 响应式布局 - 手机 */
+@media screen and (max-width: 576px) {
+  .filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .filter-buttons .el-button {
+    width: 100%;
+  }
+  
+  .table-header {
+    font-size: 14px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .chart-content {
+    height: 200px;
+  }
+  
+  .stat-cards {
+    flex-direction: column;
+  }
+  
+  .stat-card {
+    width: 100% !important;
   }
 }
 </style> 

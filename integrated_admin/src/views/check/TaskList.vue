@@ -537,6 +537,8 @@ const submitForm = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-header h1 {
@@ -548,6 +550,7 @@ const submitForm = async () => {
   display: flex;
   margin-bottom: 20px;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .search-input {
@@ -558,6 +561,7 @@ const submitForm = async () => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .text-center {
@@ -581,5 +585,91 @@ const submitForm = async () => {
 
 .mr-1 {
   margin-right: 4px;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 1200px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .actions {
+    margin-top: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .pagination-container {
+    justify-content: center;
+  }
+  
+  /* 表单响应式布局 */
+  .el-form-item {
+    margin-bottom: 22px;
+  }
+  
+  /* 日期选择器响应式 */
+  .el-col {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+  
+  .date-separator {
+    display: none;
+  }
+  
+  /* 小屏幕下调整表格列宽 */
+  .el-table .el-table__header th {
+    padding: 8px 0;
+  }
+  .el-table .el-table__body td {
+    padding: 8px;
+  }
+  
+  /* 确保表格可横向滚动 */
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  .el-table__header-wrapper {
+    overflow-x: auto !important;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .page-header h1 {
+    font-size: 20px;
+  }
+  
+  .el-dialog {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
+  
+  .el-table .el-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .el-form-label {
+    font-size: 14px;
+  }
+}
+
+/* 确保弹窗内容在小屏幕上也能正常显示 */
+@media screen and (max-width: 992px) {
+  .el-dialog {
+    width: 90% !important;
+  }
 }
 </style> 

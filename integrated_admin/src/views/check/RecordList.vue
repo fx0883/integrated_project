@@ -256,6 +256,8 @@ const handleCurrentChange = (val) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-header h1 {
@@ -283,6 +285,8 @@ const handleCurrentChange = (val) => {
 .filter-row {
   display: flex;
   margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .filter-row:last-child {
@@ -298,11 +302,14 @@ const handleCurrentChange = (val) => {
 .filter-item label {
   margin-right: 8px;
   color: #4d4d4d;
+  white-space: nowrap;
 }
 
 .date-range {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .date-separator {
@@ -318,5 +325,87 @@ const handleCurrentChange = (val) => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* 添加响应式布局 */
+@media screen and (max-width: 1200px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media screen and (max-width: 992px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-item {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .filter-item > .el-select,
+  .filter-item > .el-date-picker {
+    width: 100%;
+  }
+  
+  .date-range {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .date-separator {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .pagination-container {
+    justify-content: center;
+  }
+  
+  .page-header h1 {
+    font-size: 20px;
+  }
+  
+  .filter-panel {
+    padding: 10px 15px;
+  }
+  
+  .el-table .el-table__header th {
+    padding: 8px 0;
+  }
+  .el-table .el-table__body td {
+    padding: 8px;
+  }
+  
+  /* 确保表格可横向滚动 */
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  .el-table__header-wrapper {
+    overflow-x: auto !important;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .filter-buttons .el-button {
+    width: 100%;
+  }
+  
+  .page-header h1 {
+    font-size: 18px;
+  }
 }
 </style> 
