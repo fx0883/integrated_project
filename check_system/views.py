@@ -55,17 +55,7 @@ logger = logging.getLogger(__name__)
         description="获取单个打卡类型的详细信息",
         tags=["打卡系统-类型管理"],
         parameters=[
-            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
-        ],
-        examples=[
-            OpenApiExample(
-                'Retrieve Category Example',
-                summary='获取打卡类型详情示例',
-                description='获取单个打卡类型的详细信息',
-                value={
-                    'id': 1
-                }
-            )
+
         ]
     ),
     create=extend_schema(
