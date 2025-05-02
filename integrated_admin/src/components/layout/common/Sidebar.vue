@@ -112,17 +112,39 @@ const expandedMenus = ref([])
 
 // 判断路径是否活跃
 const isActive = (path) => {
-  return path === props.activeMenu
+  console.log('[Sidebar] 检查路径是否活跃:', path, '当前活跃菜单:', props.activeMenu)
+  
+  // 精确匹配
+  if (path === props.activeMenu) {
+    console.log('[Sidebar] 路径精确匹配')
+    return true
+  }
+  
+  // 子路径匹配
+  const currentPath = route.path
+  if (path !== '/' && currentPath.startsWith(path + '/')) {
+    console.log('[Sidebar] 路径前缀匹配:', path, currentPath)
+    return true
+  }
+  
+  return false
 }
 
 // 判断子菜单是否活跃
 const isSubmenuActive = (item) => {
   // 如果当前路径是该菜单项的路径，则活跃
-  if (isActive(item.path)) return true
+  if (isActive(item.path)) {
+    console.log('[Sidebar] 菜单项活跃:', item.path)
+    return true
+  }
   
   // 如果当前路径包含在子菜单中，则活跃
   if (item.children) {
-    return item.children.some(child => isActive(child.path))
+    const hasActiveChild = item.children.some(child => isActive(child.path))
+    if (hasActiveChild) {
+      console.log('[Sidebar] 子菜单活跃:', item.path)
+    }
+    return hasActiveChild
   }
   
   return false

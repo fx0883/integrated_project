@@ -1,4 +1,11 @@
 // 路由配置
+// 导入路由视图容器需要的依赖
+import { h } from 'vue'
+import CategoryList from '../views/check/CategoryList.vue'
+import TaskList from '../views/check/TaskList.vue'
+import RecordList from '../views/check/RecordList.vue'
+import StatisticList from '../views/check/StatisticList.vue'
+
 const routes = [
   {
     path: '/login',
@@ -41,6 +48,50 @@ const routes = [
         meta: { 
           title: '仪表盘', 
           icon: 'Odometer'
+        }
+      },
+      // 打卡类型管理页面 - 直接定义，不使用嵌套
+      {
+        path: 'check/categories',
+        name: 'CheckCategories',
+        component: CategoryList, // 直接引用组件
+        meta: { 
+          title: '类型管理',
+          icon: 'Collection',
+          parentTitle: '打卡管理' 
+        }
+      },
+      // 打卡任务管理页面
+      {
+        path: 'check/tasks',
+        name: 'CheckTasks',
+        component: TaskList, // 使用新创建的TaskList组件
+        meta: { 
+          title: '任务管理', 
+          icon: 'List',
+          parentTitle: '打卡管理'
+        }
+      },
+      // 打卡记录管理页面
+      {
+        path: 'check/records',
+        name: 'CheckRecords',
+        component: RecordList, // 使用新创建的RecordList组件
+        meta: { 
+          title: '打卡记录', 
+          icon: 'Document',
+          parentTitle: '打卡管理'
+        }
+      },
+      // 统计分析页面
+      {
+        path: 'check/statistics',
+        name: 'CheckStatistics',
+        component: StatisticList, // 使用新创建的StatisticList组件
+        meta: { 
+          title: '统计分析', 
+          icon: 'PieChart',
+          parentTitle: '打卡管理'
         }
       },
       {

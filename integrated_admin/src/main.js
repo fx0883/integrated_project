@@ -12,6 +12,14 @@ import 'vue-cropper/dist/index.css'
 // 引入并注册所有Element Plus图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
+// 添加路由调试信息
+console.log('===== 应用初始化 =====')
+console.log('已注册的路由:', router.getRoutes().map(route => ({ 
+  path: route.path,
+  name: route.name,
+  components: Object.keys(route.components || {})
+})))
+
 const app = createApp(App)
 
 // 注册所有Element Plus图标

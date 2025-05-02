@@ -28,6 +28,13 @@
         
         <!-- 主要内容 -->
         <div class="page-content">
+          <!-- 调试信息 -->
+          <div v-if="isDebug" class="debug-info">
+            <p>当前路径: {{ $route.path }}</p>
+            <p>路由名称: {{ $route.name }}</p>
+            <p>路由组件: {{ $route.matched.map(m => m.name).join(' > ') }}</p>
+          </div>
+          
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
               <keep-alive :include="cachedViews">
@@ -86,7 +93,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores'
 import { 
   User, Setting, InfoFilled, OfficeBuilding, Odometer, List, 
-  Plus, Document, Message, Bell, Search
+  Plus, Document, Message, Bell, Search, Calendar, Collection, PieChart
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -103,6 +110,9 @@ const route = useRoute()
 
 // 认证信息
 const authStore = useAuthStore()
+
+// 调试标志
+const isDebug = ref(true) // 设置为true以显示调试信息
 
 // 搜索
 const searchKeyword = ref('')
@@ -129,6 +139,7 @@ const isCollapsed = ref(localStorage.getItem('sidebarStatus') === '1')
 const activeMenu = computed(() => {
   // 处理子路由，确保父菜单项也能匹配上
   const { path } = route
+  console.log('[Layout] 当前路径:', path)
   
   if (path.includes('/users/')) {
     if (path.includes('/users/create')) {
@@ -144,6 +155,24 @@ const activeMenu = computed(() => {
     return '/tenants'
   }
   
+  // 处理打卡管理路径
+  if (path.includes('/check/')) {
+    if (path.includes('/check/categories')) {
+      console.log('[Layout] 匹配到打卡类型管理页面')
+      return '/check/categories'
+    }
+    if (path.includes('/check/tasks')) {
+      return '/check/tasks'
+    }
+    if (path.includes('/check/records')) {
+      return '/check/records'
+    }
+    if (path.includes('/check/statistics')) {
+      return '/check/statistics'
+    }
+    return '/check'
+  }
+  
   return path
 })
 
@@ -157,6 +186,33 @@ const menuItems = computed(() => {
       title: '仪表盘',
       path: '/dashboard',
       icon: 'Odometer'
+    },
+    {
+      title: '打卡管理',
+      path: '/check',  // 这个路径实际不存在，只用于菜单分组
+      icon: 'Calendar',
+      children: [
+        {
+          title: '类型管理',
+          path: '/check/categories',  // 直接链接到类型管理页面
+          icon: 'Collection'
+        },
+        {
+          title: '任务管理',
+          path: '/check/tasks',
+          icon: 'List'
+        },
+        {
+          title: '打卡记录',
+          path: '/check/records',
+          icon: 'Document'
+        },
+        {
+          title: '统计分析',
+          path: '/check/statistics',
+          icon: 'PieChart'
+        }
+      ]
     },
     {
       title: '用户管理',
@@ -240,6 +296,21 @@ const updateBreadcrumb = () => {
   
   // 添加匹配到的路由
   matched.forEach(item => {
+    // 检查是否有父级标题
+    if (item.meta.parentTitle) {
+      // 检查是否已经添加了父级标题
+      const parentExists = breadcrumbs.some(bc => bc.title === item.meta.parentTitle)
+      if (!parentExists) {
+        // 添加父级面包屑（使用路径前缀）
+        const parentPath = item.path.substring(0, item.path.lastIndexOf('/'))
+        breadcrumbs.push({
+          title: item.meta.parentTitle,
+          path: parentPath
+        })
+        console.log('[Layout] 添加父级面包屑:', item.meta.parentTitle, parentPath)
+      }
+    }
+    
     // 判断是否为编辑页面
     if (item.path.includes(':id') && route.params.id) {
       // 构建实际路径
@@ -257,6 +328,7 @@ const updateBreadcrumb = () => {
     }
   })
   
+  console.log('[Layout] 更新面包屑:', breadcrumbs)
   breadcrumbItems.value = breadcrumbs
 }
 
@@ -399,7 +471,10 @@ const getSearchIcon = (category) => {
     user: 'User',
     tenant: 'OfficeBuilding',
     document: 'Document',
-    setting: 'Setting'
+    setting: 'Setting',
+    calendar: 'Calendar',
+    collection: 'Collection',
+    pieChart: 'PieChart'
   }
   
   return iconMap[category] || 'Document'
@@ -412,7 +487,10 @@ const getSearchIconClass = (category) => {
     user: 'icon-green',
     tenant: 'icon-orange',
     document: 'icon-purple',
-    setting: 'icon-gray'
+    setting: 'icon-gray',
+    calendar: 'icon-pink',
+    collection: 'icon-teal',
+    pieChart: 'icon-yellow'
   }
   
   return classMap[category] || 'icon-blue'

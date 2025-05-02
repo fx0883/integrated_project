@@ -7,8 +7,23 @@ const router = createRouter({
   routes
 })
 
+// 添加全局路由调试日志
+router.beforeEach((to, from, next) => {
+  console.log('========= 路由导航 ==========')
+  console.log('从: ', from.path)
+  console.log('到: ', to.path)
+  console.log('目标路由完整信息: ', to)
+  next()
+})
+
 // 导航守卫
 router.beforeEach(async (to, from, next) => {
+  // 添加路由调试日志
+  console.log('========= 路由导航开始 ==========')
+  console.log('从: ', from.path)
+  console.log('到: ', to.path)
+  console.log('目标路由组件: ', to.matched.map(record => record.components.default?.name || '未命名组件'))
+  
   console.log('===== 路由导航开始 =====')
   console.log(`从路由: ${from.path} 导航到: ${to.path}`)
   
