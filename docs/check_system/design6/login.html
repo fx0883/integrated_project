@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 自律打卡</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="enhanced-style.css">
+    <style>
+        :root {
+            /* 扁平化色调 */
+            --primary-color: #4CD964;
+            --primary-dark: #009688;
+            --primary-light: #E0F2F1;
+            --accent-color: #FF9800;
+            --accent-light: #FFE0B2;
+            --highlight: #FFEB3B;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --divider-color: #BDBDBD;
+            --background-color: #F8F9FA;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            background-color: white;
+            max-width: 390px; /* iPhone 15 Pro 宽度 */
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* iPhone 样式的圆角和间距 */
+        .app-container {
+            border-radius: 12px;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: white;
+            border: 1px solid var(--divider-color);
+        }
+        
+        /* iOS 状态栏 */
+        .status-bar {
+            background-color: var(--primary-color);
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 页面内容 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 登录表单样式 */
+        .login-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 0;
+            position: relative;
+        }
+        
+        .login-header {
+            background: var(--primary-color);
+            padding: 60px 20px 40px;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .login-form {
+            padding: 0 24px;
+            position: relative;
+            z-index: 5;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .logo i {
+            font-size: 46px;
+            color: var(--primary-color);
+            position: relative;
+        }
+        
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .app-slogan {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 8px;
+            font-weight: 300;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: white;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .login-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 14px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        
+        .login-btn:active {
+            background-color: var(--primary-dark);
+        }
+        
+        .or-divider {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            color: var(--text-secondary);
+        }
+        
+        .or-divider::before, .or-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: var(--divider-color);
+        }
+        
+        .or-divider span {
+            padding: 0 16px;
+            font-size: 14px;
+        }
+        
+        .social-logins {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+        
+        .social-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid var(--divider-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        
+        .social-btn:active {
+            border-color: var(--primary-color);
+        }
+        
+        .signup-link {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding-bottom: 30px;
+        }
+        
+        .signup-link a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        /* 切换登录/注册标签 */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: var(--background-color);
+            border-radius: 4px;
+            padding: 2px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-tab.active {
+            color: white;
+            background: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- iOS 状态栏 -->
+        <div class="status-bar">
+            <div class="status-bar-time">9:41</div>
+            <div class="status-bar-content">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <div class="login-container">
+                <!-- 登录头部 -->
+                <div class="login-header">
+                    <div class="logo-container">
+                        <div class="logo">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                        <div class="app-name">自律打卡</div>
+                        <div class="app-slogan">养成好习惯 · 成就更好的自己</div>
+                    </div>
+                </div>
+                
+                <!-- 登录表单 -->
+                <div class="login-form">
+                    <div class="auth-tabs">
+                        <div class="auth-tab active">登录</div>
+                        <div class="auth-tab">注册</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="account">手机号/邮箱</label>
+                        <input type="text" id="account" class="form-input" placeholder="请输入手机号或邮箱">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="password">密码</label>
+                        <div class="password-container">
+                            <input type="password" id="password" class="form-input" placeholder="请输入密码">
+                            <div class="password-toggle">
+                                <i class="far fa-eye"></i>
+                            </div>
+                        </div>
+                        <div class="forgot-password">忘记密码？</div>
+                    </div>
+                    
+                    <a href="dashboard.html" class="login-btn">登录</a>
+                    
+                    <div class="or-divider">
+                        <span>或者</span>
+                    </div>
+                    
+                    <div class="social-logins">
+                        <div class="social-btn">
+                            <i class="fab fa-weixin" style="color: #07C160;"></i>
+                        </div>
+                        <div class="social-btn">
+                            <i class="fab fa-qq" style="color: #1DA1F2;"></i>
+                        </div>
+                        <div class="social-btn">
+                            <i class="fab fa-apple" style="color: #000;"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="signup-link">
+                        还没有账号？<a href="#">立即注册</a>
+                    </div>
+                    
+                    <div class="terms-privacy-links" style="text-align: center; margin-top: 15px; font-size: 12px; color: var(--text-secondary); padding-bottom: 20px;">
+                        注册或登录即表示您同意我们的<a href="terms.html" style="color: var(--primary-color);">用户协议</a>和<a href="privacy.html" style="color: var(--primary-color);">隐私政策</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 密码可见性切换
+        const passwordToggle = document.querySelector('.password-toggle');
+        const passwordInput = document.getElementById('password');
+        
+        passwordToggle.addEventListener('click', function() {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            passwordToggle.innerHTML = isPassword ? 
+                '<i class="far fa-eye-slash"></i>' : '<i class="far fa-eye"></i>';
+        });
+        
+        // 登录/注册标签切换
+        const authTabs = document.querySelectorAll('.auth-tab');
+        
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                authTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 修改表单标题和按钮文本
+                const isRegister = this.textContent === '注册';
+                document.querySelector('.login-btn').textContent = isRegister ? '注册' : '登录';
+                // 更新其他字段，如果需要
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -53,10 +53,7 @@ logger = logging.getLogger(__name__)
     retrieve=extend_schema(
         summary="获取打卡类型详情",
         description="获取单个打卡类型的详细信息",
-        tags=["打卡系统-类型管理"],
-        parameters=[
-
-        ]
+        tags=["打卡系统-类型管理"]
     ),
     create=extend_schema(
         summary="创建打卡类型",
@@ -112,7 +109,7 @@ logger = logging.getLogger(__name__)
         description="更新现有打卡类型的所有字段",
         tags=["打卡系统-类型管理"],
         parameters=[
-            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+
         ],
         examples=[
             OpenApiExample(
@@ -143,7 +140,8 @@ logger = logging.getLogger(__name__)
         description="更新现有打卡类型的部分字段",
         tags=["打卡系统-类型管理"],
         parameters=[
-            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+
+
         ],
         examples=[
             OpenApiExample(
@@ -169,7 +167,8 @@ logger = logging.getLogger(__name__)
         description="删除现有打卡类型",
         tags=["打卡系统-类型管理"],
         parameters=[
-            OpenApiParameter(name="id", description="打卡类型ID", required=True, type=OpenApiTypes.INT),
+
+
         ],
         examples=[
             OpenApiExample(
@@ -1024,7 +1023,7 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         description="获取单个任务模板的详细信息",
         tags=["打卡系统-模板管理"],
         parameters=[
-            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+
         ],
     ),
     create=extend_schema(
@@ -1058,7 +1057,7 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         description="更新现有任务模板",
         tags=["打卡系统-模板管理"],
         parameters=[
-            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+
         ],
     ),
     partial_update=extend_schema(
@@ -1066,7 +1065,7 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         description="部分更新现有任务模板",
         tags=["打卡系统-模板管理"],
         parameters=[
-            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+
         ],
     ),
     destroy=extend_schema(
@@ -1074,7 +1073,7 @@ class CheckRecordViewSet(viewsets.ModelViewSet):
         description="删除现有任务模板",
         tags=["打卡系统-模板管理"],
         parameters=[
-            OpenApiParameter(name="id", description="任务模板ID", required=True, type=OpenApiTypes.INT),
+
         ],
     )
 )

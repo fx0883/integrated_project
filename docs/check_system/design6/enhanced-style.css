@@ -1,0 +1,280 @@
+/* 自律打卡应用扁平化样式 */
+
+:root {
+    /* 扁平化色调 */
+    --primary-color: #4CD964;
+    --primary-dark: #009688;
+    --primary-light: #E0F2F1;
+    --accent-color: #FF9800;
+    --accent-light: #FFE0B2;
+    --highlight: #FFEB3B;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --divider-color: #BDBDBD;
+    --background-color: #F8F9FA;
+    
+    /* 统一圆角 */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+}
+
+/* 纯色背景 */
+body {
+    background-color: var(--background-color);
+    background-image: none;
+}
+
+/* 应用容器扁平化 */
+.app-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+/* 导航栏扁平化 */
+.nav-bar {
+    background: white;
+    box-shadow: none;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.nav-action {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* 卡片式设计扁平化 */
+.card-enhanced {
+    background: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: none;
+    border: 1px solid var(--divider-color);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+/* 按钮扁平化 */
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius-sm);
+    padding: 12px 20px;
+    font-weight: 600;
+    box-shadow: none;
+    transition: background-color 0.3s ease;
+    border: none;
+}
+
+.btn-primary:active {
+    transform: none;
+    background-color: var(--primary-dark);
+}
+
+/* 数据高亮样式扁平化 */
+.stat-highlight {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 2rem;
+    text-shadow: none;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* 进度条扁平化 */
+.progress-enhanced {
+    height: 8px;
+    background: rgba(0, 150, 136, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* 标签栏图标扁平化 */
+.tab-icon-enhanced {
+    font-size: 22px;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.tab-item.active .tab-icon-enhanced {
+    color: var(--primary-color);
+}
+
+.tab-item.active .tab-icon-enhanced::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary-color);
+}
+
+/* 任务类型图标扁平化 */
+.category-icon-enhanced {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: none;
+    margin-right: 16px;
+    border: 1px solid var(--divider-color);
+}
+
+/* 卡片头部扁平化 */
+.card-header-enhanced {
+    background: var(--primary-light);
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+/* 浮动按钮扁平化 */
+.float-btn-enhanced {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: none;
+    transition: background-color 0.3s ease;
+}
+
+.float-btn-enhanced:active {
+    transform: none;
+    background-color: var(--primary-dark);
+}
+
+/* 日历效果扁平化 */
+.calendar-enhanced {
+    background: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: none;
+    border: 1px solid var(--divider-color);
+    overflow: hidden;
+}
+
+/* 去除磨砂玻璃效果，改为简单背景 */
+.glass-effect {
+    background: white;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--divider-color);
+    border-radius: var(--border-radius-md);
+}
+
+/* 环形进度条扁平化 */
+.circle-progress {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+
+.circle-progress svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circle-progress-bg {
+    fill: none;
+    stroke: rgba(0, 150, 136, 0.1);
+    stroke-width: 8;
+}
+
+.circle-progress-fill {
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 251.2;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s ease;
+}
+
+.circle-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+/* 开关按钮扁平化 */
+.switch-enhanced {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch-enhanced input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-enhanced .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.switch-enhanced .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: none;
+}
+
+.switch-enhanced input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+.switch-enhanced input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* 头部扁平化背景 */
+.gradient-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 24px 20px;
+} 

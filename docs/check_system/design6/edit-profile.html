@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑个人资料 - 自律打卡</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="enhanced-style.css">
+    <style>
+        :root {
+            /* 扁平化色调 */
+            --primary-color: #4CD964;
+            --primary-dark: #009688;
+            --primary-light: #E0F2F1;
+            --accent-color: #FF9800;
+            --accent-light: #FFE0B2;
+            --highlight: #FFEB3B;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --divider-color: #BDBDBD;
+            --background-color: #F8F9FA;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            max-width: 390px; /* iPhone 15 Pro 宽度 */
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* iPhone 样式的圆角和间距 */
+        .app-container {
+            border-radius: 0;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: none;
+            position: relative;
+        }
+        
+        /* iOS 状态栏 */
+        .status-bar {
+            background-color: #000;
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 页面内容 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background-color: var(--background-color);
+            padding-bottom: 20px;
+        }
+        
+        /* 顶部导航栏 */
+        .nav-bar {
+            background-color: var(--primary-color);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            color: white;
+        }
+        
+        .nav-back {
+            font-size: 18px;
+            color: white;
+        }
+        
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .nav-action {
+            font-size: 16px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* 表单样式 */
+        .form-section {
+            background-color: white;
+            margin: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--divider-color);
+        }
+        
+        .form-title {
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--divider-color);
+        }
+        
+        .form-group {
+            padding: 16px;
+            border-bottom: 1px solid var(--divider-color);
+        }
+        
+        .form-group:last-child {
+            border-bottom: none;
+        }
+        
+        .form-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-bottom: 1px solid var(--divider-color);
+            font-size: 16px;
+            color: var(--text-primary);
+            background-color: transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            font-size: 16px;
+            color: var(--text-primary);
+            resize: none;
+            height: 100px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        /* 头像上传区域 */
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .current-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--primary-color);
+            overflow: hidden;
+            margin-right: 16px;
+        }
+        
+        .current-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-button {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        /* 日期选择器 */
+        .date-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .date-item {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px;
+            text-align: center;
+            background-color: var(--background-color);
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .date-item.selected {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        /* 性别选择器 */
+        .gender-selector {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .gender-option {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background-color: var(--background-color);
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .gender-option.selected {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        /* 保存按钮 */
+        .save-button {
+            display: block;
+            width: calc(100% - 32px);
+            margin: 20px 16px;
+            padding: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- iOS 状态栏 -->
+        <div class="status-bar">
+            <div class="status-bar-time">9:41</div>
+            <div class="status-bar-content">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <!-- 顶部导航栏 -->
+        <div class="nav-bar">
+            <a href="profile.html" class="nav-back">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <div class="nav-title">编辑个人资料</div>
+            <div class="nav-action" id="save-profile">保存</div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <div class="form-section">
+                <div class="form-title">基本信息</div>
+                
+                <div class="form-group">
+                    <div class="avatar-upload">
+                        <div class="current-avatar">
+                            <img src="https://via.placeholder.com/80/E0F2F1/009688?text=ZS" alt="头像">
+                        </div>
+                        <button class="upload-button">更换头像</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">昵称</div>
+                    <input type="text" class="form-input" value="张三" placeholder="请输入昵称">
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">性别</div>
+                    <div class="gender-selector">
+                        <div class="gender-option selected">男</div>
+                        <div class="gender-option">女</div>
+                        <div class="gender-option">保密</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">生日</div>
+                    <input type="date" class="form-input" value="1990-01-01">
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">个性签名</div>
+                    <textarea class="form-textarea" placeholder="请输入个性签名">坚持自律，每一天都是新的开始。</textarea>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-title">联系方式</div>
+                
+                <div class="form-group">
+                    <div class="form-label">手机号码</div>
+                    <input type="tel" class="form-input" value="138****6666" placeholder="请输入手机号码">
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">电子邮箱</div>
+                    <input type="email" class="form-input" value="example@mail.com" placeholder="请输入电子邮箱">
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-title">自律偏好</div>
+                
+                <div class="form-group">
+                    <div class="form-label">主要目标</div>
+                    <input type="text" class="form-input" value="提高学习效率" placeholder="请输入您的主要目标">
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-label">偏好时段</div>
+                    <div class="date-selector">
+                        <div class="date-item">早晨</div>
+                        <div class="date-item selected">上午</div>
+                        <div class="date-item">中午</div>
+                        <div class="date-item">下午</div>
+                        <div class="date-item selected">晚上</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="save-button" id="save-button">保存更改</button>
+        </div>
+    </div>
+
+    <script>
+        // 性别选择
+        const genderOptions = document.querySelectorAll('.gender-option');
+        genderOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                genderOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+        
+        // 时段选择
+        const dateItems = document.querySelectorAll('.date-item');
+        dateItems.forEach(item => {
+            item.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+        });
+        
+        // 保存按钮
+        const saveButton = document.getElementById('save-button');
+        const saveProfileAction = document.getElementById('save-profile');
+        
+        function saveProfile() {
+            // 这里是保存个人资料的逻辑
+            alert('个人资料已更新！');
+            // 保存后返回个人中心页面
+            window.location.href = 'profile.html';
+        }
+        
+        saveButton.addEventListener('click', saveProfile);
+        saveProfileAction.addEventListener('click', saveProfile);
+    </script>
+</body>
+</html> 

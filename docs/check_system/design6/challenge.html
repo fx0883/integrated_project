@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打卡挑战 - 自律打卡</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="enhanced-style.css">
+    <style>
+        :root {
+            /* 扁平化色调 */
+            --primary-color: #4CD964;
+            --primary-dark: #009688;
+            --primary-light: #E0F2F1;
+            --accent-color: #FF9800;
+            --accent-light: #FFE0B2;
+            --highlight: #FFEB3B;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --divider-color: #BDBDBD;
+            --background-color: #F8F9FA;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            max-width: 390px; /* iPhone 15 Pro 宽度 */
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* iPhone 样式的圆角和间距 */
+        .app-container {
+            border-radius: 0;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: none;
+            position: relative;
+        }
+        
+        /* iOS 状态栏 */
+        .status-bar {
+            background-color: #000;
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 页面内容 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background-color: var(--background-color);
+            padding-bottom: 70px; /* 底部导航栏的高度 + 间距 */
+        }
+        
+        /* 底部标签栏 */
+        .tab-bar {
+            height: 60px;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 390px;
+            border-top: 1px solid var(--divider-color);
+            z-index: 10;
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 8px 0;
+            width: 20%;
+            transition: color 0.3s ease;
+        }
+        
+        .tab-item.active {
+            color: var(--primary-color);
+        }
+        
+        .tab-icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+            position: relative;
+        }
+        
+        .tab-item.active .tab-icon::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 2px;
+            background: var(--primary-color);
+        }
+        
+        /* 顶部导航栏 */
+        .nav-bar {
+            background-color: var(--primary-color);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            color: white;
+        }
+        
+        .nav-back {
+            font-size: 18px;
+            color: white;
+            width: 24px;
+        }
+        
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            flex: 1;
+        }
+        
+        /* 活动标签 */
+        .category-tabs {
+            display: flex;
+            padding: 0 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .category-tabs::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
+        .category-tab {
+            padding: 8px 16px;
+            background-color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-right: 12px;
+            white-space: nowrap;
+            color: var(--text-secondary);
+            border: 1px solid var(--divider-color);
+            transition: all 0.3s ease;
+        }
+        
+        .category-tab.active {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            border-color: var(--primary-color);
+        }
+        
+        /* 主挑战卡片 */
+        .main-challenge {
+            margin: 16px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--divider-color);
+            background-color: white;
+        }
+        
+        .challenge-banner {
+            height: 160px;
+            background-color: var(--primary-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-color);
+            text-align: center;
+            position: relative;
+        }
+        
+        .challenge-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .challenge-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 80%;
+        }
+        
+        .challenge-icon {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .challenge-info {
+            padding: 16px;
+        }
+        
+        .challenge-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .join-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        /* 挑战卡片列表 */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin: 0 16px 16px;
+        }
+        
+        .challenge-card {
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid var(--divider-color);
+            overflow: hidden;
+        }
+        
+        .card-banner {
+            height: 100px;
+            background-color: var(--primary-light);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .banner-icon {
+            font-size: 36px;
+            color: var(--primary-color);
+        }
+        
+        .card-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .card-status.ended {
+            background-color: var(--text-secondary);
+        }
+        
+        .card-status.coming {
+            background-color: var(--highlight);
+            color: var(--text-primary);
+        }
+        
+        .card-content {
+            padding: 16px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .meta-item i {
+            margin-right: 4px;
+        }
+        
+        /* 活动规则 */
+        .challenge-rules {
+            background-color: white;
+            margin: 16px;
+            border-radius: 4px;
+            padding: 16px;
+            border: 1px solid var(--divider-color);
+        }
+        
+        .rules-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .rules-header i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        
+        .rule-item {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+        }
+        
+        .rule-number {
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .rule-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        
+        /* 参与者信息 */
+        .participants {
+            background-color: white;
+            margin: 0 16px 16px;
+            border-radius: 4px;
+            padding: 16px;
+            border: 1px solid var(--divider-color);
+        }
+        
+        .participants-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .view-all {
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+        
+        .avatar-group {
+            display: flex;
+            margin-bottom: 16px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin-right: -10px;
+            border: 2px solid white;
+        }
+        
+        .avatar:last-child {
+            margin-right: 0;
+        }
+        
+        .avatar.more {
+            background-color: var(--background-color);
+            color: var(--text-secondary);
+        }
+        
+        .participants-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* 热门挑战标题 */
+        .section-header {
+            padding: 0 16px;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .section-more {
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+        
+        /* 进度条 */
+        .progress-bar {
+            height: 4px;
+            background-color: var(--background-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- iOS 状态栏 -->
+        <div class="status-bar">
+            <div class="status-bar-time">9:41</div>
+            <div class="status-bar-content">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <!-- 顶部导航栏 -->
+        <div class="nav-bar">
+            <a href="profile.html" class="nav-back">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <div class="nav-title">打卡挑战</div>
+            <div style="width: 24px;"></div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 分类标签 -->
+            <div class="category-tabs">
+                <div class="category-tab active">全部</div>
+                <div class="category-tab">官方挑战</div>
+                <div class="category-tab">学习成长</div>
+                <div class="category-tab">健康习惯</div>
+                <div class="category-tab">运动健身</div>
+            </div>
+            
+            <!-- 主要挑战 -->
+            <div class="main-challenge">
+                <div class="challenge-banner">
+                    <div class="challenge-icon">官方活动</div>
+                    <div class="challenge-title">21天早起挑战</div>
+                    <div class="challenge-subtitle">培养早起好习惯，赢取限定徽章</div>
+                </div>
+                
+                <div class="challenge-info">
+                    <div class="challenge-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">21天</div>
+                            <div class="stat-label">挑战周期</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">1205</div>
+                            <div class="stat-label">参与人数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">5月28日</div>
+                            <div class="stat-label">开始时间</div>
+                        </div>
+                    </div>
+                    
+                    <button class="join-button">立即参与</button>
+                </div>
+            </div>
+            
+            <!-- 活动规则 -->
+            <div class="challenge-rules">
+                <div class="rules-header">
+                    <i class="fas fa-gavel"></i>挑战规则
+                </div>
+                
+                <div class="rule-list">
+                    <div class="rule-item">
+                        <div class="rule-number">1</div>
+                        <div class="rule-text">每天早上7:00前完成起床打卡，系统自动记录。</div>
+                    </div>
+                    
+                    <div class="rule-item">
+                        <div class="rule-number">2</div>
+                        <div class="rule-text">需连续完成21天，中间不可中断，否则挑战失败。</div>
+                    </div>
+                    
+                    <div class="rule-item">
+                        <div class="rule-number">3</div>
+                        <div class="rule-text">完成挑战可获得"早起达人"徽章和100积分奖励。</div>
+                    </div>
+                    
+                    <div class="rule-item">
+                        <div class="rule-number">4</div>
+                        <div class="rule-text">坚持超过10天将获得额外鼓励积分，继续加油！</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 参与者信息 -->
+            <div class="participants">
+                <div class="participants-header">
+                    <div>参与者</div>
+                    <div class="view-all">查看全部</div>
+                </div>
+                
+                <div class="avatar-group">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="avatar more">+1.2k</div>
+                </div>
+                
+                <div class="participants-stats">
+                    <div>当前参与: 1205人</div>
+                    <div>已完成: 328人 (27.2%)</div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 27.2%;"></div>
+                </div>
+            </div>
+            
+            <!-- 热门挑战 -->
+            <div class="section-header">
+                <div class="section-title">热门挑战</div>
+                <div class="section-more">查看更多</div>
+            </div>
+            
+            <div class="challenge-grid">
+                <div class="challenge-card">
+                    <div class="card-banner">
+                        <div class="banner-icon"><i class="fas fa-book"></i></div>
+                        <div class="card-status">进行中</div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-title">30天读书计划</div>
+                        <div class="card-desc">每天阅读30分钟，培养阅读习惯，提升知识广度。</div>
+                        <div class="card-meta">
+                            <div class="meta-item"><i class="fas fa-users"></i>873人参与</div>
+                            <div class="meta-item"><i class="fas fa-calendar"></i>剩余12天</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="challenge-card">
+                    <div class="card-banner">
+                        <div class="banner-icon"><i class="fas fa-running"></i></div>
+                        <div class="card-status">进行中</div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-title">每日万步行</div>
+                        <div class="card-desc">每天完成10000步，增强体质，养成健走习惯。</div>
+                        <div class="card-meta">
+                            <div class="meta-item"><i class="fas fa-users"></i>1342人参与</div>
+                            <div class="meta-item"><i class="fas fa-calendar"></i>剩余15天</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="challenge-card">
+                    <div class="card-banner">
+                        <div class="banner-icon"><i class="fas fa-pen"></i></div>
+                        <div class="card-status coming">即将开始</div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-title">每日写作练习</div>
+                        <div class="card-desc">21天写作训练营，每天至少500字，提升表达能力。</div>
+                        <div class="card-meta">
+                            <div class="meta-item"><i class="fas fa-users"></i>342人预约</div>
+                            <div class="meta-item"><i class="fas fa-calendar"></i>6月15日开始</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="challenge-card">
+                    <div class="card-banner">
+                        <div class="banner-icon"><i class="fas fa-tint"></i></div>
+                        <div class="card-status ended">已结束</div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-title">每日8杯水</div>
+                        <div class="card-desc">养成喝水好习惯，保持身体水分，提高新陈代谢。</div>
+                        <div class="card-meta">
+                            <div class="meta-item"><i class="fas fa-users"></i>2105人参与</div>
+                            <div class="meta-item"><i class="fas fa-check-circle"></i>972人完成</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 创建自定义挑战 -->
+            <div class="section-header">
+                <div class="section-title">创建挑战</div>
+            </div>
+            
+            <div style="margin: 0 16px 24px;">
+                <button class="join-button" style="display: flex; justify-content: center; align-items: center;">
+                    <i class="fas fa-plus" style="margin-right: 8px;"></i>创建自定义挑战
+                </button>
+            </div>
+        </div>
+        
+        <!-- 底部标签栏 -->
+        <div class="tab-bar">
+            <a href="dashboard.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-home"></i></div>
+                <div>首页</div>
+            </a>
+            <a href="tasks.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-tasks"></i></div>
+                <div>任务</div>
+            </a>
+            <a href="records.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-calendar-check"></i></div>
+                <div>记录</div>
+            </a>
+            <a href="statistics.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-chart-pie"></i></div>
+                <div>统计</div>
+            </a>
+            <a href="profile.html" class="tab-item active">
+                <div class="tab-icon"><i class="fas fa-user"></i></div>
+                <div>我的</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 分类标签切换
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 在实际应用中，这里应该根据分类过滤挑战
+                console.log("过滤类别:", this.textContent);
+            });
+        });
+        
+        // 加入挑战按钮
+        document.querySelector('.join-button').addEventListener('click', function() {
+            alert('您已成功报名参加"21天早起挑战"！挑战将于5月28日开始，请做好准备。');
+        });
+    </script>
+</body>
+</html> 

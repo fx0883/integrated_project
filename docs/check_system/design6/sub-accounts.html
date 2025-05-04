@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>子账号管理 - 自律打卡</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --primary-dark: #388E3C;
+            --primary-light: #C8E6C9;
+            --accent-color: #8BC34A;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --divider-color: #BDBDBD;
+            --background-color: #F5F5F5;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            background-color: white;
+            max-width: 390px;
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            border-radius: 40px;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .status-bar {
+            background-color: #000;
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background-color: var(--background-color);
+            padding-bottom: 76px;
+        }
+        
+        .tab-bar {
+            height: 70px;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 390px;
+            border-top: 1px solid #e0e0e0;
+            z-index: 10;
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 8px 0;
+            width: 20%;
+        }
+        
+        .tab-item.active {
+            color: var(--primary-color);
+        }
+        
+        .tab-icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-bar {
+            background-color: white;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .nav-back, .nav-action {
+            position: absolute;
+            top: 15px;
+            font-size: 16px;
+        }
+        
+        .nav-back {
+            left: 15px;
+            color: var(--text-secondary);
+        }
+        
+        .nav-action {
+            right: 15px;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        /* 账号容器 */
+        .accounts-container {
+            padding: 16px;
+        }
+        
+        .current-account-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .account-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        
+        .account-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .account-info {
+            flex: 1;
+        }
+        
+        .account-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .account-tag {
+            font-size: 12px;
+            font-weight: normal;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        
+        .account-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* 子账号列表 */
+        .sub-accounts-section {
+            margin-bottom: 20px;
+        }
+        
+        .sub-account-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+        }
+        
+        .sub-account-item {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .sub-account-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sub-account-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .sub-account-info {
+            flex: 1;
+        }
+        
+        .sub-account-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .sub-account-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .sub-account-date {
+            margin-right: 8px;
+        }
+        
+        .sub-account-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background-color: #E8F5E9;
+            color: #388E3C;
+        }
+        
+        .sub-account-status.disabled {
+            background-color: #EFEBE9;
+            color: #795548;
+        }
+        
+        .sub-account-actions {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .sub-account-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            background-color: #f5f5f5;
+        }
+        
+        /* 账号配额 */
+        .account-quota-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .quota-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .quota-progress {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        
+        .quota-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            width: 60%;
+        }
+        
+        .quota-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .quota-upgrade {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 0;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        
+        .quota-upgrade i {
+            margin-right: 8px;
+        }
+        
+        /* 添加子账号按钮 */
+        .add-account-btn {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-size: 24px;
+            z-index: 5;
+        }
+        
+        /* 创建子账号模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: none;
+        }
+        
+        .modal-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 390px;
+            background-color: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 101;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+            padding: 20px;
+            box-sizing: border-box;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-container.show {
+            transform: translateY(0);
+        }
+        
+        .modal-overlay.show {
+            display: block;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            font-size: 24px;
+            color: var(--text-secondary);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+        }
+        
+        /* 权限设置 */
+        .permission-group {
+            margin-bottom: 24px;
+        }
+        
+        .permission-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .permission-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .permission-item:last-child {
+            border-bottom: none;
+        }
+        
+        .permission-name {
+            font-size: 14px;
+        }
+        
+        .permission-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* 开关按钮 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 26px;
+        }
+        
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* 模态框底部按钮 */
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 14px 0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .btn-cancel {
+            background-color: #f0f0f0;
+            color: var(--text-secondary);
+        }
+        
+        .btn-save {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-icon {
+            font-size: 60px;
+            margin-bottom: 16px;
+            color: #e0e0e0;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .empty-action {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- iOS 状态栏 -->
+        <div class="status-bar">
+            <div class="status-bar-time">9:41</div>
+            <div class="status-bar-content">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <!-- 顶部导航栏 -->
+        <div class="nav-bar">
+            <a href="profile.html" class="nav-back"><i class="fas fa-chevron-left"></i></a>
+            <div class="nav-title">账号管理</div>
+            <div class="nav-action" id="editToggle">编辑</div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <div class="accounts-container">
+                <!-- 当前账号 -->
+                <div class="current-account-section">
+                    <div class="section-header">当前账号</div>
+                    <div class="account-card">
+                        <div class="account-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="account-info">
+                            <div class="account-name">
+                                张三 <span class="account-tag">主账号</span>
+                            </div>
+                            <div class="account-meta">
+                                电话: 138****5678
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 账号配额 -->
+                <div class="account-quota-card">
+                    <div class="quota-header">子账号配额</div>
+                    <div class="quota-progress">
+                        <div class="quota-fill"></div>
+                    </div>
+                    <div class="quota-text">
+                        <div>已使用: 3/5 个子账号</div>
+                        <div>标准版用户</div>
+                    </div>
+                    <div class="quota-upgrade">
+                        <i class="fas fa-crown"></i> 升级到高级版解锁更多子账号
+                    </div>
+                </div>
+                
+                <!-- 子账号列表 -->
+                <div class="sub-accounts-section">
+                    <div class="section-header">子账号列表</div>
+                    <div class="sub-account-card">
+                        <div class="sub-account-item">
+                            <div class="sub-account-avatar">李</div>
+                            <div class="sub-account-info">
+                                <div class="sub-account-name">小李</div>
+                                <div class="sub-account-meta">
+                                    <div class="sub-account-date">创建于2025年4月15日</div>
+                                    <div class="sub-account-status">已激活</div>
+                                </div>
+                            </div>
+                            <div class="sub-account-actions" style="display: none;">
+                                <div class="sub-account-action"><i class="fas fa-edit"></i></div>
+                                <div class="sub-account-action"><i class="fas fa-trash-alt"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-account-item">
+                            <div class="sub-account-avatar">王</div>
+                            <div class="sub-account-info">
+                                <div class="sub-account-name">小王</div>
+                                <div class="sub-account-meta">
+                                    <div class="sub-account-date">创建于2025年4月20日</div>
+                                    <div class="sub-account-status">已激活</div>
+                                </div>
+                            </div>
+                            <div class="sub-account-actions" style="display: none;">
+                                <div class="sub-account-action"><i class="fas fa-edit"></i></div>
+                                <div class="sub-account-action"><i class="fas fa-trash-alt"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-account-item">
+                            <div class="sub-account-avatar">刘</div>
+                            <div class="sub-account-info">
+                                <div class="sub-account-name">小刘</div>
+                                <div class="sub-account-meta">
+                                    <div class="sub-account-date">创建于2025年5月1日</div>
+                                    <div class="sub-account-status disabled">已禁用</div>
+                                </div>
+                            </div>
+                            <div class="sub-account-actions" style="display: none;">
+                                <div class="sub-account-action"><i class="fas fa-edit"></i></div>
+                                <div class="sub-account-action"><i class="fas fa-trash-alt"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 空状态（默认隐藏） -->
+                <div class="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="empty-text">
+                        暂无子账号<br>添加子账号可以管理家人或团队成员的打卡
+                    </div>
+                    <div class="empty-action" id="createEmptyBtn">
+                        <i class="fas fa-plus"></i> 创建子账号
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 添加子账号浮动按钮 -->
+        <div class="add-account-btn" id="addAccountBtn">
+            <i class="fas fa-plus"></i>
+        </div>
+        
+        <!-- 创建/编辑子账号模态框 -->
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-container" id="modalContainer">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">创建子账号</div>
+                <div class="modal-close" id="modalClose"><i class="fas fa-times"></i></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="accountName">账号名称</label>
+                <input type="text" id="accountName" class="form-input" placeholder="请输入账号名称">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="accountRelation">与主账号关系（可选）</label>
+                <input type="text" id="accountRelation" class="form-input" placeholder="例如：子女、同事、朋友等">
+            </div>
+            
+            <div class="permission-group">
+                <div class="permission-header">权限设置</div>
+                
+                <div class="permission-item">
+                    <div>
+                        <div class="permission-name">查看数据权限</div>
+                        <div class="permission-description">允许查看打卡数据和统计分析</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="permission-item">
+                    <div>
+                        <div class="permission-name">编辑任务权限</div>
+                        <div class="permission-description">允许创建和编辑自己的任务</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="permission-item">
+                    <div>
+                        <div class="permission-name">管理类型权限</div>
+                        <div class="permission-description">允许创建和编辑任务类型</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="permission-item">
+                    <div>
+                        <div class="permission-name">数据导出权限</div>
+                        <div class="permission-description">允许导出打卡记录和数据</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">账号状态</label>
+                <div class="permission-item" style="padding-left: 0; padding-right: 0;">
+                    <div>
+                        <div class="permission-name">启用账号</div>
+                        <div class="permission-description">禁用后该子账号将无法登录使用</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <div class="modal-btn btn-cancel" id="cancelBtn">取消</div>
+                <div class="modal-btn btn-save" id="saveBtn">保存</div>
+            </div>
+        </div>
+        
+        <!-- 底部标签栏 -->
+        <div class="tab-bar">
+            <a href="dashboard.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-home"></i></div>
+                <div>首页</div>
+            </a>
+            <a href="tasks.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-tasks"></i></div>
+                <div>任务</div>
+            </a>
+            <a href="records.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-calendar-check"></i></div>
+                <div>记录</div>
+            </a>
+            <a href="statistics.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-chart-pie"></i></div>
+                <div>统计</div>
+            </a>
+            <a href="profile.html" class="tab-item active">
+                <div class="tab-icon"><i class="fas fa-user"></i></div>
+                <div>我的</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 模态框控制
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContainer = document.getElementById('modalContainer');
+        const addAccountBtn = document.getElementById('addAccountBtn');
+        const createEmptyBtn = document.getElementById('createEmptyBtn');
+        const modalClose = document.getElementById('modalClose');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        // 显示模态框
+        function showModal(isEdit = false) {
+            modalOverlay.classList.add('show');
+            modalContainer.classList.add('show');
+            
+            // 编辑模式修改标题
+            if (isEdit) {
+                modalTitle.textContent = '编辑子账号';
+            } else {
+                modalTitle.textContent = '创建子账号';
+                // 重置表单
+                document.getElementById('accountName').value = '';
+                document.getElementById('accountRelation').value = '';
+                
+                // 重置所有开关
+                document.querySelectorAll('.switch input').forEach((switchInput, index) => {
+                    // 默认前两个权限开启，其他关闭
+                    switchInput.checked = index < 2 || index === 4;
+                });
+            }
+        }
+        
+        // 隐藏模态框
+        function hideModal() {
+            modalOverlay.classList.remove('show');
+            modalContainer.classList.remove('show');
+        }
+        
+        // 绑定事件
+        addAccountBtn.addEventListener('click', () => showModal());
+        createEmptyBtn?.addEventListener('click', () => showModal());
+        modalClose.addEventListener('click', hideModal);
+        cancelBtn.addEventListener('click', hideModal);
+        modalOverlay.addEventListener('click', hideModal);
+        
+        // 保存按钮
+        saveBtn.addEventListener('click', function() {
+            // 获取表单数据
+            const accountName = document.getElementById('accountName').value;
+            
+            // 简单验证
+            if (!accountName) {
+                alert('请输入账号名称');
+                return;
+            }
+            
+            // 配额检查
+            const quotaUsed = 3; // 已使用配额
+            const quotaTotal = 5; // 总配额
+            
+            if (quotaUsed >= quotaTotal) {
+                alert('子账号配额已用完，请升级到高级版解锁更多配额');
+                return;
+            }
+            
+            // 模拟保存
+            // 实际应用中应该将数据发送到服务器保存
+            hideModal();
+            
+            // 可以添加成功提示或刷新列表
+            alert('子账号创建成功');
+        });
+        
+        // 编辑模式切换
+        const editToggle = document.getElementById('editToggle');
+        const subAccountActions = document.querySelectorAll('.sub-account-actions');
+        
+        editToggle.addEventListener('click', function() {
+            const isEditing = this.textContent === '完成';
+            
+            if (isEditing) {
+                this.textContent = '编辑';
+                subAccountActions.forEach(action => {
+                    action.style.display = 'none';
+                });
+            } else {
+                this.textContent = '完成';
+                subAccountActions.forEach(action => {
+                    action.style.display = 'flex';
+                });
+            }
+        });
+        
+        // 编辑和删除按钮事件
+        document.querySelectorAll('.sub-account-action').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const isEdit = this.querySelector('i').classList.contains('fa-edit');
+                const accountItem = this.closest('.sub-account-item');
+                const accountName = accountItem.querySelector('.sub-account-name').textContent;
+                
+                if (isEdit) {
+                    // 显示编辑模态框并预填数据
+                    document.getElementById('accountName').value = accountName;
+                    showModal(true);
+                } else {
+                    // 删除确认
+                    if (confirm(`确定要删除"${accountName}"子账号吗？删除后将无法恢复。`)) {
+                        // 实际应该调用API删除
+                        accountItem.remove();
+                        
+                        // 如果没有子账号了，显示空状态
+                        const subAccounts = document.querySelectorAll('.sub-account-item');
+                        if (subAccounts.length === 0) {
+                            document.querySelector('.empty-state').style.display = 'block';
+                            document.querySelector('.sub-account-card').style.display = 'none';
+                        }
+                        
+                        // 更新配额显示
+                        updateQuota();
+                    }
+                }
+            });
+        });
+        
+        // 更新配额显示
+        function updateQuota() {
+            const subAccounts = document.querySelectorAll('.sub-account-item');
+            const quotaTotal = 5;
+            const quotaUsed = subAccounts.length;
+            
+            document.querySelector('.quota-text div:first-child').textContent = `已使用: ${quotaUsed}/${quotaTotal} 个子账号`;
+            document.querySelector('.quota-fill').style.width = `${(quotaUsed / quotaTotal) * 100}%`;
+        }
+        
+        // 初始化调用
+        updateQuota();
+    </script>
+</body>
+</html> 

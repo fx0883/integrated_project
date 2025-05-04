@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打卡记录 - 自律打卡</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="enhanced-style.css">
+    <style>
+        :root {
+            /* 扁平化色调 */
+            --primary-color: #4CD964;
+            --primary-dark: #009688;
+            --primary-light: #E0F2F1;
+            --accent-color: #FF9800;
+            --accent-light: #FFE0B2;
+            --highlight: #FFEB3B;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --divider-color: #BDBDBD;
+            --background-color: #F8F9FA;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            max-width: 390px; /* iPhone 15 Pro 宽度 */
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            overflow-y: visible;
+        }
+        
+        /* iPhone 样式的圆角和间距 */
+        .app-container {
+            border-radius: 0;
+            overflow-x: hidden;
+            overflow-y: visible;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border: none;
+            position: relative;
+        }
+        
+        /* iOS 状态栏 */
+        .status-bar {
+            background-color: #000;
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 页面内容 */
+        .main-content {
+            flex: 1;
+            background-color: var(--background-color);
+            padding-bottom: 70px; /* 底部导航栏的高度 + 间距 */
+        }
+        
+        /* 底部导航栏 */
+        .tab-bar {
+            height: 60px;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 390px;
+            border-top: 1px solid var(--divider-color);
+            z-index: 10;
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 8px 0;
+            width: 20%;
+            transition: color 0.3s ease;
+        }
+        
+        .tab-item.active {
+            color: var(--primary-color);
+        }
+        
+        .tab-icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+            position: relative;
+        }
+        
+        .tab-item.active .tab-icon::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 2px;
+            background: var(--primary-color);
+        }
+        
+        /* 顶部导航栏 */
+        .nav-bar {
+            background-color: var(--primary-color);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: white;
+        }
+        
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .nav-action {
+            position: absolute;
+            right: 16px;
+            color: white;
+            font-size: 18px;
+        }
+        
+        /* 日历选择器 */
+        .calendar-header {
+            background-color: white;
+            padding: 16px;
+            border-bottom: 1px solid var(--divider-color);
+        }
+        
+        .current-month {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .month-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .month-arrow {
+            color: var(--text-secondary);
+            font-size: 16px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .day {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 14px;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .day.other-month {
+            color: var(--divider-color);
+        }
+        
+        .day.today {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .day.selected {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .day.has-records::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+        
+        .day.selected.has-records::after {
+            background-color: white;
+        }
+        
+        /* 日期小结 */
+        .date-summary {
+            padding: 16px;
+            background-color: white;
+            margin-top: 1px;
+        }
+        
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .summary-date {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .summary-stats {
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .stats-item {
+            background-color: var(--background-color);
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stats-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+        
+        .stats-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* 打卡记录列表 */
+        .records-title {
+            padding: 16px 16px 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .records-list {
+            padding: 0 16px 16px;
+        }
+        
+        .record-card {
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid var(--divider-color);
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .record-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .record-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .record-info {
+            flex: 1;
+        }
+        
+        .record-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .record-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .record-time {
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .record-time i {
+            margin-right: 4px;
+            font-size: 12px;
+        }
+        
+        .record-content {
+            border-top: 1px solid var(--divider-color);
+            padding-top: 12px;
+        }
+        
+        .record-note {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .record-photos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .record-photo {
+            width: calc(33.333% - 6px);
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background-color: var(--background-color);
+            overflow: hidden;
+        }
+        
+        .record-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 指标记录 */
+        .metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .metric-item {
+            padding: 8px 12px;
+            background-color: var(--background-color);
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .metric-label {
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+        
+        .metric-value {
+            font-weight: 500;
+        }
+        
+        /* 情绪标签 */
+        .mood {
+            display: inline-block;
+            padding: 6px 10px;
+            background-color: var(--accent-light);
+            color: var(--accent-color);
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .empty-icon {
+            font-size: 60px;
+            color: var(--divider-color);
+            margin-bottom: 16px;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        .empty-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        /* 筛选抽屉 */
+        .filter-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 390px;
+            margin: 0 auto;
+            background-color: white;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 20px;
+            z-index: 20;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-drawer.open {
+            transform: translateY(0);
+        }
+        
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .drawer-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .drawer-close {
+            font-size: 20px;
+            color: var(--text-secondary);
+        }
+        
+        .filter-group {
+            margin-bottom: 16px;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .filter-option {
+            padding: 8px 16px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .filter-option.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .filter-button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        /* 遮罩层 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* 添加任务按钮 */
+        .add-task-btn {
+            position: fixed;
+            bottom: 76px;
+            right: 16px;
+            width: 52px;
+            height: 52px;
+            border-radius: 26px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 100;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .add-task-btn:active {
+            background-color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- iOS 状态栏 -->
+        <div class="status-bar">
+            <div class="status-bar-time">9:41</div>
+            <div class="status-bar-content">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <!-- 顶部导航栏 -->
+        <div class="nav-bar">
+            <div class="nav-title">打卡记录</div>
+            <div class="nav-action" id="filter-btn">
+                <i class="fas fa-filter"></i>
+            </div>
+        </div>
+        
+        <!-- 日历选择器 -->
+        <div class="calendar-header">
+            <div class="current-month">
+                <div class="month-arrow" id="prev-month">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="month-title">2023年5月</div>
+                <div class="month-arrow" id="next-month">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <div class="weekdays">
+                <div>一</div>
+                <div>二</div>
+                <div>三</div>
+                <div>四</div>
+                <div>五</div>
+                <div>六</div>
+                <div>日</div>
+            </div>
+            
+            <div class="days">
+                <!-- 上个月的日期 -->
+                <div class="day other-month">29</div>
+                <div class="day other-month">30</div>
+                
+                <!-- 本月的日期 -->
+                <div class="day has-records">1</div>
+                <div class="day">2</div>
+                <div class="day has-records">3</div>
+                <div class="day has-records">4</div>
+                <div class="day">5</div>
+                <div class="day has-records">6</div>
+                <div class="day has-records">7</div>
+                <div class="day has-records">8</div>
+                <div class="day">9</div>
+                <div class="day has-records">10</div>
+                <div class="day">11</div>
+                <div class="day has-records">12</div>
+                <div class="day">13</div>
+                <div class="day">14</div>
+                <div class="day has-records">15</div>
+                <div class="day">16</div>
+                <div class="day has-records">17</div>
+                <div class="day">18</div>
+                <div class="day selected today has-records">19</div>
+                <div class="day">20</div>
+                <div class="day">21</div>
+                <div class="day">22</div>
+                <div class="day">23</div>
+                <div class="day">24</div>
+                <div class="day">25</div>
+                <div class="day">26</div>
+                <div class="day">27</div>
+                <div class="day">28</div>
+                <div class="day">29</div>
+                <div class="day">30</div>
+                <div class="day">31</div>
+                
+                <!-- 下个月的日期 -->
+                <div class="day other-month">1</div>
+                <div class="day other-month">2</div>
+            </div>
+        </div>
+        
+        <!-- 日期小结 -->
+        <div class="date-summary">
+            <div class="summary-header">
+                <div class="summary-date">5月19日 星期五</div>
+                <div class="summary-stats">已完成 5/7</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stats-item">
+                    <div class="stats-value">71%</div>
+                    <div class="stats-label">完成率</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-value">12天</div>
+                    <div class="stats-label">连续打卡</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 打卡记录列表 -->
+            <div class="records-title">今日打卡记录</div>
+            
+            <div class="records-list">
+                <!-- 记录卡片 -->
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-icon" style="background-color: #E8F5E9; color: #4CAF50;">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="record-info">
+                            <div class="record-title">晨跑5公里</div>
+                            <div class="record-meta">
+                                <div class="record-time">
+                                    <i class="far fa-clock"></i> 07:15
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-content">
+                        <div class="record-note">
+                            今天天气不错，跑步状态很好，完成了5公里的训练目标。
+                        </div>
+                        
+                        <div class="metrics">
+                            <div class="metric-item">
+                                <div class="metric-label">距离</div>
+                                <div class="metric-value">5.2公里</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">时间</div>
+                                <div class="metric-value">28分钟</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">配速</div>
+                                <div class="metric-value">5'23"/公里</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mood">
+                            <i class="fas fa-grin"></i> 状态很好
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-icon" style="background-color: #FFF3E0; color: #FF9800;">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="record-info">
+                            <div class="record-title">英语学习</div>
+                            <div class="record-meta">
+                                <div class="record-time">
+                                    <i class="far fa-clock"></i> 09:30
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-content">
+                        <div class="record-note">
+                            完成了50个单词的背诵和两篇阅读理解练习。
+                        </div>
+                        
+                        <div class="metrics">
+                            <div class="metric-item">
+                                <div class="metric-label">背单词</div>
+                                <div class="metric-value">50个</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">阅读</div>
+                                <div class="metric-value">2篇</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-icon" style="background-color: #E3F2FD; color: #2196F3;">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="record-info">
+                            <div class="record-title">项目会议</div>
+                            <div class="record-meta">
+                                <div class="record-time">
+                                    <i class="far fa-clock"></i> 11:00
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-content">
+                        <div class="record-note">
+                            参加了项目周会，分享了本周的工作进度，讨论了下周的计划。
+                        </div>
+                        
+                        <div class="record-photos">
+                            <div class="record-photo">
+                                <img src="https://via.placeholder.com/100x100/e3f2fd/2196F3?text=会议" alt="会议照片">
+                            </div>
+                            <div class="record-photo">
+                                <img src="https://via.placeholder.com/100x100/e3f2fd/2196F3?text=笔记" alt="笔记照片">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-icon" style="background-color: #E8F5E9; color: #4CAF50;">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="record-info">
+                            <div class="record-title">午间冥想</div>
+                            <div class="record-meta">
+                                <div class="record-time">
+                                    <i class="far fa-clock"></i> 13:15
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-content">
+                        <div class="record-note">
+                            完成15分钟的冥想练习，感觉头脑清晰了很多。
+                        </div>
+                        
+                        <div class="metrics">
+                            <div class="metric-item">
+                                <div class="metric-label">时长</div>
+                                <div class="metric-value">15分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mood">
+                            <i class="fas fa-smile"></i> 平静
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-icon" style="background-color: #FFF8E1; color: #FFC107;">
+                            <i class="fas fa-book-reader"></i>
+                        </div>
+                        <div class="record-info">
+                            <div class="record-title">阅读30分钟</div>
+                            <div class="record-meta">
+                                <div class="record-time">
+                                    <i class="far fa-clock"></i> 21:30
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-content">
+                        <div class="record-note">
+                            阅读了《深度工作》第三章，关于如何在分心的环境中保持专注的技巧很有启发。
+                        </div>
+                        
+                        <div class="metrics">
+                            <div class="metric-item">
+                                <div class="metric-label">阅读量</div>
+                                <div class="metric-value">25页</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">时长</div>
+                                <div class="metric-value">35分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="record-photos">
+                            <div class="record-photo">
+                                <img src="https://via.placeholder.com/100x100/fff8e1/FFC107?text=书本" alt="书本照片">
+                            </div>
+                            <div class="record-photo">
+                                <img src="https://via.placeholder.com/100x100/fff8e1/FFC107?text=笔记" alt="笔记照片">
+                            </div>
+                            <div class="record-photo">
+                                <img src="https://via.placeholder.com/100x100/fff8e1/FFC107?text=阅读" alt="阅读照片">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 无记录空状态（默认隐藏） -->
+            <div class="empty-state" style="display: none;">
+                <div class="empty-icon">
+                    <i class="far fa-calendar-times"></i>
+                </div>
+                <div class="empty-text">
+                    当天暂无打卡记录<br>
+                    快去完成任务记录您的成长吧！
+                </div>
+                <a href="tasks.html" class="empty-btn">
+                    去完成任务
+                </a>
+            </div>
+        </div>
+        
+        <!-- 添加任务按钮 -->
+        <a href="create-task.html" class="add-task-btn">
+            <i class="fas fa-plus"></i>
+        </a>
+        
+        <!-- 底部标签栏 -->
+        <div class="tab-bar">
+            <a href="dashboard.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-home"></i></div>
+                <div>首页</div>
+            </a>
+            <a href="tasks.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-tasks"></i></div>
+                <div>任务</div>
+            </a>
+            <a href="records.html" class="tab-item active">
+                <div class="tab-icon"><i class="fas fa-calendar-check"></i></div>
+                <div>记录</div>
+            </a>
+            <a href="statistics.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-chart-pie"></i></div>
+                <div>统计</div>
+            </a>
+            <a href="profile.html" class="tab-item">
+                <div class="tab-icon"><i class="fas fa-user"></i></div>
+                <div>我的</div>
+            </a>
+        </div>
+        
+        <!-- 筛选抽屉 -->
+        <div class="filter-drawer" id="filter-drawer">
+            <div class="drawer-header">
+                <div class="drawer-title">筛选记录</div>
+                <div class="drawer-close" id="drawer-close">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">任务类型</div>
+                <div class="filter-options">
+                    <div class="filter-option selected">全部</div>
+                    <div class="filter-option">健身</div>
+                    <div class="filter-option">学习</div>
+                    <div class="filter-option">工作</div>
+                    <div class="filter-option">阅读</div>
+                    <div class="filter-option">冥想</div>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">时间范围</div>
+                <div class="filter-options">
+                    <div class="filter-option selected">全部时间</div>
+                    <div class="filter-option">本周</div>
+                    <div class="filter-option">本月</div>
+                    <div class="filter-option">上月</div>
+                    <div class="filter-option">自定义</div>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">排序方式</div>
+                <div class="filter-options">
+                    <div class="filter-option selected">时间降序</div>
+                    <div class="filter-option">时间升序</div>
+                    <div class="filter-option">按类型</div>
+                </div>
+            </div>
+            
+            <button class="filter-button">应用筛选</button>
+        </div>
+        
+        <!-- 遮罩层 -->
+        <div class="overlay" id="overlay"></div>
+    </div>
+
+    <script>
+        // 初始化日历
+        const days = document.querySelectorAll('.day');
+        
+        // 日历日期点击事件
+        days.forEach(day => {
+            day.addEventListener('click', function() {
+                // 移除之前选中的日期
+                document.querySelectorAll('.day.selected').forEach(selected => {
+                    selected.classList.remove('selected');
+                });
+                
+                // 选中当前日期
+                this.classList.add('selected');
+                
+                // 实际应用中应该根据所选日期加载对应的记录
+                // 这里简单更新日期显示
+                const dayNum = this.textContent;
+                const summaryDate = document.querySelector('.summary-date');
+                
+                if (!this.classList.contains('other-month')) {
+                    summaryDate.textContent = `5月${dayNum}日 星期${getWeekday(dayNum)}`;
+                    
+                    // 如果日期有记录，则显示记录列表，否则显示空状态
+                    const recordsList = document.querySelector('.records-list');
+                    const emptyState = document.querySelector('.empty-state');
+                    const recordsTitle = document.querySelector('.records-title');
+                    
+                    if (this.classList.contains('has-records')) {
+                        recordsList.style.display = 'block';
+                        emptyState.style.display = 'none';
+                        
+                        if (this.classList.contains('today')) {
+                            recordsTitle.textContent = '今日打卡记录';
+                        } else {
+                            recordsTitle.textContent = `5月${dayNum}日打卡记录`;
+                        }
+                    } else {
+                        recordsList.style.display = 'none';
+                        emptyState.style.display = 'block';
+                    }
+                }
+            });
+        });
+        
+        // 获取星期几
+        function getWeekday(day) {
+            // 简单实现，实际应该根据真实日期计算
+            const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+            return weekdays[(parseInt(day) + 0) % 7]; // 偏移值应根据实际月份的第一天是周几来调整
+        }
+        
+        // 月份切换
+        document.getElementById('prev-month').addEventListener('click', function() {
+            // 在实际应用中，这里应该切换到上个月的日历
+            document.querySelector('.month-title').textContent = '2023年4月';
+        });
+        
+        document.getElementById('next-month').addEventListener('click', function() {
+            // 在实际应用中，这里应该切换到下个月的日历
+            document.querySelector('.month-title').textContent = '2023年6月';
+        });
+        
+        // 筛选抽屉控制
+        const filterBtn = document.getElementById('filter-btn');
+        const filterDrawer = document.getElementById('filter-drawer');
+        const drawerClose = document.getElementById('drawer-close');
+        const overlay = document.getElementById('overlay');
+        
+        filterBtn.addEventListener('click', function() {
+            filterDrawer.classList.add('open');
+            overlay.classList.add('active');
+        });
+        
+        drawerClose.addEventListener('click', function() {
+            filterDrawer.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+        
+        overlay.addEventListener('click', function() {
+            filterDrawer.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+        
+        // 筛选选项切换
+        const filterOptions = document.querySelectorAll('.filter-option');
+        filterOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // 同级元素中只有一个可以被选中
+                const siblings = Array.from(this.parentNode.children);
+                siblings.forEach(sib => sib.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>

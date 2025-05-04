@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通用设置 - 自律打卡</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="enhanced-style.css">
+    <style>
+        :root {
+            /* 扁平化色调 */
+            --primary-color: #4CD964;
+            --primary-dark: #009688;
+            --primary-light: #E0F2F1;
+            --accent-color: #FF9800;
+            --accent-light: #FFE0B2;
+            --highlight: #FFEB3B;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --divider-color: #BDBDBD;
+            --background-color: #F8F9FA;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            max-width: 390px; /* iPhone 15 Pro 宽度 */
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* iPhone 样式的圆角和间距 */
+        .app-container {
+            border-radius: 0;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: none;
+            position: relative;
+        }
+        
+        /* iOS 状态栏 */
+        .status-bar {
+            background-color: #000;
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 导航栏 */
+        .nav-bar {
+            background-color: var(--primary-color);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: white;
+        }
+        
+        .nav-back {
+            position: absolute;
+            left: 16px;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background-color: var(--background-color);
+            padding-bottom: 16px;
+        }
+        
+        /* 设置列表 */
+        .settings-section {
+            margin-top: 12px;
+            background-color: white;
+            border-radius: 4px;
+        }
+        
+        .section-title {
+            padding: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .settings-list {
+            border-top: 1px solid var(--divider-color);
+        }
+        
+        .settings-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            position: relative;
+        }
+        
+        .settings-item:not(:last-child) {
+            border-bottom: 1px solid var(--divider-color);
+        }
+        
+        .settings-text {
+            flex: 1;
+        }
+        
+        .settings-title {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+        
+        .settings-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .settings-control {
+            display: flex;
+            align-items: center;
+        }
+        
+        .settings-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+        
+        .settings-arrow {
+            color: var(--divider-color);
+            font-size: 16px;
+        }
+        
+        /* 选择器选项模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            width: 90%;
+            max-width: 350px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--divider-color);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-body {
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .option-list {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .option-item {
+            padding: 14px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--divider-color);
+        }
+        
+        .option-item:last-child {
+            border-bottom: none;
+        }
+        
+        .option-text {
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+        
+        .option-check {
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+        
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--divider-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-cancel {
+            background-color: transparent;
+            color: var(--text-secondary);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* 切换按钮 */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* 调节器控件 */
+        .slider-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .slider-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .slider-value {
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .slider-input {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--divider-color);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        /* 颜色选择器 */
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.selected {
+            border-color: var(--text-primary);
+        }
+        
+        .color-option.selected:after {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- iOS 状态栏 -->
+        <div class="status-bar">
+            <div class="status-bar-time">9:41</div>
+            <div class="status-bar-content">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <!-- 导航栏 -->
+        <div class="nav-bar">
+            <a href="profile.html" class="nav-back">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <div class="nav-title">通用设置</div>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 用户界面设置 -->
+            <div class="settings-section">
+                <div class="section-title">用户界面</div>
+                <div class="settings-list">
+                    <div class="settings-item" onclick="showThemeModal()">
+                        <div class="settings-text">
+                            <div class="settings-title">深色模式</div>
+                            <div class="settings-desc">调整应用的显示主题</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-value" id="theme-value">跟随系统</div>
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item" onclick="showColorModal()">
+                        <div class="settings-text">
+                            <div class="settings-title">主题颜色</div>
+                            <div class="settings-desc">更改应用的主要颜色</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-value">
+                                <div style="width: 16px; height: 16px; background-color: var(--primary-color); border-radius: 50%;"></div>
+                            </div>
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">字体大小</div>
+                            <div class="settings-desc">调整应用文字的显示大小</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-value" id="font-size-value">中</div>
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 提醒设置 -->
+            <div class="settings-section">
+                <div class="section-title">提醒设置</div>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">任务提醒</div>
+                            <div class="settings-desc">开启或关闭任务到期提醒</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked id="task-reminder">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">每日总结</div>
+                            <div class="settings-desc">每天晚上收到任务完成情况总结</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="daily-summary">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">提醒声音</div>
+                            <div class="settings-desc">任务提醒播放声音</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked id="reminder-sound">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">振动</div>
+                            <div class="settings-desc">任务提醒振动</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked id="reminder-vibration">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 数据设置 -->
+            <div class="settings-section">
+                <div class="section-title">数据设置</div>
+                <div class="settings-list">
+                    <div class="settings-item" onclick="showStartDayModal()">
+                        <div class="settings-text">
+                            <div class="settings-title">一周起始日</div>
+                            <div class="settings-desc">设置每周的第一天</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-value" id="start-day-value">星期一</div>
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">智能完成提示</div>
+                            <div class="settings-desc">根据位置和时间智能提示完成任务</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked id="smart-completion">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item" onclick="clearCacheConfirm()">
+                        <div class="settings-text">
+                            <div class="settings-title">清除缓存</div>
+                            <div class="settings-desc">清除应用缓存数据</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-value">4.8MB</div>
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 高级设置 -->
+            <div class="settings-section">
+                <div class="section-title">高级设置</div>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">数据同步</div>
+                            <div class="settings-desc">自动同步数据到云端</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked id="data-sync">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">位置服务</div>
+                            <div class="settings-desc">允许应用访问位置信息</div>
+                        </div>
+                        <div class="settings-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="location-service">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item" onclick="resetAppConfirm()">
+                        <div class="settings-text">
+                            <div class="settings-title">重置应用</div>
+                            <div class="settings-desc">将应用恢复到初始状态</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 关于应用 -->
+            <div class="settings-section">
+                <div class="section-title">关于应用</div>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">当前版本</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-value">v1.2.0</div>
+                        </div>
+                    </div>
+                    
+                    <a href="about.html" class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">关于我们</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <a href="terms.html" class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">用户协议</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <a href="privacy.html" class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">隐私政策</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">检查更新</div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-text">
+                            <div class="settings-title">联系我们</div>
+                            <div class="settings-desc"><a href="mailto:feedback@selfdiscipline-app.com" style="color: var(--primary-color);">feedback@selfdiscipline-app.com</a></div>
+                        </div>
+                        <div class="settings-control">
+                            <div class="settings-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 深色模式模态框 -->
+    <div class="modal" id="themeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                深色模式
+            </div>
+            <div class="modal-body">
+                <div class="option-list">
+                    <div class="option-item" onclick="selectTheme('light')">
+                        <div class="option-text">浅色模式</div>
+                        <div class="option-check" id="light-check" style="display: none;"><i class="fas fa-check"></i></div>
+                    </div>
+                    <div class="option-item" onclick="selectTheme('dark')">
+                        <div class="option-text">深色模式</div>
+                        <div class="option-check" id="dark-check" style="display: none;"><i class="fas fa-check"></i></div>
+                    </div>
+                    <div class="option-item" onclick="selectTheme('system')">
+                        <div class="option-text">跟随系统</div>
+                        <div class="option-check" id="system-check"><i class="fas fa-check"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="hideModal('themeModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveTheme()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 星期起始日模态框 -->
+    <div class="modal" id="startDayModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                一周起始日
+            </div>
+            <div class="modal-body">
+                <div class="option-list">
+                    <div class="option-item" onclick="selectStartDay('monday')">
+                        <div class="option-text">星期一</div>
+                        <div class="option-check" id="monday-check"><i class="fas fa-check"></i></div>
+                    </div>
+                    <div class="option-item" onclick="selectStartDay('sunday')">
+                        <div class="option-text">星期日</div>
+                        <div class="option-check" id="sunday-check" style="display: none;"><i class="fas fa-check"></i></div>
+                    </div>
+                    <div class="option-item" onclick="selectStartDay('saturday')">
+                        <div class="option-text">星期六</div>
+                        <div class="option-check" id="saturday-check" style="display: none;"><i class="fas fa-check"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="hideModal('startDayModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveStartDay()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主题颜色模态框 -->
+    <div class="modal" id="colorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                主题颜色
+            </div>
+            <div class="modal-body">
+                <div class="color-options">
+                    <div class="color-option selected" style="background-color: #4CD964;" data-color="#4CD964"></div>
+                    <div class="color-option" style="background-color: #2196F3;" data-color="#2196F3"></div>
+                    <div class="color-option" style="background-color: #F44336;" data-color="#F44336"></div>
+                    <div class="color-option" style="background-color: #FF9800;" data-color="#FF9800"></div>
+                    <div class="color-option" style="background-color: #9C27B0;" data-color="#9C27B0"></div>
+                    <div class="color-option" style="background-color: #00BCD4;" data-color="#00BCD4"></div>
+                    <div class="color-option" style="background-color: #607D8B;" data-color="#607D8B"></div>
+                    <div class="color-option" style="background-color: #E91E63;" data-color="#E91E63"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="hideModal('colorModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveThemeColor()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 当前选中的选项
+        let selectedTheme = 'system';
+        let selectedStartDay = 'monday';
+        let selectedColor = '#4CD964';
+        
+        // 显示主题模态框
+        function showThemeModal() {
+            document.getElementById('themeModal').classList.add('show');
+            
+            // 重置选中状态
+            document.getElementById('light-check').style.display = 'none';
+            document.getElementById('dark-check').style.display = 'none';
+            document.getElementById('system-check').style.display = 'none';
+            
+            // 显示当前选中的选项
+            document.getElementById(`${selectedTheme}-check`).style.display = 'block';
+        }
+        
+        // 显示起始日模态框
+        function showStartDayModal() {
+            document.getElementById('startDayModal').classList.add('show');
+            
+            // 重置选中状态
+            document.getElementById('monday-check').style.display = 'none';
+            document.getElementById('sunday-check').style.display = 'none';
+            document.getElementById('saturday-check').style.display = 'none';
+            
+            // 显示当前选中的选项
+            document.getElementById(`${selectedStartDay}-check`).style.display = 'block';
+        }
+        
+        // 显示颜色选择模态框
+        function showColorModal() {
+            document.getElementById('colorModal').classList.add('show');
+        }
+        
+        // 隐藏模态框
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+        
+        // 选择主题
+        function selectTheme(theme) {
+            // 隐藏所有的勾选图标
+            document.getElementById('light-check').style.display = 'none';
+            document.getElementById('dark-check').style.display = 'none';
+            document.getElementById('system-check').style.display = 'none';
+            
+            // 显示选中的勾选图标
+            document.getElementById(`${theme}-check`).style.display = 'block';
+            
+            selectedTheme = theme;
+        }
+        
+        // 选择起始日
+        function selectStartDay(day) {
+            // 隐藏所有的勾选图标
+            document.getElementById('monday-check').style.display = 'none';
+            document.getElementById('sunday-check').style.display = 'none';
+            document.getElementById('saturday-check').style.display = 'none';
+            
+            // 显示选中的勾选图标
+            document.getElementById(`${day}-check`).style.display = 'block';
+            
+            selectedStartDay = day;
+        }
+        
+        // 保存主题设置
+        function saveTheme() {
+            // 更新页面上显示的值
+            const themeValue = document.getElementById('theme-value');
+            
+            if (selectedTheme === 'light') {
+                themeValue.textContent = '浅色模式';
+            } else if (selectedTheme === 'dark') {
+                themeValue.textContent = '深色模式';
+            } else {
+                themeValue.textContent = '跟随系统';
+            }
+            
+            // 实际应用中，这里应该保存设置到本地存储或服务器
+            console.log(`保存主题设置: ${selectedTheme}`);
+            
+            // 隐藏模态框
+            hideModal('themeModal');
+            
+            // 显示提示
+            alert('设置已保存');
+        }
+        
+        // 保存起始日设置
+        function saveStartDay() {
+            // 更新页面上显示的值
+            const startDayValue = document.getElementById('start-day-value');
+            
+            if (selectedStartDay === 'monday') {
+                startDayValue.textContent = '星期一';
+            } else if (selectedStartDay === 'sunday') {
+                startDayValue.textContent = '星期日';
+            } else {
+                startDayValue.textContent = '星期六';
+            }
+            
+            // 实际应用中，这里应该保存设置到本地存储或服务器
+            console.log(`保存起始日设置: ${selectedStartDay}`);
+            
+            // 隐藏模态框
+            hideModal('startDayModal');
+            
+            // 显示提示
+            alert('设置已保存');
+        }
+        
+        // 选择主题颜色
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // 移除所有选中状态
+                document.querySelectorAll('.color-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // 添加选中状态
+                this.classList.add('selected');
+                
+                // 保存选中的颜色
+                selectedColor = this.getAttribute('data-color');
+            });
+        });
+        
+        // 保存主题颜色
+        function saveThemeColor() {
+            // 实际应用中，这里应该更新应用的主题颜色
+            console.log(`保存主题颜色: ${selectedColor}`);
+            
+            // 更新界面上的颜色示例
+            document.querySelector('.settings-control .settings-value div').style.backgroundColor = selectedColor;
+            
+            // 隐藏模态框
+            hideModal('colorModal');
+            
+            // 显示提示
+            alert('主题颜色已更新');
+        }
+        
+        // 清除缓存确认
+        function clearCacheConfirm() {
+            if (confirm('确定要清除应用缓存吗？这不会删除您的数据。')) {
+                // 实际应用中，这里应该执行清除缓存的操作
+                console.log('清除缓存');
+                
+                // 显示提示
+                alert('缓存已清除');
+            }
+        }
+        
+        // 重置应用确认
+        function resetAppConfirm() {
+            if (confirm('确定要重置应用吗？这将删除所有数据并恢复默认设置。')) {
+                if (confirm('此操作不可撤销，确定要继续吗？')) {
+                    // 实际应用中，这里应该执行重置应用的操作
+                    console.log('重置应用');
+                    
+                    // 显示提示
+                    alert('应用已重置');
+                    
+                    // 跳转到登录页
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+        
+        // 开关按钮事件监听
+        document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const id = this.id;
+                const isChecked = this.checked;
+                
+                // 实际应用中，这里应该保存设置到本地存储或服务器
+                console.log(`${id} 设置为 ${isChecked}`);
+            });
+        });
+    </script>
+</body>
+</html> 
