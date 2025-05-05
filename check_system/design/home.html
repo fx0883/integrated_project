@@ -207,6 +207,94 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
+        
+        /* 时间轴样式 */
+        .timeline-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 14px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dcfce7;
+            z-index: 1;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 16px;
+            z-index: 2;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 5px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            border: 4px solid #f0fdf4;
+            z-index: 3;
+        }
+        .timeline-dot.empty {
+            background-color: #f0fdf4;
+            border: 2px solid #22c55e;
+        }
+        .timeline-dot.current {
+            background-color: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+            animation: pulse 2s infinite;
+        }
+        .timeline-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .timeline-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: #22c55e;
+            margin-bottom: 4px;
+        }
+        .timeline-tabs {
+            display: flex;
+            border-radius: 12px;
+            background-color: #f0fdf4;
+            padding: 3px;
+            margin-bottom: 16px;
+        }
+        .timeline-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #6b7280;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .timeline-tab.active {
+            background-color: #22c55e;
+            color: white;
+            font-weight: 500;
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
     </style>
 </head>
 <body class="h-full">
@@ -232,7 +320,7 @@
         </div>
         
         <!-- 数据概览卡片 -->
-        <div class="gradient-card p-5 mb-6 bubble-animation">
+        <div class="welcome-card p-5 mb-6 bubble-animation">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold">本周数据</h2>
                 <i class="fas fa-chart-line"></i>
@@ -257,7 +345,7 @@
         <div class="mb-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold">今日待打卡</h2>
-                <a href="tasks.html" class="text-indigo-500">查看全部 <i class="fas fa-chevron-right text-xs"></i></a>
+                <a href="tasks.html" class="text-green-500">查看全部 <i class="fas fa-chevron-right text-xs"></i></a>
             </div>
             
             <!-- 任务列表 -->
@@ -265,7 +353,7 @@
                 <!-- 任务1 -->
                 <div class="task-card p-4 flex items-center justify-between shadow-sm">
                     <div class="flex items-center">
-                        <div class="task-checkbox mr-3">
+                        <div class="task-checkbox w-6 h-6 rounded-full border-2 border-green-500 flex items-center justify-center mr-3">
                             <i class="fas fa-check text-white opacity-0"></i>
                         </div>
                         <div>
@@ -273,7 +361,7 @@
                             <p class="text-xs text-gray-500">习惯养成 · 20分钟</p>
                         </div>
                     </div>
-                    <div class="bg-indigo-100 text-indigo-600 text-xs rounded-full px-2 py-1">
+                    <div class="bg-green-100 text-green-600 text-xs rounded-full px-2 py-1">
                         9:00
                     </div>
                 </div>
@@ -281,7 +369,7 @@
                 <!-- 任务2 -->
                 <div class="task-card p-4 flex items-center justify-between shadow-sm">
                     <div class="flex items-center">
-                        <div class="task-checkbox mr-3">
+                        <div class="task-checkbox w-6 h-6 rounded-full border-2 border-green-500 flex items-center justify-center mr-3">
                             <i class="fas fa-check text-white opacity-0"></i>
                         </div>
                         <div>
@@ -289,7 +377,7 @@
                             <p class="text-xs text-gray-500">学习提升 · 45分钟</p>
                         </div>
                     </div>
-                    <div class="bg-indigo-100 text-indigo-600 text-xs rounded-full px-2 py-1">
+                    <div class="bg-green-100 text-green-600 text-xs rounded-full px-2 py-1">
                         14:00
                     </div>
                 </div>
@@ -297,7 +385,7 @@
                 <!-- 任务3 已完成 -->
                 <div class="task-card p-4 flex items-center justify-between shadow-sm bg-gray-50">
                     <div class="flex items-center">
-                        <div class="task-checkbox checked mr-3">
+                        <div class="task-checkbox checked w-6 h-6 rounded-full bg-green-500 flex items-center justify-center mr-3">
                             <i class="fas fa-check text-white"></i>
                         </div>
                         <div>
@@ -312,11 +400,107 @@
             </div>
         </div>
         
+        <!-- 打卡时间轴 -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">打卡时间轴</h2>
+                <a href="checkin_records.html" class="text-green-500">查看更多 <i class="fas fa-chevron-right text-xs"></i></a>
+            </div>
+            
+            <!-- 时间轴标签页 -->
+            <div class="timeline-tabs">
+                <div class="timeline-tab active" data-view="today">今日</div>
+                <div class="timeline-tab" data-view="week">本周</div>
+                <div class="timeline-tab" data-view="month">本月</div>
+            </div>
+            
+            <!-- 时间轴内容 -->
+            <div class="timeline-container">
+                <div class="timeline-line"></div>
+                
+                <!-- 未来事件 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot empty"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">16:00</div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">瑜伽训练</h4>
+                                <p class="text-xs text-gray-500">健康 · 45分钟</p>
+                            </div>
+                            <div class="text-xs text-gray-400">未开始</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 当前事件 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot current"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">14:00 - 现在</div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">阅读专业书籍</h4>
+                                <p class="text-xs text-gray-500">学习 · 45分钟</p>
+                            </div>
+                            <div class="bg-yellow-100 text-yellow-600 text-xs rounded-full px-2 py-1">
+                                进行中
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="task-progress">
+                                <div class="progress-bar green-bar" style="width: 62%"></div>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-xs text-gray-500">已完成 28分钟</span>
+                                <span class="text-xs text-gray-500">62%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 已完成事件 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">9:00 - 9:20</div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">晨间冥想</h4>
+                                <p class="text-xs text-gray-500">习惯养成 · 20分钟</p>
+                            </div>
+                            <div class="bg-green-100 text-green-600 text-xs rounded-full px-2 py-1">
+                                已完成
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 已完成事件 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">7:30 - 8:00</div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">晨跑5公里</h4>
+                                <p class="text-xs text-gray-500">健康运动 · 30分钟</p>
+                            </div>
+                            <div class="bg-green-100 text-green-600 text-xs rounded-full px-2 py-1">
+                                已完成
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">今天跑了5.2公里，状态不错！保持下去！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- 最近打卡动态 -->
         <div>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold">最近打卡动态</h2>
-                <a href="#" class="text-indigo-500">更多 <i class="fas fa-chevron-right text-xs"></i></a>
+                <a href="#" class="text-green-500">更多 <i class="fas fa-chevron-right text-xs"></i></a>
             </div>
             
             <!-- 动态列表 -->
@@ -379,6 +563,8 @@
             checkbox.addEventListener('click', function() {
                 if (!this.classList.contains('checked')) {
                     this.classList.add('checked');
+                    this.classList.remove('border-2', 'border-green-500');
+                    this.classList.add('bg-green-500');
                     this.querySelector('i').style.opacity = '1';
                     this.closest('.task-card').style.backgroundColor = '#f9fafb';
                     this.closest('.task-card').querySelector('h3').classList.add('text-gray-500');
@@ -394,6 +580,9 @@
                     
                     // 弹出评论输入框
                     showCommentDialog(this.nextElementSibling.querySelector('h3').textContent);
+                    
+                    // 更新时间轴
+                    updateTimeline(this.nextElementSibling.querySelector('h3').textContent);
                 }
             });
         });
@@ -436,6 +625,9 @@
                     
                     // 在动态列表中添加评论
                     addCommentToFeed(taskName, commentText);
+                    
+                    // 在时间轴中添加评论
+                    addCommentToTimeline(taskName, commentText);
                 }
                 
                 // 关闭对话框
@@ -468,6 +660,86 @@
             // 插入到动态列表的顶部
             feedContainer.insertBefore(newFeed, feedContainer.firstChild);
         }
+        
+        // 更新时间轴
+        function updateTimeline(taskName) {
+            // 获取当前时间
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeStr = `${hours}:${minutes}`;
+            
+            // 在时间轴添加已完成任务
+            const timelineContainer = document.querySelector('.timeline-container');
+            const newTimelineItem = document.createElement('div');
+            newTimelineItem.className = 'timeline-item';
+            newTimelineItem.innerHTML = `
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">${timeStr} - 刚刚</div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-medium">${taskName}</h4>
+                            <p class="text-xs text-gray-500">已完成</p>
+                        </div>
+                        <div class="bg-green-100 text-green-600 text-xs rounded-full px-2 py-1">
+                            已完成
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 插入到时间轴的顶部（但在线条后面）
+            const firstItem = timelineContainer.querySelector('.timeline-item');
+            timelineContainer.insertBefore(newTimelineItem, firstItem);
+            
+            // 记录日志
+            console.log('更新时间轴: ' + taskName + ' 于 ' + timeStr);
+        }
+        
+        // 将评论添加到时间轴
+        function addCommentToTimeline(taskName, commentText) {
+            // 找到刚刚添加的时间轴项
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            const lastAddedItem = timelineItems[0]; // 第一个是最新添加的
+            
+            // 如果找到对应的项，添加评论
+            if (lastAddedItem && lastAddedItem.querySelector('h4').textContent === taskName) {
+                const timelineContent = lastAddedItem.querySelector('.timeline-content');
+                
+                // 检查是否已有评论，如果没有则添加
+                if (!timelineContent.querySelector('p.text-sm')) {
+                    const commentElement = document.createElement('p');
+                    commentElement.className = 'text-sm text-gray-600 mt-2';
+                    commentElement.textContent = commentText;
+                    timelineContent.appendChild(commentElement);
+                    
+                    // 记录日志
+                    console.log('时间轴项添加评论: ' + taskName);
+                }
+            }
+        }
+        
+        // 时间轴标签页切换
+        document.querySelectorAll('.timeline-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有标签的active类
+                document.querySelectorAll('.timeline-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 给当前标签添加active类
+                this.classList.add('active');
+                
+                // 根据选择的视图更新时间轴
+                const view = this.dataset.view;
+                console.log('切换时间轴视图: ' + view);
+                
+                // 这里可以通过AJAX加载不同的时间轴数据
+                // 为了演示，我们只打印一条日志
+                console.log('加载时间轴数据: ' + view);
+            });
+        });
     </script>
 </body>
 </html> 
