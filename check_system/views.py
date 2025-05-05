@@ -656,6 +656,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
+        # 处理打卡频率数据
+        frequency_type = serializer.validated_data.get('frequency_type', 'daily')
+        frequency_days = serializer.validated_data.get('frequency_days', [])
+        
+        # 如果是每天打卡，frequency_days为空列表
+        if frequency_type == 'daily':
+            frequency_days = []
+        
         if user.is_admin:
             # 租户管理员：可以指定用户，但必须属于同一租户
             if user_id:
@@ -669,7 +677,9 @@ class TaskViewSet(viewsets.ModelViewSet):
                     # 设置用户和租户(始终使用当前租户)
                     serializer.save(
                         user=target_user, 
-                        tenant=user.tenant  # 强制使用当前租户管理员的租户
+                        tenant=user.tenant,  # 强制使用当前租户管理员的租户
+                        frequency_type=frequency_type,
+                        frequency_days=frequency_days
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
@@ -677,7 +687,9 @@ class TaskViewSet(viewsets.ModelViewSet):
                 # 未指定用户，使用当前用户
                 serializer.save(
                     user=user, 
-                    tenant=user.tenant
+                    tenant=user.tenant,
+                    frequency_type=frequency_type,
+                    frequency_days=frequency_days
                 )
         elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
             # 主member：可以为子账号创建
@@ -696,7 +708,9 @@ class TaskViewSet(viewsets.ModelViewSet):
                     # 设置用户和租户
                     serializer.save(
                         user=target_user, 
-                        tenant=user.tenant  # 强制使用当前用户的租户
+                        tenant=user.tenant,  # 强制使用当前用户的租户
+                        frequency_type=frequency_type,
+                        frequency_days=frequency_days
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
@@ -704,14 +718,20 @@ class TaskViewSet(viewsets.ModelViewSet):
                 # 未指定用户，使用当前用户
                 serializer.save(
                     user=user, 
-                    tenant=user.tenant
+                    tenant=user.tenant,
+                    frequency_type=frequency_type,
+                    frequency_days=frequency_days
                 )
         else:
             # 普通member：只能为自己创建
             serializer.save(
                 user=user, 
-                tenant=user.tenant
+                tenant=user.tenant,
+                frequency_type=frequency_type,
+                frequency_days=frequency_days
             )
+        
+        logger.info(f"用户 {user.username} 创建了打卡任务: {serializer.validated_data.get('name')}")
     
     def perform_update(self, serializer):
         """
@@ -730,6 +750,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         # 获取user_id
         user_id = data.get('user_id') or data.get('user')
         
+        # 处理打卡频率数据
+        frequency_type = serializer.validated_data.get('frequency_type', instance.frequency_type)
+        frequency_days = serializer.validated_data.get('frequency_days', instance.frequency_days)
+        
+        # 如果是每天打卡，frequency_days为空列表
+        if frequency_type == 'daily':
+            frequency_days = []
+        
         if user.is_admin:
             # 租户管理员：可以修改用户，但必须属于同一租户
             if user_id:
@@ -743,13 +771,19 @@ class TaskViewSet(viewsets.ModelViewSet):
                     # 设置用户和租户(始终使用当前租户)
                     serializer.save(
                         user=target_user, 
-                        tenant=user.tenant  # 强制使用当前租户管理员的租户
+                        tenant=user.tenant,  # 强制使用当前租户管理员的租户
+                        frequency_type=frequency_type,
+                        frequency_days=frequency_days
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
             else:
                 # 未指定用户，保持原样，但确保租户正确
-                serializer.save(tenant=user.tenant)
+                serializer.save(
+                    tenant=user.tenant,
+                    frequency_type=frequency_type,
+                    frequency_days=frequency_days
+                )
         elif hasattr(user, 'sub_accounts') and user.sub_accounts.exists():
             # 主member：可以修改子账号的资源
             if user_id:
@@ -767,18 +801,30 @@ class TaskViewSet(viewsets.ModelViewSet):
                     # 设置用户和租户
                     serializer.save(
                         user=target_user, 
-                        tenant=user.tenant  # 强制使用当前用户的租户
+                        tenant=user.tenant,  # 强制使用当前用户的租户
+                        frequency_type=frequency_type,
+                        frequency_days=frequency_days
                     )
                 except User.DoesNotExist:
                     raise serializers.ValidationError(_("指定的用户不存在"))
             else:
                 # 未指定用户，保持原样，但确保租户正确
-                serializer.save(tenant=user.tenant)
+                serializer.save(
+                    tenant=user.tenant,
+                    frequency_type=frequency_type,
+                    frequency_days=frequency_days
+                )
         else:
             # 普通member：只能修改自己的
             if instance.user != user:
                 raise serializers.ValidationError(_("无法修改其他用户的任务"))
-            serializer.save(tenant=user.tenant)  # 确保租户正确
+            serializer.save(
+                tenant=user.tenant,  # 确保租户正确
+                frequency_type=frequency_type,
+                frequency_days=frequency_days
+            )
+        
+        logger.info(f"用户 {user.username} 更新了打卡任务: {instance.name}")
 
 
 @extend_schema_view(

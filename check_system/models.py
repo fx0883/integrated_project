@@ -32,7 +32,9 @@ class TaskCategory(models.Model):
         Tenant, 
         on_delete=models.CASCADE, 
         related_name="task_categories",
-        verbose_name=_("所属租户")
+        verbose_name=_("所属租户"),
+        null=True,
+        blank=True
     )
     translations = models.JSONField(_("多语言翻译"), default=dict, blank=True)
     created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
@@ -99,6 +101,13 @@ class Task(models.Model):
         ('archived', '已归档'),
     )
     
+    FREQUENCY_CHOICES = (
+        ('daily', '每天'),
+        ('weekly', '每周'),
+        ('monthly', '每月'),
+        ('custom', '自定义'),
+    )
+    
     name = models.CharField(_("任务名称"), max_length=100)
     description = models.TextField(_("任务描述"), blank=True)
     category = models.ForeignKey(
@@ -118,13 +127,17 @@ class Task(models.Model):
         Tenant, 
         on_delete=models.CASCADE, 
         related_name="tasks",
-        verbose_name=_("所属租户")
+        verbose_name=_("所属租户"),
+        null=True,
+        blank=True
     )
     start_date = models.DateField(_("开始日期"))
     end_date = models.DateField(_("结束日期"), null=True, blank=True)
     status = models.CharField(_("状态"), max_length=20, choices=STATUS_CHOICES, default='active')
     reminder = models.BooleanField(_("是否启用提醒"), default=False)
     reminder_time = models.TimeField(_("提醒时间"), null=True, blank=True)
+    frequency_type = models.CharField(_("打卡频率类型"), max_length=20, choices=FREQUENCY_CHOICES, default='daily')
+    frequency_days = models.JSONField(_("打卡频率天数"), default=list, blank=True)
     created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
     updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
     
@@ -137,6 +150,41 @@ class Task(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_status_display()})"
     
+    def is_check_required_today(self):
+        """
+        判断今天是否需要打卡
+        """
+        from datetime import date, datetime
+        
+        # 如果任务未激活，不需要打卡
+        if self.status != 'active':
+            return False
+            
+        # 检查日期范围
+        today = date.today()
+        if self.start_date > today:
+            return False
+        if self.end_date and self.end_date < today:
+            return False
+            
+        # 根据频率类型判断
+        if self.frequency_type == 'daily':
+            return True
+        elif self.frequency_type == 'weekly':
+            # 获取今天是周几 (1-7 表示周一到周日)
+            weekday = datetime.now().weekday() + 1
+            return weekday in self.frequency_days
+        elif self.frequency_type == 'monthly':
+            # 获取今天是几号
+            day = today.day
+            return day in self.frequency_days
+        elif self.frequency_type == 'custom':
+            # 自定义日期需要单独处理
+            today_str = today.strftime('%Y-%m-%d')
+            return today_str in self.frequency_days
+            
+        return False
+        
     def save(self, *args, **kwargs):
         """
         重写保存方法，添加日志和自动关联租户
@@ -223,7 +271,9 @@ class TaskTemplate(models.Model):
         Tenant, 
         on_delete=models.CASCADE, 
         related_name="task_templates",
-        verbose_name=_("所属租户")
+        verbose_name=_("所属租户"),
+        null=True,
+        blank=True
     )
     reminder = models.BooleanField(_("是否启用提醒"), default=False)
     reminder_time = models.TimeField(_("提醒时间"), null=True, blank=True)
