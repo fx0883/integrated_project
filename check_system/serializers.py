@@ -71,7 +71,7 @@ class CheckRecordSerializer(serializers.ModelSerializer):
         model = CheckRecord
         fields = [
             'id', 'task', 'task_name', 'user', 'check_date', 
-            'check_time', 'remarks', 'created_at'
+            'check_time', 'remarks', 'comment', 'completion_time', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
     
@@ -91,6 +91,7 @@ class CheckRecordSerializer(serializers.ModelSerializer):
             if CheckRecord.objects.filter(
                 user=user, task=task, check_date=check_date
             ).exists():
+                print('[CheckRecordSerializer] 用户重复打卡校验未通过')
                 raise serializers.ValidationError(
                     _("您今天已经为该任务打过卡了")
                 )

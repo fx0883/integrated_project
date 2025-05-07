@@ -221,7 +221,9 @@ class CheckRecord(models.Model):
     )
     check_date = models.DateField(_("打卡日期"))
     check_time = models.TimeField(_("打卡时间"))
-    remarks = models.TextField(_("备注"), blank=True)
+    remarks = models.TextField(_("备注"), blank=True, default="")
+    comment = models.TextField(_("评论"), blank=True, default="")
+    completion_time = models.TimeField(_("完成时间"), null=True, blank=True)
     created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
     
     class Meta:
@@ -240,8 +242,9 @@ class CheckRecord(models.Model):
         """
         is_new = self.pk is None
         if is_new:
-            logger.info(f"用户 {self.user.username} 为任务 {self.task.name} 创建打卡记录")
-        
+            print(f"[CheckRecord] 用户 {self.user.username} 为任务 {self.task.name} 创建打卡记录")
+        else:
+            print(f"[CheckRecord] 用户 {self.user.username} 更新了任务 {self.task.name} 的打卡记录")
         super().save(*args, **kwargs)
 
 

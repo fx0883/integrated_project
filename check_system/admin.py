@@ -56,16 +56,16 @@ class TaskAdmin(admin.ModelAdmin):
 @admin.register(CheckRecord)
 class CheckRecordAdmin(admin.ModelAdmin):
     """打卡记录管理配置"""
-    list_display = ('user', 'task', 'check_date', 'check_time', 'created_at')
+    list_display = ('user', 'task', 'check_date', 'check_time', 'completion_time', 'remarks', 'comment', 'created_at')
     list_filter = ('check_date', 'created_at')
-    search_fields = ('task__name', 'user__username', 'remarks')
+    search_fields = ('task__name', 'user__username', 'remarks', 'comment')
     readonly_fields = ('created_at',)
     fieldsets = (
         (_('关联信息'), {
             'fields': ('user', 'task')
         }),
         (_('打卡信息'), {
-            'fields': ('check_date', 'check_time', 'remarks')
+            'fields': ('check_date', 'check_time', 'completion_time', 'remarks', 'comment')
         }),
         (_('时间信息'), {
             'fields': ('created_at',)
