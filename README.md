@@ -145,3 +145,33 @@ integrated_project/
 ## 许可证
 
 MIT License 
+
+# 自律打卡小程序
+
+## 关于图标
+
+本项目需要以下图标资源：
+
+### 底部选项卡图标
+- 首页图标：`images/tabbar/home.png` 和 `images/tabbar/home-active.png`
+- 任务图标：`images/tabbar/tasks.png` 和 `images/tabbar/tasks-active.png`
+- 统计图标：`images/tabbar/stats.png` 和 `images/tabbar/stats-active.png`
+- 我的图标：`images/tabbar/profile.png` 和 `images/tabbar/profile-active.png`
+
+请将这些图标文件添加到相应目录，或者修改 `app.json` 文件中的路径配置。
+
+目前已临时移除tabBar的图标配置以允许项目运行。
+
+### 其他必需图标
+以下图标目录已创建占位符：
+- `images/icons/` - 基本操作图标
+- `images/icons/category/` - 分类图标
+- `images/empty/` - 空状态图标
+
+## 快速启动
+
+为了临时解决图标缺失问题：
+1. 我们已经将 `app.json` 中的 tabBar 图标路径移除
+2. 创建了必要的图标目录和占位文件
+
+请在正式开发和部署前替换这些图标文件。 

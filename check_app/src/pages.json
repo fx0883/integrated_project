@@ -1,0 +1,93 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/home/index",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/tasks/index",
+			"style": {
+				"navigationBarTitleText": "任务列表",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/create_task/index",
+			"style": {
+				"navigationBarTitleText": "创建任务"
+			}
+		},
+		{
+			"path": "pages/categories/index",
+			"style": {
+				"navigationBarTitleText": "打卡类型",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/create_category/index",
+			"style": {
+				"navigationBarTitleText": "创建打卡类型"
+			}
+		},
+		{
+			"path": "pages/statistics/index",
+			"style": {
+				"navigationBarTitleText": "数据统计"
+			}
+		},
+		{
+			"path": "pages/profile/index",
+			"style": {
+				"navigationBarTitleText": "个人中心"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "打卡系统",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#4caf50",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+				"pagePath": "pages/home/index",
+				"iconPath": "static/tabbar/home.png",
+				"selectedIconPath": "static/tabbar/home-active.png",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/tasks/index",
+				"iconPath": "static/tabbar/tasks.png",
+				"selectedIconPath": "static/tabbar/tasks-active.png",
+				"text": "任务"
+			},
+			{
+				"pagePath": "pages/statistics/index",
+				"iconPath": "static/tabbar/stats.png",
+				"selectedIconPath": "static/tabbar/stats-active.png",
+				"text": "统计"
+			},
+			{
+				"pagePath": "pages/profile/index",
+				"iconPath": "static/tabbar/profile.png",
+				"selectedIconPath": "static/tabbar/profile-active.png",
+				"text": "我的"
+			}
+		]
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^uni-(.*)": "@/components/uni-$1/uni-$1.vue"
+		}
+	}
+}
