@@ -1,21 +1,19 @@
 <template>
   <view class="create-task-container">
-    <!-- 页面标题 -->
-    <view class="page-header">
-      <text class="page-title">{{ isEdit ? $t('createTask.editTitle') : $t('createTask.title') }}</text>
-    </view>
-    
-    <!-- 表单区域 -->
-    <view class="form-content">
-      <!-- 任务名称 -->
-      <view class="form-item">
-        <text class="form-label">{{ $t('createTask.taskName') }}</text>
-        <input 
-          class="form-input" 
-          :placeholder="$t('createTask.taskNamePlaceholder')" 
+    <!-- 表单内容 -->
+    <view class="form-section">
+      <!-- 任务标题 -->
+      <view class="form-group">
+        <text class="form-label">{{ $t('createTask.name') }} <text class="required">*</text></text>
+        <input
+          class="form-input"
+          type="text"
           v-model="taskForm.name"
+          :placeholder="$t('createTask.namePlaceholder')"
+          maxlength="30"
         />
-        <text class="error-text" v-if="errors.name">{{ errors.name }}</text>
+        <text class="input-count" v-if="taskForm.name">{{ taskForm.name.length }}/30</text>
+        <text class="form-error" v-if="errors.name">{{ errors.name }}</text>
       </view>
       
       <!-- 任务描述 -->
@@ -483,17 +481,7 @@ onMounted(async () => {
   background-color: var(--theme-background, #f1f8e9);
 }
 
-.page-header {
-  margin-bottom: 20px;
-  
-  .page-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: $color-text-primary;
-  }
-}
-
-.form-content {
+.form-section {
   background-color: #ffffff;
   border-radius: $border-radius-lg;
   padding: 20px;
@@ -501,17 +489,8 @@ onMounted(async () => {
   box-shadow: $box-shadow;
 }
 
-.form-item {
+.form-group {
   margin-bottom: 20px;
-  
-  &.form-item-half {
-    width: 48%;
-  }
-}
-
-.date-row {
-  display: flex;
-  justify-content: space-between;
 }
 
 .form-label {
@@ -521,11 +500,8 @@ onMounted(async () => {
   margin-bottom: 8px;
 }
 
-.sub-label {
-  display: block;
-  font-size: 14px;
-  color: $color-text-regular;
-  margin: 12px 0 8px;
+.required {
+  color: $color-danger;
 }
 
 .form-input, .form-textarea, .form-picker {
@@ -542,18 +518,37 @@ onMounted(async () => {
   height: 80px;
 }
 
+.input-count {
+  display: block;
+  font-size: 14px;
+  color: $color-text-regular;
+  margin-top: 4px;
+}
+
+.form-error {
+  color: $color-danger;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.date-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sub-label {
+  display: block;
+  font-size: 14px;
+  color: $color-text-regular;
+  margin: 12px 0 8px;
+}
+
 .picker-text {
   color: $color-text-primary;
   
   &.placeholder {
     color: $color-text-placeholder;
   }
-}
-
-.error-text {
-  color: $color-danger;
-  font-size: 12px;
-  margin-top: 4px;
 }
 
 .frequency-tabs {

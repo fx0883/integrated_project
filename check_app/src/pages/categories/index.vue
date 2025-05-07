@@ -1,45 +1,14 @@
 <template>
   <view class="categories-container">
-    <!-- 页面标题 -->
-    <view class="page-header">
-      <text class="page-title">{{ $t('categories.all') }}</text>
-      <view class="add-button" @click="navigateToCreateCategory">
-        <text class="iconfont icon-add"></text>
-      </view>
-    </view>
-    
-    <!-- 类型筛选切换 -->
-    <view class="filter-tabs">
-      <view 
-        v-for="tab in filterTabs" 
-        :key="tab.value" 
-        class="filter-tab"
-        :class="{ 'filter-active': currentFilter === tab.value }"
-        @click="changeFilter(tab.value)"
-      >
-        <text class="tab-text">{{ tab.label }}</text>
-      </view>
-    </view>
-    
-    <!-- 类型列表 -->
-    <view class="category-list" v-if="filteredCategories.length > 0">
-      <view 
-        class="category-card" 
-        v-for="category in filteredCategories" 
+    <!-- 类别列表 -->
+    <view class="category-list">
+      <category-card
+        v-for="category in categories"
         :key="category.id"
+        :category="category"
+        :task-count="getCategoryTaskCount(category.id)"
         @click="handleCategoryClick(category)"
-      >
-        <view class="category-icon" :style="{ backgroundColor: getCategoryColor(category.id) }">
-          <text class="iconfont" :class="`icon-${category.icon || 'category'}`"></text>
-        </view>
-        <view class="category-info">
-          <text class="category-name">{{ category.name }}</text>
-          <text class="category-desc" v-if="category.description">{{ category.description }}</text>
-        </view>
-        <view class="category-actions">
-          <text class="iconfont icon-arrow"></text>
-        </view>
-      </view>
+      />
     </view>
     
     <!-- 空状态 -->

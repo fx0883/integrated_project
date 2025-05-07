@@ -19,9 +19,15 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style>
 /* 引入全局样式变量 */
 @import './uni.scss';
+@import './assets/css/tailwind.min.css';
+/* 替换旧的fontawesome引用为自定义fontawesome CSS */
+/* @import './assets/css/fontawesome.min.css'; */
+@import './assets/css/font-awesome-custom.css';
+/* 也可以直接引入node_modules中的CSS文件 */
+/* @import '~@fortawesome/fontawesome-free/css/all.min.css'; */
 
 /* 全局样式 */
 view, text {
@@ -31,5 +37,11 @@ view, text {
 .app-container {
   width: 100%;
   min-height: 100vh;
+  background-color: #f0fdf4;
+}
+
+/* 隐藏滚动条 */
+::-webkit-scrollbar {
+  display: none;
 }
 </style>

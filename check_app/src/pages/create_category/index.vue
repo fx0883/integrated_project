@@ -1,21 +1,19 @@
 <template>
   <view class="create-category-container">
-    <!-- 页面标题 -->
-    <view class="page-header">
-      <text class="page-title">{{ isEdit ? $t('createCategory.editTitle') : $t('createCategory.title') }}</text>
-    </view>
-    
-    <!-- 表单区域 -->
-    <view class="form-content">
-      <!-- 类型名称 -->
-      <view class="form-item">
-        <text class="form-label">{{ $t('createCategory.categoryName') }}</text>
-        <input 
-          class="form-input" 
-          :placeholder="$t('createCategory.categoryNamePlaceholder')" 
+    <!-- 表单内容 -->
+    <view class="form-section">
+      <!-- 类别名称 -->
+      <view class="form-group">
+        <text class="form-label">{{ $t('createCategory.name') }} <text class="required">*</text></text>
+        <input
+          class="form-input"
+          type="text"
           v-model="categoryForm.name"
+          :placeholder="$t('createCategory.namePlaceholder')"
+          maxlength="30"
         />
-        <text class="error-text" v-if="errors.name">{{ errors.name }}</text>
+        <text class="input-count" v-if="categoryForm.name">{{ categoryForm.name.length }}/30</text>
+        <text class="form-error" v-if="errors.name">{{ errors.name }}</text>
       </view>
       
       <!-- 类型描述 -->
@@ -272,17 +270,7 @@ onMounted(() => {
   background-color: var(--theme-background, #f1f8e9);
 }
 
-.page-header {
-  margin-bottom: 20px;
-  
-  .page-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: $color-text-primary;
-  }
-}
-
-.form-content {
+.form-section {
   background-color: #ffffff;
   border-radius: $border-radius-lg;
   padding: 20px;
@@ -290,7 +278,7 @@ onMounted(() => {
   box-shadow: $box-shadow;
 }
 
-.form-item {
+.form-group {
   margin-bottom: 20px;
 }
 
@@ -315,7 +303,13 @@ onMounted(() => {
   height: 80px;
 }
 
-.error-text {
+.input-count {
+  float: right;
+  font-size: 12px;
+  color: $color-text-secondary;
+}
+
+.form-error {
   color: $color-danger;
   font-size: 12px;
   margin-top: 4px;

@@ -1,0 +1,142 @@
+/* 自定义字体路径 */
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 900;
+  src: url('../fonts/fa-solid-900.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/fa-regular-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Brands';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/fa-brands-400.woff2') format('woff2');
+}
+
+/* 图标基本样式 */
+.fas {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.far {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.fab {
+  font-family: 'Font Awesome 6 Brands';
+  font-weight: 400;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+/* 图标调试样式，可在测试时使用，测试完成后可注释掉 */
+/* 
+.fas, .far, .fab {
+  border: 1px solid blue;
+  padding: 2px;
+  margin: 2px;
+}
+*/
+
+/* 确保Font Awesome图标在text标签中正确显示 */
+text.fas, text.far, text.fab {
+  font-family: 'Font Awesome 6 Free' !important;
+}
+
+/* 添加常用图标的Unicode定义 */
+.fa-chart-line:before,
+.fa-line-chart:before {
+  content: "\f201";
+}
+
+.fa-home:before {
+  content: "\f015";
+}
+
+.fa-user:before {
+  content: "\f007";
+}
+
+.fa-cog:before,
+.fa-gear:before {
+  content: "\f013";
+}
+
+.fa-bell:before {
+  content: "\f0f3";
+}
+
+.fa-chart-bar:before,
+.fa-bar-chart:before {
+  content: "\f080";
+}
+
+.fa-check:before {
+  content: "\f00c";
+}
+
+.fa-plus:before,
+.fa-add:before {
+  content: "\2b";
+}
+
+.fa-wifi:before,
+.fa-wifi-3:before,
+.fa-wifi-strong:before {
+  content: "\f1eb";
+}
+
+.fa-signal:before,
+.fa-signal-5:before,
+.fa-signal-perfect:before {
+  content: "\f012";
+}
+
+.fa-battery-full:before,
+.fa-battery:before,
+.fa-battery-5:before {
+  content: "\f240";
+}
+
+.fa-tasks:before,
+.fa-list-check:before {
+  content: "\f0ae";
+}
+
+.fa-chevron-right:before {
+  content: "\f054";
+}
+
+.fa-chevron-left:before {
+  content: "\f053";
+}
+
+/* 添加更多图标定义... */

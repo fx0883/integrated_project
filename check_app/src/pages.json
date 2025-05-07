@@ -3,7 +3,7 @@
 		{
 			"path": "pages/home/index",
 			"style": {
-				"navigationBarTitleText": "首页",
+				"navigationStyle":"custom",
 				"enablePullDownRefresh": true
 			}
 		},
@@ -52,38 +52,38 @@
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
-	"tabBar": {
-		"color": "#7A7E83",
-		"selectedColor": "#4caf50",
-		"borderStyle": "black",
-		"backgroundColor": "#ffffff",
-		"list": [
-			{
-				"pagePath": "pages/home/index",
-				"iconPath": "static/tabbar/home.png",
-				"selectedIconPath": "static/tabbar/home-active.png",
-				"text": "首页"
-			},
-			{
-				"pagePath": "pages/tasks/index",
-				"iconPath": "static/tabbar/tasks.png",
-				"selectedIconPath": "static/tabbar/tasks-active.png",
-				"text": "任务"
-			},
-			{
-				"pagePath": "pages/statistics/index",
-				"iconPath": "static/tabbar/stats.png",
-				"selectedIconPath": "static/tabbar/stats-active.png",
-				"text": "统计"
-			},
-			{
-				"pagePath": "pages/profile/index",
-				"iconPath": "static/tabbar/profile.png",
-				"selectedIconPath": "static/tabbar/profile-active.png",
-				"text": "我的"
-			}
-		]
-	},
+	// "tabBar": {
+	// 	"color": "#7A7E83",
+	// 	"selectedColor": "#4caf50",
+	// 	"borderStyle": "black",
+	// 	"backgroundColor": "#ffffff",
+	// 	"list": [
+	// 		{
+	// 			"pagePath": "pages/home/index",
+	// 			"iconPath": "static/tabbar/home.png",
+	// 			"selectedIconPath": "static/tabbar/home-active.png",
+	// 			"text": "首页"
+	// 		},
+	// 		{
+	// 			"pagePath": "pages/tasks/index",
+	// 			"iconPath": "static/tabbar/tasks.png",
+	// 			"selectedIconPath": "static/tabbar/tasks-active.png",
+	// 			"text": "任务"
+	// 		},
+	// 		{
+	// 			"pagePath": "pages/statistics/index",
+	// 			"iconPath": "static/tabbar/stats.png",
+	// 			"selectedIconPath": "static/tabbar/stats-active.png",
+	// 			"text": "统计"
+	// 		},
+	// 		{
+	// 			"pagePath": "pages/profile/index",
+	// 			"iconPath": "static/tabbar/profile.png",
+	// 			"selectedIconPath": "static/tabbar/profile-active.png",
+	// 			"text": "我的"
+	// 		}
+	// 	]
+	// },
 	"easycom": {
 		"autoscan": true,
 		"custom": {

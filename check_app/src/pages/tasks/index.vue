@@ -1,13 +1,5 @@
 <template>
   <view class="tasks-container">
-    <!-- 页面标题 -->
-    <view class="page-header">
-      <text class="page-title">{{ $t('tasks.all') }}</text>
-      <view class="add-button" @click="navigateToCreateTask">
-        <text class="iconfont icon-add"></text>
-      </view>
-    </view>
-    
     <!-- 任务筛选切换 -->
     <view class="filter-tabs">
       <view 
@@ -198,34 +190,6 @@ onMounted(() => {
   min-height: 100vh;
   padding: 20px;
   background-color: var(--theme-background, #f1f8e9);
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  
-  .page-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: $color-text-primary;
-  }
-  
-  .add-button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--theme-primary, #4caf50);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    .iconfont {
-      font-size: 24px;
-      color: #ffffff;
-    }
-  }
 }
 
 .filter-tabs {

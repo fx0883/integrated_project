@@ -1,35 +1,25 @@
 <template>
   <view class="statistics-container">
-    <!-- 页面标题 -->
-    <view class="page-header">
-      <text class="page-title">{{ $t('statistics.overview') }}</text>
-    </view>
-    
-    <!-- 统计概览卡片 -->
-    <view class="stats-overview">
-      <view class="stats-card">
-        <view class="stats-card-item">
-          <text class="stats-number">{{ totalTasks }}</text>
-          <text class="stats-label">{{ $t('statistics.totalTasks') }}</text>
+    <!-- 总览卡片 -->
+    <view class="overview-card">
+      <view class="overview-row">
+        <view class="stat-card">
+          <text class="stat-number">{{ stats.continueStreak }}</text>
+          <text class="stat-label">{{ $t('statistics.continueStreak') }}</text>
         </view>
-        <view class="stats-card-item">
-          <text class="stats-number">{{ completedTasks }}</text>
-          <text class="stats-label">{{ $t('statistics.completedTasks') }}</text>
-        </view>
-        <view class="stats-card-item">
-          <text class="stats-number">{{ completionRate }}%</text>
-          <text class="stats-label">{{ $t('statistics.completionRate') }}</text>
+        <view class="stat-card">
+          <text class="stat-number">{{ stats.completionRate }}%</text>
+          <text class="stat-label">{{ $t('statistics.completionRate') }}</text>
         </view>
       </view>
-      
-      <view class="streak-card">
-        <view class="streak-info">
-          <text class="streak-label">{{ $t('statistics.continueStreak') }}</text>
-          <text class="streak-number">{{ continuousStreak }} {{ $t('statistics.days') }}</text>
+      <view class="overview-row">
+        <view class="stat-card">
+          <text class="stat-number">{{ stats.totalHabits }}</text>
+          <text class="stat-label">{{ $t('statistics.totalHabits') }}</text>
         </view>
-        <view class="streak-info">
-          <text class="streak-label">{{ $t('statistics.bestRecord') }}</text>
-          <text class="streak-number">{{ bestStreak }} {{ $t('statistics.days') }}</text>
+        <view class="stat-card">
+          <text class="stat-number">{{ stats.averageCompletionTime }}</text>
+          <text class="stat-label">{{ $t('statistics.avgCompletionTime') }}</text>
         </view>
       </view>
     </view>
@@ -319,74 +309,32 @@ onMounted(() => {
   background-color: var(--theme-background, #f1f8e9);
 }
 
-.page-header {
+.overview-card {
   margin-bottom: 20px;
+}
+
+.overview-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
   
-  .page-title {
+  .stat-number {
     font-size: 24px;
     font-weight: bold;
-    color: $color-text-primary;
-  }
-}
-
-.stats-overview {
-  margin-bottom: 20px;
-}
-
-.stats-card {
-  display: flex;
-  justify-content: space-between;
-  background-color: #ffffff;
-  border-radius: $border-radius-lg;
-  padding: 20px;
-  margin-bottom: 12px;
-  box-shadow: $box-shadow;
-  
-  .stats-card-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    
-    .stats-number {
-      font-size: 24px;
-      font-weight: bold;
-      color: var(--theme-primary, #4caf50);
-      margin-bottom: 4px;
-    }
-    
-    .stats-label {
-      font-size: 12px;
-      color: $color-text-secondary;
-    }
-  }
-}
-
-.streak-card {
-  display: flex;
-  justify-content: space-between;
-  background-color: #ffffff;
-  border-radius: $border-radius-lg;
-  padding: 20px;
-  box-shadow: $box-shadow;
-  
-  .streak-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-  }
-  
-  .streak-label {
-    font-size: 12px;
-    color: $color-text-secondary;
+    color: var(--theme-primary, #4caf50);
     margin-bottom: 4px;
   }
   
-  .streak-number {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--theme-primary, #4caf50);
+  .stat-label {
+    font-size: 12px;
+    color: $color-text-secondary;
   }
 }
 
