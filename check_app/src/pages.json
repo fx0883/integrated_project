@@ -20,13 +20,7 @@
 				"navigationBarTitleText": "创建任务"
 			}
 		},
-		{
-			"path": "pages/categories/index",
-			"style": {
-				"navigationBarTitleText": "打卡类型",
-				"enablePullDownRefresh": true
-			}
-		},
+
 		{
 			"path": "pages/create_category/index",
 			"style": {

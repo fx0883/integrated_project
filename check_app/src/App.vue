@@ -20,8 +20,7 @@ export default {
 </script>
 
 <style>
-/* 引入全局样式变量 */
-@import './uni.scss';
+
 @import './assets/css/tailwind.min.css';
 /* 替换旧的fontawesome引用为自定义fontawesome CSS */
 /* @import './assets/css/fontawesome.min.css'; */
