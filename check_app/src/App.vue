@@ -21,10 +21,14 @@ export default {
 
 <style>
 
-@import './assets/css/tailwind.min.css';
+
+@import '../static/tailwind.css'
+
+
+/* @import './assets/css/tailwind.min.css'; */
 /* 替换旧的fontawesome引用为自定义fontawesome CSS */
 /* @import './assets/css/fontawesome.min.css'; */
-@import './assets/css/font-awesome-custom.css';
+/* @import './assets/css/font-awesome-custom.css'; */
 /* 也可以直接引入node_modules中的CSS文件 */
 /* @import '~@fortawesome/fontawesome-free/css/all.min.css'; */
 
