@@ -14,6 +14,10 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import datetime
+import pymysql
+
+# 使用pymysql代替mysqlclient
+pymysql.install_as_MySQLdb()
 
 # 加载.env文件
 load_dotenv()
