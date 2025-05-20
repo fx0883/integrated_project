@@ -1,10 +1,8 @@
 """
 租户上下文管理工具，用于存储和获取当前租户信息
 """
-from common.utils.tenant_manager import get_current_tenant, set_current_tenant, clear_current_tenant
-
-# 导出这些函数，保持向后兼容性
-__all__ = ['get_current_tenant', 'set_current_tenant', 'clear_current_tenant']
+import threading
+import logging
 
 # 创建线程本地存储
 _thread_local = threading.local()
