@@ -434,3 +434,7 @@ parameters"':{2F2024%2F0122%2Fd47d7436j00s7mzmu0023d000r00100c.jpg&thumbnai1=660
 1. 先开发核心功能模块
 2. 逐步迭代完善复杂功能
 3. 持续验证和修正文档
+
+
+
+source /home/espresso/virtualenv/integrated_project/backend/3.12/bin/activate && cd /home/espresso/integrated_project/backend
