@@ -35,7 +35,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-w7&3bzjc1s*bty@)%c3w&#fro!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# 从环境变量读取ALLOWED_HOSTS，并添加espressox.online
+allowed_hosts_from_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = allowed_hosts_from_env + ['espressox.online']
 
 
 # Application definition
@@ -206,6 +208,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",
+    "http://espressox.online",
+    "https://espressox.online",
 ]
 
 # Spectacular API 文档设置
