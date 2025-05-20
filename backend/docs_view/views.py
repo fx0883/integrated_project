@@ -174,7 +174,12 @@ def get_docs_tree(request):
         # 保存到缓存
         cache.set('docs_tree', tree, 60 * 15)  # 15分钟缓存
     
-    return JsonResponse({'tree': tree})
+    return JsonResponse({
+        'success': True,
+        'code': 2000,
+        'message': '获取文档树成功',
+        'data': {'tree': tree}
+    })
 
 
 def get_doc_content(request, doc_path):
@@ -185,24 +190,54 @@ def get_doc_content(request, doc_path):
         # 确保路径安全，防止目录遍历
         full_path = os.path.normpath(os.path.join(DOCS_ROOT, doc_path))
         if not full_path.startswith(DOCS_ROOT):
-            return JsonResponse({'error': '文档不存在'}, status=404)
+            return JsonResponse({
+                'success': False,
+                'code': 4004,
+                'message': '文档不存在',
+                'data': None
+            }, status=404)
         
         if not os.path.exists(full_path):
-            return JsonResponse({'error': '文档不存在'}, status=404)
+            return JsonResponse({
+                'success': False,
+                'code': 4004,
+                'message': '文档不存在',
+                'data': None
+            }, status=404)
         
         if os.path.isdir(full_path):
-            return JsonResponse({'error': '请求的路径是目录，不是文件'}, status=400)
+            return JsonResponse({
+                'success': False,
+                'code': 4000,
+                'message': '请求的路径是目录，不是文件',
+                'data': None
+            }, status=400)
         
         # 确保是Markdown文件
         if not any(full_path.endswith(ext) for ext in MD_EXTENSIONS):
-            return JsonResponse({'error': '不是Markdown文件'}, status=400)
+            return JsonResponse({
+                'success': False,
+                'code': 4000,
+                'message': '不是Markdown文件',
+                'data': None
+            }, status=400)
         
         # 获取文件内容
         content = get_markdown_content(full_path)
         
         return JsonResponse({
-            'title': os.path.basename(full_path),
-            'content': content
+            'success': True,
+            'code': 2000,
+            'message': '获取文档内容成功',
+            'data': {
+                'title': os.path.basename(full_path),
+                'content': content
+            }
         })
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({
+            'success': False,
+            'code': 5000,
+            'message': f'服务器错误: {str(e)}',
+            'data': None
+        }, status=500)

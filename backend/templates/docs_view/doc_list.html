@@ -192,39 +192,43 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/docs/')
             .then(response => response.json())
             .then(data => {
-                renderTree(data.data.tree, docsTree);
-                docsTree.style.display = 'block';
-                loadingIndicator.style.display = 'none';
-                
-                // 从URL参数加载默认文档
-                const urlParams = new URLSearchParams(window.location.search);
-                const docPath = urlParams.get('doc');
-                if (docPath) {
-                    loadDocument(docPath);
+                if (data.success && data.data && data.data.tree) {
+                    renderTree(data.data.tree, docsTree);
+                    docsTree.style.display = 'block';
+                    loadingIndicator.style.display = 'none';
                     
-                    // 高亮显示当前文档
-                    const docLinks = document.querySelectorAll('.doc-link');
-                    docLinks.forEach(link => {
-                        if (link.dataset.path === docPath) {
-                            link.classList.add('active');
-                            // 展开所有父文件夹
-                            let parent = link.closest('li').parentElement;
-                            while (parent && parent.classList.contains('collapse')) {
-                                parent.classList.add('show');
-                                const toggler = parent.previousElementSibling.querySelector('.tree-toggle');
-                                if (toggler) {
-                                    toggler.setAttribute('aria-expanded', 'true');
-                                    toggler.classList.remove('collapsed');
-                                    const folderIcon = toggler.querySelector('.fa-folder');
-                                    if (folderIcon) {
-                                        folderIcon.classList.remove('fa-folder');
-                                        folderIcon.classList.add('fa-folder-open');
+                    // 从URL参数加载默认文档
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const docPath = urlParams.get('doc');
+                    if (docPath) {
+                        loadDocument(docPath);
+                        
+                        // 高亮显示当前文档
+                        const docLinks = document.querySelectorAll('.doc-link');
+                        docLinks.forEach(link => {
+                            if (link.dataset.path === docPath) {
+                                link.classList.add('active');
+                                // 展开所有父文件夹
+                                let parent = link.closest('li').parentElement;
+                                while (parent && parent.classList.contains('collapse')) {
+                                    parent.classList.add('show');
+                                    const toggler = parent.previousElementSibling.querySelector('.tree-toggle');
+                                    if (toggler) {
+                                        toggler.setAttribute('aria-expanded', 'true');
+                                        toggler.classList.remove('collapsed');
+                                        const folderIcon = toggler.querySelector('.fa-folder');
+                                        if (folderIcon) {
+                                            folderIcon.classList.remove('fa-folder');
+                                            folderIcon.classList.add('fa-folder-open');
+                                        }
                                     }
+                                    parent = parent.parentElement.parentElement;
                                 }
-                                parent = parent.parentElement.parentElement;
                             }
-                        }
-                    });
+                        });
+                    }
+                } else {
+                    throw new Error('获取文档树失败: ' + (data.message || '未知错误'));
                 }
             })
             .catch(error => {
@@ -345,44 +349,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                docContent.innerHTML = `
-                    <h2 class="mb-4">${title}</h2>
-                    <div class="markdown-content">${content}</div>
-                `;
-                
-                // 应用代码高亮
-                applyHighlighting();
-                
-                // 处理文档内部链接
-                docContent.querySelectorAll('.markdown-content a').forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && href.startsWith('/doc/')) {
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const docPath = href.substring(5); // 移除'/doc/'前缀
-                            
-                            // 查找并点击对应的文档链接
-                            const docLinks = document.querySelectorAll('.doc-link');
-                            let found = false;
-                            docLinks.forEach(docLink => {
-                                if (docLink.dataset.path === docPath) {
-                                    docLink.click();
-                                    found = true;
+                if (data.success && data.data) {
+                    const title = data.data.title;
+                    const content = data.data.content;
+                    
+                    docContent.innerHTML = `
+                        <h2 class="mb-4">${title}</h2>
+                        <div class="markdown-content">${content}</div>
+                    `;
+                    
+                    // 应用代码高亮
+                    applyHighlighting();
+                    
+                    // 处理文档内部链接
+                    docContent.querySelectorAll('.markdown-content a').forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && href.startsWith('/doc/')) {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const docPath = href.substring(5); // 移除'/doc/'前缀
+                                
+                                // 查找并点击对应的文档链接
+                                const docLinks = document.querySelectorAll('.doc-link');
+                                let found = false;
+                                docLinks.forEach(docLink => {
+                                    if (docLink.dataset.path === docPath) {
+                                        docLink.click();
+                                        found = true;
+                                    }
+                                });
+                                
+                                if (!found) {
+                                    // 如果在树中找不到对应项，直接加载文档
+                                    loadDocument(docPath);
+                                    
+                                    // 更新URL
+                                    const url = new URL(window.location);
+                                    url.searchParams.set('doc', docPath);
+                                    window.history.pushState({}, '', url);
                                 }
                             });
-                            
-                            if (!found) {
-                                // 如果在树中找不到对应项，直接加载文档
-                                loadDocument(docPath);
-                                
-                                // 更新URL
-                                const url = new URL(window.location);
-                                url.searchParams.set('doc', docPath);
-                                window.history.pushState({}, '', url);
-                            }
-                        });
-                    }
-                });
+                        }
+                    });
+                } else {
+                    throw new Error('获取文档内容失败: ' + (data.message || '未知错误'));
+                }
             })
             .catch(error => {
                 console.error('Error loading document:', error);
