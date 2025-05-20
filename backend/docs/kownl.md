@@ -438,3 +438,37 @@ parameters"':{2F2024%2F0122%2Fd47d7436j00s7mzmu0023d000r00100c.jpg&thumbnai1=660
 
 
 source /home/espresso/virtualenv/integrated_project/backend/3.12/bin/activate && cd /home/espresso/integrated_project/backend
+
+
+执行 python manage.py migrate 报错
+
+
+
+
+部署检查清单
+执行数据库初始化脚本：
+   python init_db.py
+Run
+执行数据库迁移：
+   python manage.py migrate
+Run
+创建超级用户：
+   python manage.py createsuperuser
+Run
+收集静态文件：
+   python manage.py collectstatic --noinput
+Run
+重启应用：
+在cPanel的"Python应用程序"部分重启您的应用。
+故障排除
+如果您仍然遇到字符集问题，可以尝试以下步骤：
+检查您的MySQL版本：
+   python init_db.py
+Run
+确保它是5.7+版本，这些版本对utf8mb4有更好的支持。
+检查数据库字符集：
+在phpMyAdmin中可以查看数据库和表的字符集设置。
+检查my.cnf文件：
+如果您有权限，添加以下配置：
+   python manage.py migrate
+字符集问题解决后，您的Django项目应该能够正常在cPanel上部署和运行。
