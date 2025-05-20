@@ -8,7 +8,7 @@ from users.models import User
 from common.admin import TenantAdminMixin
 
 # 添加调试信息
-print("=== 正在执行users/admin.py ===")
+print("=== Running users/admin.py ===")
 
 @admin.register(User)
 class UserAdmin(TenantAdminMixin, DjangoUserAdmin):
@@ -80,5 +80,5 @@ class UserAdmin(TenantAdminMixin, DjangoUserAdmin):
     display_role.short_description = _('角色')
 
 # 添加调试信息
-print("=== users/admin.py执行完毕 ===")
-print(f"=== admin._registry包含User模型: {User in admin.site._registry.keys()} ===")
+print("=== users/admin.py execution completed ===")
+print(f"=== admin._registry contains User model: {User in admin.site._registry.keys()} ===")

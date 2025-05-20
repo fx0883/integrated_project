@@ -7,7 +7,7 @@ from tenants.models import Tenant, TenantQuota
 from common.admin import TenantAdminMixin
 
 # 添加调试信息
-print("=== 正在执行tenants/admin.py ===")
+print("=== Running tenants/admin.py ===")
 
 @admin.register(Tenant)
 class TenantAdmin(admin.ModelAdmin):
@@ -171,6 +171,6 @@ class TenantQuotaAdmin(TenantAdminMixin, admin.ModelAdmin):
         return obj.tenant == tenant
 
 # 添加调试信息
-print("=== tenants/admin.py执行完毕 ===")
-print(f"=== admin._registry包含Tenant模型: {Tenant in admin.site._registry.keys()} ===")
-print(f"=== admin._registry包含TenantQuota模型: {TenantQuota in admin.site._registry.keys()} ===")
+print("=== tenants/admin.py execution completed ===")
+print(f"=== admin._registry contains Tenant model: {Tenant in admin.site._registry.keys()} ===")
+print(f"=== admin._registry contains TenantQuota model: {TenantQuota in admin.site._registry.keys()} ===")
