@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     
     # 第三方应用
     'rest_framework',
+    'drf_yasg',
     'corsheaders',
     'drf_spectacular',
     'drf_spectacular_sidecar',  # 提供Swagger UI和ReDoc的静态资源
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     'users',
     'docs_view',  # 新添加的文档查看应用
     'check_system',  # 打卡系统应用
+    'cms',  # CMS应用
 ]
 
 MIDDLEWARE = [
