@@ -25,6 +25,7 @@ from tenants.schema import (
     tenant_create_request_examples, tenant_quota_update_request_examples
 )
 from drf_spectacular.utils import OpenApiParameter
+from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -219,6 +220,27 @@ class TenantRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
                 'data': None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def get_object(self):
+        """
+        获取租户对象，并验证租户ID
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # 获取主键
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs.get(lookup_url_kwarg)
+        
+        # 验证租户ID格式
+        try:
+            pk = int(pk)
+        except (ValueError, TypeError):
+            logger.error(f"无效的租户ID: {pk}")
+            raise ValidationError({"detail": f"无效的租户ID: {pk}"})
+        
+        obj = get_object_or_404(queryset, pk=pk)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
 
 class TenantQuotaUpdateView(APIView):
     """
@@ -236,7 +258,18 @@ class TenantQuotaUpdateView(APIView):
         """
         获取租户配额
         """
-        tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+        try:
+            pk = int(pk)
+            tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+        except (ValueError, TypeError):
+            logger.error(f"无效的租户ID: {pk}")
+            return Response({
+                'success': False,
+                'code': 4000,
+                'message': f'无效的租户ID: {pk}',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
         quota = tenant.quota
         serializer = TenantQuotaSerializer(quota)
         
@@ -259,7 +292,18 @@ class TenantQuotaUpdateView(APIView):
         """
         更新租户配额
         """
-        tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+        try:
+            pk = int(pk)
+            tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+        except (ValueError, TypeError):
+            logger.error(f"无效的租户ID: {pk}")
+            return Response({
+                'success': False,
+                'code': 4000,
+                'message': f'无效的租户ID: {pk}',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
         quota = tenant.quota
         
         serializer = TenantQuotaUpdateSerializer(quota, data=request.data)
@@ -308,20 +352,30 @@ class TenantQuotaUsageView(APIView):
         """
         获取租户配额使用情况
         """
-        # 验证租户访问权限
-        tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
-        
-        # 如果不是超级管理员，只能查看自己的租户
-        if not request.user.is_super_admin and request.user.tenant.id != tenant.id:
-            logger.warning(f"租户管理员 {request.user.username} 尝试访问其他租户 {tenant.name} 的配额信息")
-            return Response({
-                'success': False,
-                'code': 4003,
-                'message': '没有权限查看其他租户的配额信息',
-                'data': None
-            }, status=status.HTTP_403_FORBIDDEN)
-        
         try:
+            # 验证租户访问权限
+            try:
+                pk = int(pk)
+                tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {pk}")
+                return Response({
+                    'success': False,
+                    'code': 4000,
+                    'message': f'无效的租户ID: {pk}',
+                    'data': None
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 如果不是超级管理员，只能查看自己的租户
+            if not request.user.is_super_admin and request.user.tenant.id != tenant.id:
+                logger.warning(f"租户管理员 {request.user.username} 尝试访问其他租户 {tenant.name} 的配额信息")
+                return Response({
+                    'success': False,
+                    'code': 4003,
+                    'message': '没有权限查看其他租户的配额信息',
+                    'data': None
+                }, status=status.HTTP_403_FORBIDDEN)
+            
             quota = tenant.quota
             serializer = TenantQuotaUsageSerializer(quota)
             
@@ -359,7 +413,17 @@ class TenantSuspendView(APIView):
         暂停租户
         """
         try:
-            tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+            try:
+                pk = int(pk)
+                tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {pk}")
+                return Response({
+                    'success': False,
+                    'code': 4000,
+                    'message': f'无效的租户ID: {pk}',
+                    'data': None
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             if tenant.status == 'suspended':
                 return Response({
@@ -409,7 +473,17 @@ class TenantActivateView(APIView):
         激活租户
         """
         try:
-            tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+            try:
+                pk = int(pk)
+                tenant = get_object_or_404(Tenant, pk=pk, is_deleted=False)
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {pk}")
+                return Response({
+                    'success': False,
+                    'code': 4000,
+                    'message': f'无效的租户ID: {pk}',
+                    'data': None
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             if tenant.status == 'active':
                 return Response({
@@ -521,7 +595,18 @@ class TenantUserListView(generics.ListAPIView):
         try:
             # 记录日志
             tenant_id = self.kwargs.get('pk')
-            logger.info(f"用户 {request.user.username} 请求获取租户ID {tenant_id} 的用户列表")
+            try:
+                tenant_id = int(tenant_id)
+                logger.info(f"用户 {request.user.username} 请求获取租户ID {tenant_id} 的用户列表")
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {tenant_id}")
+                return Response({
+                    'success': False,
+                    'code': 4000,
+                    'message': f'无效的租户ID: {tenant_id}',
+                    'data': None
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             return super().get(request, *args, **kwargs)
         except Exception as e:
             logger.error(f"获取租户用户列表失败: {str(e)}")
@@ -537,7 +622,12 @@ class TenantUserListView(generics.ListAPIView):
         获取租户用户查询集
         """
         tenant_id = self.kwargs.get('pk')
-        tenant = get_object_or_404(Tenant, pk=tenant_id, is_deleted=False)
+        try:
+            tenant_id = int(tenant_id)
+            tenant = get_object_or_404(Tenant, pk=tenant_id, is_deleted=False)
+        except (ValueError, TypeError):
+            logger.error(f"无效的租户ID: {tenant_id}")
+            return User.objects.none()  # 返回空查询集
         
         # 如果不是超级管理员，只能查看自己的租户
         if not self.request.user.is_super_admin and self.request.user.tenant.id != tenant.id:

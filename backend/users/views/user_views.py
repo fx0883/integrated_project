@@ -318,8 +318,10 @@ class UserListCreateView(generics.ListCreateAPIView):
             try:
                 tenant_id = int(tenant_id)
                 queryset = queryset.filter(tenant_id=tenant_id)
-            except ValueError:
-                pass
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {tenant_id}")
+                # 返回空查询集，因为无效的租户ID不应该匹配任何用户
+                queryset = User.objects.none()
         
         return queryset
     
@@ -340,13 +342,23 @@ class UserListCreateView(generics.ListCreateAPIView):
         # 如果传入了tenant_id参数并且是超级管理员
         tenant_id = self.request.data.get('tenant_id')
         if tenant_id and user.is_super_admin:
-            tenant = get_object_or_404(Tenant, pk=tenant_id)
+            try:
+                tenant_id = int(tenant_id)
+                tenant = get_object_or_404(Tenant, pk=tenant_id)
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {tenant_id}")
+                raise serializers.ValidationError({"tenant_id": f"无效的租户ID: {tenant_id}"})
         elif tenant_id and not user.is_super_admin:
             # 非超级管理员尝试指定租户ID
-            requested_tenant = get_object_or_404(Tenant, pk=tenant_id)
-            if requested_tenant.id != user.tenant.id:
-                raise PermissionDenied("您只能在自己的租户下创建用户")
-            tenant = user.tenant
+            try:
+                tenant_id = int(tenant_id)
+                requested_tenant = get_object_or_404(Tenant, pk=tenant_id)
+                if requested_tenant.id != user.tenant.id:
+                    raise PermissionDenied("您只能在自己的租户下创建用户")
+                tenant = user.tenant
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {tenant_id}")
+                raise serializers.ValidationError({"tenant_id": f"无效的租户ID: {tenant_id}"})
         
         logger.info(f"用户 {user.username} 创建新用户，租户设置为: {tenant.name if tenant else '无租户'}")
         serializer.save(tenant=tenant)

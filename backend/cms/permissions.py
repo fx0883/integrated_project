@@ -15,18 +15,23 @@ class CMSBasePermission(permissions.BasePermission):
     - 用户必须关联租户才能访问API
     - 租户管理员可以查看和管理其租户内的所有资源
     - 普通用户只能操作自己的资源
+    - 所有GET请求允许匿名访问
     """
     
     def has_permission(self, request, view):
         """
         检查用户是否有权限访问该视图
         
-        所有已认证且关联了租户的用户都可以访问列表和详情视图
+        所有GET请求允许匿名访问
         创建/更新/删除操作需要检查角色和参数
         """
+        # 允许所有GET请求匿名访问
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
         user = request.user
         
-        # 未认证用户无权限
+        # 未认证用户无权限执行非安全方法
         if not user or not user.is_authenticated:
             logger.warning(f"未认证用户尝试访问 {request.path}")
             return False
@@ -36,30 +41,23 @@ class CMSBasePermission(permissions.BasePermission):
             logger.warning(f"用户 {user.username} 未关联租户，拒绝访问 {request.path}")
             raise PermissionDenied("用户未关联租户，无法访问CMS系统")
         
-        # 区分安全方法和非安全方法
-        if request.method in permissions.SAFE_METHODS:
-            # 安全方法(GET, HEAD, OPTIONS)，所有认证且关联租户的用户都可以访问
+        # 超级管理员和租户管理员
+        if user.is_super_admin or user.is_admin:
             return True
-        else:
-            # 非安全方法(POST, PUT, PATCH, DELETE)，需要检查参数和角色
-            
-            # 超级管理员和租户管理员
-            if user.is_super_admin or user.is_admin:
-                return True
-            
-            # 普通用户只能操作自己的资源
-            if hasattr(view, 'get_object'):
-                try:
-                    obj = view.get_object()
-                    return self.has_object_permission(request, view, obj)
-                except:
-                    pass
-            
-            # 普通用户创建资源时，自动设置为自己的资源
-            if request.method == 'POST':
-                return True
-            
-            return False
+        
+        # 普通用户只能操作自己的资源
+        if hasattr(view, 'get_object'):
+            try:
+                obj = view.get_object()
+                return self.has_object_permission(request, view, obj)
+            except:
+                pass
+        
+        # 普通用户创建资源时，自动设置为自己的资源
+        if request.method == 'POST':
+            return True
+        
+        return False
     
     def has_object_permission(self, request, view, obj):
         """
@@ -113,19 +111,19 @@ class ArticlePermission(CMSBasePermission):
     文章权限控制
     
     额外规则：
-    - 已发布且公开的文章，所有认证用户都可以查看
+    - 所有GET请求允许匿名访问
     - 草稿、待审核和私有文章，只有作者和管理员可以查看
     """
     
     def has_object_permission(self, request, view, obj):
-        # 首先检查基本权限
-        if super().has_object_permission(request, view, obj):
-            return True
-        
-        # 已发布且公开的文章，所有认证用户都可以查看
+        # GET请求允许匿名访问已发布且公开的文章
         if request.method in permissions.SAFE_METHODS:
             if obj.status == 'published' and obj.visibility == 'public':
                 return True
+                
+        # 首先检查基本权限
+        if super().has_object_permission(request, view, obj):
+            return True
         
         return False
 

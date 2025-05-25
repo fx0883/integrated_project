@@ -12,10 +12,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiTypes
 import logging
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from common.permissions import IsSuperAdmin, IsAdmin
 from common.pagination import StandardResultsSetPagination
 from common.authentication.jwt_auth import JWTAuthentication
+from common.viewsets import TenantModelViewSet
 from users.models import User
 from .models import (
     Article, Category, Tag, TagGroup, Comment, 
@@ -59,6 +61,7 @@ logger = logging.getLogger(__name__)
             OpenApiParameter(name="visibility", description="可见性过滤", required=False, type=str, enum=["public", "private", "password"]),
             OpenApiParameter(name="date_from", description="发布日期起始，格式YYYY-MM-DD", required=False, type=str),
             OpenApiParameter(name="date_to", description="发布日期截止，格式YYYY-MM-DD", required=False, type=str),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         examples=[
             OpenApiExample(
@@ -83,6 +86,7 @@ logger = logging.getLogger(__name__)
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
             OpenApiParameter(name="password", description="访问密码，当文章可见性为password时需提供", required=False, type=str),
             OpenApiParameter(name="version", description="文章版本号，默认返回最新版本", required=False, type=int),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         examples=[
             OpenApiExample(
@@ -100,6 +104,9 @@ logger = logging.getLogger(__name__)
         description="创建新文章，需要提供标题和内容",
         tags=["CMS-文章管理"],
         request=ArticleCreateUpdateSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             201: ArticleDetailSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -132,6 +139,9 @@ logger = logging.getLogger(__name__)
         description="更新现有文章的所有字段",
         tags=["CMS-文章管理"],
         request=ArticleCreateUpdateSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: ArticleDetailSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -160,6 +170,9 @@ logger = logging.getLogger(__name__)
         description="更新现有文章的部分字段",
         tags=["CMS-文章管理"],
         request=ArticleCreateUpdateSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: ArticleDetailSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -186,6 +199,7 @@ logger = logging.getLogger(__name__)
         tags=["CMS-文章管理"],
         parameters=[
             OpenApiParameter(name="force", description="是否强制删除，默认false (false时为软删除)", required=False, type=bool),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             204: OpenApiResponse(description="删除成功"),
@@ -194,93 +208,96 @@ logger = logging.getLogger(__name__)
         }
     ),
 )
-class ArticleViewSet(viewsets.ModelViewSet):
+class ArticleViewSet(TenantModelViewSet):
     """
     文章视图集，提供增删改查API
     
-    - 普通用户: 可以查看公开的已发布文章，以及自己创建的所有文章
-    - 租户管理员: 可以查看和管理该租户下的所有文章
-    - 超级管理员: 可以查看所有租户的文章
-    
-    除了标准的CRUD操作外，还提供以下扩展功能:
-    - 按分类和标签筛选文章
-    - 全文搜索文章内容
-    - 文章版本管理
-    - 文章统计数据
-    - 文章状态管理(发布、归档等)
+    继承自TenantModelViewSet，自动处理租户隔离
     """
-    serializer_class = ArticleDetailSerializer
-    pagination_class = StandardResultsSetPagination
+    authentication_classes = [JWTAuthentication]
     permission_classes = [ArticlePermission]
+    pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'is_featured', 'is_pinned', 'visibility', 'author']
+    filterset_fields = ['status', 'visibility', 'is_featured', 'is_pinned']
     search_fields = ['title', 'content', 'excerpt']
     ordering_fields = ['created_at', 'updated_at', 'published_at', 'title']
     ordering = ['-published_at', '-created_at']
+    queryset = Article.objects.all().select_related('author', 'tenant')  # 添加select_related优化查询
     
     def get_queryset(self):
         """
-        获取文章查询集，根据用户角色和权限进行过滤
+        获取文章查询集，支持多种过滤条件
         
-        - 超级管理员: 可以查看所有租户的所有文章
-        - 租户管理员: 可以查看本租户的所有文章
-        - 普通用户: 可以查看已发布的公开文章和自己创建的文章
+        已通过TenantModelViewSet处理租户过滤
         """
-        user = self.request.user
-        queryset = Article.objects.all().select_related('author', 'tenant')
+        # 获取基础查询集，已经按照租户过滤
+        queryset = super().get_queryset()
         
-        # 基于租户的过滤
-        if not user.is_super_admin:
-            queryset = queryset.filter(tenant=user.tenant)
+        # 处理状态过滤
+        status = self.request.query_params.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
         
-        # 基于用户角色和权限的过滤
-        if not (user.is_super_admin or user.is_admin):
-            # 普通用户只能看到自己的文章或已发布的公开文章
-            queryset = queryset.filter(
-                Q(author=user) |  # 自己的文章
-                Q(status='published', visibility='public')  # 已发布且公开的文章
-            )
-        
-        # 额外的查询参数处理
+        # 处理分类过滤
         category_id = self.request.query_params.get('category_id')
         if category_id:
             queryset = queryset.filter(article_categories__category_id=category_id)
         
+        # 处理标签过滤
         tag_id = self.request.query_params.get('tag_id')
         if tag_id:
             queryset = queryset.filter(article_tags__tag_id=tag_id)
         
+        # 处理作者过滤
         author_id = self.request.query_params.get('author_id')
         if author_id:
             queryset = queryset.filter(author_id=author_id)
         
+        # 处理特色和置顶过滤
+        is_featured = self.request.query_params.get('is_featured')
+        if is_featured == 'true':
+            queryset = queryset.filter(is_featured=True)
+        
+        is_pinned = self.request.query_params.get('is_pinned')
+        if is_pinned == 'true':
+            queryset = queryset.filter(is_pinned=True)
+        
+        # 处理可见性过滤
+        visibility = self.request.query_params.get('visibility')
+        if visibility:
+            queryset = queryset.filter(visibility=visibility)
+        
+        # 处理日期范围过滤
         date_from = self.request.query_params.get('date_from')
         if date_from:
-            queryset = queryset.filter(published_at__gte=date_from)
+            queryset = queryset.filter(published_at__date__gte=date_from)
         
         date_to = self.request.query_params.get('date_to')
         if date_to:
-            queryset = queryset.filter(published_at__lte=date_to)
+            queryset = queryset.filter(published_at__date__lte=date_to)
         
-        # 排序处理
+        # 处理排序
         sort = self.request.query_params.get('sort')
         sort_direction = self.request.query_params.get('sort_direction', 'desc')
+        
         if sort:
             if sort == 'views_count':
-                # 特殊处理浏览量排序，需要关联统计表
-                queryset = queryset.select_related('statistics')
-                direction = '-' if sort_direction == 'desc' else ''
-                queryset = queryset.order_by(f'{direction}statistics__views_count')
+                # 特殊处理浏览量排序，因为它在关联表中
+                queryset = queryset.annotate(views=models.F('statistics__views_count'))
+                order_field = 'views'
             else:
-                # 处理常规字段排序
-                direction = '-' if sort_direction == 'desc' else ''
-                queryset = queryset.order_by(f'{direction}{sort}')
+                order_field = sort
+                
+            if sort_direction == 'desc':
+                order_field = f"-{order_field}"
+                
+            queryset = queryset.order_by(order_field)
         
         return queryset
     
     def get_serializer_class(self):
         """
-        根据请求方法和动作获取适当的序列化器类
+        根据请求方法返回不同的序列化器
         """
         if self.action == 'list':
             return ArticleListSerializer
@@ -291,46 +308,32 @@ class ArticleViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        执行文章创建操作
+        创建文章时设置作者为当前用户
         
-        - 自动设置当前用户为作者（如果未指定）
-        - 自动设置当前租户
-        - 记录操作日志
+        租户ID已通过TenantModelViewSet自动处理
         """
-        user = self.request.user
-        tenant = user.tenant
+        # 设置作者为当前用户
+        serializer.save(author=self.request.user)
         
-        # 如果没有指定作者，设置为当前用户
-        if 'author' not in serializer.validated_data:
-            serializer.validated_data['author'] = user
+        # 处理分类和标签关系
+        self._process_relations(serializer.instance, serializer.validated_data)
         
-        # 验证作者权限
-        author = serializer.validated_data.get('author')
-        if author != user and not (user.is_super_admin or user.is_admin):
-            raise serializers.ValidationError(_("您没有权限以其他用户的名义创建文章"))
+        # 创建统计记录
+        tenant_id = getattr(self.request, 'tenant_id', None)
+        if tenant_id:
+            try:
+                tenant_id = int(tenant_id)
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {tenant_id}")
+                raise ValidationError({"detail": f"无效的租户ID: {tenant_id}"})
         
-        # 设置租户ID
-        serializer.validated_data['tenant'] = tenant
-        
-        # 创建文章
-        article = serializer.save()
+        ArticleStatistics.objects.create(
+            article=serializer.instance,
+            tenant_id=tenant_id
+        )
         
         # 记录操作日志
-        try:
-            OperationLog.objects.create(
-                user=user,
-                action='create',
-                entity_type='article',
-                entity_id=article.id,
-                details=f"创建文章: {article.title}",
-                ip_address=self.request.META.get('REMOTE_ADDR'),
-                user_agent=self.request.META.get('HTTP_USER_AGENT'),
-                tenant=tenant
-            )
-        except Exception as e:
-            logger.error(f"记录文章创建操作日志失败: {str(e)}")
-        
-        return article
+        self._record_operation_log('create', serializer.instance)
     
     def perform_update(self, serializer):
         """
@@ -411,6 +414,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-文章管理"],
         parameters=[
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: ArticleVersionSerializer(many=True),
@@ -433,6 +437,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
             OpenApiParameter(name="version_number", description="版本号", required=True, type=int, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: ArticleVersionSerializer,
@@ -464,6 +469,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
             OpenApiParameter(name="period", description="统计周期", required=False, type=str, enum=["day", "week", "month", "year", "all"]),
             OpenApiParameter(name="start_date", description="统计起始日期，格式YYYY-MM-DD", required=False, type=str),
             OpenApiParameter(name="end_date", description="统计结束日期，格式YYYY-MM-DD", required=False, type=str),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="统计数据"),
@@ -602,6 +608,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-文章管理"],
         parameters=[
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         request={
             'application/json': {
@@ -653,11 +660,15 @@ class ArticleViewSet(viewsets.ModelViewSet):
             
             # 如果提供了阅读时间，更新平均阅读时间
             if reading_time:
-                # 使用加权平均算法更新平均阅读时间
-                if stats.avg_reading_time > 0:
-                    stats.avg_reading_time = (stats.avg_reading_time * (stats.views_count - 1) + int(reading_time)) / stats.views_count
-                else:
-                    stats.avg_reading_time = int(reading_time)
+                try:
+                    reading_time = int(reading_time)
+                    # 使用加权平均算法更新平均阅读时间
+                    if stats.avg_reading_time > 0:
+                        stats.avg_reading_time = (stats.avg_reading_time * (stats.views_count - 1) + reading_time) / stats.views_count
+                    else:
+                        stats.avg_reading_time = reading_time
+                except (ValueError, TypeError):
+                    logger.warning(f"无效的阅读时间格式: {reading_time}")
             
             stats.save()
             
@@ -672,6 +683,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-文章管理"],
         parameters=[
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="发布成功"),
@@ -728,6 +740,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-文章管理"],
         parameters=[
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="取消发布成功"),
@@ -782,6 +795,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-文章管理"],
         parameters=[
             OpenApiParameter(name="id", description="文章ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="归档成功"),
@@ -834,6 +848,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
         summary="批量删除文章",
         description="批量删除多篇文章",
         tags=["CMS-文章管理"],
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         request={
             'application/json': {
                 'type': 'object',
@@ -871,16 +888,34 @@ class ArticleViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # 验证文章ID列表格式
+        try:
+            article_ids = [int(article_id) for article_id in article_ids]
+        except (ValueError, TypeError):
+            return Response(
+                {"detail": _("文章ID列表格式错误，必须是整数列表")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # 检查是否强制删除
         force_delete = request.data.get('force', False)
+        
+        # 获取租户ID并验证
+        tenant_id = getattr(request, 'tenant_id', None)
+        if tenant_id:
+            try:
+                tenant_id = int(tenant_id)
+            except (ValueError, TypeError):
+                logger.error(f"无效的租户ID: {tenant_id}")
+                raise ValidationError({"detail": f"无效的租户ID: {tenant_id}"})
         
         # 根据权限获取可操作的文章
         if user.is_super_admin:
             articles = Article.objects.filter(id__in=article_ids)
         elif user.is_admin:
-            articles = Article.objects.filter(id__in=article_ids, tenant=tenant)
+            articles = Article.objects.filter(id__in=article_ids, tenant_id=tenant_id)
         else:
-            articles = Article.objects.filter(id__in=article_ids, tenant=tenant, author=user)
+            articles = Article.objects.filter(id__in=article_ids, tenant_id=tenant_id, author=user)
         
         # 统计找到的文章数量
         found_count = articles.count()
@@ -937,6 +972,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
             OpenApiParameter(name="parent", description="父分类ID", required=False, type=int),
             OpenApiParameter(name="is_active", description="是否激活", required=False, type=bool),
             OpenApiParameter(name="search", description="搜索关键词", required=False, type=str),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: CategorySerializer(many=True),
@@ -949,6 +985,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-分类管理"],
         parameters=[
             OpenApiParameter(name="id", description="分类ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: CategorySerializer,
@@ -961,6 +998,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
         description="创建新的文章分类",
         tags=["CMS-分类管理"],
         request=CategorySerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             201: CategorySerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -990,6 +1030,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
         description="更新现有的文章分类",
         tags=["CMS-分类管理"],
         request=CategorySerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: CategorySerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1002,6 +1045,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
         description="部分更新现有的文章分类",
         tags=["CMS-分类管理"],
         request=CategorySerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: CategorySerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1015,6 +1061,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         tags=["CMS-分类管理"],
         parameters=[
             OpenApiParameter(name="id", description="分类ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             204: OpenApiResponse(description="删除成功"),
@@ -1023,7 +1070,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         }
     ),
 )
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(TenantModelViewSet):
     """
     分类视图集，提供增删改查API
     
@@ -1038,13 +1085,21 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'slug', 'description']
     ordering_fields = ['sort_order', 'name', 'created_at']
     ordering = ['sort_order', 'name']
+    queryset = Category.objects.all().select_related('parent', 'tenant')  # 添加select_related优化查询
     
     def get_queryset(self):
         """
         获取分类查询集，根据用户角色和权限进行过滤
+        
+        - 匿名用户: 可以查看所有激活的分类
+        - 已认证用户: 根据租户过滤
         """
+        queryset = super().get_queryset()
+        
+        # 匿名用户只能看到激活的分类
         user = self.request.user
-        queryset = Category.objects.all().select_related('parent', 'tenant')
+        if not user.is_authenticated:
+            return queryset.filter(is_active=True)
         
         # 基于租户的过滤
         if not user.is_super_admin:
@@ -1156,6 +1211,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         summary="获取分类树",
         description="以树形结构获取所有分类",
         tags=["CMS-分类管理"],
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: OpenApiResponse(description="分类树结构"),
             403: OpenApiResponse(description="权限不足"),
@@ -1167,14 +1225,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
         user = request.user
         
         # 获取所有顶级分类
-        if user.is_super_admin:
+        if not user.is_authenticated:
+            # 匿名用户只能看到激活的分类
+            root_categories = Category.objects.filter(parent=None, is_active=True)
+        elif user.is_super_admin:
             root_categories = Category.objects.filter(parent=None)
         else:
             root_categories = Category.objects.filter(parent=None, tenant=user.tenant)
         
         def build_tree(category):
             """递归构建分类树"""
-            children = Category.objects.filter(parent=category)
+            if not user.is_authenticated:
+                # 匿名用户只能看到激活的子分类
+                children = Category.objects.filter(parent=category, is_active=True)
+            else:
+                children = Category.objects.filter(parent=category)
+                
             return {
                 'id': category.id,
                 'name': category.name,
@@ -1198,6 +1264,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(name="is_active", description="是否激活", required=False, type=bool),
             OpenApiParameter(name="search", description="搜索关键词", required=False, type=str),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: TagGroupSerializer(many=True),
@@ -1210,6 +1277,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         tags=["CMS-标签管理"],
         parameters=[
             OpenApiParameter(name="id", description="标签组ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: TagGroupSerializer,
@@ -1222,6 +1290,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         description="创建新的标签组",
         tags=["CMS-标签管理"],
         request=TagGroupSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             201: TagGroupSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1247,6 +1318,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         description="更新现有的标签组",
         tags=["CMS-标签管理"],
         request=TagGroupSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: TagGroupSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1259,6 +1333,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         description="部分更新现有的标签组",
         tags=["CMS-标签管理"],
         request=TagGroupSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: TagGroupSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1272,6 +1349,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         tags=["CMS-标签管理"],
         parameters=[
             OpenApiParameter(name="id", description="标签组ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             204: OpenApiResponse(description="删除成功"),
@@ -1280,7 +1358,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         }
     ),
 )
-class TagGroupViewSet(viewsets.ModelViewSet):
+class TagGroupViewSet(TenantModelViewSet):
     """
     标签组视图集，提供增删改查API
     
@@ -1295,13 +1373,21 @@ class TagGroupViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'slug', 'description']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+    queryset = TagGroup.objects.all().select_related('tenant')  # 添加select_related优化查询
     
     def get_queryset(self):
         """
         获取标签组查询集，根据用户角色和权限进行过滤
+        
+        - 匿名用户: 可以查看所有激活的标签组
+        - 已认证用户: 根据租户过滤
         """
+        queryset = super().get_queryset()
+        
+        # 匿名用户只能看到激活的标签组
         user = self.request.user
-        queryset = TagGroup.objects.all().select_related('tenant')
+        if not user.is_authenticated:
+            return queryset.filter(is_active=True)
         
         # 基于租户的过滤
         if not user.is_super_admin:
@@ -1414,6 +1500,7 @@ class TagGroupViewSet(viewsets.ModelViewSet):
             OpenApiParameter(name="group", description="标签组ID", required=False, type=int),
             OpenApiParameter(name="is_active", description="是否激活", required=False, type=bool),
             OpenApiParameter(name="search", description="搜索关键词", required=False, type=str),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: TagSerializer(many=True),
@@ -1426,6 +1513,7 @@ class TagGroupViewSet(viewsets.ModelViewSet):
         tags=["CMS-标签管理"],
         parameters=[
             OpenApiParameter(name="id", description="标签ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: TagSerializer,
@@ -1438,6 +1526,9 @@ class TagGroupViewSet(viewsets.ModelViewSet):
         description="创建新的标签",
         tags=["CMS-标签管理"],
         request=TagSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             201: TagSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1465,6 +1556,9 @@ class TagGroupViewSet(viewsets.ModelViewSet):
         description="更新现有的标签",
         tags=["CMS-标签管理"],
         request=TagSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: TagSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1477,6 +1571,9 @@ class TagGroupViewSet(viewsets.ModelViewSet):
         description="部分更新现有的标签",
         tags=["CMS-标签管理"],
         request=TagSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: TagSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1490,6 +1587,7 @@ class TagGroupViewSet(viewsets.ModelViewSet):
         tags=["CMS-标签管理"],
         parameters=[
             OpenApiParameter(name="id", description="标签ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             204: OpenApiResponse(description="删除成功"),
@@ -1498,7 +1596,7 @@ class TagGroupViewSet(viewsets.ModelViewSet):
         }
     ),
 )
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(TenantModelViewSet):
     """
     标签视图集，提供增删改查API
     
@@ -1513,13 +1611,21 @@ class TagViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'slug', 'description']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+    queryset = Tag.objects.all().select_related('group', 'tenant')  # 添加select_related优化查询
     
     def get_queryset(self):
         """
         获取标签查询集，根据用户角色和权限进行过滤
+        
+        - 匿名用户: 可以查看所有激活的标签
+        - 已认证用户: 根据租户过滤
         """
+        queryset = super().get_queryset()
+        
+        # 匿名用户只能看到激活的标签
         user = self.request.user
-        queryset = Tag.objects.all().select_related('group', 'tenant')
+        if not user.is_authenticated:
+            return queryset.filter(is_active=True)
         
         # 基于租户的过滤
         if not user.is_super_admin:
@@ -1636,6 +1742,9 @@ class TagViewSet(viewsets.ModelViewSet):
         summary="获取标签使用统计",
         description="获取各个标签的使用统计信息",
         tags=["CMS-标签管理"],
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: OpenApiResponse(description="标签使用统计"),
             403: OpenApiResponse(description="权限不足"),
@@ -1647,7 +1756,12 @@ class TagViewSet(viewsets.ModelViewSet):
         user = request.user
         
         # 获取标签及其使用次数
-        if user.is_super_admin:
+        if not user.is_authenticated:
+            # 匿名用户只能看到激活的标签
+            tags_with_count = Tag.objects.filter(is_active=True).annotate(
+                articles_count=Count('article_tags')
+            ).values('id', 'name', 'slug', 'color', 'articles_count')
+        elif user.is_super_admin:
             tags_with_count = Tag.objects.annotate(
                 articles_count=Count('article_tags')
             ).values('id', 'name', 'slug', 'color', 'articles_count')
@@ -1675,6 +1789,7 @@ class TagViewSet(viewsets.ModelViewSet):
             OpenApiParameter(name="search", description="搜索关键词，在评论内容中匹配", required=False, type=str),
             OpenApiParameter(name="sort", description="排序字段", required=False, type=str, enum=["created_at", "likes_count"]),
             OpenApiParameter(name="sort_direction", description="排序方向", required=False, type=str, enum=["asc", "desc"]),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: CommentSerializer(many=True),
@@ -1687,6 +1802,7 @@ class TagViewSet(viewsets.ModelViewSet):
         tags=["CMS-评论管理"],
         parameters=[
             OpenApiParameter(name="id", description="评论ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: CommentSerializer,
@@ -1699,6 +1815,9 @@ class TagViewSet(viewsets.ModelViewSet):
         description="创建新的评论",
         tags=["CMS-评论管理"],
         request=CommentSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             201: CommentSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1725,6 +1844,9 @@ class TagViewSet(viewsets.ModelViewSet):
         description="更新现有的评论",
         tags=["CMS-评论管理"],
         request=CommentSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: CommentSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1737,6 +1859,9 @@ class TagViewSet(viewsets.ModelViewSet):
         description="部分更新现有的评论",
         tags=["CMS-评论管理"],
         request=CommentSerializer,
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         responses={
             200: CommentSerializer,
             400: OpenApiResponse(description="请求参数错误"),
@@ -1750,6 +1875,7 @@ class TagViewSet(viewsets.ModelViewSet):
         tags=["CMS-评论管理"],
         parameters=[
             OpenApiParameter(name="id", description="评论ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             204: OpenApiResponse(description="删除成功"),
@@ -1758,7 +1884,7 @@ class TagViewSet(viewsets.ModelViewSet):
         }
     ),
 )
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(TenantModelViewSet):
     """
     评论视图集，提供增删改查API
     
@@ -1775,13 +1901,22 @@ class CommentViewSet(viewsets.ModelViewSet):
     search_fields = ['content', 'guest_name', 'guest_email']
     ordering_fields = ['created_at', 'updated_at', 'likes_count']
     ordering = ['-created_at']
+    queryset = Comment.objects.all().select_related('user', 'article', 'parent', 'tenant')  # 添加select_related优化查询
     
     def get_queryset(self):
         """
         获取评论查询集，根据用户角色和权限进行过滤
+        
+        - 匿名用户: 只能查看已批准的评论
+        - 已认证用户: 可以查看已批准的评论和自己的评论
+        - 管理员: 可以查看所有评论
         """
+        queryset = super().get_queryset()
+        
+        # 匿名用户只能看到已批准的评论
         user = self.request.user
-        queryset = Comment.objects.all().select_related('user', 'article', 'parent', 'tenant')
+        if not user.is_authenticated:
+            return queryset.filter(status='approved')
         
         # 基于租户的过滤
         if not user.is_super_admin:
@@ -1988,6 +2123,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         tags=["CMS-评论管理"],
         parameters=[
             OpenApiParameter(name="id", description="评论ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: CommentSerializer(many=True),
@@ -2001,9 +2137,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         comment = self.get_object()
         replies = Comment.objects.filter(parent=comment)
         
-        # 非管理员只能看到已批准的评论或自己的评论
+        # 匿名用户只能看到已批准的评论
         user = request.user
-        if not (user.is_super_admin or user.is_admin or user.id == comment.article.author_id):
+        if not user.is_authenticated:
+            replies = replies.filter(status='approved')
+        # 非管理员且已认证用户只能看到已批准的评论或自己的评论
+        elif not (user.is_super_admin or user.is_admin or user.id == comment.article.author_id):
             replies = replies.filter(
                 Q(status='approved') |  # 已批准的评论
                 Q(user=user)            # 自己的评论
@@ -2027,6 +2166,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         tags=["CMS-评论管理"],
         parameters=[
             OpenApiParameter(name="id", description="评论ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="批准成功"),
@@ -2104,6 +2244,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         tags=["CMS-评论管理"],
         parameters=[
             OpenApiParameter(name="id", description="评论ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="拒绝成功"),
@@ -2181,6 +2322,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         tags=["CMS-评论管理"],
         parameters=[
             OpenApiParameter(name="id", description="评论ID", required=True, type=OpenApiTypes.INT, location=OpenApiParameter.PATH),
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
             200: OpenApiResponse(description="标记成功"),
@@ -2256,6 +2398,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         summary="批量处理评论",
         description="批量审核、拒绝或删除多条评论",
         tags=["CMS-评论管理"],
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
         request={
             'application/json': {
                 'type': 'object',
