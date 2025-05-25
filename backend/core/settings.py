@@ -288,22 +288,25 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'logging.FileHandler',  # 使用普通的FileHandler代替TimedRotatingFileHandler
             'filename': os.path.join(LOGS_DIR, 'debug.log'),
-            'when': 'midnight',  # 每天午夜切换到新的日志文件
-            'interval': 1,       # 间隔为1，与when参数结合表示每1天
-            'backupCount': 30,   # 保留最近30天的日志文件
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGS_DIR, 'error.log'),
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console'] + (['file'] if DEBUG_LOG_ENABLED else []),
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'INFO',
             'propagate': True,
         },
         'drf_spectacular': {
-            'handlers': ['console'] + (['file'] if DEBUG_LOG_ENABLED else []),
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True,
         },
