@@ -153,6 +153,7 @@ import { useRouter } from 'vue-router'
 import { tenantApi } from '../../api'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
+import { request } from '../../utils/request'  // 导入request模块
 
 // 路由
 const router = useRouter()
@@ -192,17 +193,19 @@ const percentFormat = (percentage) => {
 const getTenantList = async () => {
   try {
     loading.value = true
-    console.log('获取租户列表，参数:', queryParams)
+    console.log('获取租户列表，查询参数:', queryParams)
     
-    // 调用API获取租户列表
     const response = await tenantApi.getTenants(queryParams)
     
+    // 使用request.getResponseData从响应的data字段获取数据
+    const responseData = request.getResponseData(response)
+    
     // 检查响应格式
-    if (response && response.results) {
-      tenantList.value = response.results
-      total.value = response.count || 0
+    if (responseData && responseData.results) {
+      tenantList.value = responseData.results
+      total.value = responseData.count || 0
     } else {
-      tenantList.value = Array.isArray(response) ? response : []
+      tenantList.value = Array.isArray(responseData) ? responseData : []
       total.value = tenantList.value.length
     }
     
@@ -292,8 +295,8 @@ const handleViewQuota = async (id) => {
     editingQuota.value = false
     
     // 获取配额使用情况
-    const quotaData = await tenantApi.getTenantQuotaUsage(id)
-    quotaInfo.value = quotaData
+    const response = await tenantApi.getTenantQuotaUsage(id)
+    quotaInfo.value = request.getResponseData(response)
     
     quotaLoading.value = false
   } catch (error) {

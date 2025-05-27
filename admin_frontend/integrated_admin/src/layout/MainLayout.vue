@@ -93,7 +93,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores'
 import { 
   User, Setting, InfoFilled, OfficeBuilding, Odometer, List, 
-  Plus, Document, Message, Bell, Search, Calendar, Collection, PieChart
+  Plus, Document, Message, Bell, Search, Calendar, Collection, PieChart, Reading, Folder, ChatDotRound, DataAnalysis
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -186,6 +186,38 @@ const menuItems = computed(() => {
       title: '仪表盘',
       path: '/dashboard',
       icon: 'Odometer'
+    },
+    {
+      title: 'CMS管理',
+      path: '/cms',  // 这个路径实际不存在，只用于菜单分组
+      icon: 'Reading',
+      children: [
+        {
+          title: '文章管理',
+          path: '/cms/articles',
+          icon: 'Document'
+        },
+        {
+          title: '分类管理',
+          path: '/cms/categories',
+          icon: 'Folder'
+        },
+        {
+          title: '标签管理',
+          path: '/cms/tags',
+          icon: 'Collection'
+        },
+        {
+          title: '评论管理',
+          path: '/cms/comments',
+          icon: 'ChatDotRound'
+        },
+        {
+          title: '内容统计',
+          path: '/cms/statistics',
+          icon: 'DataAnalysis'
+        }
+      ]
     },
     {
       title: '打卡管理',
@@ -474,7 +506,11 @@ const getSearchIcon = (category) => {
     setting: 'Setting',
     calendar: 'Calendar',
     collection: 'Collection',
-    pieChart: 'PieChart'
+    pieChart: 'PieChart',
+    reading: 'Reading',
+    folder: 'Folder',
+    chatDotRound: 'ChatDotRound',
+    dataAnalysis: 'DataAnalysis'
   }
   
   return iconMap[category] || 'Document'
@@ -490,7 +526,11 @@ const getSearchIconClass = (category) => {
     setting: 'icon-gray',
     calendar: 'icon-pink',
     collection: 'icon-teal',
-    pieChart: 'icon-yellow'
+    pieChart: 'icon-yellow',
+    reading: 'icon-blue',
+    folder: 'icon-teal',
+    chatDotRound: 'icon-teal',
+    dataAnalysis: 'icon-teal'
   }
   
   return classMap[category] || 'icon-blue'

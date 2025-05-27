@@ -166,10 +166,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getCheckRecords } from '@/api/check'
-import { getTaskCategories } from '@/api/check'
+import { ref, reactive, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { checkApi } from '../../api'
+import { request } from '../../utils/request'  // 导入request模块
 import * as echarts from 'echarts'
 
 // 统计数据
@@ -395,32 +395,26 @@ onUnmounted(() => {
 
 // 获取打卡记录列表数据
 const fetchData = async () => {
-  loading.value = true
   try {
-    // 构建查询参数
+    loading.value = true
+    
     const params = {
       page: queryParams.page,
-      page_size: queryParams.limit
-    }
-    
-    if (queryParams.category) {
-      params.category = queryParams.category
-    }
-    
-    if (queryParams.start_date) {
-      params.start_date = queryParams.start_date
-    }
-    
-    if (queryParams.end_date) {
-      params.end_date = queryParams.end_date
+      page_size: queryParams.limit,
+      task_id: queryParams.category || undefined,
+      start_date: queryParams.start_date || undefined,
+      end_date: queryParams.end_date || undefined
     }
     
     console.log('获取打卡记录列表，参数:', params) // 添加日志
-    const response = await getCheckRecords(params)
+    const response = await checkApi.getRecords(params)
     
-    // 假设后端返回的数据结构包含 results 和 count
-    recordList.value = response.results || response.data || []
-    total.value = response.count || response.total || 0
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
+    
+    // 尝试多种可能的响应格式
+    recordList.value = responseData.results || responseData || []
+    total.value = responseData.count || responseData.total || 0
     
     console.log('打卡记录列表数据:', recordList.value) // 添加日志
   } catch (error) {
@@ -434,8 +428,11 @@ const fetchData = async () => {
 // 获取类别选项
 const fetchCategories = async () => {
   try {
-    const response = await getTaskCategories()
-    categoryOptions.value = response.results || response.data || []
+    const response = await checkApi.getCategories()
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
+    
+    categoryOptions.value = responseData.results || responseData || []
     console.log('类型选项:', categoryOptions.value) // 添加日志
   } catch (error) {
     console.error('获取类型列表失败:', error) // 添加错误日志

@@ -50,6 +50,92 @@ const routes = [
           icon: 'Odometer'
         }
       },
+      // CMS内容管理模块
+      // 文章管理
+      {
+        path: 'cms/articles',
+        name: 'CmsArticles',
+        component: () => import('../views/cms/article/List.vue'),
+        meta: { 
+          title: '文章管理',
+          icon: 'Document',
+          parentTitle: 'CMS管理' 
+        }
+      },
+      {
+        path: 'cms/articles/create',
+        name: 'CreateArticle',
+        component: () => import('../views/cms/article/Create.vue'),
+        meta: { 
+          title: '创建文章',
+          parentTitle: 'CMS管理',
+          hidden: true
+        }
+      },
+      {
+        path: 'cms/articles/edit/:id',
+        name: 'EditArticle',
+        component: () => import('../views/cms/article/Edit.vue'),
+        meta: { 
+          title: '编辑文章',
+          parentTitle: 'CMS管理',
+          hidden: true
+        }
+      },
+      {
+        path: 'cms/articles/view/:id',
+        name: 'ViewArticle',
+        component: () => import('../views/cms/article/View.vue'),
+        meta: { 
+          title: '查看文章',
+          parentTitle: 'CMS管理',
+          hidden: true
+        }
+      },
+      // 分类管理
+      {
+        path: 'cms/categories',
+        name: 'CmsCategories',
+        component: () => import('../views/cms/category/List.vue'),
+        meta: { 
+          title: '分类管理',
+          icon: 'Folder',
+          parentTitle: 'CMS管理' 
+        }
+      },
+      // 标签管理
+      {
+        path: 'cms/tags',
+        name: 'CmsTags',
+        component: () => import('../views/cms/tag/List.vue'),
+        meta: { 
+          title: '标签管理',
+          icon: 'Collection',
+          parentTitle: 'CMS管理' 
+        }
+      },
+      // 评论管理
+      {
+        path: 'cms/comments',
+        name: 'CmsComments',
+        component: () => import('../views/cms/comment/List.vue'),
+        meta: { 
+          title: '评论管理',
+          icon: 'ChatDotRound',
+          parentTitle: 'CMS管理' 
+        }
+      },
+      // CMS统计分析
+      {
+        path: 'cms/statistics',
+        name: 'CmsStatistics',
+        component: () => import('../views/cms/statistics/Index.vue'),
+        meta: { 
+          title: '内容统计',
+          icon: 'DataAnalysis',
+          parentTitle: 'CMS管理' 
+        }
+      },
       // 打卡类型管理页面 - 直接定义，不使用嵌套
       {
         path: 'check/categories',

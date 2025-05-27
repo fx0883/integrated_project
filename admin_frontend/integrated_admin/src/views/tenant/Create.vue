@@ -125,6 +125,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { OfficeBuilding, Setting, Back } from '@element-plus/icons-vue'
 import { tenantApi } from '../../api'
+import { request } from '../../utils/request'
 
 // 路由
 const router = useRouter()
@@ -183,9 +184,9 @@ const submitForm = async () => {
     await tenantFormRef.value.validate()
     
     submitLoading.value = true
-    console.log('提交租户表单', tenantForm)
+    console.log('正在创建租户:', tenantForm)
     
-    // 准备API所需数据
+    // 处理租户基本信息
     const tenantData = {
       name: tenantForm.name,
       description: tenantForm.description,
@@ -195,19 +196,21 @@ const submitForm = async () => {
       contact_email: tenantForm.contact_email
     }
     
-    // 调用API创建租户
     try {
       const response = await tenantApi.createTenant(tenantData)
       console.log('租户创建成功:', response)
       
+      // 使用request.getResponseData从响应的data字段获取数据
+      const responseData = request.getResponseData(response)
+      
       // 如果成功创建租户，设置租户配额
-      if (response && response.id) {
+      if (responseData && responseData.id) {
         const quotaData = {
           max_users: tenantForm.max_users,
           max_storage: tenantForm.max_storage
         }
         
-        await tenantApi.updateTenantQuota(response.id, quotaData)
+        await tenantApi.updateTenantQuota(responseData.id, quotaData)
         console.log('租户配额设置成功')
       }
       

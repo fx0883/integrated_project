@@ -62,7 +62,7 @@ router.beforeEach(async (to, from, next) => {
     if (!authStore.user) {
       console.log('用户已认证但缺少用户信息，正在获取用户信息')
       try {
-        await authStore.getProfile()
+        await authStore.fetchCurrentUser()
         console.log('成功获取用户信息')
       } catch (error) {
         console.error('获取用户信息失败', error)

@@ -149,6 +149,8 @@ import { useAuthStore } from '../../stores'
 import { userApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import config from '../../config'
+import { getFullUrl } from '../../config'  // 导入getFullUrl函数
+import { request } from '../../utils/request'  // 导入request模块
 
 // 导入vue-cropper
 import 'vue-cropper/dist/index.css'
@@ -177,9 +179,12 @@ const userInitials = computed(() => {
   return name ? name.charAt(0).toUpperCase() : '?'
 })
 
-// 头像URL计算属性，添加baseUrl
+// 头像URL计算属性，添加时间戳防止缓存
 const avatarUrl = computed(() => {
-  return basicForm.avatar;
+  if (!basicForm.avatar) return '';
+  const timestamp = new Date().getTime();
+  const url = getFullUrl(basicForm.avatar);
+  return `${url}?t=${timestamp}`;
 })
 
 // 基本信息表单
@@ -258,8 +263,11 @@ const getUserInfo = async () => {
     console.log('正在获取当前用户信息...')
     
     // 调用API获取用户信息
-    const userInfo = await userApi.getCurrentUser()
-    console.log('API返回的用户信息:', userInfo)
+    const response = await userApi.getCurrentUser()
+    console.log('API返回的用户信息:', response)
+    
+    // 使用getResponseData辅助函数获取data字段里的数据
+    const userInfo = request.getResponseData(response)
     
     if (userInfo) {
       basicForm.username = userInfo.username || ''
@@ -272,6 +280,7 @@ const getUserInfo = async () => {
       
       // 更新状态管理中的用户信息
       authStore.setUser(userInfo)
+      console.log('已更新认证状态中的用户信息')
     } else {
       console.error('获取用户信息失败: 返回的数据为空')
       ElMessage.error('获取用户信息失败')
@@ -412,10 +421,13 @@ const handleCropConfirm = () => {
           类型: file.type
         });
         
+        // 先关闭裁剪对话框，再上传文件
+        cropperVisible.value = false;
+        console.log('关闭裁剪对话框');
+        
         // 上传裁剪后的文件
         console.log('开始上传裁剪后的文件...');
         uploadAvatarFile(file);
-        cropperVisible.value = false;
       } catch (error) {
         console.error('处理裁剪图片数据时出错:', error);
         console.error('错误详情:', {
@@ -424,6 +436,7 @@ const handleCropConfirm = () => {
           错误堆栈: error.stack
         });
         ElMessage.error('处理裁剪图片数据失败，请重试');
+        cropperVisible.value = false;
       }
     });
   } catch (error) {
@@ -434,6 +447,7 @@ const handleCropConfirm = () => {
       错误堆栈: error.stack
     });
     ElMessage.error('裁剪图片失败，请重试');
+    cropperVisible.value = false;
   }
 }
 
@@ -469,11 +483,25 @@ const uploadAvatarFile = async (file) => {
           const result = await userApi.uploadAvatar(file);
           console.log('头像上传API返回结果:', result);
           
+          // 使用getResponseData辅助函数获取data字段里的数据
+          const responseData = request.getResponseData(result);
+          
           // 如果后端返回了头像URL，直接使用，确保加上baseUrl
-          if (result && result.avatar) {
-            console.log('使用API返回的头像URL:', result.avatar);
-            basicForm.avatar = result.avatar;
+          if (responseData && responseData.avatar) {
+            console.log('使用API返回的头像URL:', responseData.avatar);
+            basicForm.avatar = responseData.avatar;
             console.log('设置的头像路径:', basicForm.avatar);
+            
+            // 更新authStore中的用户信息
+            const updatedUser = { ...authStore.user, avatar: responseData.avatar };
+            authStore.setUser(updatedUser);
+            console.log('已更新认证状态中的用户头像');
+            
+            // 强制刷新头像显示
+            nextTick(() => {
+              const img = document.querySelector('.avatar-image');
+              if (img) img.src = getFullUrl(basicForm.avatar) + '?t=' + new Date().getTime();
+            });
           } else {
             console.log('API未返回头像URL，重新获取用户信息');
             // 否则重新获取用户信息
@@ -532,11 +560,15 @@ const updateBasicInfo = async () => {
     console.log('正在更新基本信息:', basicForm)
     
     // 调用API更新用户信息
-    await userApi.updateUser('me', {
+    const response = await userApi.updateUser('me', {
       email: basicForm.email,
       phone: basicForm.phone,
       real_name: basicForm.real_name
     })
+    
+    // 使用getResponseData辅助函数获取响应数据
+    const responseData = request.getResponseData(response)
+    console.log('更新用户信息响应:', responseData)
     
     basicLoading.value = false
     
@@ -545,7 +577,7 @@ const updateBasicInfo = async () => {
     
     ElMessage({
       type: 'success',
-      message: '基本信息更新成功'
+      message: response.message || '基本信息更新成功'
     })
   } catch (error) {
     console.error('更新基本信息失败:', error)
@@ -563,16 +595,20 @@ const updatePassword = async () => {
     console.log('正在更新密码...')
     
     // 调用API更新密码
-    await userApi.changeCurrentUserPassword({
+    const response = await userApi.changeCurrentUserPassword({
       old_password: passwordForm.oldPassword,
       new_password: passwordForm.newPassword
     })
+    
+    // 使用getResponseData辅助函数获取响应数据
+    const responseData = request.getResponseData(response)
+    console.log('更新密码响应:', responseData)
     
     passwordLoading.value = false
     
     ElMessage({
       type: 'success',
-      message: '密码更新成功'
+      message: response.message || '密码更新成功'
     })
     
     // 重置表单

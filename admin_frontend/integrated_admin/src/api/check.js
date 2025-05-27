@@ -100,3 +100,25 @@ export function updateCheckRecord(id, data) {
 export function deleteCheckRecord(id) {
   return request.delete(`/check-records/${id}/`)
 } 
+
+// 将所有API函数整合到一个对象中并默认导出
+const checkApi = {
+  getTaskCategories,
+  createTaskCategory,
+  getTaskCategory,
+  updateTaskCategory,
+  patchTaskCategory,
+  deleteTaskCategory,
+  getTasks,
+  createTask,
+  getTask,
+  updateTask,
+  deleteTask,
+  getCheckRecords,
+  createCheckRecord,
+  getCheckRecord,
+  updateCheckRecord,
+  deleteCheckRecord
+}
+
+export default checkApi 

@@ -116,6 +116,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCheckRecords } from '@/api/check'
 import { getTasks } from '@/api/check'
 import userApi from '@/api/user'
+import { request } from '../../utils/request'
 
 // 状态和数据
 const recordList = ref([])
@@ -143,43 +144,32 @@ onMounted(() => {
 
 // 获取打卡记录列表数据
 const fetchData = async () => {
-  loading.value = true
   try {
-    // 构建查询参数
+    loading.value = true
+    
     const params = {
       page: queryParams.page,
-      page_size: queryParams.limit
+      page_size: queryParams.limit,
+      task_id: queryParams.task || undefined,
+      user_id: queryParams.user || undefined,
+      start_date: queryParams.start_date || undefined,
+      end_date: queryParams.end_date || undefined
     }
     
-    if (queryParams.user) {
-      params.user = queryParams.user
-    }
-    
-    if (queryParams.task) {
-      params.task = queryParams.task
-    }
-    
-    if (queryParams.start_date) {
-      params.start_date = queryParams.start_date
-    }
-    
-    if (queryParams.end_date) {
-      params.end_date = queryParams.end_date
-    }
-    
-    console.log('获取打卡记录列表，参数:', params) // 添加日志
     const response = await getCheckRecords(params)
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
     
-    // 假设后端返回的数据结构包含 results 和 count
-    recordList.value = response.results || response.data || []
-    total.value = response.count || response.total || 0
+    // 尝试多种可能的响应格式
+    recordList.value = responseData.results || responseData || []
+    total.value = responseData.count || responseData.total || 0
     
-    console.log('打卡记录列表数据:', recordList.value) // 添加日志
-  } catch (error) {
-    console.error('获取打卡记录列表失败:', error) // 添加错误日志
-    ElMessage.error('获取打卡记录列表失败，请稍后重试')
-  } finally {
     loading.value = false
+    console.log('获取打卡记录成功', recordList.value)
+  } catch (error) {
+    console.error('获取打卡记录失败:', error)
+    loading.value = false
+    ElMessage.error('获取打卡记录失败')
   }
 }
 
@@ -187,7 +177,10 @@ const fetchData = async () => {
 const fetchUsers = async () => {
   try {
     const response = await userApi.getUsers({limit: 100})
-    userOptions.value = response.results || response.data || []
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
+    
+    userOptions.value = responseData.results || responseData || []
     console.log('用户选项:', userOptions.value) // 添加日志
   } catch (error) {
     console.error('获取用户列表失败:', error) // 添加错误日志
@@ -199,7 +192,10 @@ const fetchUsers = async () => {
 const fetchTasks = async () => {
   try {
     const response = await getTasks({limit: 100})
-    taskOptions.value = response.results || response.data || []
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
+    
+    taskOptions.value = responseData.results || responseData || []
     console.log('任务选项:', taskOptions.value) // 添加日志
   } catch (error) {
     console.error('获取任务列表失败:', error) // 添加错误日志

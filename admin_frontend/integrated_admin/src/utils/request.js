@@ -40,92 +40,132 @@ service.interceptors.response.use(
     
     console.log('响应数据结构:', res)
     
-    // 请求成功 - 处理自定义API响应格式
-    if (res.success && (res.code === 0 || res.code === 2000 || (res.code >= 2000 && res.code < 3000))) {
-      // 直接返回完整响应，让业务代码决定如何处理
+    // 统一处理API响应格式，确保所有响应都符合标准格式
+    // 标准格式：{ success: true/false, code: 2000, message: "操作成功/失败信息", data: {} }
+    
+    // 已经符合标准格式的响应直接返回
+    if (res.success !== undefined && res.code !== undefined && res.message !== undefined) {
       return res
     }
     
-    // 如果没有success字段，可能是标准RESTful响应，直接返回
-    if (res.success === undefined) {
-      return res
+    // 处理不符合标准格式的响应，将其转换为标准格式
+    let standardResponse = {
+      success: true,
+      code: 2000,
+      message: '操作成功',
+      data: null
     }
     
-    // 处理业务错误
-    const errorMsg = res.message || '请求失败'
-    console.error('API请求业务错误:', errorMsg, res)
+    // 将原始数据放入data字段
+    if (res) {
+      // 处理已经带有分页信息的响应
+      if (res.count !== undefined && res.results !== undefined) {
+        standardResponse.data = {
+          pagination: {
+            count: res.count,
+            next: res.next,
+            previous: res.previous,
+            page_size: response.config.params?.page_size || 10,
+            current_page: response.config.params?.page || 1,
+            total_pages: Math.ceil(res.count / (response.config.params?.page_size || 10))
+          },
+          results: res.results
+        }
+      } else {
+        // 处理普通响应
+        standardResponse.data = res
+      }
+    }
     
-    ElMessage({
-      message: errorMsg,
-      type: 'error',
-      duration: 5 * 1000
-    })
-    
-    return Promise.reject(new Error(errorMsg))
+    console.log('标准化后的响应:', standardResponse)
+    return standardResponse
   },
   async error => {
     console.error('API请求错误:', error.response || error)
     
     const { response } = error
     
+    // 创建统一的错误响应格式
+    let errorResponse = {
+      success: false,
+      code: 5000,  // 默认服务器错误
+      message: '服务器内部错误',
+      data: null
+    }
+    
     if (response) {
-      // 处理HTTP错误状态码
+      // 根据HTTP状态码设置业务状态码
       switch (response.status) {
-        case 401: // 未授权
+        case 400:
+          errorResponse.code = 4000
+          errorResponse.message = '请求参数错误'
+          break
+        case 401:
+          errorResponse.code = 4001
+          errorResponse.message = '认证失败，请登录'
           // 尝试刷新Token
           await handleUnauthorized()
           break
-        case 403: // 禁止访问
-          ElMessage({
-            message: '您没有权限执行此操作',
-            type: 'error',
-            duration: 5 * 1000
-          })
+        case 403:
+          errorResponse.code = 4003
+          errorResponse.message = '您没有权限执行此操作'
           break
-        case 404: // 资源不存在
-          ElMessage({
-            message: '请求的资源不存在',
-            type: 'error',
-            duration: 5 * 1000
-          })
+        case 404:
+          errorResponse.code = 4004
+          errorResponse.message = '请求的资源不存在'
           break
-        case 500: // 服务器错误
-          ElMessage({
-            message: '服务器内部错误，请稍后再试',
-            type: 'error',
-            duration: 5 * 1000
-          })
+        case 405:
+          errorResponse.code = 4005
+          errorResponse.message = '方法不允许'
+          break
+        case 429:
+          errorResponse.code = 4029
+          errorResponse.message = '请求过于频繁'
+          break
+        case 500:
+          errorResponse.code = 5000
+          errorResponse.message = '服务器内部错误'
           break
         default:
-          // 尝试从响应中获取错误信息
-          let errorMsg = '请求失败'
+          errorResponse.code = 5000
+          errorResponse.message = '请求失败'
+      }
+      
+      // 尝试从响应中获取更详细的错误信息
+      try {
+        if (response.data) {
+          // 保存原始错误数据
+          errorResponse.data = response.data
           
-          try {
-            if (response.data && response.data.message) {
-              errorMsg = response.data.message
-            } else if (response.data && response.data.detail) {
-              errorMsg = response.data.detail
+          // 如果响应已经符合标准格式，直接使用
+          if (response.data.success === false && response.data.code && response.data.message) {
+            errorResponse = response.data
+          } else {
+            // 提取错误消息
+            if (response.data.message) {
+              errorResponse.message = response.data.message
+            } else if (response.data.detail) {
+              errorResponse.message = response.data.detail
             }
-          } catch (e) {
-            console.error('解析错误响应失败:', e)
           }
-          
-          ElMessage({
-            message: errorMsg,
-            type: 'error',
-            duration: 5 * 1000
-          })
+        }
+      } catch (e) {
+        console.error('解析错误响应失败:', e)
       }
     } else {
-      // 处理网络错误
-      ElMessage({
-        message: '网络连接失败，请检查您的网络',
-        type: 'error',
-        duration: 5 * 1000
-      })
+      // 网络错误
+      errorResponse.code = 5000
+      errorResponse.message = '网络连接失败，请检查您的网络'
     }
     
-    return Promise.reject(error)
+    // 显示错误消息
+    ElMessage({
+      message: errorResponse.message,
+      type: 'error',
+      duration: 5 * 1000
+    })
+    
+    return Promise.reject(errorResponse)
   }
 )
 
@@ -158,10 +198,22 @@ async function handleUnauthorized() {
         refresh: refreshToken
       })
       
-      // 更新Token
-      const access = response.access
-      if (access) {
-        localStorage.setItem('access_token', access)
+      // 使用辅助函数获取响应数据
+      const responseData = request.getResponseData(response)
+      
+      // 尝试从不同格式中获取token
+      let newToken = null
+      
+      if (responseData?.token) {
+        // 新的API格式
+        newToken = responseData.token
+      } else if (responseData?.access) {
+        // 旧的API格式
+        newToken = responseData.access
+      }
+      
+      if (newToken) {
+        localStorage.setItem('access_token', newToken)
         
         // 提示用户
         ElMessage({
@@ -270,6 +322,16 @@ export const request = {
       responseType: 'blob',
       ...config
     })
+  },
+  
+  // 辅助函数：安全获取响应数据
+  getResponseData(response) {
+    // 确保从标准响应格式的data字段获取数据
+    if (response && response.success !== undefined) {
+      return response.data
+    }
+    // 如果响应不符合标准格式，返回整个响应（兼容旧代码）
+    return response
   }
 }
 

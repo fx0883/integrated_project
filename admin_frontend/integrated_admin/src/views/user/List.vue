@@ -142,6 +142,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { userApi, tenantApi } from '../../api'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
+import { request } from '../../utils/request'
 
 // 路由
 const router = useRouter()
@@ -198,10 +199,23 @@ const searchTenants = async (query) => {
       page_size: 20,
       page: 1
     })
-    tenantOptions.value = response.results || []
+    // 使用标准化的响应格式
+    if (response.success) {
+      // 直接从data字段获取数据
+      const responseData = request.getResponseData(response)
+      if (responseData.pagination) {
+        tenantOptions.value = responseData.results || []
+      } else {
+        tenantOptions.value = Array.isArray(responseData) ? responseData : []
+      }
+    } else {
+      console.error('搜索租户失败:', response.message)
+      ElMessage.error(response.message || '搜索租户失败')
+    }
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
+    ElMessage.error(error.message || '搜索租户失败')
     tenantsLoading.value = false
   }
 }
@@ -232,10 +246,25 @@ const getUserList = async () => {
     
     // 调用API获取用户列表
     const response = await userApi.getUsers(queryParams)
-    userList.value = response.results || []
-    total.value = response.count || 0
-    
-    console.log('获取用户列表成功:', response);
+    // 使用标准格式的响应数据
+    if (response.success) {
+      // 直接从data字段获取数据
+      const responseData = request.getResponseData(response)
+      // 处理分页数据
+      if (responseData.pagination) {
+        userList.value = responseData.results || []
+        total.value = responseData.pagination.count || 0
+      } else {
+        // 如果没有分页信息，直接使用data
+        userList.value = Array.isArray(responseData) ? responseData : []
+        total.value = userList.value.length
+      }
+      console.log('获取用户列表成功:', response);
+    } else {
+      // 错误处理
+      console.error('获取用户列表失败:', response.message);
+      ElMessage.error(response.message || '获取用户列表失败');
+    }
     loading.value = false
   } catch (error) {
     console.error('获取用户列表失败:', error)
@@ -244,15 +273,8 @@ const getUserList = async () => {
     // 错误处理增强，显示更详细的错误信息
     let errorMessage = '获取用户列表失败';
     
-    if (error.response) {
-      console.error('错误响应状态:', error.response.status);
-      console.error('错误响应数据:', error.response.data);
-      
-      if (error.response.data && error.response.data.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error.response.data && error.response.data.message) {
-        errorMessage = error.response.data.message;
-      }
+    if (error.message) {
+      errorMessage = error.message;
     }
     
     ElMessage.error(errorMessage)
@@ -309,12 +331,18 @@ const handleDelete = (row) => {
     }
   ).then(async () => {
     try {
-      await userApi.deleteUser(row.id)
-      ElMessage.success('删除用户成功')
-      getUserList()
+      const response = await userApi.deleteUser(row.id)
+      if (response.success) {
+        // 可能有额外返回数据在data字段
+        const responseData = request.getResponseData(response)
+        ElMessage.success(response.message || '删除用户成功')
+        getUserList()
+      } else {
+        ElMessage.error(response.message || '删除用户失败')
+      }
     } catch (error) {
       console.error('删除用户失败:', error)
-      ElMessage.error(error.response?.data?.message || '删除用户失败')
+      ElMessage.error(error.message || '删除用户失败')
     }
   }).catch(() => {
     // 取消删除
@@ -333,12 +361,18 @@ const handleActivate = (row) => {
     }
   ).then(async () => {
     try {
-      await userApi.activateUser(row.id)
-      ElMessage.success('激活用户成功')
-      getUserList()
+      const response = await userApi.activateUser(row.id)
+      if (response.success) {
+        // 可能有额外返回数据在data字段
+        const responseData = request.getResponseData(response)
+        ElMessage.success(response.message || '激活用户成功')
+        getUserList()
+      } else {
+        ElMessage.error(response.message || '激活用户失败')
+      }
     } catch (error) {
       console.error('激活用户失败:', error)
-      ElMessage.error(error.response?.data?.message || '激活用户失败')
+      ElMessage.error(error.message || '激活用户失败')
     }
   }).catch(() => {
     // 取消操作
@@ -357,12 +391,18 @@ const handleDisable = (row) => {
     }
   ).then(async () => {
     try {
-      await userApi.disableUser(row.id)
-      ElMessage.success('禁用用户成功')
-      getUserList()
+      const response = await userApi.disableUser(row.id)
+      if (response.success) {
+        // 可能有额外返回数据在data字段
+        const responseData = request.getResponseData(response)
+        ElMessage.success(response.message || '禁用用户成功')
+        getUserList()
+      } else {
+        ElMessage.error(response.message || '禁用用户失败')
+      }
     } catch (error) {
       console.error('禁用用户失败:', error)
-      ElMessage.error(error.response?.data?.message || '禁用用户失败')
+      ElMessage.error(error.message || '禁用用户失败')
     }
   }).catch(() => {
     // 取消操作
@@ -381,11 +421,22 @@ const handleResetPassword = (row) => {
     }
   ).then(async () => {
     try {
-      await userApi.resetPassword(row.id)
-      ElMessage.success('密码重置成功，新密码已发送到用户邮箱')
+      const response = await userApi.resetPassword(row.id)
+      if (response.success) {
+        // 密码重置可能会在data字段返回新密码信息
+        const responseData = request.getResponseData(response)
+        // 如果返回了新密码，可以显示给管理员
+        let successMsg = response.message || '密码重置成功，新密码已发送到用户邮箱'
+        if (responseData && responseData.new_password) {
+          successMsg += `：${responseData.new_password}`
+        }
+        ElMessage.success(successMsg)
+      } else {
+        ElMessage.error(response.message || '重置密码失败')
+      }
     } catch (error) {
       console.error('重置密码失败:', error)
-      ElMessage.error(error.response?.data?.message || '重置密码失败')
+      ElMessage.error(error.message || '重置密码失败')
     }
   }).catch(() => {
     // 取消操作
@@ -404,12 +455,18 @@ const handleGrantSuperAdmin = (row) => {
     }
   ).then(async () => {
     try {
-      await userApi.grantSuperAdmin(row.id)
-      ElMessage.success('已成功设置为超级管理员')
-      getUserList()
+      const response = await userApi.grantSuperAdmin(row.id)
+      if (response.success) {
+        // 可能有额外返回数据在data字段
+        const responseData = request.getResponseData(response)
+        ElMessage.success(response.message || '已成功设置为超级管理员')
+        getUserList()
+      } else {
+        ElMessage.error(response.message || '设置超级管理员失败')
+      }
     } catch (error) {
       console.error('设置超级管理员失败:', error)
-      ElMessage.error(error.response?.data?.message || '设置超级管理员失败')
+      ElMessage.error(error.message || '设置超级管理员失败')
     }
   }).catch(() => {
     // 取消操作
@@ -428,12 +485,18 @@ const handleRevokeSuperAdmin = (row) => {
     }
   ).then(async () => {
     try {
-      await userApi.revokeSuperAdmin(row.id)
-      ElMessage.success('已成功撤销超级管理员权限')
-      getUserList()
+      const response = await userApi.revokeSuperAdmin(row.id)
+      if (response.success) {
+        // 可能有额外返回数据在data字段
+        const responseData = request.getResponseData(response)
+        ElMessage.success(response.message || '已成功撤销超级管理员权限')
+        getUserList()
+      } else {
+        ElMessage.error(response.message || '撤销超级管理员权限失败')
+      }
     } catch (error) {
       console.error('撤销超级管理员权限失败:', error)
-      ElMessage.error(error.response?.data?.message || '撤销超级管理员权限失败')
+      ElMessage.error(error.message || '撤销超级管理员权限失败')
     }
   }).catch(() => {
     // 取消操作

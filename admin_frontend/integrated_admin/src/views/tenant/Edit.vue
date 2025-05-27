@@ -112,6 +112,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { tenantApi } from '../../api'
 import { ElMessage } from 'element-plus'
+import { request } from '../../utils/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -167,13 +168,18 @@ const rules = {
 
 // 获取租户详情
 const getTenantDetail = async () => {
-  if (isCreate.value) return
+  if (!tenantId.value) return
   
   try {
+    console.log('获取租户详情, ID:', tenantId.value)
     loading.value = true
-    console.log('获取租户详情，ID:', tenantId.value)
     
-    const data = await tenantApi.getTenantById(tenantId.value)
+    // 获取租户详情
+    const response = await tenantApi.getTenantById(tenantId.value)
+    console.log('租户详情API响应:', response)
+    
+    // 使用request.getResponseData从data字段获取数据
+    const data = request.getResponseData(response)
     console.log('租户详情:', data)
     
     // 填充表单数据
@@ -203,7 +209,10 @@ const getQuotaInfo = async () => {
     quotaLoading.value = true
     
     // 获取配额使用情况
-    const data = await tenantApi.getTenantQuotaUsage(tenantId.value)
+    const response = await tenantApi.getTenantQuotaUsage(tenantId.value)
+    
+    // 使用request.getResponseData从data字段获取数据
+    const data = request.getResponseData(response)
     console.log('租户配额使用情况:', data)
     
     // 设置配额表单

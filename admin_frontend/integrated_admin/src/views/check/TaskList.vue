@@ -246,6 +246,8 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
+import { checkApi } from '../../api'
+import { request } from '../../utils/request'  // 导入request模块
 import { 
   getTasks, createTask, getTask, updateTask, deleteTask
 } from '@/api/check'
@@ -331,51 +333,45 @@ watch(
 
 // 获取任务列表数据
 const fetchData = async () => {
-  loading.value = true
   try {
-    // 构建查询参数
+    loading.value = true
+    
     const params = {
       page: queryParams.page,
-      page_size: queryParams.limit
+      page_size: queryParams.limit,
+      category_id: queryParams.category || undefined,
+      status: queryParams.status || undefined,
+      search: queryParams.search || undefined
     }
     
-    if (queryParams.search) {
-      params.search = queryParams.search
-    }
+    const response = await checkApi.getTasks(params)
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
     
-    if (queryParams.category) {
-      params.category = queryParams.category
-    }
+    // 尝试多种可能的响应格式
+    taskList.value = responseData.results || responseData || []
+    total.value = responseData.count || responseData.total || 0
     
-    if (queryParams.status) {
-      params.status = queryParams.status
-    }
-    
-    console.log('获取任务列表，参数:', params) // 添加日志
-    const response = await getTasks(params)
-    
-    // 假设后端返回的数据结构包含 results 和 count
-    taskList.value = response.results || response.data || []
-    total.value = response.count || response.total || 0
-    
-    console.log('任务列表数据:', taskList.value) // 添加日志
-  } catch (error) {
-    console.error('获取任务列表失败:', error) // 添加错误日志
-    ElMessage.error('获取任务列表失败，请稍后重试')
-  } finally {
     loading.value = false
+    console.log('获取任务列表成功', taskList.value)
+  } catch (error) {
+    console.error('获取任务列表失败:', error)
+    loading.value = false
+    ElMessage.error('获取任务列表失败')
   }
 }
 
 // 获取类别选项
 const fetchCategories = async () => {
   try {
-    const response = await getTaskCategories()
-    categoriesOptions.value = response.results || response.data || []
-    console.log('类型选项:', categoriesOptions.value) // 添加日志
+    const response = await checkApi.getCategories({limit: 100})
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
+    
+    categoriesOptions.value = responseData.results || responseData || []
   } catch (error) {
-    console.error('获取类型列表失败:', error) // 添加错误日志
-    ElMessage.error('获取类型列表失败，请稍后重试')
+    console.error('获取分类列表失败:', error)
+    ElMessage.error('获取分类列表失败')
   }
 }
 

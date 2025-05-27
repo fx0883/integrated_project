@@ -150,6 +150,7 @@ import {
   patchTaskCategory,
   deleteTaskCategory 
 } from '@/api/check'
+import { request } from '../../utils/request'  // 导入request模块
 
 // 添加调试日志，检查组件是否被正确加载
 console.log('========= CategoryList组件被导入 =========')
@@ -240,50 +241,28 @@ const fetchCategories = async () => {
   console.log('开始获取打卡类型列表，当前页:', currentPage.value, '每页条数:', pageSize.value)
   
   try {
-    // 使用API服务获取数据
-    const response = await getTaskCategories({
+    const params = {
       page: currentPage.value,
       page_size: pageSize.value,
       search: searchKeyword.value || undefined
-    })
+    }
     
-    console.log('API原始响应:', response)
+    const response = await getTaskCategories(params)
+    // 使用request.getResponseData从data字段获取数据
+    const responseData = request.getResponseData(response)
     
-    // 检查API返回格式
-    if (response.success && response.code === 2000 && response.data) {
-      // 当前后端返回格式: {success, code, message, data: {pagination, results}}
-      console.log('识别到自定义返回格式')
-      
-      // 从data中获取结果
-      const { pagination, results } = response.data
-      categories.value = results || []
-      totalItems.value = pagination?.count || 0
-      
-      console.log('解析后的数据:', {
-        categories: categories.value,
-        totalItems: totalItems.value,
-        pagination: pagination
-      })
-    } else if (response.results && typeof response.count === 'number') {
-      // DRF标准分页格式: {count, next, previous, results}
-      console.log('识别到Django REST Framework标准分页格式')
-      categories.value = response.results
-      totalItems.value = response.count
-    } else if (Array.isArray(response)) {
-      // 直接返回数组格式
-      console.log('识别到数组格式响应')
-      categories.value = response
-      totalItems.value = response.length
+    // 处理不同格式的响应
+    if (responseData && responseData.results && typeof responseData.count === 'number') {
+      // 分页格式
+      categories.value = responseData.results
+      totalItems.value = responseData.count
+    } else if (Array.isArray(responseData)) {
+      // 数组格式
+      categories.value = responseData
+      totalItems.value = responseData.length
     } else {
-      // 其他格式，作为对象处理
-      console.log('识别到其他格式响应，尝试作为对象处理')
-      categories.value = Array.isArray(response) ? response : []
-      totalItems.value = categories.value.length
-      
-      // 如果没有数据，输出警告但不使用模拟数据
-      if (categories.value.length === 0) {
-        console.warn('接口未返回数据或数据格式不符合预期')
-      }
+      categories.value = []
+      totalItems.value = 0
     }
     
     // 调试日志
