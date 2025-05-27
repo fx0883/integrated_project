@@ -621,7 +621,7 @@ const processAvatar = (avatar) => {
 
 // 组件挂载后初始化图表
 onMounted(() => {
-  authStore.getProfile()
+  authStore.fetchCurrentUser()
   initCountData()
   nextTick(() => {
     initTrendChart()
