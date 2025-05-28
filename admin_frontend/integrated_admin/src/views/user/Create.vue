@@ -96,6 +96,7 @@
             </el-radio-group>
           </el-form-item>
           
+          <!-- 需求3: 超级管理员登录可以创建所有租户的用户，需要选择租户 -->
           <el-form-item label="所属租户" prop="tenant_id" v-if="isSuperAdmin">
             <el-select 
               v-model="userForm.tenant_id" 
@@ -280,11 +281,11 @@ const rules = {
   tenant_id: [
     { required: true, message: '请选择所属租户', trigger: 'change', 
       validator: (rule, value, callback) => {
-        // 如果不是超级管理员或者已选择租户，通过验证
-        if (!isSuperAdmin.value || value) {
-          callback()
-        } else {
+        // 如果是超级管理员，必须选择租户
+        if (isSuperAdmin.value && !value) {
           callback(new Error('请选择所属租户'))
+        } else {
+          callback()
         }
       }
     }
@@ -329,11 +330,11 @@ const submitForm = async () => {
         userData.is_member = true
       }
       
-      // 如果是超级管理员且选择了租户
+      // 如果是超级管理员且选择了租户 - 需求3
       if (isSuperAdmin.value && userForm.tenant_id) {
         userData.tenant_id = userForm.tenant_id
       } else if (!isSuperAdmin.value) {
-        // 如果不是超级管理员，使用当前用户的租户
+        // 如果不是超级管理员，使用当前用户的租户 - 需求4
         userData.tenant_id = userInfo.value.tenant_id
       }
       

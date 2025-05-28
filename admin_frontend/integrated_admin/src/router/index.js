@@ -83,7 +83,7 @@ router.beforeEach(async (to, from, next) => {
       return
     }
     
-    // 超级管理员访问限制 - 只能访问用户管理和租户管理页面
+    // 需求1: 超级管理员访问限制 - 只能访问用户管理和租户管理页面
     if (authStore.user.is_super_admin) {
       const allowedPaths = ['/dashboard', '/users', '/tenants', '/profile', '/403', '/404'];
       const isAllowedPath = allowedPaths.some(path => to.path.startsWith(path));
@@ -95,7 +95,7 @@ router.beforeEach(async (to, from, next) => {
       }
     }
     
-    // 租户管理员不能访问租户管理页面
+    // 需求2: 租户管理员不能访问租户管理页面
     if (authStore.user.is_admin && !authStore.user.is_super_admin && 
         to.path.startsWith('/tenants')) {
       console.log('租户管理员尝试访问租户管理页面，重定向到403页面')
