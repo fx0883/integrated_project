@@ -122,8 +122,8 @@
         </el-form-item>
         <el-form-item label="类型" prop="is_system" v-if="isSystemAdmin || dialogType === 'view'">
           <el-radio-group v-model="categoryForm.is_system">
-            <el-radio :label="false">自定义</el-radio>
-            <el-radio :label="true">系统预设</el-radio>
+            <el-radio :value="false" label="自定义">自定义</el-radio>
+            <el-radio :value="true" label="系统预设">系统预设</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>

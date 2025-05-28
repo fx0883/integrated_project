@@ -409,4 +409,8 @@ class ChangePasswordView(generics.UpdateAPIView):
     
     # 去掉 patch 方法的 DRF 注解
     def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs) 
+        return self.partial_update(request, *args, **kwargs)
+    
+    # 去掉 post 方法的 DRF 注解
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs) 

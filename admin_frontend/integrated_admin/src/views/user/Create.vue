@@ -90,9 +90,9 @@
           
           <el-form-item label="角色" prop="role">
             <el-radio-group v-model="userForm.role">
-              <el-radio label="user">普通用户</el-radio>
-              <el-radio label="admin">管理员</el-radio>
-              <el-radio v-if="isSuperAdmin" label="super_admin">超级管理员</el-radio>
+              <el-radio value="user" label="普通用户">普通用户</el-radio>
+              <el-radio value="admin" label="管理员">管理员</el-radio>
+              <el-radio v-if="isSuperAdmin" value="super_admin" label="超级管理员">超级管理员</el-radio>
             </el-radio-group>
           </el-form-item>
           

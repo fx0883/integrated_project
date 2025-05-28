@@ -32,8 +32,8 @@
             <el-form-item label="内容" prop="content">
               <div class="editor-toolbar">
                 <el-radio-group v-model="articleForm.content_type" size="small">
-                  <el-radio-button label="markdown">Markdown</el-radio-button>
-                  <el-radio-button label="html">富文本</el-radio-button>
+                  <el-radio-button value="markdown" label="Markdown">Markdown</el-radio-button>
+                  <el-radio-button value="html" label="富文本">富文本</el-radio-button>
                 </el-radio-group>
               </div>
               

@@ -146,7 +146,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useAuthStore } from '../../stores'
-import { userApi } from '../../api'
+import { userApi, authApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import config from '../../config'
 import { getFullUrl } from '../../config'  // 导入getFullUrl函数
@@ -595,9 +595,10 @@ const updatePassword = async () => {
     console.log('正在更新密码...')
     
     // 调用API更新密码
-    const response = await userApi.changeCurrentUserPassword({
+    const response = await authApi.changeCurrentUserPassword({
       old_password: passwordForm.oldPassword,
-      new_password: passwordForm.newPassword
+      new_password: passwordForm.newPassword,
+      new_password_confirm: passwordForm.confirmPassword
     })
     
     // 使用getResponseData辅助函数获取响应数据

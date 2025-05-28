@@ -44,6 +44,16 @@ export const authApi = {
   // 验证Token
   verifyToken(data) {
     return request.post('/auth/token/verify/', data)
+  },
+  
+  // 修改密码
+  changePassword(id, data) {
+    return request.post(`/auth/${id}/change-password/`, data)
+  },
+  
+  // 修改当前用户密码
+  changeCurrentUserPassword(data) {
+    return request.post('/auth/me/change-password/', data)
   }
 }
 

@@ -44,9 +44,9 @@
               <span>使用趋势</span>
               <div class="chart-actions">
                 <el-radio-group v-model="trendPeriod" size="small">
-                  <el-radio-button label="week">本周</el-radio-button>
-                  <el-radio-button label="month">本月</el-radio-button>
-                  <el-radio-button label="year">全年</el-radio-button>
+                  <el-radio-button value="week" label="本周">本周</el-radio-button>
+                  <el-radio-button value="month" label="本月">本月</el-radio-button>
+                  <el-radio-button value="year" label="全年">全年</el-radio-button>
                 </el-radio-group>
               </div>
             </div>

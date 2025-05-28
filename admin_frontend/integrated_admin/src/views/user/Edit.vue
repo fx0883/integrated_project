@@ -88,9 +88,9 @@
           
           <el-form-item label="角色" prop="role">
             <el-radio-group v-model="userForm.role" :disabled="!canChangeRole">
-              <el-radio label="user">普通用户</el-radio>
-              <el-radio label="admin">管理员</el-radio>
-              <el-radio v-if="isSuperAdmin" label="super_admin">超级管理员</el-radio>
+              <el-radio value="user" label="普通用户">普通用户</el-radio>
+              <el-radio value="admin" label="管理员">管理员</el-radio>
+              <el-radio v-if="isSuperAdmin" value="super_admin" label="超级管理员">超级管理员</el-radio>
             </el-radio-group>
           </el-form-item>
           
@@ -241,7 +241,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { userApi, tenantApi } from '../../api'
+import { userApi, tenantApi, authApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Back } from '@element-plus/icons-vue'
 import 'vue-cropper/dist/index.css'
@@ -512,9 +512,9 @@ const submitPasswordForm = async () => {
     passwordLoading.value = true
     
     // 调用API更新用户密码
-    await userApi.changePassword(userId.value, {
-      password: passwordForm.password,
-      password_confirm: passwordForm.password_confirm
+    await authApi.changePassword(userId.value, {
+      new_password: passwordForm.password,
+      new_password_confirm: passwordForm.password_confirm
     })
     
     passwordLoading.value = false

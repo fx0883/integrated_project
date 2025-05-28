@@ -32,16 +32,6 @@ export const userApi = {
     return request.delete(`/users/${id}/`)
   },
   
-  // 修改密码
-  changePassword(id, data) {
-    return request.post(`/users/${id}/change-password/`, data)
-  },
-  
-  // 修改当前用户密码
-  changeCurrentUserPassword(data) {
-    return request.post('/users/me/change-password/', data)
-  },
-  
   // 重置用户密码
   resetPassword(id) {
     return request.post(`/users/${id}/reset-password/`)
