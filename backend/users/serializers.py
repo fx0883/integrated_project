@@ -213,6 +213,15 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True, write_only=True)
     new_password_confirm = serializers.CharField(required=True, write_only=True)
     
+    def validate_old_password(self, value):
+        """
+        验证旧密码是否正确
+        """
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("旧密码不正确")
+        return value
+    
     def validate(self, data):
         """
         验证新密码的一致性和强度

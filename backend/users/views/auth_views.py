@@ -11,7 +11,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_spectacular.utils import extend_schema
 from common.authentication.jwt_auth import generate_jwt_token, refresh_jwt_token
 from users.serializers import (
-    LoginSerializer, TokenRefreshSerializer, RegisterSerializer
+    LoginSerializer, TokenRefreshSerializer, RegisterSerializer,
+    ChangePasswordSerializer
 )
 from users.schema import (
     login_responses, login_request_examples, login_response_examples,
@@ -20,6 +21,9 @@ from users.schema import (
     register_responses, register_request_examples, register_response_examples
 )
 from common.schema import api_schema
+from rest_framework import generics
+from rest_framework import permissions
+from drf_spectacular.utils import OpenApiResponse, OpenApiExample
 
 logger = logging.getLogger(__name__)
 
@@ -330,4 +334,79 @@ class TokenVerifyView(APIView):
                 'is_valid': True,
                 'user': user_data
             }
-        }) 
+        })
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    """
+    修改密码视图
+    """
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user
+    
+    @extend_schema(
+        summary="修改用户密码",
+        description="允许已认证用户修改自己的密码，需要提供旧密码和新密码",
+        responses={
+            200: OpenApiResponse(
+                description="密码修改成功",
+                examples=[
+                    OpenApiExample(
+                        name="密码修改成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "密码修改成功",
+                            "data": {
+                                "detail": "密码修改成功"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="请求数据无效或旧密码不正确",
+                examples=[
+                    OpenApiExample(
+                        name="密码修改成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "密码修改成功",
+                            "data": {
+                                "detail": "密码修改成功"
+                            }
+                        }
+                    )
+                ]
+            ),
+        },
+        tags=["认证"]
+    )
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            # 设置新密码
+            user.set_password(serializer.validated_data.get('new_password'))
+            user.save()
+            logger.info(f"用户 {user.username} 修改了密码")
+            
+            return Response(
+                {"detail": "密码修改成功"},
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 去掉 put 方法的 DRF 注解
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    # 去掉 patch 方法的 DRF 注解
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs) 

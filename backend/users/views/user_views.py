@@ -550,22 +550,15 @@ class ChangePasswordView(generics.UpdateAPIView):
                 ]
             ),
         },
-        tags=["用户管理"]
+        tags=["认证"]
     )
     def update(self, request, *args, **kwargs):
         user = self.get_object()
         serializer = self.get_serializer(data=request.data)
         
         if serializer.is_valid():
-            # 检查旧密码
-            if not user.check_password(serializer.data.get('old_password')):
-                return Response(
-                    {"old_password": ["旧密码不正确"]},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
             # 设置新密码
-            user.set_password(serializer.data.get('new_password'))
+            user.set_password(serializer.validated_data.get('new_password'))
             user.save()
             logger.info(f"用户 {user.username} 修改了密码")
             

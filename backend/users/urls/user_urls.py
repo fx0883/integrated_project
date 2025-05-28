@@ -16,9 +16,6 @@ urlpatterns = [
     # 用户详情、更新和删除
     path('<int:pk>/', user_views.UserRetrieveUpdateDeleteView.as_view(), name='user-detail'),
     
-    # 修改密码
-    path('change-password/', user_views.ChangePasswordView.as_view(), name='change-password'),
-    
     # 上传头像
     path('me/upload-avatar/', user_views.UserAvatarUploadView.as_view(), name='upload-avatar'),
     
