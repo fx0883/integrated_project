@@ -161,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi, tenantApi } from '../../api'
 import { ElMessage } from 'element-plus'
@@ -206,13 +206,42 @@ const searchTenants = async (query) => {
       page_size: 20,
       page: 1
     })
-    tenantOptions.value = response.results || []
+    
+    // 处理API响应
+    if (response && (response.success === true || response.results)) {
+      // 处理数据
+      let responseData = response;
+      if (response.data) {
+        responseData = response.data;
+      }
+      
+      if (responseData.results) {
+        tenantOptions.value = responseData.results;
+      } else if (Array.isArray(responseData)) {
+        tenantOptions.value = responseData;
+      } else {
+        tenantOptions.value = [];
+      }
+      
+      console.log('获取租户列表成功:', tenantOptions.value);
+    } else {
+      console.error('搜索租户失败:', response?.message || '未知错误')
+      tenantOptions.value = [];
+    }
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
     tenantsLoading.value = false
+    tenantOptions.value = [];
   }
 }
+
+// 组件加载后自动加载租户列表
+onMounted(() => {
+  if (isSuperAdmin.value) {
+    searchTenants('');
+  }
+})
 
 // 表单数据
 const userForm = reactive({

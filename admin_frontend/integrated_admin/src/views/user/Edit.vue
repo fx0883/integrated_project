@@ -239,13 +239,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { userApi, tenantApi, authApi } from '../../api'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Back } from '@element-plus/icons-vue'
 import 'vue-cropper/dist/index.css'
 import { VueCropper } from 'vue-cropper'
+import { request } from '../../utils/request'
 
 // 路由
 const router = useRouter()
@@ -555,44 +556,6 @@ const userInitials = computed(() => {
 const cropperVisible = ref(false)
 const imageUrl = ref('')
 
-// 上传头像前的校验 - 打开裁剪对话框
-const beforeAvatarUpload = (file) => {
-  // 定义支持的图片类型
-  const acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-  const isAcceptedType = acceptedTypes.includes(file.type);
-  const isLt2M = file.size / 1024 / 1024 < 2;
-
-  if (!isAcceptedType) {
-    ElMessage.error('上传头像只能是 JPG/PNG/GIF/WEBP/BMP 格式!');
-    return false;
-  }
-  
-  if (!isLt2M) {
-    ElMessage.error('上传头像图片大小不能超过 2MB!');
-    return false;
-  }
-  
-  try {
-    // 创建文件URL用于裁剪
-    imageUrl.value = URL.createObjectURL(file);
-    
-    // 打开裁剪对话框
-    cropperVisible.value = true;
-  } catch (error) {
-    console.error('准备图片裁剪时出错:', error);
-    ElMessage.error('准备图片裁剪失败，请重试');
-  }
-  
-  // 阻止默认上传
-  return false;
-}
-
-// Element Plus Upload 组件的自定义上传方法
-const uploadAvatar = (options) => {
-  console.log('Element Upload组件触发上传，文件信息:', options.file.name);
-  uploadAvatarFile(options.file);
-}
-
 // 上传头像文件
 const uploadAvatarFile = async (file) => {
   try {
@@ -618,11 +581,27 @@ const uploadAvatarFile = async (file) => {
           const result = await userApi.uploadUserAvatar(userId.value, file);
           console.log('头像上传API返回结果:', result);
           
+          // 使用request辅助函数获取响应数据
+          const responseData = request.getResponseData(result);
+          
           // 如果后端返回了头像URL，直接使用
-          if (result && result.avatar) {
-            console.log('使用API返回的头像URL:', result.avatar);
-            userForm.avatar = result.avatar;
+          if (responseData && responseData.avatar) {
+            console.log('使用API返回的头像URL:', responseData.avatar);
+            userForm.avatar = responseData.avatar;
             console.log('设置的头像路径:', userForm.avatar);
+            
+            // 强制刷新头像显示
+            nextTick(() => {
+              const img = document.querySelector('.avatar-image');
+              if (img) {
+                const timestamp = new Date().getTime();
+                if (img.src.includes('?')) {
+                  img.src = img.src.split('?')[0] + '?t=' + timestamp;
+                } else {
+                  img.src = img.src + '?t=' + timestamp;
+                }
+              }
+            });
           } else {
             console.log('API未返回头像URL，重新获取用户信息');
             // 否则重新获取用户信息
@@ -666,28 +645,119 @@ const uploadAvatarFile = async (file) => {
   }
 }
 
+// Element Plus Upload 组件的自定义上传方法
+const uploadAvatar = (options) => {
+  console.log('Element Upload组件触发上传，文件信息:', options.file.name);
+  uploadAvatarFile(options.file);
+}
+
+// 上传头像前的校验 - 打开裁剪对话框
+const beforeAvatarUpload = (file) => {
+  // 定义支持的图片类型
+  const acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+  const isAcceptedType = acceptedTypes.includes(file.type);
+  const isLt2M = file.size / 1024 / 1024 < 2;
+
+  console.log('上传的文件信息:', {
+    名称: file.name,
+    类型: file.type,
+    大小: (file.size / 1024 / 1024).toFixed(2) + 'MB',
+    是否支持类型: isAcceptedType,
+    是否小于2MB: isLt2M
+  });
+
+  if (!isAcceptedType) {
+    ElMessage.error('上传头像只能是 JPG/PNG/GIF/WEBP/BMP 格式!');
+    return false;
+  }
+  
+  if (!isLt2M) {
+    ElMessage.error('上传头像图片大小不能超过 2MB!');
+    return false;
+  }
+  
+  try {
+    // 创建文件URL用于裁剪
+    imageUrl.value = URL.createObjectURL(file);
+    console.log('创建的图片URL:', imageUrl.value);
+    
+    // 测试图片是否可以正常加载
+    const testImg = new Image();
+    testImg.onload = () => {
+      console.log('测试图片加载成功，尺寸:', testImg.width, 'x', testImg.height);
+    };
+    testImg.onerror = (err) => {
+      console.error('测试图片加载失败:', err);
+    };
+    testImg.src = imageUrl.value;
+    
+    // 打开裁剪对话框
+    cropperVisible.value = true;
+    
+    // 延迟检查裁剪组件是否正确初始化
+    setTimeout(() => {
+      console.log('cropperRef是否存在:', !!cropperRef.value);
+      
+      if (cropperRef.value) {
+        console.log('裁剪组件初始化成功');
+        console.log('裁剪组件方法:', Object.keys(cropperRef.value));
+      } else {
+        console.error('裁剪组件未初始化成功');
+        ElMessage.warning('裁剪组件加载异常，请刷新页面重试');
+      }
+    }, 500);
+    
+    console.log('头像裁剪对话框已打开，图片URL:', imageUrl.value);
+  } catch (error) {
+    console.error('准备图片裁剪时出错:', error);
+    ElMessage.error('准备图片裁剪失败，请重试');
+  }
+  
+  // 阻止默认上传
+  return false;
+}
+
 // 确认裁剪
 const handleCropConfirm = () => {
+  console.log('开始确认裁剪...');
+  
   if (!cropperRef.value) {
+    console.error('裁剪组件引用不存在');
     ElMessage.error('裁剪组件未加载完成，请重试');
     return;
   }
   
+  console.log('裁剪组件当前状态:', cropperRef.value);
+  
   try {
     // 获取裁剪后的图片数据
+    console.log('调用getCropData方法获取裁剪数据...');
+    
     cropperRef.value.getCropData((data) => {
+      console.log('获取到裁剪后的图片数据，数据长度:', data ? data.length : 0);
+      console.log('裁剪数据前缀:', data ? data.substring(0, 50) + '...' : '无数据');
+      
+      if (!data || data.length < 100) {
+        console.error('裁剪数据异常，数据过短或为空');
+        ElMessage.error('裁剪图片失败，请重试');
+        return;
+      }
+      
       try {
         // 将base64转换为Blob
         const base64 = data;
+        console.log('base64数据类型:', typeof base64);
         
         // 检查base64数据格式是否正确
         if (!base64.startsWith('data:image')) {
+          console.error('裁剪数据格式异常，不是有效的base64图像数据:', base64.substring(0, 50));
           ElMessage.error('裁剪图片数据格式异常，请重试');
           return;
         }
         
         const byteString = atob(base64.split(',')[1]);
         const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
+        console.log('解析的MIME类型:', mimeString);
         
         const ab = new ArrayBuffer(byteString.length);
         const ia = new Uint8Array(ab);
@@ -695,6 +765,8 @@ const handleCropConfirm = () => {
         for (let i = 0; i < byteString.length; i++) {
           ia[i] = byteString.charCodeAt(i);
         }
+        
+        console.log('转换后的ArrayBuffer长度:', ab.byteLength);
         
         const blob = new Blob([ab], {type: mimeString});
         console.log('创建的Blob信息:', {
@@ -709,10 +781,13 @@ const handleCropConfirm = () => {
           类型: file.type
         });
         
+        // 先关闭裁剪对话框，再上传文件
+        cropperVisible.value = false;
+        console.log('关闭裁剪对话框');
+        
         // 上传裁剪后的文件
         console.log('开始上传裁剪后的文件...');
         uploadAvatarFile(file);
-        cropperVisible.value = false;
       } catch (error) {
         console.error('处理裁剪图片数据时出错:', error);
         console.error('错误详情:', {
@@ -721,6 +796,7 @@ const handleCropConfirm = () => {
           错误堆栈: error.stack
         });
         ElMessage.error('处理裁剪图片数据失败，请重试');
+        cropperVisible.value = false;
       }
     });
   } catch (error) {
@@ -731,11 +807,13 @@ const handleCropConfirm = () => {
       错误堆栈: error.stack
     });
     ElMessage.error('裁剪图片失败，请重试');
+    cropperVisible.value = false;
   }
 }
 
 // 取消裁剪
 const handleCropCancel = () => {
+  console.log('取消裁剪操作');
   cropperVisible.value = false;
   imageUrl.value = '';
 }

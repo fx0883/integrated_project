@@ -173,6 +173,9 @@ onMounted(() => {
     // 获取租户信息
     searchTenants('')
   }
+  
+  // 自动加载用户列表数据
+  getUserList();
 })
 
 // 用户列表数据
@@ -199,24 +202,34 @@ const searchTenants = async (query) => {
       page_size: 20,
       page: 1
     })
-    // 使用标准化的响应格式
-    if (response.success) {
-      // 直接从data字段获取数据
-      const responseData = request.getResponseData(response)
-      if (responseData.pagination) {
-        tenantOptions.value = responseData.results || []
-      } else {
-        tenantOptions.value = Array.isArray(responseData) ? responseData : []
+    
+    // 处理API响应
+    if (response && (response.success === true || response.results)) {
+      // 处理数据
+      let responseData = response;
+      if (response.data) {
+        responseData = response.data;
       }
+      
+      if (responseData.results) {
+        tenantOptions.value = responseData.results;
+      } else if (Array.isArray(responseData)) {
+        tenantOptions.value = responseData;
+      } else {
+        tenantOptions.value = [];
+      }
+      
+      console.log('获取租户列表成功:', tenantOptions.value);
     } else {
-      console.error('搜索租户失败:', response.message)
-      ElMessage.error(response.message || '搜索租户失败')
+      console.error('搜索租户失败:', response?.message || '未知错误')
+      ElMessage.error(response?.message || '搜索租户失败')
     }
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
-    ElMessage.error(error.message || '搜索租户失败')
+    ElMessage.error(error?.message || '搜索租户失败')
     tenantsLoading.value = false
+    tenantOptions.value = []
   }
 }
 
@@ -229,7 +242,7 @@ const canManageUser = (user) => {
   if (user.is_super_admin) return false
   
   // 租户管理员只能管理自己租户的用户
-  return user.tenant === userInfo.value.tenant
+  return user.tenant_id === userInfo.value.tenant_id || user.tenant === userInfo.value.tenant_id;
 }
 
 // 获取用户列表
@@ -238,37 +251,49 @@ const getUserList = async () => {
     loading.value = true
     
     // 如果是租户管理员，强制只查询本租户的用户
-    if (!isSuperAdmin.value && userInfo.value.tenant) {
-      queryParams.tenant_id = userInfo.value.tenant
+    if (!isSuperAdmin.value && userInfo.value.tenant_id) {
+      queryParams.tenant_id = userInfo.value.tenant_id
     }
     
     console.log('获取用户列表，查询参数:', queryParams);
     
     // 调用API获取用户列表
     const response = await userApi.getUsers(queryParams)
-    // 使用标准格式的响应数据
-    if (response.success) {
+    
+    // 处理API响应
+    if (response && (response.success === true || response.results)) {
       // 直接从data字段获取数据
-      const responseData = request.getResponseData(response)
+      let responseData = response;
+      if (response.data) {
+        responseData = response.data;
+      }
+      
       // 处理分页数据
       if (responseData.pagination) {
         userList.value = responseData.results || []
         total.value = responseData.pagination.count || 0
+      } else if (responseData.results) {
+        userList.value = responseData.results
+        total.value = responseData.count || 0
       } else {
         // 如果没有分页信息，直接使用data
         userList.value = Array.isArray(responseData) ? responseData : []
         total.value = userList.value.length
       }
-      console.log('获取用户列表成功:', response);
+      console.log('获取用户列表成功:', userList.value);
     } else {
       // 错误处理
       console.error('获取用户列表失败:', response.message);
       ElMessage.error(response.message || '获取用户列表失败');
+      userList.value = [];
+      total.value = 0;
     }
     loading.value = false
   } catch (error) {
     console.error('获取用户列表失败:', error)
     loading.value = false
+    userList.value = [];
+    total.value = 0;
     
     // 错误处理增强，显示更详细的错误信息
     let errorMessage = '获取用户列表失败';
@@ -291,8 +316,8 @@ const handleQuery = () => {
 const resetQuery = () => {
   queryForm.value.resetFields()
   // 如果是租户管理员，重置后仍然只显示自己租户的用户
-  if (!isSuperAdmin.value && userInfo.value.tenant) {
-    queryParams.tenant_id = userInfo.value.tenant
+  if (!isSuperAdmin.value && userInfo.value.tenant_id) {
+    queryParams.tenant_id = userInfo.value.tenant_id
   }
   handleQuery()
 }
