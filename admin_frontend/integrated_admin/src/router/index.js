@@ -83,16 +83,17 @@ router.beforeEach(async (to, from, next) => {
       return
     }
     
-    // 检查特定路由的角色权限
-    // if (requiredRoles) {
-    //   console.log('检查路由所需角色:', requiredRoles)
-    //   // 路由需要超级管理员权限，但用户不是超级管理员
-    //   if (requiredRoles.includes('super_admin') && !authStore.user.is_super_admin) {
-    //     console.log('路由需要超级管理员权限，但用户不是超级管理员，重定向到403页面')
-    //     next({ path: '/403' })
-    //     return
-    //   }
-    // }
+    // 超级管理员访问限制 - 只能访问用户管理和租户管理页面
+    if (authStore.user.is_super_admin) {
+      const allowedPaths = ['/dashboard', '/users', '/tenants', '/profile', '/403', '/404'];
+      const isAllowedPath = allowedPaths.some(path => to.path.startsWith(path));
+
+      if (!isAllowedPath) {
+        console.log('超级管理员尝试访问非允许页面，重定向到403页面');
+        next({ path: '/403' });
+        return;
+      }
+    }
     
     // 租户管理员不能访问租户管理页面
     if (authStore.user.is_admin && !authStore.user.is_super_admin && 

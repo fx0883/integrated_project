@@ -301,12 +301,14 @@ const menuItems = computed(() => {
 
 // 根据用户权限过滤菜单项
 const filteredMenuItems = computed(() => {
-  // 如果是超级管理员，直接返回所有菜单项
+  // 如果是超级管理员，只显示用户管理和租户管理菜单
   if (authStore.isSuperAdmin) {
-    return menuItems.value
+    return menuItems.value.filter(item => 
+      item.path === '/users' || item.path === '/tenants'
+    )
   }
   
-  // 如果是租户管理员，过滤掉租户管理菜单
+  // 如果是租户管理员，显示除租户管理外的所有菜单
   return menuItems.value.filter(item => item.path !== '/tenants')
 })
 
