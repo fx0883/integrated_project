@@ -23,7 +23,11 @@ from users.schema import (
 from common.schema import api_schema
 from rest_framework import generics
 from rest_framework import permissions
+from rest_framework import serializers
 from drf_spectacular.utils import OpenApiResponse, OpenApiExample
+from rest_framework.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -412,5 +416,153 @@ class ChangePasswordView(generics.UpdateAPIView):
         return self.partial_update(request, *args, **kwargs)
     
     # 去掉 post 方法的 DRF 注解
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+# 管理员修改用户密码的序列化器
+class AdminChangePasswordSerializer(serializers.Serializer):
+    """
+    管理员修改用户密码的序列化器
+    """
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+    
+    def validate(self, data):
+        """
+        验证两次输入的密码是否一致
+        """
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "两次输入的密码不一致"})
+        
+        # 验证新密码强度
+        from django.contrib.auth.password_validation import validate_password
+        validate_password(data['new_password'])
+        
+        return data
+
+# 管理员修改用户密码视图
+class AdminChangePasswordView(generics.UpdateAPIView):
+    """
+    管理员修改用户密码视图
+    """
+    serializer_class = AdminChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        user_id = self.kwargs.get('user_id')
+        user = get_object_or_404(User, id=user_id)
+        return user
+    
+    def check_permissions(self, request):
+        """
+        检查当前用户是否有权限修改指定用户密码
+        """
+        super().check_permissions(request)
+        if not (request.user.is_admin or request.user.is_super_admin):
+            raise PermissionDenied("只有管理员才能修改其他用户的密码")
+    
+    @extend_schema(
+        summary="管理员修改用户密码",
+        description="允许租户管理员或超级管理员修改其他用户的密码",
+        responses={
+            200: OpenApiResponse(
+                description="密码修改成功",
+                examples=[
+                    OpenApiExample(
+                        name="管理员修改密码成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "密码修改成功",
+                            "data": {
+                                "detail": "密码修改成功"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="请求数据无效",
+                examples=[
+                    OpenApiExample(
+                        name="数据验证失败示例",
+                        value={
+                            "success": False,
+                            "code": 4000,
+                            "message": "请求数据无效",
+                            "data": {
+                                "confirm_password": ["两次输入的密码不一致"]
+                            }
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="权限不足",
+                examples=[
+                    OpenApiExample(
+                        name="权限不足示例",
+                        value={
+                            "success": False,
+                            "code": 4003,
+                            "message": "权限不足",
+                            "data": {
+                                "detail": "只有管理员才能修改其他用户的密码"
+                            }
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="用户不存在",
+                examples=[
+                    OpenApiExample(
+                        name="用户不存在示例",
+                        value={
+                            "success": False,
+                            "code": 4004,
+                            "message": "用户不存在",
+                            "data": {
+                                "detail": "未找到指定用户"
+                            }
+                        }
+                    )
+                ]
+            )
+        },
+        tags=["认证"]
+    )
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            # 设置新密码
+            user.set_password(serializer.validated_data.get('new_password'))
+            user.save()
+            logger.info(f"管理员 {request.user.username} 修改了用户 {user.username} 的密码")
+            
+            return Response({
+                'success': True,
+                'code': 2000,
+                'message': '密码修改成功',
+                'data': {
+                    "detail": "密码修改成功"
+                }
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            'success': False,
+            'code': 4000,
+            'message': '请求数据无效',
+            'data': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    def patch(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
     def post(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs) 

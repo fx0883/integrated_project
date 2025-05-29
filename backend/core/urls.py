@@ -93,6 +93,9 @@ urlpatterns = [
         # CMS系统路由
         path('cms/', include('cms.urls', namespace='cms')),
         
+        # 菜单管理系统路由
+        path('menus/', include('menus.urls', namespace='menus')),
+        
         # API 文档
         path('schema/', LoggingSpectacularAPIView.as_view(), name='schema'),
         path('docs/', LoggingSpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

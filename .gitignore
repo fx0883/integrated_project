@@ -29,3 +29,5 @@ users/__pycache__/
 .env.test.local
 .env.production.local
 /backend/media/avatars
+/backend/menus/migrations
+/backend/.idea

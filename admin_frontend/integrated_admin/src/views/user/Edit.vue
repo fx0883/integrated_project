@@ -136,7 +136,7 @@
           </div>
         </template>
         
-        <div class="security-option">
+        <div class="security-option" v-if="canChangePassword">
           <div class="security-content">
             <div class="security-title">修改密码</div>
             <div class="security-desc">重置用户的登录密码</div>
@@ -298,17 +298,39 @@ const searchTenants = async (query) => {
   try {
     tenantsLoading.value = true
     
-    // 调用API获取用户信息
+    // 调用API获取租户列表
     const response = await tenantApi.getTenants({
       search: query,
       page_size: 20,
       page: 1
     })
-    tenantOptions.value = response.results || []
+    
+    // 处理API响应
+    const responseData = request.getResponseData(response)
+    console.log('搜索租户响应:', responseData);
+    
+    if (responseData) {
+      if (responseData.results) {
+        // 处理分页数据格式
+        tenantOptions.value = responseData.results || []
+      } else if (Array.isArray(responseData)) {
+        // 处理数组格式
+        tenantOptions.value = responseData
+      } else {
+        tenantOptions.value = []
+      }
+      
+      console.log('租户选项:', tenantOptions.value);
+    } else {
+      tenantOptions.value = []
+    }
+    
     tenantsLoading.value = false
   } catch (error) {
     console.error('搜索租户失败:', error)
     tenantsLoading.value = false
+    ElMessage.error('搜索租户失败: ' + (error.message || '未知错误'))
+    tenantOptions.value = []
   }
 }
 
@@ -332,6 +354,22 @@ const userForm = reactive({
 const passwordForm = reactive({
   password: '',
   password_confirm: ''
+})
+
+// 判断当前登录用户是否有权限修改目标用户的密码
+const canChangePassword = computed(() => {
+  // 超级管理员可以修改任何用户的密码
+  if (isSuperAdmin.value) {
+    return true;
+  }
+  
+  // 租户管理员只能修改普通用户的密码
+  // 如果目标用户是管理员或超级管理员，则不能修改
+  if (userForm.is_admin || userForm.is_super_admin) {
+    return false;
+  }
+  
+  return true;
 })
 
 // 密码校验
@@ -395,38 +433,55 @@ const getUserDetail = async () => {
     
     // 调用API获取用户信息
     const response = await userApi.getUserById(userId.value)
-    const userInfo = response
     
-    console.log('获取到的用户详情:', userInfo);
+    // 使用request辅助函数获取响应数据
+    const userData = request.getResponseData(response)
+    
+    console.log('获取到的用户详情:', userData);
+    
+    if (!userData) {
+      console.error('获取用户信息失败: 返回的数据为空');
+      ElMessage.error('获取用户信息失败: 未找到用户数据');
+      loading.value = false;
+      return;
+    }
     
     // 设置表单数据
-    userForm.id = userInfo.id
-    userForm.username = userInfo.username
-    userForm.email = userInfo.email
-    userForm.phone = userInfo.phone || ''
-    userForm.nick_name = userInfo.nick_name || ''
-    userForm.first_name = userInfo.first_name || ''
-    userForm.last_name = userInfo.last_name || ''
-    userForm.is_active = userInfo.is_active
-    userForm.tenant_id = userInfo.tenant
-    userForm.is_admin = userInfo.is_admin
-    userForm.is_super_admin = userInfo.is_super_admin
-    userForm.avatar = userInfo.avatar || ''  // 确保设置头像URL
+    userForm.id = userData.id
+    userForm.username = userData.username
+    userForm.email = userData.email
+    userForm.phone = userData.phone || ''
+    userForm.nick_name = userData.nick_name || ''
+    userForm.first_name = userData.first_name || ''
+    userForm.last_name = userData.last_name || ''
+    userForm.is_active = userData.is_active
+    userForm.tenant_id = userData.tenant_id || userData.tenant || ''
+    userForm.is_admin = userData.is_admin
+    userForm.is_super_admin = userData.is_super_admin
+    userForm.avatar = userData.avatar || ''  // 确保设置头像URL
     
     // 设置角色
-    if (userInfo.is_super_admin) {
+    if (userData.is_super_admin) {
       userForm.role = 'super_admin'
-    } else if (userInfo.is_admin) {
+    } else if (userData.is_admin) {
       userForm.role = 'admin'
     } else {
       userForm.role = 'user'
     }
     
     // 如果有租户，需要获取租户信息以显示名称
-    if (userInfo.tenant && isSuperAdmin.value) {
+    if (userForm.tenant_id && isSuperAdmin.value) {
       try {
-        const tenantResponse = await tenantApi.getTenantById(userInfo.tenant)
-        tenantOptions.value = [{ id: tenantResponse.id, name: tenantResponse.name }]
+        const tenantResponse = await tenantApi.getTenantById(userForm.tenant_id)
+        
+        // 使用request辅助函数获取响应数据
+        const tenantData = request.getResponseData(tenantResponse)
+        
+        if (tenantData && tenantData.id) {
+          tenantOptions.value = [{ id: tenantData.id, name: tenantData.name }]
+        } else {
+          console.error('获取租户信息失败: 返回的数据为空或无效');
+        }
       } catch (error) {
         console.error('获取租户信息失败:', error)
       }
@@ -436,7 +491,7 @@ const getUserDetail = async () => {
   } catch (error) {
     console.error('获取用户信息失败:', error)
     loading.value = false
-    ElMessage.error(error.response?.message || '获取用户信息失败')
+    ElMessage.error('获取用户信息失败: ' + (error.message || '未知错误'))
   }
 }
 
@@ -471,13 +526,19 @@ const submitBasicForm = async () => {
       userData.is_member = true
     }
     
-    // 如果是超级管理员且选择了租户
+    // 处理租户ID
     if (isSuperAdmin.value && userForm.tenant_id) {
       userData.tenant_id = userForm.tenant_id
     }
     
+    console.log('提交的用户数据:', userData);
+    
     // 调用API更新用户基本信息
-    await userApi.updateUser(userId.value, userData)
+    const response = await userApi.updateUser(userId.value, userData)
+    
+    // 处理API响应
+    const responseData = request.getResponseData(response)
+    console.log('API返回更新结果:', responseData);
     
     submitLoading.value = false
     
@@ -487,7 +548,7 @@ const submitBasicForm = async () => {
     })
     
     // 刷新数据
-    getUserDetail()
+    await getUserDetail()
   } catch (error) {
     console.error('更新用户信息失败:', error)
     // 打印完整的错误响应以便调试
@@ -495,7 +556,7 @@ const submitBasicForm = async () => {
       console.error('错误响应数据:', error.response.data)
     }
     submitLoading.value = false
-    ElMessage.error('更新用户信息失败：' + (error.response?.data?.message || error.response?.data || '未知错误'))
+    ElMessage.error('更新用户信息失败：' + (error.message || '未知错误'))
   }
 }
 
@@ -512,11 +573,15 @@ const submitPasswordForm = async () => {
     
     passwordLoading.value = true
     
-    // 调用API更新用户密码
-    await authApi.changePassword(userId.value, {
+    // 调用API更新用户密码 - 使用正确的参数名称
+    const response = await authApi.changePassword(userId.value, {
       new_password: passwordForm.password,
-      new_password_confirm: passwordForm.password_confirm
+      confirm_password: passwordForm.password_confirm // 修改参数名称为confirm_password
     })
+    
+    // 处理API响应
+    const responseData = request.getResponseData(response)
+    console.log('密码修改结果:', responseData);
     
     passwordLoading.value = false
     showChangePassword.value = false
@@ -532,7 +597,7 @@ const submitPasswordForm = async () => {
   } catch (error) {
     console.error('密码修改失败:', error)
     passwordLoading.value = false
-    ElMessage.error('密码修改失败：' + (error.response?.data?.message || error.response?.data || '未知错误'))
+    ElMessage.error('密码修改失败：' + (error.message || '未知错误'))
   }
 }
 
@@ -543,7 +608,22 @@ const goBack = () => {
 
 // 生命周期钩子
 onMounted(() => {
-  getUserDetail()
+  console.log('编辑用户页面已加载，用户ID:', userId.value);
+  
+  // 检查用户ID是否有效
+  if (!userId.value) {
+    console.error('无效的用户ID');
+    ElMessage.error('无效的用户ID，无法获取用户信息');
+    return;
+  }
+  
+  // 获取用户详情
+  getUserDetail();
+  
+  // 如果是超级管理员，加载初始租户列表
+  if (isSuperAdmin.value) {
+    searchTenants('');
+  }
 })
 
 // 用户初始字母

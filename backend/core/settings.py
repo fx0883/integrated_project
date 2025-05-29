@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'docs_view',  # 新添加的文档查看应用
     'check_system',  # 打卡系统应用
     'cms',  # CMS应用
+    'menus',  # 菜单管理应用
 ]
 
 MIDDLEWARE = [

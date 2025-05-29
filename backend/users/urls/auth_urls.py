@@ -19,6 +19,9 @@ urlpatterns = [
     # 验证token
     path('verify/', auth_views.TokenVerifyView.as_view(), name='token-verify'),
     
-    # 修改密码
+    # 修改自己的密码
     path('me/change-password/', auth_views.ChangePasswordView.as_view(), name='change-password'),
+    
+    # 管理员修改用户密码
+    path('<int:user_id>/change-password/', auth_views.AdminChangePasswordView.as_view(), name='admin-change-password'),
 ] 
