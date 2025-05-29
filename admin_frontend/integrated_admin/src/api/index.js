@@ -7,6 +7,7 @@ import tagApi from './tag'
 import commentApi from './comment'
 import statisticsApi from './statistics'
 import checkApi from './check'
+import menuApi from './menu'
 
 export {
   authApi,
@@ -17,7 +18,8 @@ export {
   tagApi,
   commentApi,
   statisticsApi,
-  checkApi
+  checkApi,
+  menuApi
 }
 
 export default {
@@ -29,5 +31,6 @@ export default {
   tag: tagApi,
   comment: commentApi,
   statistics: statisticsApi,
-  check: checkApi
+  check: checkApi,
+  menu: menuApi
 } 

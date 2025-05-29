@@ -258,6 +258,17 @@ const routes = [
           roles: ['super_admin']
         }
       },
+      // 菜单管理路由
+      {
+        path: 'menus',
+        name: 'Menus',
+        component: () => import('../views/menu/List.vue'),
+        meta: { 
+          title: '菜单管理', 
+          icon: 'Menu', 
+          roles: ['super_admin'] 
+        }
+      },
       {
         path: 'profile',
         name: 'Profile',

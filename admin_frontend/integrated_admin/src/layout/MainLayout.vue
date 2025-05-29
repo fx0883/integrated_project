@@ -93,7 +93,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores'
 import { 
   User, Setting, InfoFilled, OfficeBuilding, Odometer, List, 
-  Plus, Document, Message, Bell, Search, Calendar, Collection, PieChart, Reading, Folder, ChatDotRound, DataAnalysis
+  Plus, Document, Message, Bell, Search, Calendar, Collection, 
+  PieChart, Reading, Folder, ChatDotRound, DataAnalysis, Menu
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -294,6 +295,13 @@ const menuItems = computed(() => {
         }
       ]
     })
+    
+    // 添加菜单管理项，仅超级管理员可见
+    items.splice(3, 0, {
+      title: '菜单管理',
+      path: '/menus',
+      icon: 'Menu'
+    })
   }
   
   return items
@@ -301,10 +309,10 @@ const menuItems = computed(() => {
 
 // 根据用户权限过滤菜单项
 const filteredMenuItems = computed(() => {
-  // 需求1: 超级管理员登录时，菜单只显示用户管理和租户管理
+  // 需求1: 超级管理员登录时，菜单只显示用户管理、租户管理和菜单管理
   if (authStore.isSuperAdmin) {
     return menuItems.value.filter(item => 
-      item.path === '/users' || item.path === '/tenants'
+      item.path === '/users' || item.path === '/tenants' || item.path === '/menus' || item.path === '/dashboard' || item.path === '/profile'
     )
   }
   
@@ -512,7 +520,8 @@ const getSearchIcon = (category) => {
     reading: 'Reading',
     folder: 'Folder',
     chatDotRound: 'ChatDotRound',
-    dataAnalysis: 'DataAnalysis'
+    dataAnalysis: 'DataAnalysis',
+    menu: 'Menu'
   }
   
   return iconMap[category] || 'Document'
@@ -532,7 +541,8 @@ const getSearchIconClass = (category) => {
     reading: 'icon-blue',
     folder: 'icon-teal',
     chatDotRound: 'icon-teal',
-    dataAnalysis: 'icon-teal'
+    dataAnalysis: 'icon-teal',
+    menu: 'icon-teal'
   }
   
   return classMap[category] || 'icon-blue'

@@ -83,9 +83,9 @@ router.beforeEach(async (to, from, next) => {
       return
     }
     
-    // 需求1: 超级管理员访问限制 - 只能访问用户管理和租户管理页面
+    // 需求1: 超级管理员访问限制 - 只能访问仪表盘、用户管理、租户管理和菜单管理页面
     if (authStore.user.is_super_admin) {
-      const allowedPaths = ['/dashboard', '/users', '/tenants', '/profile', '/403', '/404'];
+      const allowedPaths = ['/dashboard', '/users', '/tenants', '/menus', '/profile', '/403', '/404'];
       const isAllowedPath = allowedPaths.some(path => to.path.startsWith(path));
 
       if (!isAllowedPath) {
