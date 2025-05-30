@@ -113,6 +113,10 @@
                     v-if="isSuperAdmin && scope.row.is_super_admin && scope.row.username !== userInfo.username" 
                     @click="handleRevokeSuperAdmin(scope.row)"
                   >撤销超管</el-dropdown-item>
+                  <el-dropdown-item 
+                    v-if="isSuperAdmin && scope.row.is_admin && !scope.row.is_super_admin" 
+                    @click="handleEditMenus(scope.row)"
+                  >编辑菜单</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -133,6 +137,54 @@
         />
       </div>
     </el-card>
+    
+    <!-- 菜单编辑对话框 -->
+    <el-dialog
+      v-model="showMenuDialog"
+      :title="`编辑菜单权限 - ${currentUser?.username || ''}`"
+      width="50%"
+      destroy-on-close
+      :close-on-click-modal="false"
+    >
+      <div v-loading="menuDialogLoading">
+        <div class="menu-dialog-header">
+          <p>请选择要分配给该租户管理员的菜单项：</p>
+          <div>
+            <el-button size="small" @click="checkedMenuIds = []">取消全选</el-button>
+            <el-button size="small" type="primary" @click="checkedMenuIds = getAllMenuIds(menuTreeData)">全选</el-button>
+          </div>
+        </div>
+        
+        <el-tree
+          ref="menuTreeRef"
+          :data="menuTreeData"
+          node-key="id"
+          show-checkbox
+          default-expand-all
+          :props="{
+            label: 'name',
+            children: 'children'
+          }"
+          :check-strictly="false"
+          v-model:checked-keys="checkedMenuIds"
+          class="menu-tree"
+        >
+          <template #default="{ node, data }">
+            <span class="menu-tree-node">
+              <span>{{ node.label }}</span>
+              <span class="menu-tree-code">{{ data.code }}</span>
+            </span>
+          </template>
+        </el-tree>
+      </div>
+      
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showMenuDialog = false">取消</el-button>
+          <el-button type="primary" @click="saveUserMenus" :loading="menuDialogLoading">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -140,6 +192,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { userApi, tenantApi } from '../../api'
+import { menuApi } from '../../api'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { request } from '../../utils/request'
@@ -536,6 +589,92 @@ const getUserInitials = (user) => {
   return name ? name.charAt(0).toUpperCase() : '?';
 }
 
+// 编辑菜单相关变量
+const showMenuDialog = ref(false)
+const currentUser = ref(null)
+const menuTreeData = ref([])
+const userMenuIds = ref([])
+const checkedMenuIds = ref([])
+const menuDialogLoading = ref(false)
+const menuTreeRef = ref(null)
+
+// 编辑用户菜单
+const handleEditMenus = async (row) => {
+  currentUser.value = row
+  showMenuDialog.value = true
+  menuDialogLoading.value = true
+  
+  try {
+    // 获取菜单树形数据
+    const treeResponse = await menuApi.getMenuTree()
+    const treeData = request.getResponseData(treeResponse)
+    menuTreeData.value = treeData || []
+    
+    // 获取用户当前的菜单
+    const userMenuResponse = await menuApi.getAdminMenus(row.id)
+    const userMenuData = request.getResponseData(userMenuResponse)
+    
+    if (userMenuData && userMenuData.menus) {
+      // 提取菜单ID
+      userMenuIds.value = userMenuData.menus.map(menu => menu.id)
+      // 初始化选中项
+      checkedMenuIds.value = [...userMenuIds.value]
+    } else {
+      userMenuIds.value = []
+      checkedMenuIds.value = []
+    }
+  } catch (error) {
+    console.error('获取菜单数据失败:', error)
+    ElMessage.error('获取菜单数据失败')
+  } finally {
+    menuDialogLoading.value = false
+  }
+}
+
+// 保存用户菜单
+const saveUserMenus = async () => {
+  if (!currentUser.value) return
+  
+  menuDialogLoading.value = true
+  try {
+    const response = await menuApi.assignMenusToAdmin(
+      currentUser.value.id, 
+      checkedMenuIds.value
+    )
+    
+    if (response.success) {
+      ElMessage.success('菜单权限设置成功')
+      showMenuDialog.value = false
+    } else {
+      ElMessage.error(response.message || '菜单权限设置失败')
+    }
+  } catch (error) {
+    console.error('保存菜单权限失败:', error)
+    ElMessage.error('保存菜单权限失败')
+  } finally {
+    menuDialogLoading.value = false
+  }
+}
+
+// 获取所有菜单ID
+const getAllMenuIds = (menuItems) => {
+  let ids = []
+  
+  const collectIds = (items) => {
+    if (!items || !items.length) return
+    
+    items.forEach(item => {
+      ids.push(item.id)
+      if (item.children && item.children.length > 0) {
+        collectIds(item.children)
+      }
+    })
+  }
+  
+  collectIds(menuItems)
+  return ids
+}
+
 // 生命周期钩子
 onMounted(() => {
   getUserList()
@@ -590,5 +729,38 @@ onMounted(() => {
   color: #95a5a6;
   background-color: #ecf0f1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 菜单对话框样式 */
+.menu-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.menu-dialog-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #606266;
+}
+
+.menu-tree {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #EBEEF5;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.menu-tree-node {
+  display: flex;
+  align-items: center;
+}
+
+.menu-tree-code {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #909399;
 }
 </style>
