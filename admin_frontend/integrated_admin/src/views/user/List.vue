@@ -1,6 +1,6 @@
 <template>
   <div class="user-list-container">
-    <el-card shadow="never">
+    <el-card shadow="never" class="filter-container">
       <template #header>
         <div class="card-header">
           <span>用户列表</span>
@@ -19,6 +19,13 @@
               <el-option label="活跃" value="active" />
               <el-option label="禁用" value="disabled" />
               <el-option label="未激活" value="pending" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="角色">
+            <el-select v-model="queryParams.role" placeholder="请选择角色" clearable>
+              <el-option label="超级管理员" value="super_admin" />
+              <el-option label="租户管理员" value="admin" />
+              <el-option label="普通用户" value="user" />
             </el-select>
           </el-form-item>
           <el-form-item label="租户" v-if="isSuperAdmin">
@@ -47,82 +54,84 @@
       </div>
       
       <!-- 用户表格 -->
-      <el-table
-        :data="userList"
-        style="width: 100%"
-        v-loading="loading"
-        border
-      >
-        <el-table-column type="index" width="50" label="#" />
-        <el-table-column label="头像" width="80" align="center">
-          <template #default="scope">
-            <div class="avatar-cell">
-              <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-image" />
-              <div v-else class="avatar-placeholder">{{ getUserInitials(scope.row) }}</div>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="email" label="邮箱" min-width="150" />
-        <el-table-column prop="nick_name" label="昵称" min-width="100" />
-        <el-table-column prop="phone" label="电话" min-width="120" />
-        <el-table-column prop="tenant_name" label="所属租户" min-width="150" v-if="isSuperAdmin" />
-        <el-table-column prop="role" label="角色" width="120">
-          <template #default="scope">
-            <el-tag v-if="scope.row.is_super_admin" type="danger">超级管理员</el-tag>
-            <el-tag v-else-if="scope.row.is_admin" type="warning">租户管理员</el-tag>
-            <el-tag v-else type="info">普通用户</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="80">
-          <template #default="scope">
-            <el-tag v-if="scope.row.is_active" type="success">活跃</el-tag>
-            <el-tag v-else-if="!scope.row.is_active" type="info">禁用</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="date_joined" label="注册时间" min-width="160" />
-        <el-table-column fixed="right" label="操作" width="220">
-          <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row.id)">编辑</el-button>
-            <el-button 
-              v-if="canManageUser(scope.row)" 
-              size="small" 
-              type="danger" 
-              @click="handleDelete(scope.row)"
-            >删除</el-button>
-            <el-dropdown trigger="click" v-if="canManageUser(scope.row)">
-              <el-button size="small" type="primary">
-                更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item 
-                    v-if="!scope.row.is_active" 
-                    @click="handleActivate(scope.row)"
-                  >激活账号</el-dropdown-item>
-                  <el-dropdown-item 
-                    v-if="scope.row.is_active" 
-                    @click="handleDisable(scope.row)"
-                  >禁用账号</el-dropdown-item>
-                  <el-dropdown-item @click="handleResetPassword(scope.row)">重置密码</el-dropdown-item>
-                  <el-dropdown-item 
-                    v-if="isSuperAdmin && !scope.row.is_super_admin" 
-                    @click="handleGrantSuperAdmin(scope.row)"
-                  >设为超管</el-dropdown-item>
-                  <el-dropdown-item 
-                    v-if="isSuperAdmin && scope.row.is_super_admin && scope.row.username !== userInfo.username" 
-                    @click="handleRevokeSuperAdmin(scope.row)"
-                  >撤销超管</el-dropdown-item>
-                  <el-dropdown-item 
-                    v-if="isSuperAdmin && scope.row.is_admin && !scope.row.is_super_admin" 
-                    @click="handleEditMenus(scope.row)"
-                  >编辑菜单</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="table-container">
+        <el-table
+          :data="userList"
+          v-loading="loading"
+          border
+          style="width: 100%; min-width: 1000px;"
+        >
+          <el-table-column type="index" width="50" label="#" align="center" />
+          <el-table-column label="头像" width="80" align="center">
+            <template #default="scope">
+              <div class="avatar-cell">
+                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-image" />
+                <div v-else class="avatar-placeholder">{{ getUserInitials(scope.row) }}</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="username" label="用户名" min-width="120" align="center" />
+          <el-table-column prop="email" label="邮箱" min-width="150" align="center" />
+          <el-table-column prop="nick_name" label="昵称" min-width="100" align="center" />
+          <el-table-column prop="phone" label="电话" min-width="120" align="center" />
+          <el-table-column prop="tenant_name" label="所属租户" min-width="150" v-if="isSuperAdmin" align="center" />
+          <el-table-column prop="role" label="角色" width="120" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.is_super_admin" type="danger">超级管理员</el-tag>
+              <el-tag v-else-if="scope.row.is_admin" type="warning">租户管理员</el-tag>
+              <el-tag v-else type="info">普通用户</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="80" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.is_active" type="success">活跃</el-tag>
+              <el-tag v-else-if="!scope.row.is_active" type="info">禁用</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="date_joined" label="注册时间" min-width="160" align="center" />
+          <el-table-column label="操作" width="220" align="center" class-name="small-padding fixed-width">
+            <template #default="scope">
+              <el-button size="small" @click="handleEdit(scope.row.id)">编辑</el-button>
+              <el-button 
+                v-if="canManageUser(scope.row)" 
+                size="small" 
+                type="danger" 
+                @click="handleDelete(scope.row)"
+              >删除</el-button>
+              <el-dropdown trigger="click" v-if="canManageUser(scope.row)">
+                <el-button size="small" type="primary">
+                  更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item 
+                      v-if="!scope.row.is_active" 
+                      @click="handleActivate(scope.row)"
+                    >激活账号</el-dropdown-item>
+                    <el-dropdown-item 
+                      v-if="scope.row.is_active" 
+                      @click="handleDisable(scope.row)"
+                    >禁用账号</el-dropdown-item>
+                    <el-dropdown-item @click="handleResetPassword(scope.row)">重置密码</el-dropdown-item>
+                    <el-dropdown-item 
+                      v-if="isSuperAdmin && !scope.row.is_super_admin" 
+                      @click="handleGrantSuperAdmin(scope.row)"
+                    >设为超管</el-dropdown-item>
+                    <el-dropdown-item 
+                      v-if="isSuperAdmin && scope.row.is_super_admin && scope.row.username !== userInfo.username" 
+                      @click="handleRevokeSuperAdmin(scope.row)"
+                    >撤销超管</el-dropdown-item>
+                    <el-dropdown-item 
+                      v-if="isSuperAdmin && scope.row.is_admin && !scope.row.is_super_admin" 
+                      @click="handleEditMenus(scope.row)"
+                    >编辑菜单</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
       
       <!-- 分页 -->
       <div class="pagination-container">
@@ -150,8 +159,8 @@
         <div class="menu-dialog-header">
           <p>请选择要分配给该租户管理员的菜单项：</p>
           <div>
-            <el-button size="small" @click="checkedMenuIds = []">取消全选</el-button>
-            <el-button size="small" type="primary" @click="checkedMenuIds = getAllMenuIds(menuTreeData)">全选</el-button>
+            <el-button size="small" @click="handleUncheckAll">取消全选</el-button>
+            <el-button size="small" type="primary" @click="handleCheckAll">全选</el-button>
           </div>
         </div>
         
@@ -166,7 +175,7 @@
             children: 'children'
           }"
           :check-strictly="false"
-          v-model:checked-keys="checkedMenuIds"
+          @check="handleTreeCheck"
           class="menu-tree"
         >
           <template #default="{ node, data }">
@@ -214,6 +223,7 @@ const isSuperAdmin = computed(() => userInfo.value.is_super_admin)
 const queryParams = reactive({
   search: '',
   status: '',
+  role: '',
   tenant_id: '',
   page: 1,
   page_size: 10
@@ -308,10 +318,26 @@ const getUserList = async () => {
       queryParams.tenant_id = userInfo.value.tenant_id
     }
     
-    console.log('获取用户列表，查询参数:', queryParams);
+    // 转换角色参数为API需要的格式
+    const params = { ...queryParams }
+    if (params.role) {
+      if (params.role === 'super_admin') {
+        params.is_super_admin = true
+      } else if (params.role === 'admin') {
+        params.is_admin = true
+        params.is_super_admin = false
+      } else if (params.role === 'user') {
+        params.is_admin = false
+        params.is_super_admin = false
+      }
+      // 删除原始role字段，后端API不使用此字段
+      delete params.role
+    }
+    
+    console.log('获取用户列表，查询参数:', params);
     
     // 调用API获取用户列表
-    const response = await userApi.getUsers(queryParams)
+    const response = await userApi.getUsers(params)
     
     // 处理API响应
     if (response && (response.success === true || response.results)) {
@@ -619,6 +645,14 @@ const handleEditMenus = async (row) => {
       userMenuIds.value = userMenuData.menus.map(menu => menu.id)
       // 初始化选中项
       checkedMenuIds.value = [...userMenuIds.value]
+      
+      // 等待DOM更新完成后设置选中状态
+      setTimeout(() => {
+        if (menuTreeRef.value) {
+          menuTreeRef.value.setCheckedKeys(checkedMenuIds.value)
+          console.log('初始化菜单选中状态:', checkedMenuIds.value)
+        }
+      }, 100)
     } else {
       userMenuIds.value = []
       checkedMenuIds.value = []
@@ -631,9 +665,31 @@ const handleEditMenus = async (row) => {
   }
 }
 
-// 保存用户菜单
+// 处理树节点选中状态变更
+const handleTreeCheck = (data, checked) => {
+  // 更新选中的节点ID列表
+  if (menuTreeRef.value) {
+    checkedMenuIds.value = menuTreeRef.value.getCheckedKeys()
+    console.log('当前选中的菜单ID:', checkedMenuIds.value)
+  }
+}
+
+// 修改保存用户菜单函数
 const saveUserMenus = async () => {
   if (!currentUser.value) return
+  
+  // 重新获取最新选中的菜单ID
+  if (menuTreeRef.value) {
+    checkedMenuIds.value = menuTreeRef.value.getCheckedKeys()
+  }
+  
+  // 检查是否选择了至少一个菜单项
+  if (!checkedMenuIds.value.length) {
+    ElMessage.warning('请至少选择一个菜单项')
+    return
+  }
+  
+  console.log('准备保存的菜单ID:', checkedMenuIds.value)
   
   menuDialogLoading.value = true
   try {
@@ -675,6 +731,41 @@ const getAllMenuIds = (menuItems) => {
   return ids
 }
 
+// 处理全选按钮
+const handleCheckAll = () => {
+  if (menuTreeData.value && menuTreeData.value.length > 0) {
+    // 使用el-tree的setCheckedKeys方法设置所有选中项
+    if (menuTreeRef.value) {
+      const allIds = getAllMenuIds(menuTreeData.value)
+      menuTreeRef.value.setCheckedKeys(allIds)
+      checkedMenuIds.value = [...allIds] // 使用解构创建新数组以确保响应性
+      console.log('全选后菜单ID:', checkedMenuIds.value)
+    }
+  }
+}
+
+// 处理取消全选按钮
+const handleUncheckAll = () => {
+  ElMessageBox.confirm(
+    '取消全选将清空所有菜单选择，您需要至少选择一个菜单项才能保存。确定继续吗？',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(() => {
+    // 使用el-tree的setCheckedKeys方法清空所有选中项
+    if (menuTreeRef.value) {
+      menuTreeRef.value.setCheckedKeys([])
+      checkedMenuIds.value = []
+      console.log('取消全选后菜单ID:', checkedMenuIds.value)
+    }
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
 // 生命周期钩子
 onMounted(() => {
   getUserList()
@@ -684,6 +775,14 @@ onMounted(() => {
 <style scoped>
 .user-list-container {
   margin-bottom: 20px;
+  width: 100%;
+  overflow-x: hidden; /* 防止整体页面出现滚动条 */
+}
+
+.filter-container {
+  padding-bottom: 10px;
+  max-width: 100%; /* 确保卡片不会超出父容器 */
+  overflow: hidden; /* 防止溢出 */
 }
 
 .card-header {
@@ -698,8 +797,44 @@ onMounted(() => {
 
 .pagination-container {
   margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
+  padding: 10px 16px;
+  background: #fff;
+  text-align: right;
+}
+
+/* 表格容器样式 */
+.table-container {
+  width: 100%;
+  overflow-x: scroll; /* 强制显示滚动条 */
+  margin-bottom: 15px;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  position: relative; /* 确保定位上下文 */
+  max-width: 100%; /* 限制最大宽度为父容器宽度 */
+}
+
+/* 移除旧的样式 */
+.app-container {
+  display: none;
+}
+
+.table-scrollable {
+  display: none;
+}
+
+/* 自定义滚动条样式 */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 12px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #909399;
+  border-radius: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background-color: #f0f2f5;
 }
 
 /* 头像样式 */
@@ -762,5 +897,14 @@ onMounted(() => {
   margin-left: 8px;
   font-size: 12px;
   color: #909399;
+}
+
+.small-padding {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.fixed-width {
+  min-width: 220px;
 }
 </style>

@@ -151,7 +151,7 @@ class AdminMenuViewSet(mixins.ListModelMixin,
         if not current_user.is_super_admin:
             return UserMenu.objects.none()
         
-        return UserMenu.objects.filter(user_id=user_id)
+        return UserMenu.objects.filter(user_id=user_id, is_active=True)
     
     def list(self, request, *args, **kwargs):
         """
@@ -215,6 +215,10 @@ class AdminMenuViewSet(mixins.ListModelMixin,
         
         assigned_menus = []
         with transaction.atomic():
+            # 首先禁用不在当前列表中的所有菜单
+            UserMenu.objects.filter(user=user).exclude(menu_id__in=menu_ids).update(is_active=False)
+            
+            # 然后添加或激活请求中的菜单
             for menu in menus:
                 user_menu, created = UserMenu.objects.get_or_create(
                     user=user,

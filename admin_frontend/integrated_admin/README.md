@@ -527,3 +527,30 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 - `src/router/routes.js` (更新)
 - `src/router/index.js` (更新)
 - `src/layout/MainLayout.vue` (更新)
+
+## 会话总结：修复用户管理表格右侧显示不完整问题
+
+### 本次会话的主要目标
+修复用户管理表格在某些情况下右侧内容显示不完整的问题，确保表格可以正常水平滚动并显示所有内容。
+
+### 已完成的具体任务
+1. 修改了用户列表组件 (src/views/user/List.vue)
+   - 简化了表格容器的CSS样式，去除可能干扰表格渲染的属性
+   - 设置表格宽度为`width: max-content`，确保表格能够自动扩展适应内容
+   - 移除了列的固定属性（fixed="left"和fixed="right"），防止因固定列导致的布局问题
+   - 保留了基本的水平滚动功能，通过`overflow-x: auto`实现
+
+### 采用的技术方案及决策理由
+1. 使用简单直接的CSS解决方案，避免复杂的样式冲突或不兼容问题
+2. 设置表格为`max-content`宽度，让表格根据内容决定宽度而非容器宽度
+3. 移除固定列设置，因为在某些情况下固定列可能会导致布局计算错误
+4. 简化CSS样式，只保留必要的属性，减少样式冲突的可能性
+
+### 使用的主要技术栈
+- Vue 3 组合式API
+- Element Plus表格组件
+- CSS布局技术
+
+### 变更的文件清单
+1. src/views/user/List.vue (修改)
+2. README.md (更新)
