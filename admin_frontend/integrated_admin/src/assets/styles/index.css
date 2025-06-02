@@ -1,3 +1,8 @@
+/* 导入Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* 全局样式文件 */
 
 /* 基础样式重置 */

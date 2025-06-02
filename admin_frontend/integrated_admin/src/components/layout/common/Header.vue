@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar">
+  <div class="navbar" :class="{ 'dark-mode': isDarkMode }">
     <div class="navbar-menu">
       <div class="menu-toggle" @click="$emit('toggleSidebar')">
         <el-icon size="24"><Menu /></el-icon>
@@ -26,6 +26,21 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
+      </div>
+      
+      <!-- 主题切换按钮 -->
+      <div class="nav-item">
+        <el-tooltip content="切换主题模式" placement="bottom">
+          <el-button 
+            circle 
+            text
+            @click="$emit('toggleDarkMode')"
+          >
+            <el-icon size="20">
+              <component :is="isDarkMode ? 'Sunny' : 'Moon'" />
+            </el-icon>
+          </el-button>
+        </el-tooltip>
       </div>
       
       <!-- 通知图标 -->
@@ -76,10 +91,10 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../../stores'
+import { useAuthStore, useSettingsStore } from '../../../stores'
 import { 
   User, Setting, SwitchButton, Menu,
-  ArrowDown, Bell, Search
+  ArrowDown, Bell, Search, Moon, Sunny
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -104,11 +119,15 @@ const props = defineProps({
 })
 
 // 定义事件
-const emit = defineEmits(['showNotifications', 'logout', 'toggleSidebar', 'search'])
+const emit = defineEmits(['showNotifications', 'logout', 'toggleSidebar', 'toggleDarkMode', 'search'])
 
-// 路由和认证
+// 路由和store
 const router = useRouter()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
+
+// 是否为暗黑模式
+const isDarkMode = computed(() => settingsStore.isDarkMode)
 
 // 搜索关键字
 const searchKeyword = ref('')
@@ -137,18 +156,7 @@ const handleCommand = (command) => {
     })
   } else if (command === 'profile') {
     // 跳转到个人资料页
-    console.log('正在导航到个人资料页...')
-    try {
-      router.push('/profile').catch(err => {
-        console.error('导航到个人资料页时出错:', err)
-        // 如果导航失败，尝试重新加载页面
-        window.location.href = '/profile'
-      })
-    } catch (error) {
-      console.error('点击个人资料菜单时出错:', error)
-      // 如果出现错误，尝试重新加载页面
-      window.location.href = '/profile'
-    }
+    router.push('/profile')
   } else if (command === 'settings') {
     // 跳转到设置页
     router.push('/settings')
@@ -170,6 +178,13 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: all 0.3s;
+}
+
+.navbar.dark-mode {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-menu {
@@ -189,12 +204,12 @@ const handleCommand = (command) => {
   align-items: center;
   font-weight: 600;
   font-size: 20px;
-  color: var(--primary-color);
+  color: var(--el-color-primary);
 }
 
 .navbar-brand svg {
   margin-right: 10px;
-  stroke: var(--primary-color);
+  stroke: var(--el-color-primary);
 }
 
 .navbar-right {
@@ -204,34 +219,47 @@ const handleCommand = (command) => {
 
 .nav-item {
   margin-left: 15px;
+  position: relative;
 }
 
 .search-container {
-  width: 250px;
+  margin-right: 15px;
 }
 
 .search-input {
-  width: 100%;
+  width: 220px;
+  transition: all 0.3s;
+}
+
+.search-input:focus-within {
+  width: 300px;
 }
 
 .notification-badge :deep(.el-badge__content) {
-  background-color: var(--accent-color);
+  background-color: var(--el-color-danger);
 }
 
 .navbar-user {
   display: flex;
   align-items: center;
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--text-color);
   cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.navbar-user:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .navbar-user:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .navbar-user img {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  margin-right: 10px;
   object-fit: cover;
 }
 
@@ -239,33 +267,32 @@ const handleCommand = (command) => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: var(--primary-color);
+  background-color: var(--el-color-primary);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  margin-right: 10px;
+  font-size: 16px;
 }
 
 .username {
-  margin-right: 5px;
+  margin-left: 10px;
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* 响应式样式 */
-@media (max-width: 992px) {
-  .search-container {
-    width: 200px;
-  }
-}
-
+/* 响应式调整 */
 @media (max-width: 768px) {
-  .navbar {
-    padding: 0 10px;
+  .search-input {
+    width: 150px;
   }
   
-  .search-container {
-    width: 150px;
+  .search-input:focus-within {
+    width: 200px;
   }
   
   .username {

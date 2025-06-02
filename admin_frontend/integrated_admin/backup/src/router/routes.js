@@ -6,40 +6,6 @@ import TaskList from '../views/check/TaskList.vue'
 import RecordList from '../views/check/RecordList.vue'
 import StatisticList from '../views/check/StatisticList.vue'
 
-// 基础路由配置
-const constantRoutes = [
-  // 重定向页面 - 用于页面刷新功能
-  {
-    path: '/redirect',
-    component: () => import('../layout/MainLayout.vue'),
-    meta: { hidden: true },
-    children: [
-      {
-        path: '',
-        component: () => import('../views/Redirect.vue'),
-        meta: { title: '重定向', hidden: true }
-      }
-    ]
-  },
-
-  // 错误页面
-  {
-    path: '/403',
-    component: () => import('../views/error/403.vue'),
-    meta: { title: '403', hidden: true }
-  },
-  {
-    path: '/404',
-    component: () => import('../views/error/404.vue'),
-    meta: { title: '404', hidden: true }
-  },
-  {
-    path: '/500',
-    component: () => import('../views/error/500.vue'),
-    meta: { title: '500', hidden: true }
-  },
-]
-
 const routes = [
   {
     path: '/login',
@@ -312,17 +278,6 @@ const routes = [
           icon: 'Setting' 
         }
       },
-      // 新增Pure组件示例页面
-      {
-        path: 'examples/pure',
-        name: 'PureComponentsExample',
-        component: () => import('../views/examples/PureComponents.vue'),
-        meta: { 
-          title: 'Pure组件示例', 
-          icon: 'Notebook',
-          roles: ['admin', 'super_admin']  
-        }
-      },
       {
         path: 'about',
         name: 'About',
@@ -358,25 +313,29 @@ const routes = [
           title: '帮助中心',
           hidden: true
         }
-      },
-      // 设置页面
-      {
-        path: 'settings',
-        component: () => import('../layout/MainLayout.vue'),
-        children: [
-          {
-            path: '',
-            name: 'Settings',
-            component: () => import('../views/settings/index.vue'),
-            meta: {
-              title: '系统设置',
-              icon: 'Setting',
-              requiresAuth: true
-            }
-          }
-        ]
       }
     ]
+  },
+  // 错误页面
+  {
+    path: '/403',
+    name: '403',
+    component: () => import('../views/error/403.vue'),
+    meta: { 
+      requiresAuth: false, 
+      hidden: true,
+      title: '403 - 禁止访问'
+    }
+  },
+  {
+    path: '/404',
+    name: '404',
+    component: () => import('../views/error/404.vue'),
+    meta: { 
+      requiresAuth: false, 
+      hidden: true,
+      title: '404 - 页面未找到'
+    }
   },
   // 通配符路由，匹配所有未定义的路由，重定向到404
   {

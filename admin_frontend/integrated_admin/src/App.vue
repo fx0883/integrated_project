@@ -1,15 +1,20 @@
 <script setup>
 import { onMounted } from 'vue'
-import { useAuthStore } from './stores'
+import { useAuthStore, useSettingsStore } from './stores'
 import { useRoute, useRouter } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { getCurrentTheme, applyTheme } from './config/theme'
 
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const route = useRoute()
 const router = useRouter()
 
 // 应用初始化逻辑
 onMounted(() => {
+  // 初始化主题
+  const currentTheme = getCurrentTheme()
+  applyTheme(currentTheme)
+  
   // 如果已登录但访问登录/注册页面，重定向到首页
   if (authStore.isLoggedIn && (route.name === 'Login' || route.name === 'Register')) {
     router.push('/')
@@ -40,6 +45,27 @@ html, body {
 :root {
   --el-color-primary: #2c9678;
   --el-color-success: #67C23A;
+}
+
+/* 暗色模式 */
+.dark-mode {
+  --el-bg-color: #1e1e1e;
+  --el-bg-color-overlay: #2c2c2c;
+  --el-text-color-primary: #e0e0e0;
+  --el-text-color-regular: #c0c0c0;
+  --el-border-color: #4a4a4a;
+  --el-border-color-light: #3a3a3a;
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .logo {

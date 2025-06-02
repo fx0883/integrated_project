@@ -1,5 +1,5 @@
 <template>
-  <div class="main-layout">
+  <div class="main-layout" :class="{ 'dark-mode': settingsStore.isDarkMode }">
     <!-- 头部导航组件 -->
     <AppHeader 
       :notification-count="unreadNotificationCount"
@@ -8,23 +8,27 @@
       :user-initials="userInitials"
       @show-notifications="showNotifications = true"
       @logout="handleLogout"
-      @toggle-sidebar="toggleSidebar"
+      @toggle-sidebar="settingsStore.toggleSidebar"
+      @toggle-dark-mode="settingsStore.toggleDarkMode"
       @search="handleSearch"
     />
     
     <div class="main-container">
       <!-- 侧边栏组件 -->
       <AppSidebar 
-        :is-collapsed="isCollapsed"
+        :is-collapsed="settingsStore.isSidebarCollapsed"
         :active-menu="activeMenu"
         :menu-items="filteredMenuItems"
-        @toggle-collapse="toggleSidebar"
+        @toggle-collapse="settingsStore.toggleSidebar"
       />
       
       <!-- 内容区域 -->
-      <div class="main-content" :class="{ 'content-expanded': isCollapsed }">
+      <div class="main-content" :class="{ 'content-expanded': settingsStore.isSidebarCollapsed }">
+        <!-- 标签页视图 -->
+        <TagsView ref="tagsViewRef" />
+        
         <!-- 面包屑导航组件 -->
-        <AppBreadcrumb :items="breadcrumbItems" />
+        <AppBreadcrumb v-if="settingsStore.layout.showBreadcrumb" :items="breadcrumbItems" />
         
         <!-- 主要内容 -->
         <div class="page-content">
@@ -45,7 +49,7 @@
         </div>
         
         <!-- 页脚组件 -->
-        <AppFooter />
+        <AppFooter v-if="settingsStore.layout.showFooter" />
       </div>
     </div>
     
@@ -88,13 +92,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../stores'
+import { useAuthStore, useSettingsStore } from '../stores'
 import { 
   User, Setting, InfoFilled, OfficeBuilding, Odometer, List, 
   Plus, Document, Message, Bell, Search, Calendar, Collection, 
-  PieChart, Reading, Folder, ChatDotRound, DataAnalysis, Menu
+  PieChart, Reading, Folder, ChatDotRound, DataAnalysis, Menu, Notebook
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -104,16 +108,21 @@ import AppSidebar from '../components/layout/common/Sidebar.vue'
 import AppBreadcrumb from '../components/layout/common/Breadcrumb.vue'
 import AppNotificationDrawer from '../components/layout/common/NotificationDrawer.vue'
 import AppFooter from '../components/layout/common/Footer.vue'
+import TagsView from '../components/layout/common/TagsView.vue'
 
 // 路由相关
 const router = useRouter()
 const route = useRoute()
 
-// 认证信息
+// store
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
+
+// 标签页视图引用
+const tagsViewRef = ref(null)
 
 // 调试标志
-const isDebug = ref(true) // 设置为true以显示调试信息
+const isDebug = ref(false) // 设置为false以隐藏调试信息
 
 // 搜索
 const searchKeyword = ref('')
@@ -135,8 +144,7 @@ const userInitials = computed(() => {
   return name.charAt(0).toUpperCase()
 })
 
-// 侧边栏相关
-const isCollapsed = ref(localStorage.getItem('sidebarStatus') === '1')
+// 活动菜单
 const activeMenu = computed(() => {
   // 处理子路由，确保父菜单项也能匹配上
   const { path } = route
@@ -178,7 +186,9 @@ const activeMenu = computed(() => {
 })
 
 // 缓存的视图
-const cachedViews = ref(['Dashboard'])
+const cachedViews = computed(() => {
+  return tagsViewRef.value?.cachedViews || []
+})
 
 // 菜单项配置
 const menuItems = computed(() => {
@@ -212,38 +222,6 @@ const menuItems = computed(() => {
           title: '评论管理',
           path: '/cms/comments',
           icon: 'ChatDotRound'
-        },
-        {
-          title: '内容统计',
-          path: '/cms/statistics',
-          icon: 'DataAnalysis'
-        }
-      ]
-    },
-    {
-      title: '打卡管理',
-      path: '/check',  // 这个路径实际不存在，只用于菜单分组
-      icon: 'Calendar',
-      children: [
-        {
-          title: '类型管理',
-          path: '/check/categories',  // 直接链接到类型管理页面
-          icon: 'Collection'
-        },
-        {
-          title: '任务管理',
-          path: '/check/tasks',
-          icon: 'List'
-        },
-        {
-          title: '打卡记录',
-          path: '/check/records',
-          icon: 'Document'
-        },
-        {
-          title: '统计分析',
-          path: '/check/statistics',
-          icon: 'PieChart'
         }
       ]
     },
@@ -258,27 +236,13 @@ const menuItems = computed(() => {
           icon: 'List'
         },
         {
-          title: '创建用户',
+          title: '新增用户',
           path: '/users/create',
           icon: 'Plus'
         }
       ]
     },
     {
-      title: '个人设置',
-      path: '/profile',
-      icon: 'Setting'
-    },
-    {
-      title: '关于系统',
-      path: '/about',
-      icon: 'InfoFilled'
-    }
-  ]
-  
-  // 仅对超级管理员显示租户菜单
-  if (authStore.isSuperAdmin) {
-    items.splice(2, 0, {
       title: '租户管理',
       path: '/tenants',
       icon: 'OfficeBuilding',
@@ -289,100 +253,235 @@ const menuItems = computed(() => {
           icon: 'List'
         },
         {
-          title: '创建租户',
+          title: '新增租户',
           path: '/tenants/create',
           icon: 'Plus'
         }
       ]
-    })
-    
-    // 添加菜单管理项，仅超级管理员可见
-    items.splice(3, 0, {
-      title: '菜单管理',
-      path: '/menus',
-      icon: 'Menu'
-    })
-  }
+    },
+    {
+      title: '打卡管理',
+      path: '/check',
+      icon: 'Calendar',
+      children: [
+        {
+          title: '打卡类型',
+          path: '/check/categories',
+          icon: 'Collection'
+        },
+        {
+          title: '打卡任务',
+          path: '/check/tasks',
+          icon: 'List'
+        },
+        {
+          title: '打卡记录',
+          path: '/check/records',
+          icon: 'Document'
+        },
+        {
+          title: '统计分析',
+          path: '/check/statistics',
+          icon: 'DataAnalysis'
+        }
+      ]
+    },
+    {
+      title: '组件示例',
+      path: '/examples/pure',
+      icon: 'Notebook'
+    },
+    {
+      title: '系统设置',
+      path: '/settings',
+      icon: 'Setting'
+    }
+  ]
   
   return items
 })
 
-// 根据用户权限过滤菜单项
+// 根据用户角色过滤菜单项
 const filteredMenuItems = computed(() => {
-  // 需求1: 超级管理员登录时，菜单只显示用户管理、租户管理和菜单管理
-  if (authStore.isSuperAdmin) {
-    return menuItems.value.filter(item => 
-      item.path === '/users' || item.path === '/tenants' || item.path === '/menus' || item.path === '/dashboard' || item.path === '/profile'
-    )
+  // 如果是超级管理员，只显示仪表盘、用户管理、租户管理
+  if (authStore.user?.is_super_admin) {
+    return menuItems.value.filter(item => {
+      return ['仪表盘', '用户管理', '租户管理', '系统设置'].includes(item.title)
+    })
   }
   
-  // 需求2: 租户管理员登录时，菜单不显示租户管理，其他菜单全部显示
-  return menuItems.value.filter(item => item.path !== '/tenants')
+  // 如果是租户管理员，显示除了租户管理之外的所有菜单
+  if (authStore.user?.is_admin && !authStore.user?.is_super_admin) {
+    return menuItems.value.filter(item => item.title !== '租户管理')
+  }
+  
+  // 其他用户显示所有菜单
+  return menuItems.value
 })
 
-// 面包屑导航项
-const breadcrumbItems = ref([])
-
-// 更新面包屑导航
-const updateBreadcrumb = () => {
-  const { path } = route
-  const matched = route.matched.filter(item => item.meta && item.meta.title)
+// 面包屑导航
+const breadcrumbItems = computed(() => {
+  const items = []
   
-  const breadcrumbs = []
-  
-  // 默认添加首页
-  breadcrumbs.push({
+  // 添加首页
+  items.push({
     title: '首页',
-    path: '/dashboard'
+    path: '/'
   })
   
-  // 添加匹配到的路由
-  matched.forEach(item => {
-    // 检查是否有父级标题
-    if (item.meta.parentTitle) {
-      // 检查是否已经添加了父级标题
-      const parentExists = breadcrumbs.some(bc => bc.title === item.meta.parentTitle)
-      if (!parentExists) {
-        // 添加父级面包屑（使用路径前缀）
-        const parentPath = item.path.substring(0, item.path.lastIndexOf('/'))
-        breadcrumbs.push({
-          title: item.meta.parentTitle,
-          path: parentPath
-        })
-        console.log('[Layout] 添加父级面包屑:', item.meta.parentTitle, parentPath)
-      }
+  // 根据当前路由生成面包屑
+  const { path, matched } = route
+  
+  if (path === '/') {
+    return items
+  }
+  
+  // 处理特殊路径
+  if (path.includes('/users/')) {
+    items.push({
+      title: '用户管理',
+      path: '/users'
+    })
+    
+    if (path.includes('/users/create')) {
+      items.push({
+        title: '新增用户',
+        path: '/users/create'
+      })
+    } else if (path.includes('/users/edit/')) {
+      items.push({
+        title: '编辑用户',
+        path: path
+      })
+    } else if (path.includes('/users/view/')) {
+      items.push({
+        title: '用户详情',
+        path: path
+      })
     }
     
-    // 判断是否为编辑页面
-    if (item.path.includes(':id') && route.params.id) {
-      // 构建实际路径
-      const actualPath = item.path.replace(':id', route.params.id)
-      
-      breadcrumbs.push({
-        title: item.meta.title,
-        path: actualPath
+    return items
+  }
+  
+  if (path.includes('/tenants/')) {
+    items.push({
+      title: '租户管理',
+      path: '/tenants'
+    })
+    
+    if (path.includes('/tenants/create')) {
+      items.push({
+        title: '新增租户',
+        path: '/tenants/create'
       })
-    } else {
-      breadcrumbs.push({
-        title: item.meta.title,
-        path: item.path
+    } else if (path.includes('/tenants/edit/')) {
+      items.push({
+        title: '编辑租户',
+        path: path
+      })
+    } else if (path.includes('/tenants/view/')) {
+      items.push({
+        title: '租户详情',
+        path: path
+      })
+    }
+    
+    return items
+  }
+  
+  // 处理CMS路径
+  if (path.includes('/cms/')) {
+    items.push({
+      title: 'CMS管理',
+      path: '/cms'
+    })
+    
+    if (path.includes('/cms/articles')) {
+      items.push({
+        title: '文章管理',
+        path: '/cms/articles'
+      })
+      
+      if (path.includes('/cms/articles/create')) {
+        items.push({
+          title: '新增文章',
+          path: path
+        })
+      } else if (path.includes('/cms/articles/edit/')) {
+        items.push({
+          title: '编辑文章',
+          path: path
+        })
+      } else if (path.includes('/cms/articles/view/')) {
+        items.push({
+          title: '文章详情',
+          path: path
+        })
+      }
+    } else if (path.includes('/cms/categories')) {
+      items.push({
+        title: '分类管理',
+        path: '/cms/categories'
+      })
+    } else if (path.includes('/cms/tags')) {
+      items.push({
+        title: '标签管理',
+        path: '/cms/tags'
+      })
+    } else if (path.includes('/cms/comments')) {
+      items.push({
+        title: '评论管理',
+        path: '/cms/comments'
+      })
+    }
+    
+    return items
+  }
+  
+  // 处理打卡管理路径
+  if (path.includes('/check/')) {
+    items.push({
+      title: '打卡管理',
+      path: '/check'
+    })
+    
+    if (path.includes('/check/categories')) {
+      items.push({
+        title: '打卡类型',
+        path: '/check/categories'
+      })
+    } else if (path.includes('/check/tasks')) {
+      items.push({
+        title: '打卡任务',
+        path: '/check/tasks'
+      })
+    } else if (path.includes('/check/records')) {
+      items.push({
+        title: '打卡记录',
+        path: '/check/records'
+      })
+    } else if (path.includes('/check/statistics')) {
+      items.push({
+        title: '统计分析',
+        path: '/check/statistics'
+      })
+    }
+    
+    return items
+  }
+  
+  // 处理其他路径
+  matched.forEach(record => {
+    if (record.meta && record.meta.title && !record.meta.hidden) {
+      items.push({
+        title: record.meta.title,
+        path: record.path
       })
     }
   })
   
-  console.log('[Layout] 更新面包屑:', breadcrumbs)
-  breadcrumbItems.value = breadcrumbs
-}
-
-// 监听路由变化，更新面包屑
-watch(() => route.path, updateBreadcrumb, { immediate: true })
-watch(() => route.params, updateBreadcrumb, { deep: true })
-
-// 切换侧边栏折叠状态
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-  localStorage.setItem('sidebarStatus', isCollapsed.value ? '1' : '0')
-}
+  return items
+})
 
 // 通知相关
 const showNotifications = ref(false)
@@ -390,93 +489,85 @@ const notifications = ref([
   {
     id: 1,
     title: '系统通知',
-    content: '您的账户已成功激活',
-    time: '2023-06-10 10:30:00',
-    read: false,
-    type: 'system'
+    content: '您有新的任务待处理',
+    time: '2023-05-01 10:30',
+    read: false
   },
   {
     id: 2,
-    title: '操作提醒',
-    content: '您创建了一个新租户',
-    time: '2023-06-09 14:20:00',
-    read: true,
-    type: 'operation'
+    title: '安全提醒',
+    content: '您的账户今日有5次异常登录尝试',
+    time: '2023-05-01 09:15',
+    read: false
   },
   {
     id: 3,
-    title: '安全提醒',
-    content: '检测到异常登录行为',
-    time: '2023-06-08 09:15:00',
-    read: false,
-    type: 'security'
+    title: '更新提示',
+    content: '系统将在今晚22:00-23:00进行升级维护',
+    time: '2023-04-30 18:00',
+    read: true
   }
 ])
 
+// 未读通知数量
 const unreadNotificationCount = computed(() => {
-  return notifications.value.filter(n => !n.read).length
+  return notifications.value.filter(item => !item.read).length
 })
 
-// 标记所有通知为已读
-const markAllNotificationsAsRead = () => {
-  notifications.value.forEach(notification => {
-    notification.read = true
-  })
-}
-
-// 标记单个通知为已读
+// 标记通知为已读
 const markNotificationAsRead = (id) => {
-  const notification = notifications.value.find(n => n.id === id)
+  const notification = notifications.value.find(item => item.id === id)
   if (notification) {
     notification.read = true
   }
 }
 
-// 处理登出事件
-const handleLogout = () => {
-  authStore.logout()
-    .then(() => {
-      router.push('/login')
-    })
-    .catch(error => {
-      console.error('登出出错:', error)
-      // 即使发生错误，也尝试清除本地凭证并重定向到登录页
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-      router.push('/login')
-    })
+// 标记所有通知为已读
+const markAllNotificationsAsRead = () => {
+  notifications.value.forEach(item => {
+    item.read = true
+  })
 }
 
 // 处理搜索
 const handleSearch = (keyword) => {
-  console.log('搜索关键词:', keyword)
+  searchKeyword.value = keyword
   
   // 模拟搜索结果
-  searchResults.value = [
-    {
-      id: 1,
-      title: '用户管理',
-      description: '用户列表页面',
-      type: 'page',
-      path: '/users'
-    },
-    {
-      id: 2,
-      title: '测试租户',
-      description: '租户ID: #2',
-      type: 'tenant',
-      path: '/tenants/edit/2'
-    },
-    {
-      id: 3,
-      title: '管理员',
-      description: '用户名: admin',
-      type: 'user',
-      path: '/users/view/1'
-    }
-  ]
+  if (!keyword) {
+    searchResults.value = []
+    showSearchResults.value = false
+    return
+  }
   
-  showSearchResults.value = true
+  // 模拟API搜索
+  setTimeout(() => {
+    searchResults.value = [
+      {
+        id: 1,
+        type: 'article',
+        title: '如何提高工作效率',
+        description: '包含关键词: ' + keyword,
+        path: '/cms/articles/view/1'
+      },
+      {
+        id: 2,
+        type: 'user',
+        title: '张三',
+        description: '用户ID: 10001, 包含关键词: ' + keyword,
+        path: '/users/view/1'
+      },
+      {
+        id: 3,
+        type: 'tenant',
+        title: '某某科技有限公司',
+        description: '租户ID: 5001, 包含关键词: ' + keyword,
+        path: '/tenants/view/1'
+      }
+    ]
+    
+    showSearchResults.value = true
+  }, 300)
 }
 
 // 搜索结果分组
@@ -487,20 +578,21 @@ const groupedSearchResults = computed(() => {
     if (!groups[item.type]) {
       groups[item.type] = []
     }
+    
     groups[item.type].push(item)
   })
   
   return groups
 })
 
-// 格式化分类名称
+// 格式化搜索分类名称
 const formatCategory = (category) => {
   const categoryMap = {
-    page: '页面',
-    user: '用户',
-    tenant: '租户',
-    document: '文档',
-    setting: '设置'
+    'article': '文章',
+    'user': '用户',
+    'tenant': '租户',
+    'task': '任务',
+    'record': '记录'
   }
   
   return categoryMap[category] || category
@@ -509,107 +601,102 @@ const formatCategory = (category) => {
 // 获取搜索图标
 const getSearchIcon = (category) => {
   const iconMap = {
-    page: 'Document',
-    user: 'User',
-    tenant: 'OfficeBuilding',
-    document: 'Document',
-    setting: 'Setting',
-    calendar: 'Calendar',
-    collection: 'Collection',
-    pieChart: 'PieChart',
-    reading: 'Reading',
-    folder: 'Folder',
-    chatDotRound: 'ChatDotRound',
-    dataAnalysis: 'DataAnalysis',
-    menu: 'Menu'
+    'article': 'Document',
+    'user': 'User',
+    'tenant': 'OfficeBuilding',
+    'task': 'List',
+    'record': 'Calendar'
   }
   
-  return iconMap[category] || 'Document'
+  return iconMap[category] || 'InfoFilled'
 }
 
-// 获取搜索图标样式类
+// 获取搜索图标类名
 const getSearchIconClass = (category) => {
-  const classMap = {
-    page: 'icon-blue',
-    user: 'icon-green',
-    tenant: 'icon-orange',
-    document: 'icon-purple',
-    setting: 'icon-gray',
-    calendar: 'icon-pink',
-    collection: 'icon-teal',
-    pieChart: 'icon-yellow',
-    reading: 'icon-blue',
-    folder: 'icon-teal',
-    chatDotRound: 'icon-teal',
-    dataAnalysis: 'icon-teal',
-    menu: 'icon-teal'
-  }
-  
-  return classMap[category] || 'icon-blue'
+  return `search-icon-${category}`
 }
 
 // 导航到搜索结果
 const navigateToResult = (item) => {
-  if (item.path) {
-    router.push(item.path)
-    showSearchResults.value = false
-  }
+  router.push(item.path)
+  showSearchResults.value = false
 }
 
-// 生命周期钩子
+// 处理登出
+const handleLogout = () => {
+  ElMessageBox.confirm('确定要退出登录吗?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    authStore.logout()
+    router.push('/login')
+  }).catch(() => {})
+}
+
+// 初始化
 onMounted(() => {
-  updateBreadcrumb()
-  
-  // 从localStorage获取侧边栏状态
-  const savedSidebarStatus = localStorage.getItem('sidebarStatus')
-  if (savedSidebarStatus !== null) {
-    isCollapsed.value = savedSidebarStatus === '1'
-  }
+  // 应用当前主题
+  settingsStore.setTheme(settingsStore.theme)
 })
 </script>
 
 <style scoped>
 .main-layout {
-  min-height: 100vh;
-  background-color: #f7f9fc;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+  transition: all 0.3s;
+}
+
+.main-layout.dark-mode {
+  background-color: #1e1e1e;
+  color: #eee;
 }
 
 .main-container {
   display: flex;
-  min-height: calc(100vh - 70px);
-  padding-top: 70px; /* 顶部导航栏高度 */
+  flex: 1;
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
-  margin-left: 260px; /* 侧边栏宽度 */
-  padding: 25px;
-  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s;
+  margin-left: 220px;
 }
 
 .content-expanded {
-  margin-left: 64px; /* 折叠后的侧边栏宽度 */
+  margin-left: 64px;
 }
 
 .page-content {
-  min-height: calc(100vh - 180px); /* 减去头部、面包屑、页脚高度 */
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
 }
 
-/* 过渡动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s;
+.debug-info {
+  background: #f0f9eb;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #67c23a;
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+.dark-mode .debug-info {
+  background: #263238;
+  color: #aed581;
 }
 
 /* 搜索结果样式 */
 .search-empty {
-  padding: 40px 0;
-  text-align: center;
+  padding: 20px 0;
 }
 
 .search-group {
@@ -617,11 +704,11 @@ onMounted(() => {
 }
 
 .search-category {
-  font-size: 14px;
-  color: var(--secondary-color);
-  margin-bottom: 10px;
+  margin: 0 0 10px;
   padding-bottom: 5px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #ebeef5;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .search-items {
@@ -632,49 +719,45 @@ onMounted(() => {
 
 .search-item {
   display: flex;
-  align-items: flex-start;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .search-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: #f5f7fa;
 }
 
 .search-item-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  color: white;
+  margin-right: 10px;
+  color: #fff;
 }
 
-.icon-blue {
-  background-color: var(--info-color);
+.search-icon-article {
+  background-color: #409eff;
 }
 
-.icon-green {
-  background-color: var(--success-color);
+.search-icon-user {
+  background-color: #67c23a;
 }
 
-.icon-orange {
-  background-color: var(--accent-color);
+.search-icon-tenant {
+  background-color: #e6a23c;
 }
 
-.icon-purple {
-  background-color: #9c27b0;
+.search-icon-task {
+  background-color: #f56c6c;
 }
 
-.icon-gray {
-  background-color: var(--secondary-color);
+.search-icon-record {
+  background-color: #909399;
 }
 
 .search-item-content {
@@ -683,33 +766,22 @@ onMounted(() => {
 
 .search-item-title {
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .search-item-desc {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #909399;
 }
 
-/* 响应式样式 */
-@media (max-width: 992px) {
-  .main-content {
-    margin-left: 0;
-    padding: 20px;
-  }
-  
-  .content-expanded {
-    margin-left: 0;
-  }
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-@media (max-width: 768px) {
-  .main-content {
-    padding: 15px;
-  }
-  
-  .search-items {
-    grid-template-columns: 1fr;
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

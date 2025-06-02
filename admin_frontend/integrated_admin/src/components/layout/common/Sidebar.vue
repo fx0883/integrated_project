@@ -1,330 +1,263 @@
 <template>
-  <div class="sidebar" :class="{ 'collapsed': isCollapsed }">
+  <div class="sidebar" :class="{ 'sidebar-collapsed': isCollapsed, 'dark-mode': isDarkMode }">
+    <!-- Logo区域 -->
+    <div class="sidebar-logo">
+      <div class="logo-container">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span v-if="!isCollapsed">{{ systemTitle }}</span>
+      </div>
+    </div>
+    
+    <!-- 菜单区域 -->
     <div class="sidebar-menu">
-      <template v-for="(item, index) in menuItems" :key="index">
-        <!-- 菜单分类标题 -->
-        <div class="menu-category" v-if="item.type === 'category'">
-          {{ item.title }}
-        </div>
-        
-        <!-- 无子菜单的菜单项 -->
-        <router-link 
-          v-else-if="!item.children || item.children.length === 0" 
-          :to="item.path"
-          class="menu-item"
-          :class="{ 'active': isActive(item.path) }"
-          v-show="!item.meta?.hidden"
+      <el-scrollbar>
+        <el-menu
+          :default-active="activeMenu"
+          :collapse="isCollapsed"
+          :unique-opened="true"
+          :collapse-transition="false"
+          class="sidebar-el-menu"
         >
-          <el-icon v-if="item.icon">
-            <component :is="item.icon" />
-          </el-icon>
-          <span class="menu-title">{{ item.title }}</span>
-        </router-link>
-        
-        <!-- 有子菜单的菜单项 -->
-        <div 
-          v-else 
-          class="submenu-container"
-          v-show="!item.meta?.hidden"
-        >
-          <div 
-            class="submenu-title" 
-            :class="{ 'active': isSubmenuActive(item) }"
-            @click="toggleSubmenu(item)"
-          >
-            <el-icon v-if="item.icon">
-              <component :is="item.icon" />
-            </el-icon>
-            <span class="menu-title">{{ item.title }}</span>
-            <el-icon class="arrow-icon">
-              <component :is="expandedMenus.includes(item.path) ? 'ArrowUp' : 'ArrowDown'" />
-            </el-icon>
-          </div>
-          
-          <!-- 子菜单项 -->
-          <div 
-            class="submenu" 
-            v-show="expandedMenus.includes(item.path)"
-          >
-            <router-link 
-              v-for="(subItem, subIndex) in item.children" 
-              :key="subIndex" 
-              :to="subItem.path"
-              class="menu-item submenu-item"
-              :class="{ 'active': isActive(subItem.path) }"
-              v-show="!subItem.meta?.hidden"
+          <template v-for="(item, index) in menuItems" :key="index">
+            <!-- 没有子菜单的菜单项 -->
+            <el-menu-item 
+              v-if="!item.children || item.children.length === 0" 
+              :index="item.path"
+              @click="navigateTo(item.path)"
             >
-              <el-icon v-if="subItem.icon">
-                <component :is="subItem.icon" />
+              <el-icon v-if="item.icon">
+                <component :is="item.icon" />
               </el-icon>
-              <span class="menu-title">{{ subItem.title }}</span>
-            </router-link>
-          </div>
-        </div>
-      </template>
+              <template #title>
+                <span>{{ item.title }}</span>
+              </template>
+            </el-menu-item>
+            
+            <!-- 有子菜单的菜单项 -->
+            <el-sub-menu 
+              v-else 
+              :index="item.path"
+            >
+              <template #title>
+                <el-icon v-if="item.icon">
+                  <component :is="item.icon" />
+                </el-icon>
+                <span>{{ item.title }}</span>
+              </template>
+              
+              <!-- 子菜单项 -->
+              <el-menu-item 
+                v-for="(subItem, subIndex) in item.children" 
+                :key="subIndex"
+                :index="subItem.path"
+                @click="navigateTo(subItem.path)"
+              >
+                <el-icon v-if="subItem.icon">
+                  <component :is="subItem.icon" />
+                </el-icon>
+                <template #title>
+                  <span>{{ subItem.title }}</span>
+                </template>
+              </el-menu-item>
+            </el-sub-menu>
+          </template>
+        </el-menu>
+      </el-scrollbar>
     </div>
     
     <!-- 折叠按钮 -->
-    <div class="menu-toggle-btn" @click="toggleCollapse">
-      <el-icon v-if="isCollapsed">
-        <Expand />
-      </el-icon>
-      <el-icon v-else>
-        <Fold />
+    <div class="sidebar-collapse-btn" @click="$emit('toggleCollapse')">
+      <el-icon size="16">
+        <component :is="isCollapsed ? 'ArrowRight' : 'ArrowLeft'" />
       </el-icon>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { 
-  Expand, Fold, Odometer, User, Setting, List, 
-  Plus, OfficeBuilding, DataLine, ArrowUp, ArrowDown
-} from '@element-plus/icons-vue'
-
-// 路由
-const router = useRouter()
-const route = useRoute()
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSettingsStore } from '../../../stores'
+import * as ElementPlusIcons from '@element-plus/icons-vue'
 
 // 定义组件属性
 const props = defineProps({
   isCollapsed: {
     type: Boolean,
-    required: true
+    default: false
   },
   activeMenu: {
     type: String,
-    required: true
+    default: '/'
   },
   menuItems: {
     type: Array,
-    required: true
+    default: () => []
   }
 })
 
 // 定义事件
-const emit = defineEmits(['toggle-collapse', 'select'])
+const emit = defineEmits(['toggleCollapse'])
 
-// 展开的子菜单
-const expandedMenus = ref([])
+// 路由和store
+const router = useRouter()
+const settingsStore = useSettingsStore()
 
-// 判断路径是否活跃
-const isActive = (path) => {
-  console.log('[Sidebar] 检查路径是否活跃:', path, '当前活跃菜单:', props.activeMenu)
-  
-  // 精确匹配
-  if (path === props.activeMenu) {
-    console.log('[Sidebar] 路径精确匹配')
-    return true
-  }
-  
-  // 子路径匹配
-  const currentPath = route.path
-  if (path !== '/' && currentPath.startsWith(path + '/')) {
-    console.log('[Sidebar] 路径前缀匹配:', path, currentPath)
-    return true
-  }
-  
-  return false
-}
+// 是否为暗黑模式
+const isDarkMode = computed(() => settingsStore.isDarkMode)
 
-// 判断子菜单是否活跃
-const isSubmenuActive = (item) => {
-  // 如果当前路径是该菜单项的路径，则活跃
-  if (isActive(item.path)) {
-    console.log('[Sidebar] 菜单项活跃:', item.path)
-    return true
-  }
-  
-  // 如果当前路径包含在子菜单中，则活跃
-  if (item.children) {
-    const hasActiveChild = item.children.some(child => isActive(child.path))
-    if (hasActiveChild) {
-      console.log('[Sidebar] 子菜单活跃:', item.path)
-    }
-    return hasActiveChild
-  }
-  
-  return false
-}
+// 系统标题
+const systemTitle = computed(() => settingsStore.systemTitle)
 
-// 切换子菜单展开状态
-const toggleSubmenu = (item) => {
-  const index = expandedMenus.value.indexOf(item.path)
-  if (index > -1) {
-    expandedMenus.value.splice(index, 1)
-  } else {
-    expandedMenus.value.push(item.path)
+// 导航到指定路径
+const navigateTo = (path) => {
+  if (path) {
+    router.push(path)
   }
 }
-
-// 折叠/展开侧边栏
-const toggleCollapse = () => {
-  emit('toggle-collapse')
-}
-
-// 处理菜单选择
-const handleSelect = (index) => {
-  emit('select', index)
-}
-
-// 监听路由变化，自动展开对应的子菜单
-watch(() => route.path, (newPath) => {
-  props.menuItems.forEach(item => {
-    if (item.children) {
-      const hasActiveChild = item.children.some(child => 
-        child.path === newPath || newPath.startsWith(child.path + '/')
-      )
-      
-      if (hasActiveChild && !expandedMenus.value.includes(item.path)) {
-        expandedMenus.value.push(item.path)
-      }
-    }
-  })
-}, { immediate: true })
 </script>
 
 <style scoped>
-/* 侧边栏样式 */
 .sidebar {
   position: fixed;
-  top: 70px;
-  left: 0;
+  top: 0;
   bottom: 0;
-  width: 260px;
-  background-color: white;
-  border-right: 1px solid var(--border-color);
-  overflow-y: auto;
-  z-index: 900;
-  transition: all 0.3s ease;
+  left: 0;
+  width: 220px;
+  background-color: #fff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  z-index: 999;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  padding-top: 70px; /* 头部导航栏高度 */
 }
 
-.collapsed {
+.sidebar.dark-mode {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-collapsed {
   width: 64px;
+}
+
+.sidebar-logo {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 220px;
+  background-color: #fff;
+  z-index: 1000;
+  transition: all 0.3s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .sidebar-logo {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-collapsed .sidebar-logo {
+  width: 64px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+  padding: 0 16px;
+  white-space: nowrap;
   overflow: hidden;
+}
+
+.logo-container svg {
+  margin-right: 10px;
+  stroke: var(--el-color-primary);
+  flex-shrink: 0;
 }
 
 .sidebar-menu {
-  padding: 20px 0;
-}
-
-.menu-category {
-  padding: 12px 25px;
-  color: var(--secondary-color);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-  margin-top: 10px;
-}
-
-.menu-item {
-  padding: 12px 25px;
-  display: flex;
-  align-items: center;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  text-decoration: none;
-  position: relative;
-}
-
-.menu-item.active {
-  color: var(--primary-color);
-  background-color: var(--primary-light);
-  font-weight: 500;
-}
-
-.menu-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background-color: var(--primary-color);
-}
-
-.menu-item:hover {
-  background-color: rgba(10, 186, 181, 0.05);
-}
-
-.submenu-container {
-  margin-bottom: 5px;
-}
-
-.submenu-title {
-  padding: 12px 25px;
-  display: flex;
-  align-items: center;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  cursor: pointer;
-  position: relative;
-}
-
-.submenu-title.active {
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-.submenu-title:hover {
-  background-color: rgba(10, 186, 181, 0.05);
-}
-
-.submenu {
-  margin-left: 15px;
-}
-
-.submenu-item {
-  padding: 10px 25px 10px 35px;
-}
-
-.menu-title {
-  margin-left: 10px;
-  white-space: nowrap;
+  flex: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.arrow-icon {
-  margin-left: auto;
-  transition: transform 0.3s;
+.sidebar-el-menu {
+  border-right: none;
 }
 
-.menu-toggle-btn {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
+.sidebar-el-menu:not(.el-menu--collapse) {
+  width: 220px;
+}
+
+.sidebar-collapse-btn {
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--primary-light);
-  color: var(--primary-color);
-  border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(10, 186, 181, 0.2);
+  color: #909399;
+  border-top: 1px solid #e4e7ed;
   transition: all 0.3s;
 }
 
-.menu-toggle-btn:hover {
-  background-color: var(--primary-color);
-  color: white;
+.dark-mode .sidebar-collapse-btn {
+  border-top: 1px solid #4a4a4a;
+  color: #a0a0a0;
 }
 
-/* 响应式样式 */
-@media (max-width: 992px) {
+.sidebar-collapse-btn:hover {
+  background-color: #f5f7fa;
+  color: var(--el-color-primary);
+}
+
+.dark-mode .sidebar-collapse-btn:hover {
+  background-color: #2a2a2a;
+  color: var(--el-color-primary);
+}
+
+/* 自定义菜单样式 */
+:deep(.el-menu) {
+  background-color: transparent;
+}
+
+:deep(.el-menu-item.is-active) {
+  color: var(--el-color-primary);
+  background-color: #ecf5ff;
+}
+
+.dark-mode :deep(.el-menu-item.is-active) {
+  background-color: #263238;
+}
+
+:deep(.el-menu-item:hover),
+:deep(.el-sub-menu__title:hover) {
+  background-color: #f5f7fa;
+}
+
+.dark-mode :deep(.el-menu-item:hover),
+.dark-mode :deep(.el-sub-menu__title:hover) {
+  background-color: #2a2a2a;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
   .sidebar {
-    transform: translateX(0);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    transform: translateX(-100%);
   }
   
-  .collapsed {
-    transform: translateX(-260px);
+  .sidebar.sidebar-collapsed {
+    transform: translateX(0);
+    width: 64px;
   }
 }
 </style>

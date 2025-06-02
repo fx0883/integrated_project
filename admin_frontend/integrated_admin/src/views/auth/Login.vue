@@ -1,73 +1,82 @@
 <template>
   <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <div class="login-logo">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
-        </div>
-        <h1 class="login-title">集成管理系统</h1>
-        <p class="login-subtitle">登录以继续访问</p>
+    <div class="login-box">
+      <div class="login-left">
+        <img src="../../assets/login-bg.svg" alt="Login" class="login-image" />
       </div>
-      
-      <!-- 显示重定向或错误消息 -->
-      <el-alert
-        v-if="redirectMessage"
-        type="warning"
-        :closable="true"
-        show-icon
-        :title="redirectMessage"
-        style="margin-bottom: 20px;"
-      />
-      
-      <el-form
-        ref="loginForm"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @submit.prevent="handleLogin"
-      >
-        <el-form-item label="用户名" prop="username">
-          <el-input 
-            v-model="form.username"
-            placeholder="请输入用户名"
-            prefix-icon="User"
-          />
-        </el-form-item>
+      <div class="login-right">
+        <div class="login-header">
+          <div class="login-logo">
+            <img src="../../assets/logo.svg" alt="Logo" class="logo-img" />
+          </div>
+          <h2 class="login-title">集成管理系统</h2>
+          <p class="login-subtitle">登录以继续访问管理平台</p>
+        </div>
         
-        <el-form-item label="密码" prop="password">
-          <el-input 
-            v-model="form.password"
-            type="password"
-            placeholder="请输入密码"
-            prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
-        
-        <div class="form-flex">
-          <el-form-item style="margin-bottom: 0">
-            <el-checkbox v-model="form.rememberMe">记住我</el-checkbox>
+        <!-- 显示重定向或错误消息 -->
+        <el-alert
+          v-if="redirectMessage"
+          type="warning"
+          :closable="true"
+          show-icon
+          :title="redirectMessage"
+          class="login-alert"
+        />
+
+        <el-form
+          ref="loginForm"
+          :model="form"
+          :rules="rules"
+          class="login-form"
+          @submit.prevent="handleLogin"
+        >
+          <el-form-item prop="username">
+            <el-input 
+              v-model="form.username"
+              placeholder="请输入用户名"
+              :prefix-icon="User"
+              size="large"
+            />
           </el-form-item>
-          <router-link to="/forgot-password" class="forgot-link">忘记密码?</router-link>
-        </div>
+          
+          <el-form-item prop="password">
+            <el-input 
+              v-model="form.password"
+              type="password"
+              placeholder="请输入密码"
+              :prefix-icon="Lock"
+              show-password
+              size="large"
+              @keyup.enter="handleLogin"
+            />
+          </el-form-item>
+          
+          <div class="form-options">
+            <el-checkbox v-model="form.rememberMe">记住我</el-checkbox>
+            <el-link type="primary" href="#/forgot-password">忘记密码?</el-link>
+          </div>
+          
+          <el-form-item>
+            <el-button 
+              type="primary" 
+              :loading="loading" 
+              class="login-button" 
+              @click="handleLogin"
+              round
+            >
+              登 录
+            </el-button>
+          </el-form-item>
+          
+          <div class="register-link">
+            还没有账号? <el-link type="primary" href="#/register">立即注册</el-link>
+          </div>
+        </el-form>
         
-        <el-form-item>
-          <el-button 
-            type="primary" 
-            :loading="loading" 
-            class="login-button" 
-            @click="handleLogin"
-          >
-            登录
-          </el-button>
-        </el-form-item>
-        
-        <div class="register-link">
-          还没有账号? <router-link to="/register">立即注册</router-link>
+        <div class="login-footer">
+          <p>© 2023 集成管理系统 版权所有</p>
         </div>
-      </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +86,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores'
 import { ElMessage } from 'element-plus'
+import { User, Lock } from '@element-plus/icons-vue'
 
 // 路由
 const router = useRouter()
@@ -141,9 +151,8 @@ const handleLogin = async () => {
   
   try {
     // 表单验证
-    console.log('开始验证表单')
+    if (!loginForm.value) return
     await loginForm.value.validate()
-    console.log('表单验证通过')
     
     // 设置加载状态
     loading.value = true
@@ -173,26 +182,27 @@ const handleLogin = async () => {
     // 先显示成功消息
     ElMessage({
       type: 'success',
-      message: '登录成功'
+      message: '登录成功，正在跳转...',
+      duration: 1500
     })
     
-    // 确保在重定向前重置loading状态
-    loading.value = false
+    // 延迟跳转，确保消息显示
+    setTimeout(() => {
+      // 确保在重定向前重置loading状态
+      loading.value = false
+      
+      // 使用更安全的重定向方法
+      try {
+        router.replace(redirect)
+      } catch (navError) {
+        console.error('导航失败，尝试使用备用方法:', navError)
+        // 如果路由导航失败，使用location.href作为备用
+        const baseUrl = window.location.origin
+        const fullUrl = baseUrl + (redirect.startsWith('/') ? redirect : '/' + redirect)
+        window.location.href = fullUrl
+      }
+    }, 1500)
     
-    // 使用更安全的重定向方法
-    console.log('执行重定向到', redirect)
-    
-    // 直接使用router.replace，简化流程
-    try {
-      await router.replace(redirect)
-      console.log('导航完成')
-    } catch (navError) {
-      console.error('导航失败，尝试使用备用方法:', navError)
-      // 如果路由导航失败，使用location.href作为备用
-      const baseUrl = window.location.origin
-      const fullUrl = baseUrl + (redirect.startsWith('/') ? redirect : '/' + redirect)
-      window.location.href = fullUrl
-    }
   } catch (error) {
     console.error('登录失败:', error)
     
@@ -214,17 +224,44 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f7f9fc;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: repeat;
+  width: 100vw;
+  background-color: #f0f2f5;
+  overflow: hidden;
+  background-image: 
+    linear-gradient(135deg, rgba(49, 71, 150, 0.06) 0%, rgba(233, 236, 241, 0.06) 100%),
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2329477b' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
 }
 
-.login-card {
-  width: 400px;
-  padding: 30px;
+.login-box {
+  width: 900px;
+  height: 520px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  overflow: hidden;
+}
+
+.login-left {
+  width: 50%;
+  background: linear-gradient(135deg, #304156 0%, #1f2d3d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-image {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.login-right {
+  width: 50%;
+  padding: 40px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .login-header {
@@ -233,75 +270,84 @@ const handleLogin = async () => {
 }
 
 .login-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 15px;
+  display: inline-block;
+  margin-bottom: 16px;
 }
 
-.login-logo svg {
-  width: 45px;
-  height: 45px;
-  color: #0abab5;
+.logo-img {
+  width: 60px;
+  height: 60px;
 }
 
 .login-title {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 500;
   color: #333;
-  margin-bottom: 5px;
+  margin: 0 0 10px;
 }
 
 .login-subtitle {
   font-size: 14px;
-  color: #666;
+  color: #909399;
+  margin: 0;
 }
 
-.login-button {
-  width: 100%;
-  margin-top: 10px;
-  background-color: #0abab5;
-  border-color: #0abab5;
-  height: 44px;
-  font-size: 16px;
+.login-form {
+  flex: 1;
 }
 
-.login-button:hover {
-  background-color: #099490;
-  border-color: #099490;
+.login-alert {
+  margin-bottom: 20px;
 }
 
-.form-flex {
+.form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.forgot-link {
-  font-size: 14px;
-  color: #0abab5;
-  text-decoration: none;
-}
-
-.forgot-link:hover {
-  text-decoration: underline;
+.login-button {
+  width: 100%;
+  height: 46px;
+  font-size: 16px;
+  letter-spacing: 2px;
 }
 
 .register-link {
-  margin-top: 20px;
   text-align: center;
+  margin-top: 16px;
   font-size: 14px;
-  color: #666;
+  color: #606266;
 }
 
-.register-link a {
-  color: #ff6600;
-  text-decoration: none;
-  font-weight: 500;
+.login-footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: #909399;
 }
 
-.register-link a:hover {
-  text-decoration: underline;
+/* 响应式调整 */
+@media screen and (max-width: 992px) {
+  .login-box {
+    width: 700px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .login-box {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    border-radius: 0;
+  }
+  .login-left {
+    display: none;
+  }
+  .login-right {
+    width: 100%;
+    padding: 30px;
+  }
 }
 </style>

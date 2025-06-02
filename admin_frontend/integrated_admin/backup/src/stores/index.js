@@ -5,7 +5,6 @@ import useCategoryStore from './modules/category'
 import useTagStore from './modules/tag'
 import useCommentStore from './modules/comment'
 import useStatisticsStore from './modules/statistics'
-import useSettingsStore from './modules/settings'
 
 const pinia = createPinia()
 
@@ -15,8 +14,7 @@ export {
   useCategoryStore,
   useTagStore,
   useCommentStore,
-  useStatisticsStore,
-  useSettingsStore
+  useStatisticsStore
 }
 
 export default pinia 

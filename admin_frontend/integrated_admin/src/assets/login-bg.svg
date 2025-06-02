@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .wave {
+      animation: wave 12s linear infinite;
+    }
+    
+    @keyframes wave {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
+  
+  <!-- 背景 -->
+  <rect width="500" height="500" fill="url(#grad1)"/>
+  
+  <!-- 矢量图形 -->
+  <g opacity="0.1" fill="#FFFFFF">
+    <circle cx="100" cy="100" r="15" />
+    <circle cx="400" cy="150" r="10" />
+    <circle cx="350" cy="400" r="12" />
+    <circle cx="150" cy="350" r="8" />
+    <circle cx="250" cy="250" r="20" />
+    <circle cx="450" cy="50" r="6" />
+    <circle cx="50" cy="450" r="9" />
+  </g>
+  
+  <!-- 波浪动画 -->
+  <g class="wave" opacity="0.1">
+    <path d="M0 280C50 230 100 320 150 280C200 240 250 300 300 260C350 220 400 270 450 250C500 230 550 280 600 260L600 500L0 500L0 280Z" fill="white"/>
+  </g>
+  
+  <!-- 渐变定义 -->
+  <defs>
+    <linearGradient id="grad1" x1="0" y1="0" x2="500" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#304156" />
+      <stop offset="1" stop-color="#1F2D3D" />
+    </linearGradient>
+  </defs>
+</svg> 
