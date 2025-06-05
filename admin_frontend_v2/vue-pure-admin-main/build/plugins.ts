@@ -20,6 +20,17 @@ export function getPluginsList(
   VITE_COMPRESSION: ViteCompression
 ): PluginOption[] {
   const lifecycle = process.env.npm_lifecycle_event;
+  
+  // 从环境变量中获取VITE_USE_MOCK的值
+  const VITE_USE_MOCK = process.env.VITE_USE_MOCK === "true";
+  
+  console.log("[Vite] 环境变量:", {
+    VITE_CDN,
+    VITE_COMPRESSION,
+    VITE_USE_MOCK,
+    BASE_API: process.env.VITE_BASE_API
+  });
+  
   return [
     tailwindcss(),
     vue({
@@ -51,13 +62,15 @@ export function getPluginsList(
      * vite-plugin-router-warn只在开发环境下启用，只处理vue-router文件并且只在服务启动或重启时运行一次，性能消耗可忽略不计
      */
     removeNoMatch(),
-    // mock支持
-    vitePluginFakeServer({
-      logger: false,
-      include: "mock",
-      infixName: false,
-      enableProd: true
-    }),
+    // mock支持，根据环境变量决定是否启用
+    VITE_USE_MOCK
+      ? vitePluginFakeServer({
+          logger: true,
+          include: "mock",
+          infixName: false,
+          enableProd: true
+        })
+      : null,
     // svg组件化支持
     svgLoader(),
     // 自动按需加载图标

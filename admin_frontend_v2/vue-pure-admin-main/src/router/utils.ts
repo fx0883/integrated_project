@@ -154,6 +154,43 @@ function handleAsyncRoutes(routeList) {
   if (routeList.length === 0) {
     usePermissionStoreHook().handleWholeMenus(routeList);
   } else {
+    // 确保router.options.routes存在
+    if (!router.options.routes || router.options.routes.length === 0) {
+      console.warn("[路由警告] router.options.routes为空");
+      // 创建一个新的路由对象并添加到router中
+      const mainRoute = {
+        path: "/",
+        name: "Root",
+        component: () => import("@/layout/index.vue"),
+        children: []
+      };
+      router.addRoute(mainRoute);
+      // 手动更新router.options.routes
+      // @ts-ignore - 忽略TypeScript类型检查，因为我们需要修改只读属性
+      router.options.routes = [mainRoute];
+    }
+    
+    // 确保router.options.routes[0]存在
+    if (!router.options.routes[0]) {
+      console.warn("[路由警告] router.options.routes[0]不存在");
+      const mainRoute = {
+        path: "/",
+        name: "Root",
+        component: () => import("@/layout/index.vue"),
+        children: []
+      };
+      router.addRoute(mainRoute);
+      // @ts-ignore - 忽略TypeScript类型检查
+      router.options.routes[0] = mainRoute;
+    }
+    
+    // 确保children数组存在
+    if (!router.options.routes[0].children) {
+      console.warn("[路由警告] router.options.routes[0].children不存在，已自动创建");
+      // @ts-ignore - 忽略TypeScript类型检查
+      router.options.routes[0].children = [];
+    }
+
     formatFlatteningRoutes(addAsyncRoutes(routeList)).map(
       (v: RouteRecordRaw) => {
         // 防止重复添加路由
@@ -165,16 +202,22 @@ function handleAsyncRoutes(routeList) {
           return;
         } else {
           // 切记将路由push到routes后还需要使用addRoute，这样路由才能正常跳转
+          // @ts-ignore - 忽略TypeScript类型检查
           router.options.routes[0].children.push(v);
           // 最终路由进行升序
+          // @ts-ignore - 忽略TypeScript类型检查
           ascending(router.options.routes[0].children);
           if (!router.hasRoute(v?.name)) router.addRoute(v);
           const flattenRouters: any = router
             .getRoutes()
             .find(n => n.path === "/");
           // 保持router.options.routes[0].children与path为"/"的children一致，防止数据不一致导致异常
-          flattenRouters.children = router.options.routes[0].children;
-          router.addRoute(flattenRouters);
+          if (flattenRouters) {
+            flattenRouters.children = router.options.routes[0].children;
+            router.addRoute(flattenRouters);
+          } else {
+            console.warn("[路由警告] 找不到路径为'/'的路由");
+          }
         }
       }
     );
@@ -300,34 +343,83 @@ function handleAliveRoute({ name }: ToRouteType, mode?: string) {
   }
 }
 
-/** 过滤后端传来的动态路由 重新生成规范路由 */
-function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
-  if (!arrRoutes || !arrRoutes.length) return;
-  const modulesRoutesKeys = Object.keys(modulesRoutes);
-  arrRoutes.forEach((v: RouteRecordRaw) => {
-    // 将backstage属性加入meta，标识此路由为后端返回路由
-    v.meta.backstage = true;
-    // 父级的redirect属性取值：如果子级存在且父级的redirect属性不存在，默认取第一个子级的path；如果子级存在且父级的redirect属性存在，取存在的redirect属性，会覆盖默认值
-    if (v?.children && v.children.length && !v.redirect)
-      v.redirect = v.children[0].path;
-    // 父级的name属性取值：如果子级存在且父级的name属性不存在，默认取第一个子级的name；如果子级存在且父级的name属性存在，取存在的name属性，会覆盖默认值（注意：测试中发现父级的name不能和子级name重复，如果重复会造成重定向无效（跳转404），所以这里给父级的name起名的时候后面会自动加上`Parent`，避免重复）
-    if (v?.children && v.children.length && !v.name)
-      v.name = (v.children[0].name as string) + "Parent";
-    if (v.meta?.frameSrc) {
-      v.component = IFrame;
-    } else {
-      // 对后端传component组件路径和不传做兼容（如果后端传component组件路径，那么path可以随便写，如果不传，component组件路径会跟path保持一致）
-      const index = v?.component
-        ? modulesRoutesKeys.findIndex(ev => ev.includes(v.component as any))
-        : modulesRoutesKeys.findIndex(ev => ev.includes(v.path));
-      v.component = modulesRoutes[modulesRoutesKeys[index]];
-    }
-    if (v?.children && v.children.length) {
-      addAsyncRoutes(v.children);
-    }
-  });
-  return arrRoutes;
+/**
+ * 添加日志函数
+ * @param message 日志信息
+ */
+function routeLog(message: string, ...args: any[]): void {
+  const enable = import.meta.env.VITE_DEBUG_ROUTE || false;
+  if (enable) {
+    console.log(`[路由处理] ${message}`, ...args);
+  }
 }
+
+/**
+ * 检测并防止循环依赖
+ */
+function detectCircularRoutes(routes: any[], path: string[] = []): boolean {
+  if (!routes || routes.length === 0) return false;
+  
+  for (const route of routes) {
+    if (!route) continue;
+    
+    const routePath = route.path || route.name || 'unnamed';
+    const currentPath = [...path, routePath];
+    
+    // 检查是否存在循环引用
+    if (path.includes(routePath)) {
+      console.error(`检测到路由循环引用: ${currentPath.join(' -> ')}`);
+      return true;
+    }
+    
+    // 检查子路由
+    if (route.children && route.children.length > 0) {
+      if (detectCircularRoutes(route.children, currentPath)) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * 安全处理路由配置
+ * @param fn 路由处理函数
+ * @returns 包装后的安全函数
+ */
+function safeRouteHandler<T extends (...args: any[]) => any>(fn: T): T {
+  return ((...args: any[]) => {
+    try {
+      routeLog(`调用函数 ${fn.name || 'anonymous'}`);
+      return fn.apply(null, args);
+    } catch (error) {
+      console.error(`路由处理函数 ${fn.name || 'anonymous'} 执行失败:`, error);
+      // 返回一个安全的默认值
+      if (fn.name === 'addAsyncRoutes') return [];
+      return null;
+    }
+  }) as unknown as T;
+}
+
+// 安全包装路由处理函数
+const originalAddAsyncRoutes = addAsyncRoutes;
+addAsyncRoutes = safeRouteHandler(addAsyncRoutes);
+
+// 在处理路由配置之前检查是否存在循环引用
+const originalFlatMultiLevelRoutes = flatMultiLevelRoutes;
+flatMultiLevelRoutes = (routes: any) => {
+  routeLog("检查路由配置是否存在循环引用");
+  if (detectCircularRoutes(routes)) {
+    console.error("路由配置中存在循环引用，这可能导致堆栈溢出");
+  }
+  try {
+    return originalFlatMultiLevelRoutes(routes);
+  } catch (error) {
+    console.error("展平多级路由失败:", error);
+    return routes; // 返回原始路由，保证应用不崩溃
+  }
+};
 
 /** 获取路由历史模式 https://next.router.vuejs.org/zh/guide/essentials/history-mode.html */
 function getHistoryMode(routerHistory): RouterHistory {

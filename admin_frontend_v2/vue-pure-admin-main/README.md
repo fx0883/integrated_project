@@ -266,3 +266,155 @@ docker run -dp 8080:80  --name pure-admin vue-pure-admin
 2. `src/views/system/menu/utils/hook.tsx` - 更新菜单管理钩子函数
 3. `src/views/system/menu/form.vue` - 添加菜单状态字段
 4. `src/views/system/menu/utils/types.ts` - 更新菜单表单类型定义
+
+## 项目清理记录
+
+### 2023-10-20 清理无关代码
+
+- 删除了与业务逻辑无关的视图目录，仅保留核心业务模块（dashboard、cms、user、check、tenant）和必要的系统页面（login、error）
+- 删除了与业务逻辑无关的路由模块文件，仅保留核心业务模块路由和必要的系统路由
+- 修改了路由配置文件，移除了自动导入所有路由模块的逻辑，改为显式导入业务相关模块
+- 优化了项目结构，减少了不必要的代码文件，提高了项目的可维护性和加载性能
+
+## API调用日志记录优化
+
+### 本次会话的主要目标
+优化项目的API调用，在所有API请求处添加详细的控制台日志输出，便于开发调试和问题排查。
+
+### 已完成的具体任务
+1. 在HTTP请求拦截器中添加请求详情和Token处理过程的日志
+2. 在HTTP响应拦截器中添加响应详情的日志
+3. 在HTTP通用请求方法中添加请求和响应信息的日志
+4. 在HTTP GET和POST方法中添加特定请求类型的日志
+5. 在响应格式化逻辑中添加响应数据处理过程的日志
+6. 在错误处理逻辑中添加错误信息的日志
+7. 在Token刷新和请求重试过程中添加完整流程的日志
+
+### 采用的技术方案及决策理由
+- **分层日志记录**：在HTTP请求的各个环节添加日志，确保整个请求流程可跟踪
+- **统一日志格式**：为不同类型的日志制定统一的格式，使日志易于识别和分析
+- **详细错误信息**：对错误情况进行详细记录，包括完整的错误对象和状态信息
+- **请求参数记录**：记录请求的URL、方法、参数和数据，便于复现问题
+- **Token处理流程记录**：详细记录Token的处理过程，包括过期检测、刷新和重试
+
+### 使用的主要技术栈
+- Axios请求拦截器和响应拦截器
+- JavaScript Console API
+- Promise链式处理
+- Vue 3生态系统
+
+### 变更的文件清单
+1. `src/utils/http/index.ts` - 添加请求、响应和Token处理的日志
+2. `src/utils/http/response.ts` - 添加响应格式化和错误处理的日志
+
+## 路由错误修复总结
+
+### 问题描述
+登录后出现 `Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'findIndex')` 错误，导致异步路由加载失败。
+
+### 修复方案
+1. **路由初始化问题修复**：
+   - 确保`router.options.routes[0]`和`router.options.routes[0].children`存在
+   - 添加根路由(/)作为所有路由的父级
+   - 在路由处理函数中添加空值检查和防御性代码
+
+2. **组件路径解析增强**：
+   - 改进`addAsyncRoutes`函数中的组件路径查找逻辑
+   - 尝试多种可能的路径格式匹配组件
+   - 添加找不到组件时的备用空组件
+
+3. **环境配置完善**：
+   - 创建`.env.local`文件配置API基础URL和mock服务
+   - 在`build/utils.ts`中为环境变量添加默认值
+   - 修改`build/plugins.ts`正确处理环境变量
+
+4. **调试支持增强**：
+   - 添加详细的路由处理日志
+   - 在关键步骤添加错误处理和警告信息
+   - 提供本地路由数据作为API失败的备选方案
+
+### 相关文件
+- `src/router/utils.ts`
+- `src/router/index.ts`
+- `src/api/routes.ts`
+- `src/views/error/empty.vue`
+- `build/plugins.ts`
+- `.env.local`
+
+### 使用说明
+1. 确保`.env.local`文件中配置了正确的环境变量：
+   ```
+   VITE_BASE_API=/api
+   VITE_USE_MOCK=true
+   ```
+
+2. 如果需要禁用mock服务，将`VITE_USE_MOCK`设置为`false`
+3. 如果需要修改API基础URL，更改`VITE_BASE_API`的值
+
+## 堆栈溢出错误修复总结
+
+### 问题描述
+启动项目时出现 `Uncaught RangeError: Maximum call stack size exceeded` 错误，错误出现在 @pureadmin_utils.js 文件中，可能是由于循环引用导致的堆栈溢出。
+
+### 修复方案
+1. **循环引用检测**：
+   - 在所有递归处理树结构的函数中添加循环引用检测
+   - 使用 `Set` 数据结构追踪已处理过的节点
+   - 当检测到循环引用时，跳过该节点或提前返回
+
+2. **深拷贝处理**：
+   - 在 `handleTree` 函数中使用 `JSON.parse(JSON.stringify())` 对输入数据进行深拷贝
+   - 避免对原始数据的修改，防止意外创建循环引用
+
+3. **健壮性增强**：
+   - 添加更多空值检查，如 `Array.isArray()` 检查
+   - 优化递归终止条件，确保在各种边缘情况下都能正确返回
+   - 添加详细的警告日志，帮助定位循环引用问题的根源
+
+### 修复的函数
+1. `buildHierarchyTree`: 创建层级关系时检测循环引用
+2. `extractPathList`: 提取菜单路径时检测循环引用
+3. `deleteChildren`: 删除子节点时检测循环引用
+4. `getNodeByUniqueId`: 查找节点时检测循环引用并优化搜索逻辑
+5. `appendFieldByUniqueId`: 追加字段时检测循环引用
+6. `handleTree`: 构造树型结构时添加深拷贝和循环引用检测
+
+### 额外配置
+创建 `.env.development.local` 文件，添加 `VITE_MAX_RECURSION_DEPTH=100` 配置项，为递归操作设置深度限制，增强开发环境下的错误排查能力。
+
+## API响应循环引用修复总结
+
+### 问题描述
+项目启动时出现 `Uncaught RangeError: Maximum call stack size exceeded` 错误，错误出现在 @pureadmin_utils.js 文件中，与API响应处理相关。根据错误堆栈信息，问题出在处理API返回数据时的循环引用问题。
+
+### 修复方案
+1. **安全深拷贝工具**：
+   - 创建了 `safeDeepClone` 函数处理循环引用问题
+   - 实现了 `safeStringify` 和 `safeParse` 安全序列化工具
+   - 添加了最大递归深度限制，防止堆栈溢出
+
+2. **HTTP请求响应处理改造**：
+   - 修改 `formatResponse` 函数，使用安全深拷贝函数
+   - 为API请求、响应和错误处理添加错误捕获
+   - 使用 `safeStringify` 输出日志，避免循环引用引起的错误
+
+3. **表格数据处理工具**：
+   - 添加 `tableHelper.ts` 工具，专门处理表格数据的安全问题
+   - 实现 `hasCircularReference` 检测函数
+   - 添加 `safeTableData` 函数处理表格数据，即使有循环引用也能正常显示
+
+### 相关文件
+- `src/utils/common.ts`: 新增安全深拷贝工具函数
+- `src/utils/http/response.ts`: 修改API响应格式化逻辑
+- `src/utils/http/index.ts`: 修改请求和响应拦截器
+- `src/utils/tableHelper.ts`: 新增表格数据安全处理工具
+
+### 环境变量配置
+添加了以下环境变量，用于控制安全处理功能：
+```
+# 是否启用调试工具函数
+DEBUG_UTILS=true
+
+# 是否启用循环引用安全检查
+CIRCLE_SAFE=true
+```

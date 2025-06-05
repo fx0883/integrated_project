@@ -230,3 +230,159 @@ class TenantQuota(models.Model):
         
         percentage = (current / maximum) * 100
         return round(percentage, 1)  # 保留一位小数
+
+
+class TenantBusinessInfo(models.Model):
+    """
+    租户信息附加表，用于存储租户的公司注册信息和营业执照
+    """
+    VERIFICATION_STATUS_CHOICES = (
+        ('pending', '待验证'),
+        ('verified', '已验证'),
+        ('rejected', '已拒绝'),
+        ('expired', '已过期'),
+    )
+    
+    tenant = models.OneToOneField(
+        Tenant,
+        on_delete=models.CASCADE,
+        related_name='business_info',
+        verbose_name=_('租户')
+    )
+    
+    # 公司基本信息
+    company_name = models.CharField(_("公司名称"), max_length=100)
+    legal_representative = models.CharField(_("法定代表人"), max_length=50)
+    unified_social_credit_code = models.CharField(
+        _("统一社会信用代码"), 
+        max_length=50,
+        unique=True,
+    )
+    registration_number = models.CharField(_("注册号"), max_length=50, null=True, blank=True)
+    company_type = models.CharField(_("公司类型"), max_length=50, null=True, blank=True)
+    registered_capital = models.DecimalField(
+        _("注册资本"), 
+        max_digits=15, 
+        decimal_places=2, 
+        null=True, 
+        blank=True
+    )
+    registered_capital_currency = models.CharField(
+        _("注册资本币种"), 
+        max_length=20, 
+        default="CNY",
+        null=True, 
+        blank=True
+    )
+    business_scope = models.TextField(_("经营范围"), null=True, blank=True)
+    
+    # 日期信息
+    establishment_date = models.DateField(_("成立日期"), null=True, blank=True)
+    business_term_start = models.DateField(_("营业期限开始日期"), null=True, blank=True)
+    business_term_end = models.DateField(_("营业期限结束日期"), null=True, blank=True)
+    
+    # 注册信息
+    registration_authority = models.CharField(_("登记机关"), max_length=100, null=True, blank=True)
+    approval_date = models.DateField(_("核准日期"), null=True, blank=True)
+    business_status = models.CharField(_("企业状态"), max_length=50, null=True, blank=True)
+    registered_address = models.CharField(_("注册地址"), max_length=255, null=True, blank=True)
+    
+    # 联系信息
+    office_address = models.CharField(_("办公地址"), max_length=255, null=True, blank=True)
+    contact_person = models.CharField(_("联系人"), max_length=50, null=True, blank=True)
+    contact_phone = models.CharField(_("联系电话"), max_length=20, null=True, blank=True)
+    email = models.EmailField(_("电子邮箱"), null=True, blank=True)
+    website = models.URLField(_("公司网站"), null=True, blank=True)
+    
+    # 营业执照信息
+    license_image_url = models.CharField(_("营业执照图片URL"), max_length=255, null=True, blank=True)
+    license_image_path = models.CharField(_("营业执照图片存储路径"), max_length=255, null=True, blank=True)
+    license_issue_date = models.DateField(_("营业执照发证日期"), null=True, blank=True)
+    license_expiry_date = models.DateField(_("营业执照到期日期"), null=True, blank=True)
+    
+    # 验证信息
+    verification_status = models.CharField(
+        _("验证状态"), 
+        max_length=20, 
+        choices=VERIFICATION_STATUS_CHOICES, 
+        default='pending'
+    )
+    verification_time = models.DateTimeField(_("验证时间"), null=True, blank=True)
+    verification_user = models.ForeignKey(
+        'users.User',  # 使用字符串引用避免循环导入
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_businesses',
+        verbose_name=_('验证人')
+    )
+    rejection_reason = models.TextField(_("拒绝原因"), null=True, blank=True)
+    remark = models.TextField(_("备注"), null=True, blank=True)
+    
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    created_by = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_business_infos',
+        verbose_name=_('创建人')
+    )
+    updated_by = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='updated_business_infos',
+        verbose_name=_('更新人')
+    )
+    
+    class Meta:
+        verbose_name = _('租户企业信息')
+        verbose_name_plural = _('租户企业信息')
+        db_table = 'tenant_business_info'
+        
+    def __str__(self):
+        return f"{self.company_name} ({self.tenant.name})"
+    
+    def save(self, *args, **kwargs):
+        """
+        重写保存方法，添加日志记录
+        """
+        is_new = self.pk is None
+        if is_new:
+            logger.info(f"创建租户企业信息: {self.company_name} (租户: {self.tenant.name})")
+        else:
+            logger.info(f"更新租户企业信息: {self.company_name} (租户: {self.tenant.name})")
+        
+        super().save(*args, **kwargs)
+    
+    def verify(self, user, status='verified', rejection_reason=None):
+        """
+        验证企业信息
+        
+        Args:
+            user: 执行验证的用户
+            status: 验证状态，默认为已验证
+            rejection_reason: 拒绝原因，仅在状态为'rejected'时使用
+        """
+        from django.utils import timezone
+        
+        self.verification_status = status
+        self.verification_time = timezone.now()
+        self.verification_user = user
+        
+        if status == 'rejected' and rejection_reason:
+            self.rejection_reason = rejection_reason
+            
+        self.save(update_fields=[
+            'verification_status', 
+            'verification_time', 
+            'verification_user', 
+            'rejection_reason', 
+            'updated_at'
+        ])
+        
+        logger.info(
+            f"租户企业信息 {self.company_name} 验证状态更新为: {status}, "
+            f"验证人: {user.username if user else 'Unknown'}"
+        )

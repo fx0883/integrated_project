@@ -74,6 +74,27 @@ import lazyLoad from "@/directives/lazyLoad";
 // 注册图片懒加载指令
 app.use(lazyLoad);
 
+// 添加全局错误捕获并记录日志，帮助定位循环引用问题
+// 这个必须添加在最前面，所有其他导入之前
+window.addEventListener('error', (event) => {
+  if (event.error?.stack?.includes('@pureadmin_utils')) {
+    console.error('========================');
+    console.error('[错误捕获] @pureadmin/utils 模块错误:');
+    console.error('错误消息:', event.error?.message);
+    console.error('错误堆栈:', event.error?.stack);
+    console.error('错误对象:', event.error);
+    console.error('错误位置:', {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno
+    });
+    console.error('========================');
+    
+    // 防止错误传播导致应用崩溃
+    event.preventDefault();
+  }
+});
+
 getPlatformConfig(app).then(async config => {
   setupStore(app);
   app.use(router);

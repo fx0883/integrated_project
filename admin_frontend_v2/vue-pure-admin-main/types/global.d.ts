@@ -70,6 +70,8 @@ declare global {
     VITE_CDN: boolean;
     VITE_HIDE_HOME: string;
     VITE_COMPRESSION: ViteCompression;
+    VITE_BASE_API: string;
+    VITE_USE_MOCK: boolean;
   }
 
   /**

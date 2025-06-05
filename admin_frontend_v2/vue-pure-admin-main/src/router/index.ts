@@ -38,28 +38,45 @@ import {
   multipleTabsKey
 } from "@/utils/auth";
 
-/** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
- * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
- * 如何排除文件请看：https://cn.vitejs.dev/guide/features.html#negative-patterns
- */
-const modules: Record<string, any> = import.meta.glob(
-  ["./modules/**/*.ts", "!./modules/**/remaining.ts"],
-  {
-    eager: true
-  }
-);
+// 导入业务相关的路由模块
+import dashboard from "./modules/dashboard";
+import cms from "./modules/cms";
+import user from "./modules/user";
+import check from "./modules/check";
+import tenant from "./modules/tenant";
+import error from "./modules/error";
 
 /** 原始静态路由（未做任何处理） */
-const routes = [];
+const routes = [dashboard, cms, user, check, tenant, error];
 
-Object.keys(modules).forEach(key => {
-  routes.push(modules[key].default);
-});
+// 确保有一个根路由(/)作为所有路由的父级
+const rootRoute: RouteRecordRaw = {
+  path: "/",
+  name: "Root",
+  component: () => import("@/layout/index.vue"),
+  redirect: "/welcome",
+  meta: {
+    title: "根路由"
+  },
+  children: []
+};
 
 /** 导出处理后的静态路由（三级及以上的路由全部拍成二级） */
 export const constantRoutes: Array<RouteRecordRaw> = formatTwoStageRoutes(
   formatFlatteningRoutes(buildHierarchyTree(ascending(routes.flat(Infinity))))
 );
+
+// 确保constantRoutes中的第一个路由是根路由
+if (!constantRoutes.some(route => route.path === "/")) {
+  rootRoute.children = constantRoutes;
+  constantRoutes.length = 0;
+  constantRoutes.push(rootRoute);
+} else if (constantRoutes[0].path === "/") {
+  // 确保根路由有children属性
+  if (!constantRoutes[0].children) {
+    constantRoutes[0].children = [];
+  }
+}
 
 /** 初始的静态路由，用于退出登录时重置路由 */
 const initConstantRoutes: Array<RouteRecordRaw> = cloneDeep(constantRoutes);
@@ -94,15 +111,39 @@ export const router: Router = createRouter({
   }
 });
 
+// 调试路由结构
+console.log("[路由初始化] 路由结构:", JSON.stringify(router.options.routes, null, 2));
+
 /** 重置路由 */
 export function resetRouter() {
   router.clearRoutes();
-  for (const route of initConstantRoutes.concat(...(remainingRouter as any))) {
+  
+  const routesToAdd = initConstantRoutes.concat(...(remainingRouter as any));
+  
+  // 确保有根路由
+  if (!routesToAdd.some(route => route.path === "/")) {
+    routesToAdd.unshift(rootRoute);
+  }
+  
+  for (const route of routesToAdd) {
     router.addRoute(route);
   }
+  
   router.options.routes = formatTwoStageRoutes(
     formatFlatteningRoutes(buildHierarchyTree(ascending(routes.flat(Infinity))))
   );
+  
+  // 确保router.options.routes[0]存在并且有children属性
+  if (!router.options.routes[0]) {
+    // @ts-ignore
+    router.options.routes[0] = rootRoute;
+  }
+  
+  if (!router.options.routes[0].children) {
+    // @ts-ignore
+    router.options.routes[0].children = [];
+  }
+  
   usePermissionStoreHook().clearAllCachePage();
 }
 
@@ -185,7 +226,7 @@ router.beforeEach((to: ToRouteType, _from, next) => {
             const { path } = to;
             const route = findRouteByPath(
               path,
-              router.options.routes[0].children
+              router.options.routes[0]?.children || []
             );
             getTopMenu(true);
             // query、params模式路由传参数的标签页不在此处处理
