@@ -125,9 +125,16 @@ export const useUserStore = defineStore("pure-user", {
       this.tenantId = null;
       this.deptId = null;
       removeToken();
+      // 先处理标签页
       useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
+      
+      // 重置路由
       resetRouter();
-      router.push("/login");
+      
+      // 使用nextTick确保DOM更新后再导航
+      setTimeout(() => {
+        router.push("/login");
+      }, 10);
     },
     /** 刷新`token` */
     async handRefreshToken(data) {

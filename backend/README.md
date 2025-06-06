@@ -368,28 +368,29 @@ cms/
 - 新建文件: @aquaculture_system/system_wireframe.md（系统线框图和架构设计）
 - 更新文件: README.md（添加多租户集成信息） 
 
-## 会话记录
+# 会话总结：租户模块文档更新
 
-### 2025-05-31 菜单权限更新问题修复
+## 本次会话的主要目标
+- 更新水产养殖系统的文档，加入租户模块的详细信息
+- 结合 tenants 目录下的实际代码，完善系统架构和数据库模型文档
 
-#### 本次会话的主要目标
-修复管理员菜单权限更新问题，使菜单权限分配按照替换而非添加的方式工作。
+## 已完成的具体任务
+- 分析了 tenants 目录下的核心文件(models.py、views.py、urls.py、apps.py)
+- 在数据库模型文档中添加了租户模块的详细表结构
+- 在系统线框图文档中添加了租户模块的架构和API信息
+- 完善了多租户架构实现的技术说明
 
-#### 已完成的具体任务
-- 分析了菜单权限更新API的逻辑问题
-- 修改了`AdminMenuViewSet.create`方法，添加了禁用不在`menu_ids`列表中的菜单权限的逻辑
-- 更新了`AdminMenuViewSet.get_queryset`方法，使其默认只返回活跃状态的菜单权限
+## 采用的技术方案及决策理由
+- 通过实际代码分析确保文档与代码实现一致
+- 保留了原有文档结构，在适当位置增加租户模块信息
+- 采用图表形式展示租户模块架构，提高可读性
 
-#### 采用的技术方案及决策理由
-- 使用`UserMenu.objects.filter(user=user).exclude(menu_id__in=menu_ids).update(is_active=False)`来禁用不在新列表中的菜单权限
-- 采用禁用（设置`is_active=False`）而非删除的方式，可以保留历史记录并方便后续恢复
-- 在查询时添加`is_active=True`过滤条件，确保只返回当前有效的权限
+## 使用的主要技术栈
+- Django REST Framework (用于租户模块API实现)
+- Django ORM (用于租户数据模型定义)
+- 多租户中间件 (实现租户上下文和数据隔离)
 
-#### 使用的主要技术栈
-- Django REST Framework
-- Django ORM事务管理
-
-#### 变更的文件清单
-- `menus/views/admin_menu_views.py`
-  - 修改了`get_queryset`方法，添加了`is_active=True`过滤条件
-  - 修改了`create`方法，添加了禁用不在`menu_ids`列表中的菜单的逻辑 
+## 变更的文件清单
+- docs/aquaculture_system/aquaculture_database_model.md - 添加租户模块表结构和实现信息
+- docs/aquaculture_system/system_wireframe.md - 添加租户模块架构和API信息
+- README.md - 添加本次会话总结 

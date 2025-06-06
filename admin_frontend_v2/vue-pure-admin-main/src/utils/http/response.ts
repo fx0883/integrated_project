@@ -1,5 +1,4 @@
 import { ElMessage, ElNotification } from "element-plus";
-import { safeDeepClone } from "../common";
 
 /**
  * API响应处理工具
@@ -105,54 +104,45 @@ export function formatResponse<T = any>(response: any): ApiResponse<T> {
     return standardResponse;
   }
   
-  try {
-    // 使用安全深拷贝函数处理可能的循环引用
-    console.log('[API 响应格式化] 尝试安全复制响应对象');
-    const safeResponse = safeDeepClone(response, 20); // 限制递归深度为20
-    console.log('[API 响应格式化] 安全复制完成');
+  // 尝试从不同格式中提取信息
+  if (typeof response === 'object') {
+    // 提取code
+    if ('code' in response) {
+      standardResponse.code = Number(response.code);
+      standardResponse.success = SUCCESS_CODES.includes(standardResponse.code);
+    } else if ('statusCode' in response) {
+      standardResponse.code = Number(response.statusCode);
+      standardResponse.success = SUCCESS_CODES.includes(standardResponse.code);
+    }
     
-    // 尝试从不同格式中提取信息
-    if (typeof safeResponse === 'object') {
-      // 提取code
-      if ('code' in safeResponse) {
-        standardResponse.code = Number(safeResponse.code);
-        standardResponse.success = SUCCESS_CODES.includes(standardResponse.code);
-      } else if ('statusCode' in safeResponse) {
-        standardResponse.code = Number(safeResponse.statusCode);
-        standardResponse.success = SUCCESS_CODES.includes(standardResponse.code);
-      }
-      
-      // 提取message
-      if ('message' in safeResponse) {
-        standardResponse.message = String(safeResponse.message);
-      } else if ('msg' in safeResponse) {
-        standardResponse.message = String(safeResponse.msg);
-      } else if ('errorMessage' in safeResponse) {
-        standardResponse.message = String(safeResponse.errorMessage);
-      }
-      
-      // 提取data
-      if ('data' in safeResponse) {
-        standardResponse.data = safeResponse.data;
-      } else if ('result' in safeResponse) {
-        standardResponse.data = safeResponse.result;
-      } else {
-        // 如果没有data字段，可能整个response就是data
-        const { code, message, msg, success, ...rest } = safeResponse;
-        if (Object.keys(rest).length > 0) {
-          standardResponse.data = rest as T;
-        }
+    // 提取message
+    if ('message' in response) {
+      standardResponse.message = String(response.message);
+    } else if ('msg' in response) {
+      standardResponse.message = String(response.msg);
+    } else if ('errorMessage' in response) {
+      standardResponse.message = String(response.errorMessage);
+    }
+    
+    // 提取data
+    if ('data' in response) {
+      standardResponse.data = response.data;
+    } else if ('result' in response) {
+      standardResponse.data = response.result;
+    } else {
+      // 如果没有data字段，可能整个response就是data
+      const { code, message, msg, success, ...rest } = response;
+      if (Object.keys(rest).length > 0) {
+        standardResponse.data = rest as T;
       }
     }
-  } catch (error) {
-    console.error('[API 响应格式化] 格式化过程出错', error);
-    standardResponse.message = '响应格式化失败';
   }
   
   // 添加时间戳
   standardResponse.timestamp = Date.now();
   
   console.log('[API 响应格式化] 原始格式转为标准格式', {
+    原始数据: response,
     标准化结果: standardResponse
   });
   

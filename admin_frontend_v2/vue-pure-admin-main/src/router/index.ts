@@ -49,34 +49,10 @@ import error from "./modules/error";
 /** 原始静态路由（未做任何处理） */
 const routes = [dashboard, cms, user, check, tenant, error];
 
-// 确保有一个根路由(/)作为所有路由的父级
-const rootRoute: RouteRecordRaw = {
-  path: "/",
-  name: "Root",
-  component: () => import("@/layout/index.vue"),
-  redirect: "/welcome",
-  meta: {
-    title: "根路由"
-  },
-  children: []
-};
-
 /** 导出处理后的静态路由（三级及以上的路由全部拍成二级） */
 export const constantRoutes: Array<RouteRecordRaw> = formatTwoStageRoutes(
   formatFlatteningRoutes(buildHierarchyTree(ascending(routes.flat(Infinity))))
 );
-
-// 确保constantRoutes中的第一个路由是根路由
-if (!constantRoutes.some(route => route.path === "/")) {
-  rootRoute.children = constantRoutes;
-  constantRoutes.length = 0;
-  constantRoutes.push(rootRoute);
-} else if (constantRoutes[0].path === "/") {
-  // 确保根路由有children属性
-  if (!constantRoutes[0].children) {
-    constantRoutes[0].children = [];
-  }
-}
 
 /** 初始的静态路由，用于退出登录时重置路由 */
 const initConstantRoutes: Array<RouteRecordRaw> = cloneDeep(constantRoutes);
@@ -111,39 +87,15 @@ export const router: Router = createRouter({
   }
 });
 
-// 调试路由结构
-console.log("[路由初始化] 路由结构:", JSON.stringify(router.options.routes, null, 2));
-
 /** 重置路由 */
 export function resetRouter() {
   router.clearRoutes();
-  
-  const routesToAdd = initConstantRoutes.concat(...(remainingRouter as any));
-  
-  // 确保有根路由
-  if (!routesToAdd.some(route => route.path === "/")) {
-    routesToAdd.unshift(rootRoute);
-  }
-  
-  for (const route of routesToAdd) {
+  for (const route of initConstantRoutes.concat(...(remainingRouter as any))) {
     router.addRoute(route);
   }
-  
   router.options.routes = formatTwoStageRoutes(
     formatFlatteningRoutes(buildHierarchyTree(ascending(routes.flat(Infinity))))
   );
-  
-  // 确保router.options.routes[0]存在并且有children属性
-  if (!router.options.routes[0]) {
-    // @ts-ignore
-    router.options.routes[0] = rootRoute;
-  }
-  
-  if (!router.options.routes[0].children) {
-    // @ts-ignore
-    router.options.routes[0].children = [];
-  }
-  
   usePermissionStoreHook().clearAllCachePage();
 }
 
@@ -159,20 +111,111 @@ const preloadComponent = (route: any) => {
   
   preloadMap.set(route.name as string, true);
   
-  // 预加载当前路由组件
-  if (route.component && typeof route.component === "function") {
-    route.component();
-  }
-  
-  // 预加载子路由组件
-  if (route.children && route.children.length) {
-    route.children.forEach(childRoute => {
-      if (childRoute.component && typeof childRoute.component === "function") {
-        childRoute.component();
-      }
-    });
+  try {
+    // 预加载当前路由组件
+    if (route.component && typeof route.component === "function") {
+      route.component();
+    }
+    
+    // 预加载子路由组件
+    if (route.children && route.children.length) {
+      route.children.forEach(childRoute => {
+        if (childRoute.component && typeof childRoute.component === "function") {
+          childRoute.component();
+        }
+      });
+    }
+  } catch (error) {
+    console.error(`[路由预加载] 路由预加载失败: ${route.path}`, error);
   }
 };
+
+/** 预先添加错误页面路由，确保它们总是可用 */
+function preAddErrorRoutes() {
+  console.log("[路由] 预处理 - 添加错误页面路由");
+  
+  // 添加错误页面路由
+  if (!router.hasRoute("Error")) {
+    router.addRoute({
+      path: "/error",
+      name: "Error",
+      component: () => import("@/layout/index.vue"),
+      redirect: "/error/404",
+      children: []
+    } as RouteRecordRaw);
+  }
+  
+  // 添加404路由
+  if (!router.hasRoute("404")) {
+    router.addRoute("Error", {
+      path: "/error/404",
+      name: "404",
+      component: () => import("@/views/error/404.vue"),
+      meta: {
+        title: "404页面"
+      }
+    } as RouteRecordRaw);
+  }
+  
+  // 添加403路由
+  if (!router.hasRoute("403")) {
+    router.addRoute("Error", {
+      path: "/error/403",
+      name: "403",
+      component: () => import("@/views/error/403.vue"),
+      meta: {
+        title: "403页面"
+      }
+    } as RouteRecordRaw);
+  }
+  
+  // 添加500路由
+  if (!router.hasRoute("500")) {
+    router.addRoute("Error", {
+      path: "/error/500",
+      name: "500",
+      component: () => import("@/views/error/500.vue"),
+      meta: {
+        title: "500页面"
+      }
+    } as RouteRecordRaw);
+  }
+  
+  // 添加通配符路由
+  if (!router.hasRoute("pathMatch")) {
+    router.addRoute({
+      path: "/:pathMatch(.*)",
+      name: "pathMatch",
+      redirect: "/error/404"
+    } as RouteRecordRaw);
+  }
+  
+  console.log("[路由] 预处理完成 - 错误页面路由已添加");
+}
+
+// 立即执行预处理
+preAddErrorRoutes();
+
+/** 添加路由初始化异常处理 */
+function safeInitRouter() {
+  console.log("[路由] 开始初始化路由");
+
+  try {
+    return initRouter().catch(error => {
+      console.error("[路由] 初始化路由出错", error);
+      console.log("[路由] 尝试恢复基本路由");
+      
+      // 确保至少有基本路由可用
+      resetRouter();
+      
+      // 返回一个已解决的Promise，避免阻塞导航
+      return Promise.resolve(router);
+    });
+  } catch (error) {
+    console.error("[路由] 初始化路由过程中发生异常", error);
+    return Promise.resolve(router);
+  }
+}
 
 router.beforeEach((to: ToRouteType, _from, next) => {
   if (to.meta?.keepAlive) {
@@ -221,35 +264,44 @@ router.beforeEach((to: ToRouteType, _from, next) => {
         usePermissionStoreHook().wholeMenus.length === 0 &&
         to.path !== "/login"
       ) {
-        initRouter().then((router: Router) => {
+        console.log("[路由] 刷新页面，准备获取菜单", to.path);
+        safeInitRouter().then((router: Router) => {
           if (!useMultiTagsStoreHook().getMultiTagsCache) {
-            const { path } = to;
-            const route = findRouteByPath(
-              path,
-              router.options.routes[0]?.children || []
-            );
-            getTopMenu(true);
-            // query、params模式路由传参数的标签页不在此处处理
-            if (route && route.meta?.title) {
-              if (isAllEmpty(route.parentId) && route.meta?.backstage) {
-                // 此处为动态顶级路由（目录）
-                const { path, name, meta } = route.children[0];
-                useMultiTagsStoreHook().handleTags("push", {
-                  path,
-                  name,
-                  meta
-                });
-              } else {
-                const { path, name, meta } = route;
-                useMultiTagsStoreHook().handleTags("push", {
-                  path,
-                  name,
-                  meta
-                });
+            try {
+              const { path } = to;
+              const route = findRouteByPath(
+                path,
+                router.options.routes[0]?.children || []
+              );
+              getTopMenu(true);
+              // query、params模式路由传参数的标签页不在此处处理
+              if (route && route.meta?.title) {
+                if (isAllEmpty(route.parentId) && route.meta?.backstage) {
+                  // 此处为动态顶级路由（目录）
+                  if (route.children && route.children.length > 0) {
+                    const { path, name, meta } = route.children[0];
+                    useMultiTagsStoreHook().handleTags("push", {
+                      path,
+                      name,
+                      meta
+                    });
+                  } else {
+                    console.warn("[路由] 动态顶级路由没有子路由", route.path);
+                  }
+                } else {
+                  const { path, name, meta } = route;
+                  useMultiTagsStoreHook().handleTags("push", {
+                    path,
+                    name,
+                    meta
+                  });
+                }
               }
+            } catch (error) {
+              console.error("[路由] 处理标签出错", error);
             }
           }
-          // 确保动态路由完全加入路由列表并且不影响静态路由（注意：动态路由刷新时router.beforeEach可能会触发两次，第一次触发动态路由还未完全添加，第二次动态路由才完全添加到路由列表，如果需要在router.beforeEach做一些判断可以在to.name存在的条件下去判断，这样就只会触发一次）
+          // 确保动态路由完全加入路由列表并且不影响静态路由
           if (isAllEmpty(to.name)) router.push(to.fullPath);
         });
       }
@@ -270,19 +322,23 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   
   // 添加预加载逻辑 - 提前加载即将访问的路由的相关组件
   setTimeout(() => {
-    const routes = usePermissionStoreHook().wholeMenus;
-    
-    // 预加载当前路由
-    const currentRoute = routes.find(route => route.path === to.matched[0]?.path);
-    preloadComponent(currentRoute);
-    
-    // 预加载侧边栏中可能访问的下一个路由组件
-    if (currentRoute?.children?.length) {
-      currentRoute.children.forEach(childRoute => {
-        if (childRoute.path !== to.path) {
-          preloadComponent(childRoute);
-        }
-      });
+    try {
+      const routes = usePermissionStoreHook().wholeMenus;
+      
+      // 预加载当前路由
+      const currentRoute = routes.find(route => route.path === to.matched[0]?.path);
+      preloadComponent(currentRoute);
+      
+      // 预加载侧边栏中可能访问的下一个路由组件
+      if (currentRoute?.children?.length) {
+        currentRoute.children.forEach(childRoute => {
+          if (childRoute.path !== to.path) {
+            preloadComponent(childRoute);
+          }
+        });
+      }
+    } catch (error) {
+      console.error("[路由] 预加载组件出错", error);
     }
   }, 300);
 });

@@ -14,15 +14,18 @@ import NProgress from "../progress";
 import { getToken, formatToken } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 import { formatResponse, showApiError } from "./response";
-import { safeStringify } from "../common";
 
 // 获取环境变量中的API基础URL
+const API_URL = import.meta.env.VITE_API_URL || "";
 const BASE_API = import.meta.env.VITE_BASE_API || "";
+
+// 完整的API基础URL
+const FULL_BASE_URL = API_URL + BASE_API;
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
   // API请求的基础URL
-  baseURL: BASE_API,
+  baseURL: FULL_BASE_URL,
   // 请求超时时间
   timeout: 10000,
   headers: {
@@ -37,7 +40,11 @@ const defaultConfig: AxiosRequestConfig = {
 };
 
 // 输出当前API基础URL到控制台，方便调试
-console.log(`[API配置] 当前API基础URL: ${BASE_API}`);
+console.log(`[API配置] 当前API基础URL: ${FULL_BASE_URL}`);
+
+// 判断是否启用Mock
+const USE_MOCK = String(import.meta.env.VITE_USE_MOCK).toLowerCase() === "true";
+console.log(`[API配置] Mock状态: ${USE_MOCK ? '启用' : '禁用'}`);
 
 class PureHttp {
   constructor() {
@@ -75,16 +82,8 @@ class PureHttp {
         // 开启进度条动画
         NProgress.start();
         
-        try {
-          // 添加请求拦截日志（使用安全序列化避免循环引用）
-          console.log(`[API请求拦截] ${config.method?.toUpperCase()} ${config.url}`, {
-            headers: config.headers,
-            params: config.params ? safeStringify(config.params) : undefined,
-            data: config.data ? safeStringify(config.data) : undefined
-          });
-        } catch (error) {
-          console.error("[API请求拦截] 日志记录失败", error);
-        }
+        // 添加请求拦截日志
+        console.log(`[API请求拦截] ${config.method?.toUpperCase()} ${config.url}`, config);
         
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof config.beforeRequestCallback === "function") {
@@ -156,17 +155,12 @@ class PureHttp {
         // 关闭进度条动画
         NProgress.done();
         
-        try {
-          // 添加响应日志（使用安全序列化避免循环引用）
-          console.log(`[API响应拦截] ${$config.method?.toUpperCase()} ${$config.url}`, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-            data: safeStringify(response.data)
-          });
-        } catch (error) {
-          console.error("[API响应拦截] 日志记录失败", error);
-        }
+        // 添加响应日志
+        console.log(`[API响应拦截] ${$config.method?.toUpperCase()} ${$config.url}`, {
+          status: response.status,
+          statusText: response.statusText,
+          data: response.data
+        });
         
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
@@ -188,57 +182,29 @@ class PureHttp {
         // 关闭进度条动画
         NProgress.done();
         
-        try {
-          // 添加错误日志（使用安全序列化避免循环引用）
-          console.error(`[API响应拦截错误]`, {
-            url: error.config?.url,
-            method: error.config?.method?.toUpperCase(),
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            message: error.message,
-            data: error.response?.data ? safeStringify(error.response.data) : undefined
-          });
-        } catch (logError) {
-          console.error("[API响应拦截] 错误日志记录失败", logError);
-        }
+        // 添加错误日志
+        console.error(`[API响应拦截错误]`, $error);
         
         // 处理错误响应
         if (error.response) {
           // 服务器返回错误响应
-          const statusCode = error.response.status;
-          const errorData = error.response.data as Record<string, any>;
-          
-          // 处理特定状态码
-          switch (statusCode) {
-            case 401: // 未授权
-              useUserStoreHook().logOut();
-              showApiError("登录状态已过期，请重新登录", "授权失败");
-              break;
-            case 403: // 禁止访问
-              showApiError("您没有权限访问该资源", "权限不足");
-              break;
-            case 404: // 资源不存在
-              showApiError("请求的资源不存在", "请求失败");
-              break;
-            case 500: // 服务器错误
-              showApiError("服务器内部错误，请稍后重试", "服务器错误");
-              break;
-            default:
-              // 尝试从响应中获取错误信息
-              const errorMsg = errorData?.message || errorData?.msg || "请求失败";
-              showApiError(errorMsg, `请求错误(${statusCode})`);
-              break;
-          }
+          console.error(`[API响应错误] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, error);
+          // 显示API错误提示
+          showApiError(error);
         } else if (error.request) {
-          // 请求发出但未收到响应
-          showApiError("服务器无响应，请检查网络连接", "网络错误");
+          // 请求已发送但未收到响应
+          console.error(`[API 网络错误] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, error.message);
+          // 如果启用了Mock但服务器无响应，可能是Mock服务器未启动或配置有误
+          if (USE_MOCK && error.config?.url?.includes("/get-async-routes")) {
+            console.warn("[API mock警告] Mock服务可能未启动或配置错误，尝试使用备用路由");
+            // 在这种情况下，错误会被传递到API调用处理函数，让路由加载逻辑使用本地路由
+          }
         } else {
-          // 请求配置错误
-          showApiError(error.message || "请求配置错误", "请求错误");
+          // 请求设置时发生错误
+          console.error(`[API 错误处理]`, error.message);
         }
         
-        // 所有的响应异常 区分来源为取消请求/非取消请求
-        return Promise.reject($error);
+        return Promise.reject(error);
       }
     );
   }
@@ -250,6 +216,9 @@ class PureHttp {
     param?: AxiosRequestConfig,
     axiosConfig?: PureHttpRequestConfig
   ): Promise<T> {
+    // 请求开始前记录日志
+    console.log(`[API请求] ${method.toUpperCase()} ${url}`, param);
+    
     const config = {
       method,
       url,
@@ -257,39 +226,15 @@ class PureHttp {
       ...axiosConfig
     } as PureHttpRequestConfig;
 
-    // 添加请求日志（使用安全序列化避免循环引用）
-    try {
-      console.log(`[API请求] ${method.toUpperCase()} ${url}`, {
-        params: param?.params ? safeStringify(param.params) : '{}',
-        data: param?.data ? safeStringify(param.data) : '{}',
-        headers: config.headers || {}
-      });
-    } catch (error) {
-      console.error(`[API请求日志记录失败] ${method.toUpperCase()} ${url}`, error);
-    }
-
     // 单独处理自定义请求/响应回调
     return new Promise((resolve, reject) => {
       PureHttp.axiosInstance
         .request(config)
-        .then((response: any) => {
-          // 添加响应成功日志
-          try {
-            console.log(`[API响应成功] ${method.toUpperCase()} ${url}`, 
-              typeof response === 'object' ? safeStringify(response) : response);
-          } catch (error) {
-            console.error(`[API响应成功日志记录失败] ${method.toUpperCase()} ${url}`, error);
-          }
+        .then((response: undefined) => {
           resolve(response);
         })
         .catch(error => {
-          // 添加响应错误日志
-          try {
-            console.error(`[API响应错误] ${method.toUpperCase()} ${url}`, 
-              error ? safeStringify(error) : 'Unknown error');
-          } catch (logError) {
-            console.error(`[API响应错误日志记录失败] ${method.toUpperCase()} ${url}`, logError);
-          }
+          console.error(`[API 请求失败] ${method.toUpperCase()} ${url}`, error);
           reject(error);
         });
     });
@@ -301,11 +246,7 @@ class PureHttp {
     params?: AxiosRequestConfig<P>,
     config?: PureHttpRequestConfig
   ): Promise<T> {
-    try {
-      console.log(`[API POST请求] ${url}`, params ? safeStringify(params) : '{}');
-    } catch (error) {
-      console.error(`[API POST请求日志记录失败] ${url}`, error);
-    }
+    console.log(`[API POST请求] ${url}`, params);
     return this.request<T>("post", url, params, config);
   }
 
@@ -315,11 +256,7 @@ class PureHttp {
     params?: AxiosRequestConfig<P>,
     config?: PureHttpRequestConfig
   ): Promise<T> {
-    try {
-      console.log(`[API GET请求] ${url}`, params ? safeStringify(params) : '{}');
-    } catch (error) {
-      console.error(`[API GET请求日志记录失败] ${url}`, error);
-    }
+    console.log(`[API GET请求] ${url}`, params);
     return this.request<T>("get", url, params, config);
   }
 }

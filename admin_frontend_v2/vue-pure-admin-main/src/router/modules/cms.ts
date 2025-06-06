@@ -15,7 +15,7 @@ export default {
   },
   children: [
     {
-      path: "/cms/statistics",
+      path: "statistics",
       name: "CMSStatistics",
       component: () => import("@/views/cms/statistics/index.vue"),
       meta: {
@@ -24,15 +24,15 @@ export default {
       }
     },
     {
-      path: "/cms/article",
+      path: "article",
       name: "CMSArticle",
-      redirect: "/cms/article/list",
+      redirect: "article/list",
       meta: {
         title: "文章管理"
       },
       children: [
         {
-          path: "/cms/article/list",
+          path: "list",
           name: "ArticleList",
           component: () => import("@/views/cms/article/list.vue"),
           meta: {
@@ -40,7 +40,7 @@ export default {
           }
         },
         {
-          path: "/cms/article/detail/:id",
+          path: "detail/:id",
           name: "ArticleDetail",
           component: () => import("@/views/cms/article/detail.vue"),
           meta: {
@@ -50,7 +50,7 @@ export default {
           }
         },
         {
-          path: "/cms/article/create",
+          path: "create",
           name: "ArticleCreate",
           component: () => import("@/views/cms/article/form.vue"),
           meta: {
@@ -60,7 +60,7 @@ export default {
           }
         },
         {
-          path: "/cms/article/edit/:id",
+          path: "edit/:id",
           name: "ArticleEdit",
           component: () => import("@/views/cms/article/form.vue"),
           meta: {
@@ -72,7 +72,7 @@ export default {
       ]
     },
     {
-      path: "/cms/category",
+      path: "category",
       name: "CMSCategory",
       component: () => import("@/views/cms/category/index.vue"),
       meta: {
@@ -80,7 +80,7 @@ export default {
       }
     },
     {
-      path: "/cms/tag",
+      path: "tag",
       name: "CMSTag",
       component: () => import("@/views/cms/tag/index.vue"),
       meta: {
@@ -88,7 +88,7 @@ export default {
       }
     },
     {
-      path: "/cms/comment",
+      path: "comment",
       name: "CMSComment",
       component: () => import("@/views/cms/comment/list.vue"),
       meta: {

@@ -13,7 +13,8 @@ from common.permissions import IsSuperAdminUser, IsAdminUser, TenantApiPermissio
 from tenants.models import Tenant, TenantQuota
 from tenants.serializers import (
     TenantSerializer, TenantCreateSerializer, TenantDetailSerializer,
-    TenantQuotaSerializer, TenantQuotaUpdateSerializer, TenantQuotaUsageSerializer
+    TenantQuotaSerializer, TenantQuotaUpdateSerializer, TenantQuotaUsageSerializer,
+    TenantComprehensiveSerializer
 )
 from django.contrib.auth import get_user_model
 from users.serializers import UserListSerializer
@@ -22,7 +23,8 @@ from tenants.schema import (
     tenant_list_responses, tenant_create_responses, tenant_detail_responses,
     tenant_quota_responses, tenant_quota_update_responses, tenant_quota_usage_responses,
     tenant_suspend_responses, tenant_activate_responses, tenant_users_responses,
-    tenant_create_request_examples, tenant_quota_update_request_examples
+    tenant_create_request_examples, tenant_quota_update_request_examples,
+    tenant_comprehensive_responses
 )
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework.exceptions import ValidationError
@@ -693,4 +695,68 @@ class TenantUserListView(generics.ListAPIView):
         return Response({
             'count': queryset.count(),
             'results': serializer.data
+        })
+
+
+class TenantComprehensiveView(APIView):
+    """
+    获取租户所有信息视图
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    @extend_schema(
+        summary="获取租户完整信息",
+        description="根据租户ID获取租户所有信息，包括基本信息、配额信息和企业信息。对于超级管理员可以查询任何租户，租户管理员只能查询自己所在的租户。",
+        responses=tenant_comprehensive_responses,
+        tags=["租户"]
+    )
+    def get(self, request, pk):
+        """
+        获取租户详细信息
+        """
+        # 获取租户
+        try:
+            pk = int(pk)
+        except (ValueError, TypeError):
+            logger.error(f"无效的租户ID: {pk}")
+            return Response({
+                'success': False,
+                'code': 4000,
+                'message': f'无效的租户ID: {pk}',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 检查权限
+        user = request.user
+        if not user.is_super_admin and (not user.tenant or user.tenant.id != pk):
+            logger.warning(f"用户 {user.username} 尝试访问租户 {pk} 的信息，但没有权限")
+            return Response({
+                'success': False,
+                'code': 4030,
+                'message': '您没有权限访问此租户的信息',
+                'data': None
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # 获取租户
+        try:
+            tenant = Tenant.objects.get(pk=pk, is_deleted=False)
+        except Tenant.DoesNotExist:
+            logger.warning(f"租户ID {pk} 不存在或已删除")
+            return Response({
+                'success': False,
+                'code': 4040,
+                'message': '租户不存在或已删除',
+                'data': None
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 序列化租户数据
+        serializer = TenantComprehensiveSerializer(tenant)
+        
+        # 返回结果
+        logger.info(f"用户 {user.username} 成功获取了租户 '{tenant.name}' 的完整信息")
+        return Response({
+            'success': True,
+            'code': 2000,
+            'message': '获取租户信息成功',
+            'data': serializer.data
         })

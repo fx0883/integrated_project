@@ -2,450 +2,241 @@
 
 本文档描述了水产养殖系统的数据库表结构设计，作为系统开发的基础模型。系统已集成到多租户架构中，通过租户ID字段实现数据隔离。
 
+## 多租户架构实现
+
+系统使用 Django 框架实现了多租户架构，主要通过 `tenants` 应用模块来管理租户信息、配额和企业资料。多租户架构有以下几个核心组件：
+
+### 核心模型
+
+1. **租户模型 (Tenant)**：存储租户的基本信息，如名称、状态和联系方式。
+2. **租户配额模型 (TenantQuota)**：控制租户可使用的资源上限，如用户数量、存储空间等。
+3. **租户企业信息模型 (TenantBusinessInfo)**：记录租户的企业资质信息，如公司名称、营业执照等。
+
+### 主要功能
+
+1. **租户管理**：创建、查询、更新和删除(软删除)租户。
+2. **配额控制**：设置和监控租户资源使用情况。
+3. **用户隔离**：确保用户只能访问其所属租户的数据。
+4. **状态管理**：支持激活、暂停租户服务。
+
+### 数据隔离实现
+
+系统采用共享数据库、共享架构(Shared Database, Shared Schema)的多租户模式，通过以下机制实现数据隔离：
+
+1. 所有业务表包含 `tenant_id` 字段关联到租户表
+2. API 请求时自动注入当前租户上下文
+3. 数据查询自动添加租户过滤条件
+4. 权限系统支持租户级别的权限控制
+
+## 数据库表关系线框图
+
+### 多租户架构关系图
+
+```
++---------------+       +-------------------+       +------------------------+
+|               |       |                   |       |                        |
+|   Tenant      |<----->| TenantQuota      |       | TenantBusinessInfo     |
+| (租户)        |       | (租户配额)        |       | (租户企业信息)          |
+|               |       |                   |       |                        |
++-------+-------+       +-------------------+       +------------------------+
+        |
+        | 1:n (所有业务表)
+        v
++-------+-------+
+|               |
+| 业务数据表     |
+| (tenant_id)   |
+|               |
++---------------+
+```
+
+### 基础数据关系图
+
+```
++---------------+       +----------------+       +---------------------+
+|               |       |                |       |                     |
+|    Tenant     |<------| Base           |<------| Pond                |
+| (租户)        |       | (基地)         |       | (池塘)              |
+|               |       |                |       |                     |
++---------------+       +----------------+       +--------+------------+
+                                                          |
+                                                          |
+                                                          v
++-----------------+     +----------------+     +----------+-----------+
+|                 |     |                |     |                      |
+| Species         |<----| Production     |<----| 各类记录表           |
+| (养殖品种)      |     | Batch (批次)   |     | (水质/投喂/生长等)   |
+|                 |     |                |     |                      |
++-----------------+     +----------------+     +----------------------+
+```
+
+### 物资管理关系图
+
+```
++---------------+       +-----------------+       +-----------------+
+|               |       |                 |       |                 |
+|    Tenant     |<------| Feeds           |<------| FeedingRecords  |
+| (租户)        |       | (饲料)          |       | (投喂记录)      |
+|               |       |                 |       |                 |
++-------+-------+       +-----------------+       +-----------------+
+        |
+        |
+        |               +-----------------+       +-----------------+
+        |               |                 |       |                 |
+        +-------------->| Medicines       |<------| DiseasePrevention|
+                        | (药品)          |       | (病害防治)      |
+                        |                 |       |                 |
+                        +-----------------+       +-----------------+
+                        
+                        +-----------------+
+                        |                 |
+                        | Equipment       |
+                        | (设备)          |
+                        |                 |
+                        +-----------------+
+```
+
+### 权限管理关系图
+
+```
++---------------+       +-----------------+       +-----------------+
+|               |       |                 |       |                 |
+|    Tenant     |<------| Role            |<------| Permission      |
+| (租户)        |       | (角色)          |        | (权限)           |
+|               |       |                 |       |                 |
++-------+-------+       +--------+--------+       +-----------------+
+        |                        |
+        |                        |
+        v                        v
++-------+-------+       +--------+--------+
+|               |       |                 |
+| User          |<------| UserRole        |
+| (用户)        |       | (用户角色)      |
+|               |       |                 |
++---------------+       +-----------------+
+```
+
+### 销售与批次关系图
+
+```
++---------------+       +-----------------+       +-----------------+
+|               |       |                 |       |                 |
+| ProductionBatch|<------| SalesRecord    |       | GrowthRecord    |
+| (生产批次)    |       | (销售记录)      |       | (生长记录)      |
+|               |       |                 |       |                 |
++-------+-------+       +-----------------+       +-----------------+
+        |
+        |
+        v
++-------+-------+
+|               |
+| WaterQuality  |
+| (水质监测)    |
+|               |
++---------------+
+```
+
+## 租户模块表结构详细设计
+
+除了之前介绍的业务表外，租户模块本身包含以下表结构：
+
+### 1. 租户表 (tenant)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 租户ID | 主键, 自增 |
+| name | VARCHAR(100) | 租户名称 | 非空, 唯一 |
+| code | VARCHAR(50) | 租户代码 | 唯一, 可空 |
+| status | VARCHAR(20) | 状态(active/suspended/deleted) | 非空, 默认'active' |
+| contact_name | VARCHAR(50) | 联系人姓名 | 可空 |
+| contact_email | VARCHAR(100) | 联系人邮箱 | 可空 |
+| contact_phone | VARCHAR(20) | 联系人电话 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 2. 租户配额表 (tenant_quota)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 配额ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空, 一对一 |
+| max_users | INTEGER | 最大用户数 | 非空, 默认10 |
+| max_admins | INTEGER | 最大管理员数 | 非空, 默认2 |
+| max_storage_mb | INTEGER | 最大存储空间(MB) | 非空, 默认1024 |
+| max_products | INTEGER | 最大产品数 | 非空, 默认100 |
+| current_storage_used_mb | INTEGER | 当前已用存储空间(MB) | 非空, 默认0 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+
+### 3. 租户企业信息表 (tenant_business_info)
+
+该表与之前文档中描述的"租户信息附加表"对应，实际系统中已实现，包含以下字段：
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空, 一对一 |
+| company_name | VARCHAR(100) | 公司名称 | 非空 |
+| legal_representative | VARCHAR(50) | 法定代表人 | 非空 |
+| unified_social_credit_code | VARCHAR(50) | 统一社会信用代码 | 非空, 唯一 |
+| registration_number | VARCHAR(50) | 注册号 | 可空 |
+| company_type | VARCHAR(50) | 公司类型 | 可空 |
+| registered_capital | DECIMAL(15,2) | 注册资本 | 可空 |
+| registered_capital_currency | VARCHAR(20) | 注册资本币种 | 默认'CNY', 可空 |
+| business_scope | TEXT | 经营范围 | 可空 |
+| establishment_date | DATE | 成立日期 | 可空 |
+| business_term_start | DATE | 营业期限开始日期 | 可空 |
+| business_term_end | DATE | 营业期限结束日期 | 可空 |
+| registration_authority | VARCHAR(100) | 登记机关 | 可空 |
+| approval_date | DATE | 核准日期 | 可空 |
+| business_status | VARCHAR(50) | 企业状态 | 可空 |
+| registered_address | VARCHAR(255) | 注册地址 | 可空 |
+| office_address | VARCHAR(255) | 办公地址 | 可空 |
+| contact_person | VARCHAR(50) | 联系人 | 可空 |
+| contact_phone | VARCHAR(20) | 联系电话 | 可空 |
+| email | VARCHAR(100) | 电子邮箱 | 可空 |
+| website | VARCHAR(100) | 公司网站 | 可空 |
+| license_image_url | VARCHAR(255) | 营业执照图片URL | 可空 |
+| license_image_path | VARCHAR(255) | 营业执照图片存储路径 | 可空 |
+| license_issue_date | DATE | 营业执照发证日期 | 可空 |
+| license_expiry_date | DATE | 营业执照到期日期 | 可空 |
+| verification_status | VARCHAR(20) | 验证状态(pending/verified/rejected/expired) | 非空, 默认'pending' |
+| verification_time | TIMESTAMP | 验证时间 | 可空 |
+| verification_user_id | BIGINT UNSIGNED | 验证人ID | 外键, 可空, 关联用户表 |
+| rejection_reason | TEXT | 拒绝原因 | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+
 ## 数据库表结构概览
 
 | 序号 | 表名 | 描述 |
 |------|------|------|
-| 1 | 基地信息表(bases) | 记录养殖基地的基本信息 |
-| 2 | 池塘信息表(ponds) | 记录养殖池塘的基本信息 |
-| 3 | 水质监测表(water_quality) | 记录水质监测数据 |
-| 4 | 投喂记录表(feeding_records) | 记录日常投喂情况 |
-| 5 | 生长记录表(growth_records) | 记录养殖品种的生长情况 |
-| 6 | 病害防治表(disease_prevention) | 记录疾病防治情况 |
-| 7 | 药品管理表(medicines) | 记录药品使用和库存 |
-| 8 | 设备管理表(equipment) | 记录养殖设备信息 |
-| 9 | 生产批次表(production_batches) | 记录养殖批次信息 |
-| 10 | 销售记录表(sales_records) | 记录产品销售情况 |
-| 11 | 养殖品种表(species) | 记录养殖的品种信息 |
-| 12 | 饲料管理表(feeds) | 记录饲料使用和库存 |
-| 13 | 环境监测表(environment_monitoring) | 记录养殖环境监测数据 |
-| 14 | 疾病信息表(diseases) | 记录疾病的基本信息 |
-| 15 | 租户信息附加表(tenant_business_info) | 记录租户的公司注册信息和营业执照 |
-| 16 | 角色表(roles) | 定义系统角色 |
-| 17 | 权限表(permissions) | 定义系统权限 |
-| 18 | 角色权限关联表(role_permissions) | 关联角色和权限 |
-| 19 | 用户角色关联表(user_roles) | 关联用户和角色 |
-| 20 | 操作日志表(operation_logs) | 记录系统操作日志 |
-
-## 多租户集成说明
-
-系统采用共享数据库、共享架构(Shared Database, Shared Schema)的多租户架构模式：
-
-1. 所有表都包含`tenant_id`字段，用于关联到租户表
-2. 每个租户只能访问和管理自己的数据
-3. 用户通过系统现有的用户管理模块管理，不再单独设计用户表
-4. 表中的`created_by`字段关联到系统用户表的ID
-5. 角色和权限系统支持多租户隔离，每个租户可以有自己的角色定义
-
-## 表结构详细设计
-
-### 1. 基地信息表 (bases)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 基地ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(100) | 基地名称 | 非空 |
-| location | VARCHAR(255) | 位置描述 | |
-| area | DECIMAL(10,2) | 总面积(平方) | |
-| contact_person | VARCHAR(50) | 联系人 | |
-| contact_phone | VARCHAR(20) | 联系电话 | |
-| status | TINYINT UNSIGNED | 使用状态 | 非空, 默认1(使用中) |
-| remark | TEXT | 备注 | |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 2. 池塘信息表 (ponds)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 池塘ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| base_id | BIGINT UNSIGNED | 基地ID | 外键, 非空 |
-| name | VARCHAR(50) | 池塘名称 | 非空 |
-| area | DECIMAL(10,2) | 面积(平方) | 非空 |
-| depth | DECIMAL(5,2) | 深度(米) | 非空 |
-| location | VARCHAR(255) | 位置描述 | |
-| pond_type | VARCHAR(50) | 池塘类型 | |
-| status | TINYINT UNSIGNED | 使用状态 | 非空, 默认1(使用中) |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 3. 水质监测表 (water_quality)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空 |
-| test_time | TIMESTAMP | 检测时间 | 非空 |
-| temperature | DECIMAL(5,2) | 水温(℃) | |
-| ph | DECIMAL(4,2) | pH值 | |
-| dissolved_oxygen | DECIMAL(5,2) | 溶解氧(mg/L) | |
-| ammonia_nitrogen | DECIMAL(5,2) | 氨氮(mg/L) | |
-| nitrite | DECIMAL(5,2) | 亚硝酸盐(mg/L) | |
-| transparency | DECIMAL(5,2) | 透明度(cm) | |
-| phosphorus | DECIMAL(5,2) | 磷(mg/L) | |
-| total_alkalinity | DECIMAL(5,2) | 总碱度(mg/L) | |
-| total_hardness | DECIMAL(5,2) | 总硬度(mg/L) | |
-| tds | DECIMAL(5,2) | TDS值(mg/L) | |
-| orp | DECIMAL(5,2) | ORP(mV) | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 记录人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 4. 投喂记录表 (feeding_records)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空 |
-| feed_id | BIGINT UNSIGNED | 饲料ID | 外键, 非空 |
-| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空 |
-| feeding_time | TIMESTAMP | 投喂时间 | 非空 |
-| feeding_amount | DECIMAL(10,2) | 投喂量(kg) | 非空 |
-| feeding_method | VARCHAR(50) | 投喂方式 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 记录人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 5. 生长记录表 (growth_records)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空 |
-| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空 |
-| species_id | BIGINT UNSIGNED | 品种ID | 外键, 非空 |
-| sample_time | TIMESTAMP | 取样时间 | 非空 |
-| sample_count | INT UNSIGNED | 取样数量 | 非空 |
-| avg_weight | DECIMAL(8,2) | 平均体重(g) | 非空 |
-| avg_length | DECIMAL(8,2) | 平均体长(cm) | |
-| health_status | VARCHAR(50) | 健康状况 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 记录人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 6. 病害防治表 (disease_prevention)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空 |
-| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空 |
-| medicine_id | BIGINT UNSIGNED | 药品ID | 外键 |
-| dosage | DECIMAL(8,2) | 用药剂量 | |
-| unit | VARCHAR(20) | 剂量单位 | |
-| treatment_time | TIMESTAMP | 治疗时间 | 非空 |
-| treatment_result | VARCHAR(50) | 治疗结果 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 记录人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 7. 药品管理表 (medicines)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 药品ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(100) | 药品名称 | 非空 |
-| category | VARCHAR(50) | 类别 | |
-| specification | VARCHAR(100) | 规格 | |
-| manufacturer | VARCHAR(100) | 生产厂家 | |
-| batch_number | VARCHAR(50) | 批号 | |
-| production_date | DATE | 生产日期 | |
-| expiry_date | DATE | 有效期 | |
-| stock_quantity | DECIMAL(10,2) | 库存数量 | 非空, 默认0 |
-| unit | VARCHAR(20) | 单位 | 非空 |
-| price | DECIMAL(10,2) | 单价 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 8. 设备管理表 (equipment)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 设备ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(100) | 设备名称 | 非空 |
-| equipment_type | VARCHAR(50) | 设备类型 | 非空 |
-| model | VARCHAR(50) | 型号 | |
-| serial_number | VARCHAR(50) | 序列号 | |
-| purchase_date | DATE | 购买日期 | |
-| warranty_period | INT UNSIGNED | 保修期(月) | |
-| supplier | VARCHAR(100) | 供应商 | |
-| status | TINYINT UNSIGNED | 状态 | 非空, 默认1(正常) |
-| location | VARCHAR(100) | 安装位置 | |
-| maintenance_cycle | INT UNSIGNED | 维护周期(天) | |
-| last_maintenance_time | TIMESTAMP | 上次维护时间 | |
-| next_maintenance_time | TIMESTAMP | 下次维护时间 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 9. 生产批次表 (production_batches)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 批次ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| batch_number | VARCHAR(50) | 批次编号 | 非空, 同一租户内唯一 |
-| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空 |
-| species_id | BIGINT UNSIGNED | 品种ID | 外键, 非空 |
-| start_date | DATE | 开始日期 | 非空 |
-| expected_end_date | DATE | 预计结束日期 | |
-| actual_end_date | DATE | 实际结束日期 | |
-| end_reason_type_id | BIGINT UNSIGNED | 结束原因类型ID | 外键 |
-| initial_quantity | INT UNSIGNED | 初始数量 | 非空 |
-| initial_avg_weight | DECIMAL(8,2) | 初始平均体重(g) | |
-| source | VARCHAR(100) | 来源 | |
-| status | VARCHAR(20) | 状态 | 非空, 默认'active' |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 10. 销售记录表 (sales_records)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空 |
-| sale_date | DATE | 销售日期 | 非空 |
-| quantity | DECIMAL(10,2) | 销售数量 | 非空 |
-| unit | VARCHAR(20) | 单位 | 非空 |
-| unit_price | DECIMAL(10,2) | 单价 | 非空 |
-| total_amount | DECIMAL(12,2) | 总金额 | 非空 |
-| customer | VARCHAR(100) | 客户 | |
-| contact | VARCHAR(50) | 联系方式 | |
-| payment_method | VARCHAR(50) | 支付方式 | |
-| payment_status | VARCHAR(20) | 支付状态 | 非空, 默认'unpaid' |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 记录人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 11. 养殖品种表 (species)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 品种ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(100) | 品种名称 | 非空 |
-| scientific_name | VARCHAR(100) | 学名 | |
-| category | VARCHAR(50) | 类别 | |
-| growth_cycle | INT UNSIGNED | 生长周期(天) | |
-| suitable_temperature | VARCHAR(50) | 适宜温度范围 | |
-| suitable_ph | VARCHAR(50) | 适宜pH值范围 | |
-| feeding_habits | TEXT | 饮食习性 | |
-| disease_resistance | VARCHAR(50) | 抗病性 | |
-| market_value | VARCHAR(100) | 市场价值 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 12. 饲料管理表 (feeds)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 饲料ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(100) | 饲料名称 | 非空 |
-| type | VARCHAR(50) | 类型 | |
-| specification | VARCHAR(100) | 规格 | |
-| manufacturer | VARCHAR(100) | 生产厂家 | |
-| batch_number | VARCHAR(50) | 批号 | |
-| production_date | DATE | 生产日期 | |
-| expiry_date | DATE | 有效期 | |
-| protein_content | DECIMAL(5,2) | 蛋白质含量(%) | |
-| stock_quantity | DECIMAL(10,2) | 库存数量 | 非空, 默认0 |
-| unit | VARCHAR(20) | 单位 | 非空 |
-| price | DECIMAL(10,2) | 单价 | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 13. 环境监测表 (environment_monitoring)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空 |
-| monitor_time | TIMESTAMP | 监测时间 | 非空 |
-| air_temperature | DECIMAL(5,2) | 气温(℃) | |
-| humidity | DECIMAL(5,2) | 湿度(%) | |
-| weather | VARCHAR(50) | 天气状况 | |
-| wind_direction | VARCHAR(20) | 风向 | |
-| wind_force | VARCHAR(20) | 风力 | |
-| rainfall | DECIMAL(5,2) | 降雨量(mm) | |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 记录人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 14. 疾病信息表 (diseases)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 疾病ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(100) | 疾病名称 | 非空 |
-| code | VARCHAR(50) | 疾病代码 | |
-| category | VARCHAR(50) | 疾病类别 | |
-| symptom | TEXT | 症状描述 | |
-| treatment_method | TEXT | 治疗方法 | |
-| prevention_method | TEXT | 预防措施 | |
-| affected_species | VARCHAR(255) | 易感品种 | |
-| risk_level | TINYINT UNSIGNED | 风险等级 | 非空, 默认1 |
-| status | TINYINT UNSIGNED | 状态 | 非空, 默认1(启用) |
-| remark | TEXT | 备注 | |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 15. 租户信息附加表 (tenant_business_info)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空, 关联租户表, 唯一 |
-| company_name | VARCHAR(100) | 公司名称 | 非空 |
-| legal_representative | VARCHAR(50) | 法定代表人 | 非空 |
-| unified_social_credit_code | VARCHAR(50) | 统一社会信用代码 | 非空, 唯一 |
-| registration_number | VARCHAR(50) | 注册号 | |
-| company_type | VARCHAR(50) | 公司类型 | |
-| registered_capital | DECIMAL(15,2) | 注册资本 | |
-| registered_capital_currency | VARCHAR(20) | 注册资本币种 | 默认'CNY' |
-| business_scope | TEXT | 经营范围 | |
-| establishment_date | DATE | 成立日期 | |
-| business_term_start | DATE | 营业期限开始日期 | |
-| business_term_end | DATE | 营业期限结束日期 | |
-| registration_authority | VARCHAR(100) | 登记机关 | |
-| approval_date | DATE | 核准日期 | |
-| business_status | VARCHAR(50) | 企业状态 | |
-| registered_address | VARCHAR(255) | 注册地址 | |
-| office_address | VARCHAR(255) | 办公地址 | |
-| contact_person | VARCHAR(50) | 联系人 | |
-| contact_phone | VARCHAR(20) | 联系电话 | |
-| email | VARCHAR(100) | 电子邮箱 | |
-| website | VARCHAR(100) | 公司网站 | |
-| license_image_url | VARCHAR(255) | 营业执照图片URL | |
-| license_image_path | VARCHAR(255) | 营业执照图片存储路径 | |
-| license_issue_date | DATE | 营业执照发证日期 | |
-| license_expiry_date | DATE | 营业执照到期日期 | |
-| verification_status | VARCHAR(20) | 验证状态 | 非空, 默认'pending' |
-| verification_time | TIMESTAMP | 验证时间 | |
-| verification_user_id | BIGINT UNSIGNED | 验证人ID | 外键, 关联用户表 |
-| rejection_reason | TEXT | 拒绝原因 | |
-| remark | TEXT | 备注 | |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 16. 角色表 (roles)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 角色ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| name | VARCHAR(50) | 角色名称 | 非空 |
-| code | VARCHAR(50) | 角色编码 | 非空, 租户内唯一 |
-| description | VARCHAR(255) | 角色描述 | |
-| is_system | TINYINT UNSIGNED | 是否系统角色 | 非空, 默认0 |
-| status | TINYINT UNSIGNED | 状态 | 非空, 默认1(启用) |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 17. 权限表 (permissions)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 权限ID | 主键, 自增 |
-| name | VARCHAR(50) | 权限名称 | 非空 |
-| code | VARCHAR(100) | 权限代码 | 非空, 唯一 |
-| module | VARCHAR(50) | 所属模块 | 非空 |
-| type | VARCHAR(20) | 权限类型(view/create/edit/delete) | 非空 |
-| description | VARCHAR(255) | 权限描述 | |
-| status | TINYINT UNSIGNED | 状态 | 非空, 默认1(启用) |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 18. 角色权限关联表 (role_permissions)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| role_id | BIGINT UNSIGNED | 角色ID | 外键, 非空 |
-| permission_id | BIGINT UNSIGNED | 权限ID | 外键, 非空 |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 19. 用户角色关联表 (user_roles)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| user_id | BIGINT UNSIGNED | 用户ID | 外键, 非空 |
-| role_id | BIGINT UNSIGNED | 角色ID | 外键, 非空 |
-| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
-| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
-| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 关联用户表 |
-
-### 20. 操作日志表 (operation_logs)
-
-| 字段名 | 数据类型 | 描述 | 约束 |
-|--------|----------|------|------|
-| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
-| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
-| user_id | BIGINT UNSIGNED | 用户ID | 外键, 非空, 关联用户表 |
-| operation_type | VARCHAR(50) | 操作类型 | 非空 |
-| operation_module | VARCHAR(50) | 操作模块 | 非空 |
-| operation_description | VARCHAR(255) | 操作描述 | 非空 |
-| ip_address | VARCHAR(50) | IP地址 | |
-| operation_time | TIMESTAMP | 操作时间 | 非空, 默认当前时间 |
-| operation_result | TINYINT UNSIGNED | 操作结果(0:失败,1:成功) | 非空, 默认1 |
-| operation_params | TEXT | 操作参数 | |
-| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| 1 | 租户表(tenant) | 存储租户基本信息 |
+| 2 | 租户配额表(tenant_quota) | 控制租户资源使用上限 |
+| 3 | 租户企业信息表(tenant_business_info) | 记录租户的公司注册信息和营业执照 |
+| 4 | 基地信息表(bases) | 记录养殖基地的基本信息 |
+| 5 | 池塘信息表(ponds) | 记录养殖池塘的基本信息 |
+| 6 | 水质监测表(water_quality) | 记录水质监测数据 |
+| 7 | 投喂记录表(feeding_records) | 记录日常投喂情况 |
+| 8 | 生长记录表(growth_records) | 记录养殖品种的生长情况 |
+| 9 | 病害防治表(disease_prevention) | 记录疾病防治情况 |
+| 10 | 药品管理表(medicines) | 记录药品使用和库存 |
+| 11 | 设备管理表(equipment) | 记录养殖设备信息 |
+| 12 | 生产批次表(production_batches) | 记录养殖批次信息 |
+| 13 | 销售记录表(sales_records) | 记录产品销售情况 |
+| 14 | 养殖品种表(species) | 记录养殖的品种信息 |
+| 15 | 饲料管理表(feeds) | 记录饲料使用和库存 |
+| 16 | 环境监测表(environment_monitoring) | 记录养殖环境监测数据 |
+| 17 | 疾病信息表(diseases) | 记录疾病的基本信息 |
+| 18 | 角色表(roles) | 定义系统角色 |
+| 19 | 权限表(permissions) | 定义系统权限 |
+| 20 | 角色权限关联表(role_permissions) | 关联角色和权限 |
+| 21 | 用户角色关联表(user_roles) | 关联用户和角色 |
+| 22 | 操作日志表(operation_logs) | 记录系统操作日志 |
 
 ## 表关系说明
 

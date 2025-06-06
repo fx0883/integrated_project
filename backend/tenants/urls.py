@@ -13,6 +13,9 @@ urlpatterns = [
     # 租户详情、更新和删除
     path('<int:pk>/', views.TenantRetrieveUpdateDeleteView.as_view(), name='tenant-detail'),
     
+    # 获取租户完整信息
+    path('<int:pk>/comprehensive/', views.TenantComprehensiveView.as_view(), name='tenant-comprehensive'),
+    
     # 租户配额管理
     path('<int:pk>/quota/', views.TenantQuotaUpdateView.as_view(), name='tenant-quota-update'),
     

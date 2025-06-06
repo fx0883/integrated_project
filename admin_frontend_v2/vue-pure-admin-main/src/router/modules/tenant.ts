@@ -15,7 +15,7 @@ export default {
   },
   children: [
     {
-      path: "/tenant/list",
+      path: "list",
       name: "TenantList",
       component: () => import("@/views/tenant/list.vue"),
       meta: {
@@ -23,7 +23,7 @@ export default {
       }
     },
     {
-      path: "/tenant/detail/:id",
+      path: "detail/:id",
       name: "TenantDetail",
       component: () => import("@/views/tenant/detail.vue"),
       meta: {
@@ -33,7 +33,7 @@ export default {
       }
     },
     {
-      path: "/tenant/create",
+      path: "create",
       name: "TenantCreate",
       component: () => import("@/views/tenant/form.vue"),
       meta: {
@@ -43,7 +43,7 @@ export default {
       }
     },
     {
-      path: "/tenant/edit/:id",
+      path: "edit/:id",
       name: "TenantEdit",
       component: () => import("@/views/tenant/form.vue"),
       meta: {
@@ -53,7 +53,7 @@ export default {
       }
     },
     {
-      path: "/tenant/quota/:id",
+      path: "quota/:id",
       name: "TenantQuota",
       component: () => import("@/views/tenant/quota.vue"),
       meta: {

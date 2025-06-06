@@ -208,4 +208,85 @@ class TenantBusinessInfoSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = TenantBusinessInfo
         fields = ('id', 'tenant', 'tenant_name', 'company_name', 'legal_representative', 
-                  'unified_social_credit_code', 'verification_status', 'verification_status_display') 
+                  'unified_social_credit_code', 'verification_status', 'verification_status_display')
+
+
+class TenantComprehensiveSerializer(serializers.ModelSerializer):
+    """
+    全面的租户详细信息序列化器，包含租户所有关联信息
+    """
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    quota = serializers.SerializerMethodField()
+    business_info = serializers.SerializerMethodField()
+    user_count = serializers.SerializerMethodField()
+    admin_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Tenant
+        fields = [
+            'id', 'name', 'code', 'status', 'status_display', 
+            'contact_name', 'contact_email', 'contact_phone', 
+            'created_at', 'updated_at', 'is_active',
+            'user_count', 'admin_count', 'quota', 'business_info'
+        ]
+        read_only_fields = fields
+    
+    def get_user_count(self, obj) -> int:
+        """获取租户用户数量"""
+        return obj.users.filter(is_deleted=False).count()
+    
+    def get_admin_count(self, obj) -> int:
+        """获取租户管理员数量"""
+        return obj.users.filter(is_deleted=False, is_admin=True).count()
+    
+    def get_quota(self, obj):
+        """获取租户配额信息"""
+        try:
+            quota = obj.quota
+            return {
+                'max_users': quota.max_users,
+                'max_admins': quota.max_admins,
+                'max_storage_mb': quota.max_storage_mb,
+                'max_products': quota.max_products,
+                'current_storage_used_mb': quota.current_storage_used_mb,
+                'usage_percentage': {
+                    'users': quota.get_usage_percentage('users'),
+                    'admins': quota.get_usage_percentage('admins'),
+                    'storage': quota.get_usage_percentage('storage'),
+                    'products': quota.get_usage_percentage('products')
+                }
+            }
+        except TenantQuota.DoesNotExist:
+            return None
+    
+    def get_business_info(self, obj):
+        """获取租户企业信息"""
+        try:
+            business_info = obj.business_info
+            return {
+                'company_name': business_info.company_name,
+                'legal_representative': business_info.legal_representative,
+                'unified_social_credit_code': business_info.unified_social_credit_code,
+                'registration_number': business_info.registration_number,
+                'company_type': business_info.company_type,
+                'registered_capital': business_info.registered_capital,
+                'registered_capital_currency': business_info.registered_capital_currency,
+                'business_scope': business_info.business_scope,
+                'establishment_date': business_info.establishment_date,
+                'business_term_start': business_info.business_term_start,
+                'business_term_end': business_info.business_term_end,
+                'registration_authority': business_info.registration_authority,
+                'approval_date': business_info.approval_date,
+                'business_status': business_info.business_status,
+                'registered_address': business_info.registered_address,
+                'office_address': business_info.office_address,
+                'contact_person': business_info.contact_person,
+                'contact_phone': business_info.contact_phone,
+                'email': business_info.email,
+                'website': business_info.website,
+                'license_image_url': business_info.license_image_url,
+                'verification_status': business_info.verification_status,
+                'verification_status_display': business_info.get_verification_status_display()
+            }
+        except (AttributeError, TenantBusinessInfo.DoesNotExist):
+            return None 

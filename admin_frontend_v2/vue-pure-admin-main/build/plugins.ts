@@ -20,16 +20,9 @@ export function getPluginsList(
   VITE_COMPRESSION: ViteCompression
 ): PluginOption[] {
   const lifecycle = process.env.npm_lifecycle_event;
-  
-  // 从环境变量中获取VITE_USE_MOCK的值
   const VITE_USE_MOCK = process.env.VITE_USE_MOCK === "true";
   
-  console.log("[Vite] 环境变量:", {
-    VITE_CDN,
-    VITE_COMPRESSION,
-    VITE_USE_MOCK,
-    BASE_API: process.env.VITE_BASE_API
-  });
+  console.log("[Vite] 是否启用Mock服务:", VITE_USE_MOCK);
   
   return [
     tailwindcss(),
@@ -66,9 +59,9 @@ export function getPluginsList(
     VITE_USE_MOCK
       ? vitePluginFakeServer({
           logger: true,
-          include: "mock",
-          infixName: false,
-          enableProd: true
+      include: "mock",
+      infixName: false,
+      enableProd: true
         })
       : null,
     // svg组件化支持

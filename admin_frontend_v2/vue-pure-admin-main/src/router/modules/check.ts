@@ -15,7 +15,7 @@ export default {
   },
   children: [
     {
-      path: "/check/category",
+      path: "category",
       name: "CheckCategory",
       component: () => import("@/views/check/category/index.vue"),
       meta: {
@@ -23,15 +23,15 @@ export default {
       }
     },
     {
-      path: "/check/task",
+      path: "task",
       name: "CheckTask",
-      redirect: "/check/task/list",
+      redirect: "task/list",
       meta: {
         title: "打卡任务"
       },
       children: [
         {
-          path: "/check/task/list",
+          path: "list",
           name: "CheckTaskList",
           component: () => import("@/views/check/task/list.vue"),
           meta: {
@@ -39,7 +39,7 @@ export default {
           }
         },
         {
-          path: "/check/task/detail/:id",
+          path: "detail/:id",
           name: "CheckTaskDetail",
           component: () => import("@/views/check/task/detail.vue"),
           meta: {
@@ -49,7 +49,7 @@ export default {
           }
         },
         {
-          path: "/check/task/create",
+          path: "create",
           name: "CheckTaskCreate",
           component: () => import("@/views/check/task/form.vue"),
           meta: {
@@ -59,7 +59,7 @@ export default {
           }
         },
         {
-          path: "/check/task/edit/:id",
+          path: "edit/:id",
           name: "CheckTaskEdit",
           component: () => import("@/views/check/task/form.vue"),
           meta: {
@@ -69,7 +69,7 @@ export default {
           }
         },
         {
-          path: "/check/task/statistic/:id",
+          path: "statistic/:id",
           name: "CheckTaskStatistic",
           component: () => import("@/views/check/task/statistic.vue"),
           meta: {
@@ -81,7 +81,7 @@ export default {
       ]
     },
     {
-      path: "/check/record",
+      path: "record",
       name: "CheckRecord",
       component: () => import("@/views/check/record/index.vue"),
       meta: {
@@ -89,7 +89,7 @@ export default {
       }
     },
     {
-      path: "/check/report",
+      path: "report",
       name: "CheckReport",
       component: () => import("@/views/check/report/index.vue"),
       meta: {

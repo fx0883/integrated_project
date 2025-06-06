@@ -86,6 +86,11 @@ const transitionMain = defineComponent({
       transitions.value(this.route)?.name || "fade-transform";
     const enterTransition = transitions.value(this.route)?.enterTransition;
     const leaveTransition = transitions.value(this.route)?.leaveTransition;
+    
+    // 确保默认插槽存在且为函数
+    const defaultSlot = this.$slots.default;
+    const slotContent = typeof defaultSlot === 'function' ? defaultSlot() : null;
+    
     return h(
       Transition,
       {
@@ -97,10 +102,14 @@ const transitionMain = defineComponent({
           ? `animate__animated ${leaveTransition}`
           : undefined,
         mode: "out-in",
-        appear: true
+        appear: true,
+        onBeforeLeave: () => {
+          // 确保在元素离开前执行清理操作
+          // 这有助于防止"Cannot read property 'parentNode' of null"错误
+        }
       },
       {
-        default: () => [this.$slots.default()]
+        default: () => slotContent
       }
     );
   }

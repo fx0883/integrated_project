@@ -286,6 +286,81 @@ tenant_users_response_examples = [
     )
 ]
 
+# 租户完整信息响应示例
+tenant_comprehensive_response_examples = [
+    OpenApiExample(
+        name="租户完整信息",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "获取租户信息成功",
+            "data": {
+                "id": 1,
+                "name": "测试租户1",
+                "code": "test_tenant_1",
+                "status": "active",
+                "status_display": "活跃",
+                "contact_name": "张三",
+                "contact_email": "zhangsan@example.com",
+                "contact_phone": "13800138000",
+                "created_at": "2025-04-20T10:00:00Z",
+                "updated_at": "2025-04-20T10:00:00Z",
+                "is_active": True,
+                "user_count": 10,
+                "admin_count": 2,
+                "quota": {
+                    "max_users": 20,
+                    "max_admins": 5,
+                    "max_storage_mb": 2048,
+                    "max_products": 100,
+                    "current_storage_used_mb": 120,
+                    "usage_percentage": {
+                        "users": 50.0,
+                        "admins": 40.0,
+                        "storage": 5.9,
+                        "products": 25.0
+                    }
+                },
+                "business_info": {
+                    "company_name": "测试科技有限公司",
+                    "legal_representative": "张三",
+                    "unified_social_credit_code": "91310000MA1FL1000X",
+                    "registration_number": "310000000000000",
+                    "company_type": "有限责任公司",
+                    "registered_capital": 1000000,
+                    "registered_capital_currency": "CNY",
+                    "business_scope": "水产养殖技术开发、技术咨询、技术服务",
+                    "establishment_date": "2020-01-01",
+                    "business_term_start": "2020-01-01",
+                    "business_term_end": "2050-01-01",
+                    "registration_authority": "市场监督管理局",
+                    "approval_date": "2020-01-01",
+                    "business_status": "存续",
+                    "registered_address": "上海市浦东新区张江高科技园区",
+                    "office_address": "上海市浦东新区张江高科技园区",
+                    "contact_person": "张三",
+                    "contact_phone": "13800138000",
+                    "email": "info@example.com",
+                    "website": "https://www.example.com",
+                    "license_image_url": "https://storage.example.com/licenses/tenant1.jpg",
+                    "verification_status": "verified",
+                    "verification_status_display": "已验证"
+                }
+            }
+        },
+        response_only=True
+    )
+]
+
+# 租户完整信息响应
+tenant_comprehensive_responses = {
+    status.HTTP_200_OK: OpenApiResponse(
+        description="获取成功",
+        examples=tenant_comprehensive_response_examples
+    ),
+    **common_error_responses
+}
+
 # 租户列表API响应定义
 tenant_list_responses = {
     status.HTTP_200_OK: {
