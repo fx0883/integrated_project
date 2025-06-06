@@ -13,6 +13,11 @@ import {
 import { useUserStoreHook } from "./user";
 import { useMultiTagsStoreHook } from "./multiTags";
 
+// 导入路由模块
+import tenant from "@/router/modules/tenant";
+import user from "@/router/modules/user";
+import menu from "@/router/modules/menu";
+
 export const usePermissionStore = defineStore("pure-permission", {
   state: () => ({
     // 静态路由生成的菜单
@@ -56,16 +61,27 @@ export const usePermissionStore = defineStore("pure-permission", {
       // 获取用户角色
       const roles = useUserStoreHook().roles || [];
       
-      // 过滤路由 - 基于角色
+      // 超级管理员特殊处理 - 只显示租户管理、用户管理和菜单管理
+      if (roles.includes('super_admin')) {
+        console.log("[菜单] 超级管理员登录，仅显示指定菜单");
+        
+        // 只保留租户管理、用户管理和菜单管理三个菜单
+        const allowedMenus = [tenant, user, menu];
+        
+        // 组装菜单
+        this.wholeMenus = filterTree(ascending(allowedMenus));
+        this.flatteningRoutes = formatFlatteningRoutes(allowedMenus as any);
+        
+        // 初始化按钮权限
+        this.initButtonPermissions();
+        return;
+      }
+      
+      // 普通用户 - 过滤路由基于角色
       const filterRoutesByRole = (routes: any[]) => {
         return routes.filter(route => {
           // 如果没有meta或没有roles字段，则默认所有人可见
           if (!route.meta || !route.meta.roles) {
-            return true;
-          }
-          
-          // 如果是超级管理员，可以访问所有路由
-          if (roles.includes('super_admin')) {
             return true;
           }
           

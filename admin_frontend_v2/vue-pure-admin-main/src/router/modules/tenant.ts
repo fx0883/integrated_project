@@ -1,9 +1,10 @@
 import { $t } from "@/plugins/i18n";
 import { permission } from "@/router/enums";
+import { RouteRecordRaw } from "vue-router";
 
 const Layout = () => import("@/layout/index.vue");
 
-export default {
+const tenantRoutes: RouteRecordRaw = {
   path: "/tenant",
   name: "Tenant",
   component: Layout,
@@ -11,7 +12,8 @@ export default {
   meta: {
     icon: "ep/office-building",
     title: "租户管理",
-    rank: permission
+    rank: permission,
+    roles: ["super_admin"]
   },
   children: [
     {
@@ -19,7 +21,8 @@ export default {
       name: "TenantList",
       component: () => import("@/views/tenant/list.vue"),
       meta: {
-        title: "租户列表"
+        title: "租户列表",
+        roles: ["super_admin"]
       }
     },
     {
@@ -29,7 +32,8 @@ export default {
       meta: {
         title: "租户详情",
         showLink: false,
-        activePath: "/tenant/list"
+        activePath: "/tenant/list",
+        roles: ["super_admin"]
       }
     },
     {
@@ -39,7 +43,8 @@ export default {
       meta: {
         title: "创建租户",
         showLink: false,
-        activePath: "/tenant/list"
+        activePath: "/tenant/list",
+        roles: ["super_admin"]
       }
     },
     {
@@ -49,7 +54,8 @@ export default {
       meta: {
         title: "编辑租户",
         showLink: false,
-        activePath: "/tenant/list"
+        activePath: "/tenant/list",
+        roles: ["super_admin"]
       }
     },
     {
@@ -59,8 +65,11 @@ export default {
       meta: {
         title: "租户配额",
         showLink: false,
-        activePath: "/tenant/list"
+        activePath: "/tenant/list",
+        roles: ["super_admin"]
       }
     }
   ]
-} satisfies RouteConfigsTable; 
+};
+
+export default tenantRoutes; 

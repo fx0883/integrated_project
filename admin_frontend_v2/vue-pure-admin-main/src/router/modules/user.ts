@@ -10,7 +10,8 @@ const userRoutes: RouteRecordRaw = {
   meta: {
     title: "用户管理",
     icon: "ri:user-line",
-    rank: permission
+    rank: permission,
+    roles: ["super_admin"]
   },
   children: [
     {
@@ -19,7 +20,7 @@ const userRoutes: RouteRecordRaw = {
       component: () => import("@/views/user/list/index.vue"),
       meta: {
         title: "用户列表",
-        roles: ["admin"]
+        roles: ["super_admin"]
       }
     },
     {
@@ -30,7 +31,7 @@ const userRoutes: RouteRecordRaw = {
         title: "用户详情",
         showLink: false,
         activePath: "/user/list",
-        roles: ["admin"]
+        roles: ["super_admin"]
       }
     }
   ]

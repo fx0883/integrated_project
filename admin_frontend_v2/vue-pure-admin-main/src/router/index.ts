@@ -44,10 +44,11 @@ import cms from "./modules/cms";
 import user from "./modules/user";
 import check from "./modules/check";
 import tenant from "./modules/tenant";
+import menu from "./modules/menu";
 import error from "./modules/error";
 
 /** 原始静态路由（未做任何处理） */
-const routes = [dashboard, cms, user, check, tenant, error];
+const routes = [dashboard, cms, user, check, tenant, menu, error];
 
 /** 导出处理后的静态路由（三级及以上的路由全部拍成二级） */
 export const constantRoutes: Array<RouteRecordRaw> = formatTwoStageRoutes(
