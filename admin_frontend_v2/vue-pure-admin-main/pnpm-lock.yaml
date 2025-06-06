@@ -231,6 +231,9 @@ importers:
       '@stagewise/toolbar':
         specifier: ^0.4.1
         version: 0.4.1
+      '@stagewise/toolbar-vue':
+        specifier: ^0.4.1
+        version: 0.4.1(vue@3.5.16(typescript@5.8.3))
       '@tailwindcss/vite':
         specifier: ^4.1.8
         version: 4.1.8(vite@6.3.5(@types/node@20.17.57)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.89.1)(yaml@2.8.0))
@@ -1561,6 +1564,11 @@ packages:
 
   '@sinonjs/fake-timers@8.1.0':
     resolution: {integrity: sha512-OAPJUAtgeINhh/TAlUID4QTs53Njm7xzddaVlEs/SXwgtiD1tW22zAB/W1wdqfrpmikgaWQ9Fw6Ws+hsiRm5Vg==}
+
+  '@stagewise/toolbar-vue@0.4.1':
+    resolution: {integrity: sha512-8jzEq18wWcwNZK7HpDUbOL2yFQMHIznf2/Ahqu5Cu8SAkh2bgyT8uOgbxsZU7kCwXRwBia9dns213G+6tdN8Sg==}
+    peerDependencies:
+      vue: '>=3.0.0'
 
   '@stagewise/toolbar@0.4.1':
     resolution: {integrity: sha512-8HE0Dxa9XriPS8N2T3xf7ceJ2Zop6OlZLVM2tOP/rSGAD1XuEoRCj4DMB7H01doY//qltifnxihatGdLiuSRpQ==}
@@ -6788,6 +6796,11 @@ snapshots:
   '@sinonjs/fake-timers@8.1.0':
     dependencies:
       '@sinonjs/commons': 1.8.6
+
+  '@stagewise/toolbar-vue@0.4.1(vue@3.5.16(typescript@5.8.3))':
+    dependencies:
+      '@stagewise/toolbar': 0.4.1
+      vue: 3.5.16(typescript@5.8.3)
 
   '@stagewise/toolbar@0.4.1': {}
 

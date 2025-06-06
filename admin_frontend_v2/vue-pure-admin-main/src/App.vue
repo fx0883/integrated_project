@@ -3,6 +3,7 @@
     <router-view />
     <ReDialog />
     <ReDrawer />
+    <StagewiseToolbar v-if="isDevelopment" :config="stagewiseConfig" />
   </el-config-provider>
 </template>
 
@@ -16,13 +17,23 @@ import en from "element-plus/es/locale/lang/en";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 import plusEn from "plus-pro-components/es/locale/lang/en";
 import plusZhCn from "plus-pro-components/es/locale/lang/zh-cn";
+import { StagewiseToolbar } from "@stagewise/toolbar-vue";
 
 export default defineComponent({
   name: "app",
   components: {
     [ElConfigProvider.name]: ElConfigProvider,
     ReDialog,
-    ReDrawer
+    ReDrawer,
+    StagewiseToolbar
+  },
+  data() {
+    return {
+      isDevelopment: import.meta.env.MODE === "development",
+      stagewiseConfig: {
+        plugins: []
+      }
+    };
   },
   computed: {
     currentLocale() {
