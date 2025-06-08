@@ -1,8 +1,8 @@
-import { reactive } from "vue";
-import { isPhone } from "@pureadmin/utils";
-import type { FormRules } from "element-plus";
 import { $t, transformI18n } from "@/plugins/i18n";
 import { useUserStoreHook } from "@/store/modules/user";
+import { isPhone } from "@pureadmin/utils";
+import type { FormRules } from "element-plus";
+import { reactive } from "vue";
 
 /** 6位数字验证码正则 */
 export const REGEXP_SIX = /^\d{6}$/;
