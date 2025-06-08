@@ -20,7 +20,7 @@ import { useUserStoreHook } from "@/store/modules/user";
 import { initRouter, getTopMenu } from "@/router/utils";
 import { bg, avatar, illustration } from "./utils/static";
 import { ReImageVerify } from "@/components/ReImageVerify";
-import { ref, toRaw, reactive, watch, computed } from "vue";
+import { ref, toRaw, reactive, watch, computed, onMounted } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useTranslationLang } from "@/layout/hooks/useTranslationLang";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
@@ -43,6 +43,9 @@ import QuestionCircle from "~icons/ri/question-circle-fill";
 defineOptions({
   name: "Login"
 });
+
+// 判断是否为开发环境
+const isDevelopment = import.meta.env.MODE === "development";
 
 const imgCode = ref("");
 const loginDay = ref(7);
@@ -69,6 +72,20 @@ const ruleForm = reactive({
   verifyCode: ""
 });
 
+// 在开发环境中设置默认验证码
+onMounted(() => {
+  if (isDevelopment) {
+    console.log("[登录页面] 开发环境，设置默认验证码");
+    // 延迟一会儿，确保图形验证码组件已经生成了验证码
+    setTimeout(() => {
+      if (imgCode.value) {
+        ruleForm.verifyCode = imgCode.value;
+        console.log(`[登录页面] 已自动填充验证码: ${imgCode.value}`);
+      }
+    }, 500);
+  }
+});
+
 const showDebugPanel = ref(false);
 const debugInfo = ref({
   token: null as any
@@ -81,6 +98,13 @@ const onLogin = async (formEl: FormInstance | undefined) => {
   console.time("[登录流程] 总耗时");
   console.log(`[登录流程] 开始时间: ${new Date().toLocaleString()}`);
   console.log(`[登录流程] 用户名: ${ruleForm.username}`);
+  console.log(`[登录流程] 开发环境: ${isDevelopment}`);
+  
+  // 在开发环境中，自动填充验证码
+  if (isDevelopment && !ruleForm.verifyCode && imgCode.value) {
+    console.log(`[登录流程] 开发环境，自动填充验证码: ${imgCode.value}`);
+    ruleForm.verifyCode = imgCode.value;
+  }
   
   await formEl.validate(valid => {
     if (valid) {
@@ -221,10 +245,10 @@ const goToErrorPage = () => {
               :class="['dark:text-white!', getDropdownItemClass(locale, 'zh')]"
               @click="translationCh"
             >
-              <IconifyIconOffline
+              <IconifyIconOnline
                 v-show="locale === 'zh'"
                 class="check-zh"
-                :icon="Check"
+                icon="ep:check"
               />
               简体中文
             </el-dropdown-item>
@@ -234,7 +258,7 @@ const goToErrorPage = () => {
               @click="translationEn"
             >
               <span v-show="locale === 'en'" class="check-en">
-                <IconifyIconOffline :icon="Check" />
+                <IconifyIconOnline icon="ep:check" />
               </span>
               English
             </el-dropdown-item>
@@ -317,7 +341,7 @@ const goToErrorPage = () => {
                 <el-input
                   v-model="ruleForm.verifyCode"
                   clearable
-                  :placeholder="t('login.pureVerifyCode')"
+                  :placeholder="isDevelopment ? t('login.pureVerifyCode') + '(开发模式自动填充)' : t('login.pureVerifyCode')"
                   :prefix-icon="null"
                 >
                   <template #prefix>

@@ -29,7 +29,8 @@ export default defineComponent({
   },
   data() {
     return {
-      isDevelopment: import.meta.env.MODE === "development",
+      // isDevelopment: import.meta.env.MODE === "development",
+      isDevelopment: false,
       stagewiseConfig: {
         plugins: []
       }

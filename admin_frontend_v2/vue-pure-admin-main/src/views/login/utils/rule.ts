@@ -11,6 +11,10 @@ export const REGEXP_SIX = /^\d{6}$/;
 export const REGEXP_PWD =
   /^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?!([^(0-9a-zA-Z)]|[()])+$)(?!^.*[\u4E00-\u9FA5].*$)([^(0-9a-zA-Z)]|[()]|[a-z]|[A-Z]|[0-9]){8,18}$/;
 
+// 判断是否为开发环境
+const isDevelopment = import.meta.env.MODE === "development";
+console.log(`[环境检测] 当前环境: ${import.meta.env.MODE}, 开发模式: ${isDevelopment}`);
+
 /** 登录校验 */
 const loginRules = reactive<FormRules>({
   password: [
@@ -30,6 +34,13 @@ const loginRules = reactive<FormRules>({
   verifyCode: [
     {
       validator: (rule, value, callback) => {
+        // 开发环境下跳过验证码验证
+        if (isDevelopment) {
+          console.log("[验证码验证] 开发环境下跳过验证码验证");
+          callback();
+          return;
+        }
+
         if (value === "") {
           callback(new Error(transformI18n($t("login.pureVerifyCodeReg"))));
         } else if (useUserStoreHook().verifyCode !== value) {
@@ -64,6 +75,13 @@ const phoneRules = reactive<FormRules>({
   verifyCode: [
     {
       validator: (rule, value, callback) => {
+        // 开发环境下跳过验证码验证
+        if (isDevelopment) {
+          console.log("[验证码验证] 开发环境下跳过手机验证码验证");
+          callback();
+          return;
+        }
+
         if (value === "") {
           callback(new Error(transformI18n($t("login.pureVerifyCodeReg"))));
         } else if (!REGEXP_SIX.test(value)) {
@@ -96,6 +114,13 @@ const updateRules = reactive<FormRules>({
   verifyCode: [
     {
       validator: (rule, value, callback) => {
+        // 开发环境下跳过验证码验证
+        if (isDevelopment) {
+          console.log("[验证码验证] 开发环境下跳过密码重置验证码验证");
+          callback();
+          return;
+        }
+
         if (value === "") {
           callback(new Error(transformI18n($t("login.pureVerifyCodeReg"))));
         } else if (!REGEXP_SIX.test(value)) {
