@@ -1,0 +1,176 @@
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取路由成功",
+  "data": [
+    {
+      "path": "/dashboard",
+      "name": "Dashboard",
+      "component": "Layout",
+      "redirect": "/dashboard/index",
+      "meta": {
+        "icon": "ep:data-board",
+        "title": "仪表盘",
+        "rank": 1,
+        "roles": ["admin"]
+      },
+      "children": [
+        {
+          "path": "index",
+          "name": "DashboardIndex",
+          "component": "/src/views/dashboard/index",
+          "meta": {
+            "title": "系统概览",
+            "icon": "ep:monitor",
+            "roles": ["admin"]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/tenant",
+      "name": "Tenant",
+      "component": "Layout",
+      "redirect": "/tenant/list",
+      "meta": {
+        "icon": "ep:office-building",
+        "title": "租户管理",
+        "rank": 2,
+        "roles": ["admin"]
+      },
+      "children": [
+        {
+          "path": "list",
+          "name": "TenantList",
+          "component": "/src/views/tenant/list",
+          "meta": {
+            "title": "租户列表",
+            "roles": ["admin"]
+          }
+        },
+        {
+          "path": "detail/:id",
+          "name": "TenantDetail",
+          "component": "/src/views/tenant/detail",
+          "meta": {
+            "title": "租户详情",
+            "showLink": false,
+            "activePath": "/tenant/list",
+            "roles": ["admin"]
+          }
+        },
+        {
+          "path": "create",
+          "name": "TenantCreate",
+          "component": "/src/views/tenant/form",
+          "meta": {
+            "title": "创建租户",
+            "showLink": false,
+            "activePath": "/tenant/list",
+            "roles": ["admin"]
+          }
+        },
+        {
+          "path": "edit/:id",
+          "name": "TenantEdit",
+          "component": "/src/views/tenant/form",
+          "meta": {
+            "title": "编辑租户",
+            "showLink": false,
+            "activePath": "/tenant/list",
+            "roles": ["admin"]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/user",
+      "name": "User",
+      "component": "Layout",
+      "redirect": "/user/list",
+      "meta": {
+        "icon": "ri:user-line",
+        "title": "用户管理",
+        "rank": 3,
+        "roles": ["admin"]
+      },
+      "children": [
+        {
+          "path": "list",
+          "name": "UserList",
+          "component": "/src/views/user/list/index",
+          "meta": {
+            "title": "用户列表",
+            "roles": ["admin"]
+          }
+        },
+        {
+          "path": "detail/:id",
+          "name": "UserDetail",
+          "component": "/src/views/user/detail/index",
+          "meta": {
+            "title": "用户详情",
+            "showLink": false,
+            "activePath": "/user/list",
+            "roles": ["admin"]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/menu",
+      "name": "Menu",
+      "component": "Layout",
+      "redirect": "/menu/list",
+      "meta": {
+        "icon": "ep:menu",
+        "title": "菜单管理",
+        "rank": 4,
+        "roles": ["admin"]
+      },
+      "children": [
+        {
+          "path": "list",
+          "name": "MenuList",
+          "component": "/src/views/menu/index",
+          "meta": {
+            "title": "菜单列表",
+            "roles": ["admin"]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/system",
+      "name": "System",
+      "component": "Layout",
+      "redirect": "/system/config",
+      "meta": {
+        "icon": "ep:setting",
+        "title": "系统设置",
+        "rank": 5,
+        "roles": ["admin"]
+      },
+      "children": [
+        {
+          "path": "config",
+          "name": "SystemConfig",
+          "component": "/src/views/system/config/index",
+          "meta": {
+            "title": "系统配置",
+            "roles": ["admin"]
+          }
+        },
+        {
+          "path": "log",
+          "name": "SystemLog",
+          "component": "/src/views/system/log/index",
+          "meta": {
+            "title": "系统日志",
+            "roles": ["admin"]
+          }
+        }
+      ]
+    }
+  ]
+} 

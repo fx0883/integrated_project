@@ -6,10 +6,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample, inline_serializer
 from common.permissions import IsSuperAdminUser, IsAdminUser
-from common.models import APILog
+from common.models import APILog, Config
 from common.serializers import APILogSerializer, APILogDetailSerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from common.utils.tenant_manager import TenantManager
 
 logger = logging.getLogger(__name__)
 
@@ -246,12 +249,22 @@ class TestStandardResponseView(APIView):
         tags=["测试"]
     )
     def get(self, request):
+        """
+        测试成功响应
+        """
         data = {
             'message': '这是一个测试消息',
-            'test_field': 'test_value',
+            'test_field': '这是一个测试字段',
             'items': [1, 2, 3, 4, 5]
         }
-        return Response(data)
+        
+        return Response({
+            'success': True,
+            'code': 2000,
+            'message': '操作成功',
+            'data': data
+        })
+
 
 class TestErrorResponseView(APIView):
     """
@@ -269,14 +282,24 @@ class TestErrorResponseView(APIView):
         tags=["测试"]
     )
     def get(self, request):
+        """
+        测试错误响应
+        """
         error_data = {
             'detail': '请求参数错误',
             'fields': {
-                'name': '此字段是必填项',
-                'age': '此字段必须是一个整数',
+                'name': '名称不能为空',
+                'email': '邮箱格式不正确'
             }
         }
-        return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({
+            'success': False,
+            'code': 4000,
+            'message': '请求参数错误',
+            'data': error_data
+        }, status=status.HTTP_400_BAD_REQUEST)
+
 
 class TestAuthErrorResponseView(APIView):
     """
@@ -294,7 +317,18 @@ class TestAuthErrorResponseView(APIView):
         tags=["测试"]
     )
     def get(self, request):
-        return Response({'detail': '认证令牌无效'}, status=status.HTTP_401_UNAUTHORIZED)
+        """
+        测试认证失败响应
+        """
+        return Response({
+            'success': False,
+            'code': 4001,
+            'message': '认证失败',
+            'data': {
+                'detail': '身份验证凭据未提供或已过期'
+            }
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class TestPaginationResponseView(APIView):
     """
@@ -312,24 +346,36 @@ class TestPaginationResponseView(APIView):
         tags=["测试"]
     )
     def get(self, request):
-        data = [{'id': i, 'name': f'Item {i}'} for i in range(1, 21)]
-        
-        # 手动模拟分页响应
-        paginated_data = {
-            'pagination': {
-                'count': 100,
-                'next': 'http://localhost:8000/api/v1/common/test-pagination/?page=2',
-                'previous': None,
-                'page_size': 20,
-                'current_page': 1,
-                'total_pages': 5,
-            },
-            'results': data
+        """
+        测试分页响应
+        """
+        # 模拟分页数据
+        pagination_data = {
+            'count': 100,
+            'next': 'http://example.com/api/items?page=3',
+            'previous': 'http://example.com/api/items?page=1',
+            'page_size': 10,
+            'current_page': 2,
+            'total_pages': 10
         }
         
-        return Response(paginated_data)
+        # 模拟结果数据
+        results = [
+            {'id': i, 'name': f'Item {i}'} for i in range(10, 20)
+        ]
+        
+        return Response({
+            'success': True,
+            'code': 2000,
+            'message': '获取成功',
+            'data': {
+                'pagination': pagination_data,
+                'results': results
+            }
+        })
 
-# 保留原来的函数视图用于向后兼容，但不再使用@extend_schema
+
+# 函数视图示例
 @extend_schema(
     responses={
         200: TestStandardResponseSerializer,
@@ -342,14 +388,21 @@ class TestPaginationResponseView(APIView):
 @permission_classes([AllowAny])
 def test_standard_response(request):
     """
-    测试成功响应的统一格式
+    测试标准响应格式
     """
     data = {
         'message': '这是一个测试消息',
-        'test_field': 'test_value',
+        'test_field': '这是一个测试字段',
         'items': [1, 2, 3, 4, 5]
     }
-    return Response(data)
+    
+    return Response({
+        'success': True,
+        'code': 2000,
+        'message': '操作成功',
+        'data': data
+    })
+
 
 @extend_schema(
     responses={
@@ -363,16 +416,23 @@ def test_standard_response(request):
 @permission_classes([AllowAny])
 def test_error_response(request):
     """
-    测试错误响应的统一格式
+    测试错误响应格式
     """
     error_data = {
         'detail': '请求参数错误',
         'fields': {
-            'name': '此字段是必填项',
-            'age': '此字段必须是一个整数',
+            'name': '名称不能为空',
+            'email': '邮箱格式不正确'
         }
     }
-    return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response({
+        'success': False,
+        'code': 4000,
+        'message': '请求参数错误',
+        'data': error_data
+    }, status=status.HTTP_400_BAD_REQUEST)
+
 
 @extend_schema(
     responses={
@@ -386,9 +446,17 @@ def test_error_response(request):
 @permission_classes([AllowAny])
 def test_auth_error_response(request):
     """
-    测试认证失败响应的统一格式
+    测试认证错误响应格式
     """
-    return Response({'detail': '认证令牌无效'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({
+        'success': False,
+        'code': 4001,
+        'message': '认证失败',
+        'data': {
+            'detail': '身份验证凭据未提供或已过期'
+        }
+    }, status=status.HTTP_401_UNAUTHORIZED)
+
 
 @extend_schema(
     responses={
@@ -402,21 +470,32 @@ def test_auth_error_response(request):
 @permission_classes([AllowAny])
 def test_pagination_response(request):
     """
-    测试分页响应的统一格式
+    测试分页响应格式
     """
-    data = [{'id': i, 'name': f'Item {i}'} for i in range(1, 21)]
-    
-    # 手动模拟分页响应
-    paginated_data = {
-        'pagination': {
-            'count': 100,
-            'next': 'http://localhost:8000/api/v1/common/test-pagination/?page=2',
-            'previous': None,
-            'page_size': 20,
-            'current_page': 1,
-            'total_pages': 5,
-        },
-        'results': data
+    # 模拟分页数据
+    pagination_data = {
+        'count': 100,
+        'next': 'http://example.com/api/items?page=3',
+        'previous': 'http://example.com/api/items?page=1',
+        'page_size': 10,
+        'current_page': 2,
+        'total_pages': 10
     }
     
-    return Response(paginated_data)
+    # 模拟结果数据
+    results = [
+        {'id': i, 'name': f'Item {i}'} for i in range(10, 20)
+    ]
+    
+    # 返回标准化的分页响应
+    paginated_data = {
+        'pagination': pagination_data,
+        'results': results
+    }
+    
+    return Response({
+        'success': True,
+        'code': 2000,
+        'message': '获取成功',
+        'data': paginated_data
+    })

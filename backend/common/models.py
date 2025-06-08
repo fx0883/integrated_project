@@ -110,3 +110,48 @@ class APILog(models.Model):
     
     def __str__(self):
         return f"{self.request_method} {self.request_path} - {self.status_code}"
+
+
+class Config(models.Model):
+    """
+    系统配置模型
+    用于存储系统级别的配置信息，包括超级管理员菜单配置等
+    """
+    CONFIG_TYPE_CHOICES = (
+        ('menu', '菜单配置'),
+        ('system', '系统配置'),
+        ('feature', '功能配置'),
+        ('other', '其他配置'),
+    )
+    
+    name = models.CharField(_("配置名称"), max_length=100, unique=True)
+    key = models.CharField(_("配置键"), max_length=100, unique=True)
+    value = models.JSONField(_("配置值"), default=dict)
+    type = models.CharField(_("配置类型"), max_length=20, choices=CONFIG_TYPE_CHOICES, default='other')
+    description = models.TextField(_("配置描述"), null=True, blank=True)
+    is_active = models.BooleanField(_("是否启用"), default=True)
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    created_by = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_configs',
+        verbose_name=_('创建人')
+    )
+    updated_by = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='updated_configs',
+        verbose_name=_('更新人')
+    )
+    
+    class Meta:
+        verbose_name = _('系统配置')
+        verbose_name_plural = _('系统配置')
+        db_table = 'common_config'
+        ordering = ['type', 'name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.key})"

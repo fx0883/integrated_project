@@ -22,9 +22,17 @@ import { userKey, type DataInfo } from "@/utils/auth";
 import { type menuType, routerArrays } from "@/layout/types";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { usePermissionStoreHook } from "@/store/modules/permission";
+import { resetRouter } from "./index";
+import { ElMessage } from "element-plus";
 const IFrame = () => import("@/layout/frame.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
+
+// 明确预加载关键路由组件，确保它们总是可用
+const LoginPage = () => import(/* webpackChunkName: "login" */ "@/views/login/index.vue");
+const Error404Page = () => import(/* webpackChunkName: "error404" */ "@/views/error/404.vue");
+const Error403Page = () => import(/* webpackChunkName: "error403" */ "@/views/error/403.vue");
+const Error500Page = () => import(/* webpackChunkName: "error500" */ "@/views/error/500.vue");
 
 // 动态路由
 import { getAsyncRoutes } from "@/api/routes";
@@ -83,8 +91,8 @@ function isOneOfArray(a: Array<string>, b: Array<string>) {
 
 /** 从localStorage里取出当前登录用户的角色roles，过滤无权限的菜单 */
 function filterNoPermissionTree(data: RouteComponent[]) {
-  const currentRoles =
-    storageLocal().getItem<DataInfo<number>>(userKey)?.roles ?? [];
+  const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
+  const currentRoles = Array.isArray(userInfo?.roles) ? userInfo.roles : [];
   const newTree = cloneDeep(data).filter((v: any) =>
     isOneOfArray(v.meta?.roles, currentRoles)
   );
@@ -190,208 +198,191 @@ function addPathMatch() {
   }
 }
 
-/** 处理动态路由（后端返回的路由） */
+/** 处理后端返回的动态路由 */
 function handleAsyncRoutes(routeList) {
-  console.log("[路由调试] 开始处理动态路由", routeList);
+  console.group("[路由处理] 开始处理动态路由");
+  console.time("[路由处理] 总耗时");
+  console.log(`[路由处理] 开始时间: ${new Date().toLocaleString()}`);
+  console.log("[路由处理] 路由列表数量:", routeList ? routeList.length : 0);
   
-  if (routeList.length === 0) {
-    console.log("[路由调试] 路由列表为空");
-    usePermissionStoreHook().handleWholeMenus(routeList);
-  } else {
-    // 确保基础路由结构存在
-    if (!router.options.routes || router.options.routes.length === 0) {
-      console.error("[路由调试] 基础路由结构不存在，无法添加动态路由");
-      router.options.routes = [{ 
-        path: "/",
-        name: "Root",
-        component: () => import("@/layout/index.vue"),
-        redirect: "/login",
-        children: [] 
-      }];
-    } else {
-      console.log("[路由调试] 当前基础路由结构:", JSON.stringify(router.options.routes, null, 2));
+  if (!routeList || !routeList.length) {
+    console.warn("[路由处理] 动态路由列表为空");
+    console.timeEnd("[路由处理] 总耗时");
+    console.groupEnd();
+    throw new Error("动态路由列表为空");
+  }
+  
+  try {
+    // 处理路由数据，确保符合格式要求
+    console.log("[路由处理] 开始转换路由格式");
+    console.time("[路由处理] 路由格式转换耗时");
+    
+    const asyncRouteList = addAsyncRoutes(routeList);
+    
+    console.timeEnd("[路由处理] 路由格式转换耗时");
+    console.log("[路由处理] 转换后的路由数量:", asyncRouteList ? asyncRouteList.length : 0);
+    
+    if (!asyncRouteList || asyncRouteList.length === 0) {
+      console.error("[路由处理] 处理后的动态路由列表为空");
+      console.timeEnd("[路由处理] 总耗时");
+      console.groupEnd();
+      throw new Error("处理后的动态路由列表为空");
     }
     
-    // 确保children数组存在
-    if (!router.options.routes[0].children) {
-      console.log("[路由调试] 创建子路由数组");
-      router.options.routes[0].children = [];
-    }
-
-    // 预先确保错误页面路由存在
-    const errorRoutes = [
-      {
-        path: "/error",
-        name: "Error",
-        component: () => import("@/layout/index.vue"),
-        redirect: "/error/403",
-        meta: {
-          icon: "ri:information-line",
-          title: "错误页面",
-          rank: 9
-        },
-        children: [
-          {
-            path: "/error/403",
-            name: "403",
-            component: () => import("@/views/error/403.vue"),
-            meta: {
-              title: "403页面"
-            }
-          },
-          {
-            path: "/error/404",
-            name: "404",
-            component: () => import("@/views/error/404.vue"),
-            meta: {
-              title: "404页面"
-            }
-          },
-          {
-            path: "/error/500",
-            name: "500",
-            component: () => import("@/views/error/500.vue"),
-            meta: {
-              title: "500页面"
-            }
-          }
-        ]
+    // 扁平化路由
+    console.time("[路由处理] 路由扁平化耗时");
+    const flattenedRoutes = formatFlatteningRoutes(asyncRouteList);
+    console.timeEnd("[路由处理] 路由扁平化耗时");
+    console.log("[路由处理] 扁平化后的路由数量:", flattenedRoutes ? flattenedRoutes.length : 0);
+    
+    // 添加路由
+    console.time("[路由处理] 路由注册耗时");
+    let addedCount = 0;
+    asyncRouteList.forEach(route => {
+      // 检查路由是否已存在
+      if (route.name && router.hasRoute(route.name)) {
+        console.log(`[路由处理] 路由已存在，跳过添加: ${String(route.name)}`);
+        return;
       }
-    ];
-    
-    // 将错误路由添加到路由列表
-    if (!router.hasRoute("403") && !router.hasRoute("Error")) {
-      errorRoutes.forEach(route => {
-        router.addRoute(route);
-      });
-      console.log("[路由调试] 预先添加了错误页面路由");
-    }
-
-    // 先处理路由
-    const processedRoutes = addAsyncRoutes(routeList);
-    const flattenedRoutes = formatFlatteningRoutes(processedRoutes);
-    
-    console.log("[路由调试] 扁平化后的路由:", flattenedRoutes.map(r => ({ 
-      path: r.path, 
-      name: r.name, 
-      redirect: r.redirect 
-    })));
-
-    // 添加路由前检查循环引用
-    const redirectMap = new Map();
-    const checkCircularRedirects = (routes) => {
-      routes.forEach(route => {
-        if (route.redirect) {
-          redirectMap.set(route.path, route.redirect);
-          
-          // 检查是否有循环重定向
-          let currentPath = route.path;
-          const visited = new Set([currentPath]);
-          
-          while (redirectMap.has(currentPath)) {
-            currentPath = redirectMap.get(currentPath);
-            if (visited.has(currentPath)) {
-              console.error(`[路由调试] 检测到循环重定向: ${Array.from(visited).join(' -> ')} -> ${currentPath}`);
-              // 修复循环重定向
-              route.redirect = null;
-              break;
-            }
-            visited.add(currentPath);
-          }
-        }
-        
-        if (route.children && route.children.length > 0) {
-          checkCircularRedirects(route.children);
-        }
-      });
-    };
-    
-    checkCircularRedirects(routeList);
-    
-    // 使用Map记录已添加的路由名称，避免重复
-    const addedRoutes = new Map();
-    
-    // 一次性添加所有扁平化路由，避免多次修改路由
-    try {
-      // 先创建一个新路由对象
-      const newRouteConfig = { 
-        path: "/", 
-        component: () => import("@/layout/index.vue"),
-        children: []
-      };
-
-      // 将扁平化路由添加到新路由对象
-      flattenedRoutes.forEach(route => {
-        // 避免名称冲突
-        if (route.name && addedRoutes.has(String(route.name))) {
-          const originalName = String(route.name);
-          route.name = `${originalName}_${Date.now()}`;
-          console.log(`[路由调试] 路由名称冲突，重命名: ${originalName} -> ${route.name}`);
-        }
-        
-        if (route.name) {
-          addedRoutes.set(String(route.name), route.path);
-        }
-
-        // 将路由添加到新配置中
-        newRouteConfig.children.push(route);
-      });
       
-      // 添加新路由到路由器
-      router.addRoute(newRouteConfig);
-      console.log(`[路由调试] 成功添加${flattenedRoutes.length}个路由`);
-    } catch (error) {
-      console.error("[路由调试] 添加路由失败:", error);
+      try {
+        // 确保路由组件已设置
+        if (route.name === 'Dashboard' && typeof route.component !== 'function') {
+          console.log("[路由处理] 设置Dashboard路由组件");
+          route.component = () => import("@/layout/index.vue");
+        }
+        
+        // 添加路由
+        router.addRoute(route);
+        addedCount++;
+        console.log(`[路由处理] 成功添加路由: ${route.name ? String(route.name) : route.path}`);
+      } catch (error) {
+        console.error(`[路由处理] 添加路由失败: ${route.name ? String(route.name) : route.path}`, error);
+      }
+    });
+    console.timeEnd("[路由处理] 路由注册耗时");
+    
+    console.log(`[路由处理] 成功添加${addedCount}个路由`);
+    
+    if (addedCount === 0) {
+      console.error("[路由处理] 没有成功添加任何路由");
+      console.timeEnd("[路由处理] 总耗时");
+      console.groupEnd();
+      throw new Error("没有成功添加任何路由");
     }
     
-    usePermissionStoreHook().handleWholeMenus(routeList);
+    // 更新状态
+    console.time("[路由处理] 更新菜单状态耗时");
+    usePermissionStoreHook().handleWholeMenus(asyncRouteList);
+    console.timeEnd("[路由处理] 更新菜单状态耗时");
+    
+    // 确保添加了通配符路由
+    console.time("[路由处理] 添加通配符路由耗时");
+    addPathMatch();
+    console.timeEnd("[路由处理] 添加通配符路由耗时");
+    
+    console.log("[路由处理] 路由处理完成");
+    
+    // 输出当前所有路由
+    console.log("[路由处理] 当前所有路由数量:", router.getRoutes().length);
+    console.timeEnd("[路由处理] 总耗时");
+    console.groupEnd();
+  } catch (error) {
+    console.error("[路由处理] 处理动态路由时出错:", error);
+    console.timeEnd("[路由处理] 总耗时");
+    console.groupEnd();
+    throw error;
   }
-  
-  if (!useMultiTagsStoreHook().getMultiTagsCache) {
-    useMultiTagsStoreHook().handleTags("equal", [
-      ...routerArrays,
-      ...usePermissionStoreHook().flatteningRoutes.filter(
-        v => v?.meta?.fixedTag
-      )
-    ]);
-  }
-  addPathMatch();
-  console.log("[路由调试] 路由处理完成");
 }
 
 /** 初始化路由（`new Promise` 写法防止在异步请求中造成无限循环）*/
 function initRouter() {
-  if (getConfig()?.CachingAsyncRoutes) {
-    // 开启动态路由缓存本地localStorage
-    const key = "async-routes";
-    
-    // 清理缓存，强制重新获取路由配置
-    console.log("[路由] 清理路由缓存，强制重新获取");
-    storageLocal().removeItem(key);
-    
-    const asyncRouteList = storageLocal().getItem(key) as any;
-    if (asyncRouteList && asyncRouteList?.length > 0) {
-      return new Promise(resolve => {
-        handleAsyncRoutes(asyncRouteList);
-        resolve(router);
-      });
-    } else {
-      return new Promise(resolve => {
-        getAsyncRoutes().then(({ data }) => {
-          handleAsyncRoutes(cloneDeep(data));
-          storageLocal().setItem(key, data);
-          resolve(router);
+  console.group("[路由初始化] 开始初始化路由");
+  console.time("[路由初始化] 总耗时");
+  console.log(`[路由初始化] 开始时间: ${new Date().toLocaleString()}`);
+  
+  return new Promise((resolve, reject) => {
+    try {
+      // 实际初始化
+      console.log("[路由初始化] 开始请求异步路由数据");
+      console.time("[路由初始化] API请求耗时");
+      
+      getAsyncRoutes()
+        .then(response => {
+          console.timeEnd("[路由初始化] API请求耗时");
+          console.log("[路由初始化] 收到API响应", response);
+          
+          try {
+            // 检查响应格式
+            if (!response) {
+              console.error("[路由初始化] 获取路由响应为空");
+              ElMessage.error("获取路由失败，请联系管理员");
+              reject(new Error("获取的路由响应为空"));
+              console.timeEnd("[路由初始化] 总耗时");
+              console.groupEnd();
+              return;
+            }
+            
+            // 尝试从不同的响应格式中获取数据
+            let data;
+            if (response && typeof response === 'object' && 'data' in response) {
+              data = (response as any).data;
+              console.log("[路由初始化] 从response.data中获取路由数据", data);
+            } else if (Array.isArray(response)) {
+              data = response;
+              console.log("[路由初始化] 从response数组中获取路由数据", data);
+            } else {
+              console.error("[路由初始化] 无法从响应中获取路由数据", response);
+              ElMessage.error("无法从响应中获取路由数据");
+              reject(new Error("无法从响应中获取路由数据"));
+              console.timeEnd("[路由初始化] 总耗时");
+              console.groupEnd();
+              return;
+            }
+            
+            if (!data || (Array.isArray(data) && data.length === 0)) {
+              console.error("[路由初始化] 获取的路由数据为空");
+              ElMessage.error("获取路由失败，请联系管理员");
+              reject(new Error("获取的路由数据为空"));
+              console.timeEnd("[路由初始化] 总耗时");
+              console.groupEnd();
+              return;
+            }
+            
+            console.log("[路由初始化] 成功获取路由数据，路由数量:", Array.isArray(data) ? data.length : "未知");
+            console.time("[路由初始化] 处理路由耗时");
+            
+            handleAsyncRoutes(cloneDeep(data));
+            
+            console.timeEnd("[路由初始化] 处理路由耗时");
+            console.log("[路由初始化] 路由处理完成");
+            console.timeEnd("[路由初始化] 总耗时");
+            console.groupEnd();
+            
+            resolve(router);
+          } catch (error) {
+            console.error("[路由初始化] 处理响应数据时出错", error);
+            ElMessage.error("处理路由数据失败，请联系管理员");
+            reject(error);
+            console.timeEnd("[路由初始化] 总耗时");
+            console.groupEnd();
+          }
+        })
+        .catch(error => {
+          console.error("[路由初始化] 获取路由数据失败", error);
+          ElMessage.error("获取路由失败，请联系管理员");
+          reject(error);
+          console.timeEnd("[路由初始化] 总耗时");
+          console.groupEnd();
         });
-      });
+    } catch (error) {
+      console.error("[路由初始化] 路由初始化过程中发生异常", error);
+      ElMessage.error("路由初始化失败，请联系管理员");
+      reject(error);
+      console.timeEnd("[路由初始化] 总耗时");
+      console.groupEnd();
     }
-  } else {
-    return new Promise(resolve => {
-      getAsyncRoutes().then(({ data }) => {
-        handleAsyncRoutes(cloneDeep(data));
-        resolve(router);
-      });
-    });
-  }
+  });
 }
 
 /**
@@ -480,74 +471,7 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
     return [];
   }
   
-  // 添加特定日志输出，检查CheckCategory路由
-  const checkRoute = arrRoutes.find(route => route.name === "Check");
-  if (checkRoute && checkRoute.children) {
-    const categoryRoute = checkRoute.children.find(child => child.name === "CheckCategory");
-    console.log("[路由调试] 打卡类型路由检查:", categoryRoute ? {
-      path: categoryRoute.path,
-      fullPath: `${checkRoute.path}/${categoryRoute.path.replace(/^\//, '')}`,
-      name: categoryRoute.name,
-      component: categoryRoute.component
-    } : "未找到");
-  }
-  
   try {
-    // 检查路径冲突
-    const pathMap = new Map();
-    const nameMap = new Map();
-    
-    // 递归检查路径和名称冲突
-    const checkPathConflicts = (routes, parentPath = "") => {
-      routes.forEach(route => {
-        const fullPath = parentPath ? `${parentPath}/${route.path.replace(/^\//, '')}` : route.path;
-        
-        // 检查路径冲突
-        if (pathMap.has(fullPath)) {
-          console.warn(`[路由] 检测到路径冲突: ${fullPath}`);
-          console.warn(`  - 现有路由: ${pathMap.get(fullPath)}`);
-          console.warn(`  - 冲突路由: ${route.name || '未命名路由'}`);
-          
-          // 修正冲突路径，为路径添加随机后缀
-          if (route.name && !fullPath.includes('error')) {
-            const originalPath = route.path;
-            route.path = `${originalPath}_${Date.now()}`;
-            console.log(`[路由] 修正冲突路径: ${originalPath} -> ${route.path}`);
-          }
-        } else {
-          pathMap.set(fullPath, route.name || '未命名路由');
-        }
-        
-        // 检查名称冲突
-        if (route.name) {
-          if (nameMap.has(route.name)) {
-            console.warn(`[路由] 检测到名称冲突: ${route.name}`);
-            console.warn(`  - 现有路由: ${nameMap.get(route.name)}`);
-            console.warn(`  - 冲突路由: ${fullPath}`);
-            
-            // 修正冲突名称，为名称添加随机后缀
-            const originalName = route.name;
-            route.name = `${originalName}_${Date.now()}`;
-            console.log(`[路由] 修正冲突名称: ${originalName} -> ${route.name}`);
-          } else {
-            nameMap.set(route.name, fullPath);
-          }
-        }
-        
-        // 递归处理子路由
-        if (route.children && route.children.length) {
-          checkPathConflicts(route.children, fullPath);
-        }
-      });
-    };
-    
-    // 执行冲突检查
-    checkPathConflicts(arrRoutes);
-    
-    // 预先导入布局组件
-    const Layout = () => import("@/layout/index.vue");
-    const IFrameBlank = () => import("@/layout/frame.vue");
-    
     // 获取所有组件的路径
     const modulesRoutesKeys = Object.keys(modulesRoutes);
     
@@ -555,6 +479,8 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
       console.error("[路由] 未找到任何视图组件");
       return [];
     }
+    
+    console.log("[路由] 开始处理异步路由，路由数量:", arrRoutes.length);
     
     arrRoutes.forEach((v: RouteRecordRaw) => {
       // 确保meta对象存在并具有默认值
@@ -569,21 +495,6 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
       // 将backstage属性加入meta，标识此路由为后端返回路由
       v.meta.backstage = true;
       
-      // 修正可能存在的路径问题
-      if (v.path && v.path.includes('/error/') && v.name && !String(v.name).startsWith("Error") && !["403", "404", "500"].includes(String(v.name))) {
-        console.warn(`[路由] 检测到可能错误的路径: ${v.path}, 名称: ${String(v.name)}`);
-        
-        // 尝试根据名称修正路径
-        const namePrefix = String(v.name).split(/(?=[A-Z])/)[0].toLowerCase();
-        if (namePrefix && namePrefix !== 'error') {
-          const segments = v.path.split('/').filter(Boolean);
-          const lastSegment = segments[segments.length - 1];
-          const correctedPath = `/${namePrefix}/${lastSegment}`;
-          console.log(`[路由] 尝试修正路径: ${v.path} -> ${correctedPath}`);
-          v.path = correctedPath;
-        }
-      }
-      
       // 父级的redirect属性取值：如果子级存在且父级的redirect属性不存在，默认取第一个子级的path；如果子级存在且父级的redirect属性存在，取存在的redirect属性，会覆盖默认值
       if (v?.children && v.children.length && !v.redirect) {
         // 确保生成的redirect路径是有效的，考虑路径是否以/开头
@@ -594,175 +505,61 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
           // 如果子路径是相对路径，需要基于父路径构建完整的重定向路径
           v.redirect = v.path.endsWith('/') ? `${v.path}${childPath}` : `${v.path}/${childPath}`;
         }
-        console.log(`[路由] 设置重定向: ${v.path} -> ${v.redirect}`);
       }
       
-      // 父级的name属性取值：如果子级存在且父级的name属性不存在，默认取第一个子级的name；如果子级存在且父级的name属性存在，取存在的name属性，会覆盖默认值
-      if (v?.children && v.children.length && !v.name)
-        v.name = (v.children[0].name as string) + "Parent";
-      
       // 处理组件
+      const Layout = () => import("@/layout/index.vue");
+      const IFrameBlank = () => import("@/layout/frame.vue");
+      
+      console.log(`[路由] 处理路由组件: ${v.name ? String(v.name) : v.path}, 组件值:`, v.component);
+      
       if (v.meta?.frameSrc) {
         // iframe页面
         v.component = IFrameBlank;
-        console.log(`[路由] 设置IFrame组件: ${v.path}`);
+        console.log(`[路由] 设置为IFrame组件: ${v.name ? String(v.name) : v.path}`);
+      } else if (v.name === 'Dashboard' || v.path === '/dashboard') {
+        // 特殊处理Dashboard路由
+        v.component = Layout;
+        console.log(`[路由] 设置Dashboard路由组件为Layout`);
+      } else if (String(v.component) === "Layout" || String(v.component) === "/src/layout/index") {
+        // 布局组件
+        v.component = Layout;
+        console.log(`[路由] 设置为Layout组件: ${v.name ? String(v.name) : v.path}`);
       } else {
-        // 优先处理已知的特殊组件
-        const componentValue = v.component as any; // 使用any类型临时转换
+        // 尝试查找匹配的组件
+        let index = -1;
+        let componentPath = "";
         
-        if (componentValue === "Layout" || componentValue === "/src/layout/index") {
-          v.component = Layout;
-          console.log(`[路由] 设置布局组件: ${v.path}`);
+        // 尝试获取组件路径字符串
+        if (typeof v.component === "string") {
+          componentPath = v.component;
+          
+          // 去掉可能的前缀
+          if (componentPath && componentPath.startsWith("/src/")) {
+            componentPath = componentPath.substring(5);
+          }
+          
+          console.log(`[路由] 组件路径: ${componentPath}`);
+        }
+        
+        // 尝试匹配组件
+        if (componentPath) {
+          index = modulesRoutesKeys.findIndex(key => key.includes(componentPath));
+          console.log(`[路由] 组件路径匹配结果: ${index !== -1 ? '找到匹配' : '未找到匹配'}`);
+        }
+        
+        if (index !== -1) {
+          v.component = modulesRoutes[modulesRoutesKeys[index]];
+          console.log(`[路由] 设置组件: ${v.name ? String(v.name) : v.path} -> ${modulesRoutesKeys[index]}`);
         } else {
-          // 尝试查找匹配的组件
-          let index = -1;
-          let componentPath = "";
-          
-          // 尝试获取组件路径字符串
-          if (typeof componentValue === "string") {
-            componentPath = componentValue;
-            
-            // 去掉可能的前缀
-            if (componentPath && componentPath.startsWith("/src/")) {
-              componentPath = componentPath.substring(5);
-            }
-          }
-
-          // 特殊处理CheckCategory路由
-          if (v.name === "CheckCategory") {
-            console.log(`[路由调试] 处理CheckCategory组件路径: ${componentPath}, 路由路径: ${v.path}`);
-            
-            // 列出可能的所有匹配模式
-            const possiblePaths = [
-              "check/category/index", 
-              "views/check/category/index",
-              "check/category",
-              "views/check/category"
-            ];
-            
-            // 查找匹配的组件
-            for (const path of possiblePaths) {
-              const foundIndex = modulesRoutesKeys.findIndex(key => key.includes(path));
-              if (foundIndex !== -1) {
-                index = foundIndex;
-                console.log(`[路由调试] 找到CheckCategory组件: ${modulesRoutesKeys[index]}`);
-                break;
-              }
-            }
-          }
-          
-          // 1. 精确匹配
-          if (index === -1 && componentPath) {
-            index = modulesRoutesKeys.findIndex(key => key.includes(componentPath));
-          }
-          
-          // 2. 如果精确匹配失败，尝试根据路径匹配
-          if (index === -1 && v.path) {
-            // 提取路径的最后一部分，例如从 /tenant/list 提取 list
-            const pathSegments = v.path.replace(/^\//, '').split('/').filter(Boolean);
-            const pathComponent = pathSegments[pathSegments.length - 1];
-            
-            // 先尝试使用完整路径匹配
-            index = modulesRoutesKeys.findIndex(key => key.includes(v.path.replace(/^\//, '')));
-            
-            // 再尝试使用父路径+当前路径匹配
-            if (index === -1 && pathSegments.length >= 2) {
-              const parentPath = pathSegments[0]; // 获取根路径部分
-              
-              // 构建可能的路径模式进行匹配
-              const possiblePaths = [
-                `${parentPath}/${pathComponent}/index`,
-                `views/${parentPath}/${pathComponent}/index`,
-                `${parentPath}/${pathComponent}`,
-                `views/${parentPath}/${pathComponent}`,
-                `${parentPath}/${pathSegments[pathSegments.length - 1]}/index`,
-                `views/${parentPath}/${pathSegments[pathSegments.length - 1]}/index`
-              ];
-              
-              for (const path of possiblePaths) {
-                const foundIndex = modulesRoutesKeys.findIndex(key => key.includes(path));
-                if (foundIndex !== -1) {
-                  index = foundIndex;
-                  console.log(`[路由] 使用模式 ${path} 匹配到组件: ${modulesRoutesKeys[index]}`);
-                  break;
-                }
-              }
-            }
-            
-            // 最后尝试只匹配路径的最后部分
-            if (index === -1) {
-              // 构建更多可能的路径格式
-              const possiblePaths = [
-                `${pathComponent}/index`,
-                `views/${pathComponent}/index`,
-                `/${pathComponent}/index`,
-                `/views/${pathComponent}/index`,
-                `${pathComponent}`,
-                `views/${pathComponent}`,
-                `/${pathComponent}`,
-                `/views/${pathComponent}`
-              ];
-              
-              for (const path of possiblePaths) {
-                const foundIndex = modulesRoutesKeys.findIndex(key => key.includes(path));
-                if (foundIndex !== -1) {
-                  index = foundIndex;
-                  console.log(`[路由] 使用简化模式 ${path} 匹配到组件: ${modulesRoutesKeys[index]}`);
-                  break;
-                }
-              }
-            }
-          }
-          
-          // 3. 尝试使用命名约定查找组件
-          if (index === -1 && v.name) {
-            // 例如：CheckCategory => check/category
-            const nameParts = String(v.name).match(/[A-Z][a-z]+/g);
-            if (nameParts && nameParts.length >= 2) {
-              const moduleName = nameParts[0].toLowerCase();
-              const subModuleName = nameParts[1].toLowerCase();
-              
-              const possiblePaths = [
-                `${moduleName}/${subModuleName}/index`,
-                `views/${moduleName}/${subModuleName}/index`,
-                `${moduleName}/${subModuleName}`,
-                `views/${moduleName}/${subModuleName}`
-              ];
-              
-              for (const path of possiblePaths) {
-                const foundIndex = modulesRoutesKeys.findIndex(key => key.includes(path));
-                if (foundIndex !== -1) {
-                  index = foundIndex;
-                  console.log(`[路由] 通过名称约定 ${path} 匹配到组件: ${modulesRoutesKeys[index]}`);
-                  break;
-                }
-              }
-            }
-          }
-          
-          // 4. 最后的备选方案 - 使用特定的视图组件
-          if (index !== -1) {
-            v.component = modulesRoutes[modulesRoutesKeys[index]];
-            console.log(`[路由] 最终找到组件: ${modulesRoutesKeys[index]} 用于路径: ${v.path}, 名称: ${v.name}`);
-          } else {
-            console.warn(`[路由] 无法找到组件: ${componentPath || v.path}，使用错误页面作为替代`);
-            
-            // 使用错误页面组件作为后备
-            const errorPageIndex = modulesRoutesKeys.findIndex(key => key.includes("error/404"));
-            if (errorPageIndex !== -1) {
-              v.component = modulesRoutes[modulesRoutesKeys[errorPageIndex]];
-              console.log(`[路由] 使用404组件 ${modulesRoutesKeys[errorPageIndex]} 作为未匹配组件的替代`);
-            } else {
-              // 最后的后备方案 - 空组件
-              v.component = () => import("@/views/error/404.vue");
-              console.log(`[路由] 使用硬编码的404组件作为未匹配组件的替代`);
-            }
-          }
+          console.warn(`[路由] 无法找到组件: ${componentPath || v.path}，设置为404页面`);
+          v.component = () => import("@/views/error/404.vue");
         }
       }
       
       // 递归处理子路由
       if (v?.children && v.children.length) {
+        console.log(`[路由] 处理子路由: ${v.name ? String(v.name) : v.path}, 子路由数量: ${v.children.length}`);
         addAsyncRoutes(v.children);
       }
     });
@@ -834,6 +631,9 @@ function getTopMenu(tag = false): menuType {
   tag && useMultiTagsStoreHook().handleTags("push", topMenu);
   return topMenu;
 }
+
+// 导出预加载组件
+export { LoginPage, Error404Page, Error403Page, Error500Page };
 
 export {
   hasAuth,

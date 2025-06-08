@@ -7,7 +7,7 @@ import { getTopMenu } from "@/router/utils";
 import { useFullscreen } from "@vueuse/core";
 import type { routeMetaType } from "../types";
 import { transformI18n } from "@/plugins/i18n";
-import { router, remainingPaths } from "@/router";
+import { router } from "@/router";
 import { computed, type CSSProperties } from "vue";
 import { useAppStoreHook } from "@/store/modules/app";
 import { useUserStoreHook } from "@/store/modules/user";
@@ -139,7 +139,8 @@ export function useNav() {
 
   /** 判断路径是否参与菜单 */
   function isRemaining(path: string) {
-    return remainingPaths.includes(path);
+    // 由于remainingPaths已被移除，我们返回false，表示所有路径都参与菜单
+    return false;
   }
 
   /** 获取`logo` */

@@ -74,32 +74,83 @@
 3. **依赖管理**：vue-pure-admin-main使用pnpm进行包管理，与源项目可能存在依赖管理差异
 4. **样式系统**：vue-pure-admin-main使用了tailwindcss，需要适配原有的CSS样式
 
-## 本次会话总结
+## 本次会话总结：修复页面无限刷新问题
 
 ### 本次会话的主要目标
-分析两个项目的代码结构和差异，创建迁移工作的待办事项清单。
+修复项目启动后首页预加载完成就开始疯狂刷新的问题
 
 ### 已完成的具体任务
-1. 分析了integrated_admin项目的代码结构和主要功能
-2. 分析了vue-pure-admin-main项目的代码结构和技术特点
-3. 对比了两个项目的API实现、视图组件和依赖关系
-4. 创建了详细的迁移待办事项清单(todoList_0606.md)
-5. 创建了项目README文件
+- 分析并找出导致页面无限刷新的代码
+- 修复main.ts中的刷新逻辑
+- 优化路由守卫中的防刷新机制
+- 添加刷新计数器和时间间隔检测
 
 ### 采用的技术方案及决策理由
-- 优先迁移API接口层，确保数据访问的一致性
-- 按功能模块逐步迁移，确保每个模块的完整性
-- 添加TypeScript类型定义，提高代码质量和可维护性
-- 保持与vue-pure-admin-main项目的代码风格一致
+- 移除了main.ts中导致无限刷新的代码逻辑，不再设置和检测need_refresh标记
+- 增强路由守卫中的防刷新机制，延长防刷新时间间隔并添加计数器
+- 使用sessionStorage存储刷新标记和计数器，确保页面刷新后仍能保持状态
+- 添加更多错误处理和日志记录，便于后续调试和维护
 
 ### 使用的主要技术栈
 - Vue 3
-- TypeScript
-- Element Plus
-- Pinia
 - Vue Router
-- Axios
+- Pinia状态管理
+- SessionStorage API
 
 ### 变更的文件清单
-1. todoList_0606.md (新建)
-2. README.md (新建) 
+- vue-pure-admin-main/src/main.ts
+- vue-pure-admin-main/src/router/index.ts
+
+## 本次会话总结：修复菜单显示问题
+
+### 本次会话的主要目标
+修复左侧菜单不显示和异常页面错误显示在菜单中的问题
+
+### 已完成的具体任务
+- 修改error.ts文件，将异常页面从菜单中隐藏
+- 修改permission.ts文件中超级管理员的菜单处理逻辑
+- 修改api/routes.ts文件中的路由获取逻辑
+
+### 采用的技术方案及决策理由
+- 在error.ts中将showLink设置为false，使异常页面不显示在菜单中
+- 修改超级管理员的菜单处理逻辑，使其能够加载所有菜单而不是只加载错误页面菜单
+- 修改路由获取逻辑，使所有用户（包括超级管理员）都通过API获取路由，确保菜单数据一致性
+
+### 使用的主要技术栈
+- Vue 3
+- Vue Router
+- Pinia状态管理
+- Element Plus
+
+### 变更的文件清单
+- vue-pure-admin-main/src/router/modules/error.ts
+- vue-pure-admin-main/src/store/modules/permission.ts
+- vue-pure-admin-main/src/api/routes.ts
+
+## 本次会话总结：修复首页卡住问题
+
+### 本次会话的主要目标
+修复启动首页后页面卡住不动的问题
+
+### 已完成的具体任务
+- 分析并找出导致首页卡住的原因（API请求超时或失败）
+- 修改routes.ts文件，添加错误处理和超时处理
+- 修改HTTP请求配置，减少超时时间
+- 修改路由初始化逻辑，确保在路由加载失败时也能正常显示页面
+
+### 采用的技术方案及决策理由
+- 在routes.ts中添加备用路由配置，当API请求失败时使用备用路由
+- 添加请求超时处理，设置5秒超时时间，超时后使用备用路由
+- 减少HTTP请求的超时时间，从10秒减少到5秒，加快失败检测
+- 增强路由初始化逻辑的错误处理，确保在各种异常情况下都能正常显示页面
+
+### 使用的主要技术栈
+- Vue 3
+- Vue Router
+- Axios
+- Promise API
+
+### 变更的文件清单
+- vue-pure-admin-main/src/api/routes.ts
+- vue-pure-admin-main/src/utils/http/index.ts
+- vue-pure-admin-main/src/router/utils.ts 

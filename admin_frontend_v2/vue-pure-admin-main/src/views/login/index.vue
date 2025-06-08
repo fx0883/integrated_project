@@ -24,15 +24,21 @@ import { ref, toRaw, reactive, watch, computed } from "vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useTranslationLang } from "@/layout/hooks/useTranslationLang";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
+import { getToken, removeToken } from "@/utils/auth";
 
 import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
 import globalization from "@/assets/svg/globalization.svg?component";
+
+// 替换图标导入方式
+/* 原导入方式可能会有问题，使用IconifyIconOnline组件替代
 import Lock from "~icons/ri/lock-fill";
 import Check from "~icons/ep/check";
 import User from "~icons/ri/user-3-fill";
 import Info from "~icons/ri/information-line";
 import Keyhole from "~icons/ri/shield-keyhole-line";
+import QuestionCircle from "~icons/ri/question-circle-fill";
+*/
 
 defineOptions({
   name: "Login"
@@ -63,33 +69,78 @@ const ruleForm = reactive({
   verifyCode: ""
 });
 
+const showDebugPanel = ref(false);
+const debugInfo = ref({
+  token: null as any
+});
+
 const onLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
+  
+  console.group("[登录流程] 开始登录流程");
+  console.time("[登录流程] 总耗时");
+  console.log(`[登录流程] 开始时间: ${new Date().toLocaleString()}`);
+  console.log(`[登录流程] 用户名: ${ruleForm.username}`);
+  
   await formEl.validate(valid => {
     if (valid) {
+      console.log("[登录流程] 表单验证通过，准备发送登录请求");
       loading.value = true;
+      
       useUserStoreHook()
         .loginByUsername({
           username: ruleForm.username,
           password: ruleForm.password
         })
         .then(res => {
+          console.log("[登录流程] 登录请求响应", res);
+          
           if (res.success) {
+            console.log("[登录流程] 登录成功，准备初始化路由");
             // 获取后端路由
             return initRouter().then(() => {
+              console.log("[登录流程] 路由初始化完成");
               disabled.value = true;
+              
+              const topMenuPath = getTopMenu(true).path;
+              console.log(`[登录流程] 获取顶部菜单路径: ${topMenuPath}`);
+              
               router
-                .push(getTopMenu(true).path)
+                .push(topMenuPath)
                 .then(() => {
+                  console.log("[登录流程] 导航到首页成功");
                   message(t("login.pureLoginSuccess"), { type: "success" });
+                  console.timeEnd("[登录流程] 总耗时");
+                  console.groupEnd();
+                })
+                .catch(err => {
+                  console.error("[登录流程] 导航到首页失败", err);
+                  console.timeEnd("[登录流程] 总耗时");
+                  console.groupEnd();
                 })
                 .finally(() => (disabled.value = false));
+            }).catch(err => {
+              console.error("[登录流程] 路由初始化失败", err);
+              console.timeEnd("[登录流程] 总耗时");
+              console.groupEnd();
             });
           } else {
+            console.error("[登录流程] 登录失败", res);
             message(t("login.pureLoginFail"), { type: "error" });
+            console.timeEnd("[登录流程] 总耗时");
+            console.groupEnd();
           }
         })
+        .catch(err => {
+          console.error("[登录流程] 登录请求异常", err);
+          console.timeEnd("[登录流程] 总耗时");
+          console.groupEnd();
+        })
         .finally(() => (loading.value = false));
+    } else {
+      console.error("[登录流程] 表单验证失败");
+      console.timeEnd("[登录流程] 总耗时");
+      console.groupEnd();
     }
   });
 };
@@ -118,6 +169,32 @@ watch(checked, bool => {
 watch(loginDay, value => {
   useUserStoreHook().SET_LOGINDAY(value);
 });
+
+const clearStorage = () => {
+  removeToken();
+  sessionStorage.clear();
+  localStorage.clear();
+  message("缓存已清除", { type: "success" });
+};
+
+const checkToken = () => {
+  const data = getToken();
+  const now = Date.now();
+  const expires = data ? parseInt(data.expires) : 0;
+  const isExpired = expires <= now;
+  
+  debugInfo.value.token = {
+    exists: !!data,
+    type: data ? "Bearer" : "无",
+    isExpired,
+    remainingTime: isExpired ? "已过期" : `${Math.floor((expires - now) / 1000 / 60)}分钟`,
+    expiresTime: data ? new Date(expires).toLocaleString() : "无"
+  };
+};
+
+const goToErrorPage = () => {
+  router.push("/error/route-error");
+};
 </script>
 
 <template>
@@ -202,8 +279,16 @@ watch(loginDay, value => {
                   v-model="ruleForm.username"
                   clearable
                   :placeholder="t('login.pureUsername')"
-                  :prefix-icon="useRenderIcon(User)"
+                  :prefix-icon="null"
+                >
+                  <template #prefix>
+                    <IconifyIconOnline
+                      icon="ri:user-3-fill"
+                      width="1.2em"
+                      height="1.2em"
                 />
+                  </template>
+                </el-input>
               </el-form-item>
             </Motion>
 
@@ -213,9 +298,17 @@ watch(loginDay, value => {
                   v-model="ruleForm.password"
                   clearable
                   show-password
-                  :placeholder="t('login.purePassword')"
-                  :prefix-icon="useRenderIcon(Lock)"
+                  :placeholder="t('login.purePwd')"
+                  :prefix-icon="null"
+                >
+                  <template #prefix>
+                    <IconifyIconOnline
+                      icon="ri:lock-fill"
+                      width="1.2em"
+                      height="1.2em"
                 />
+                  </template>
+                </el-input>
               </el-form-item>
             </Motion>
 
@@ -225,9 +318,16 @@ watch(loginDay, value => {
                   v-model="ruleForm.verifyCode"
                   clearable
                   :placeholder="t('login.pureVerifyCode')"
-                  :prefix-icon="useRenderIcon(Keyhole)"
+                  :prefix-icon="null"
                 >
-                  <template v-slot:append>
+                  <template #prefix>
+                    <IconifyIconOnline
+                      icon="ri:shield-keyhole-line"
+                      width="1.2em"
+                      height="1.2em"
+                    />
+                  </template>
+                  <template #append>
                     <ReImageVerify v-model:code="imgCode" />
                   </template>
                 </el-input>
@@ -254,52 +354,63 @@ watch(loginDay, value => {
                         <option value="30">30</option>
                       </select>
                       {{ t("login.pureRemember") }}
-                      <IconifyIconOffline
-                        v-tippy="{
-                          content: t('login.pureRememberInfo'),
-                          placement: 'top'
-                        }"
-                        :icon="Info"
-                        class="ml-1"
+                      <el-tooltip
+                        effect="dark"
+                        :content="t('login.pureRememberInfo')"
+                        placement="right"
+                      >
+                        <span
+                        class="ml-1 outline-none cursor-pointer"
+                        >
+                          <IconifyIconOnline
+                            icon="ri:question-circle-fill"
+                            width="1.2em"
+                            height="1.2em"
                       />
+                        </span>
+                      </el-tooltip>
                     </span>
                   </el-checkbox>
-                  <el-button
-                    link
-                    type="primary"
-                    @click="useUserStoreHook().SET_CURRENTPAGE(4)"
-                  >
-                    {{ t("login.pureForget") }}
+                  <el-button type="text" @click="showDebugPanel = !showDebugPanel">
+                    调试
                   </el-button>
                 </div>
-                <el-button
-                  class="w-full mt-4!"
-                  size="default"
-                  type="primary"
-                  :loading="loading"
-                  :disabled="disabled"
-                  @click="onLogin(ruleFormRef)"
-                >
-                  {{ t("login.pureLogin") }}
-                </el-button>
               </el-form-item>
             </Motion>
 
             <Motion :delay="300">
               <el-form-item>
-                <div class="w-full h-[20px] flex justify-between items-center">
-                  <el-button
-                    v-for="(item, index) in operates"
-                    :key="index"
-                    class="w-full mt-4!"
-                    size="default"
-                    @click="useUserStoreHook().SET_CURRENTPAGE(index + 1)"
-                  >
-                    {{ t(item.title) }}
-                  </el-button>
-                </div>
+                <el-button
+                  class="w-full"
+                  size="large"
+                  type="primary"
+                  :loading="loading"
+                  @click="immediateDebounce(ruleFormRef)"
+                >
+                  {{ t("login.pureLogin") }}
+                </el-button>
               </el-form-item>
             </Motion>
+            
+            <!-- 调试面板 -->
+            <el-collapse-transition>
+              <div v-if="showDebugPanel" class="debug-panel">
+                <h3>调试面板</h3>
+                <div class="debug-actions">
+                  <el-button size="small" @click="clearStorage">清除缓存</el-button>
+                  <el-button size="small" @click="checkToken">检查Token</el-button>
+                  <el-button size="small" @click="goToErrorPage">错误页面</el-button>
+                </div>
+                <div class="debug-info" v-if="debugInfo.token">
+                  <p><strong>Token信息:</strong></p>
+                  <p>存在: {{ debugInfo.token.exists ? '是' : '否' }}</p>
+                  <p v-if="debugInfo.token.exists">
+                    过期: {{ debugInfo.token.isExpired ? '已过期' : '有效' }}
+                    ({{ debugInfo.token.expiresTime }})
+                  </p>
+                </div>
+              </div>
+            </el-collapse-transition>
           </el-form>
 
           <Motion v-if="currentPage === 0" :delay="350">
@@ -366,12 +477,44 @@ watch(loginDay, value => {
 
   .check-zh {
     position: absolute;
-    left: 20px;
+    left: 6px;
   }
 
   .check-en {
     position: absolute;
-    left: 20px;
+    left: 6px;
   }
+}
+
+/* 调试面板样式 */
+.debug-panel {
+  margin-top: 15px;
+  padding: 10px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.debug-panel h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #606266;
+  font-size: 14px;
+}
+
+.debug-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.debug-info {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #606266;
+}
+
+.debug-info p {
+  margin: 5px 0;
 }
 </style>

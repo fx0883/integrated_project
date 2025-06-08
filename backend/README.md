@@ -368,29 +368,69 @@ cms/
 - 新建文件: @aquaculture_system/system_wireframe.md（系统线框图和架构设计）
 - 更新文件: README.md（添加多租户集成信息） 
 
-# 会话总结：租户模块文档更新
+# 会话总结记录
 
-## 本次会话的主要目标
-- 更新水产养殖系统的文档，加入租户模块的详细信息
-- 结合 tenants 目录下的实际代码，完善系统架构和数据库模型文档
+## 2025-06-06：实现管理员菜单路由API
 
-## 已完成的具体任务
-- 分析了 tenants 目录下的核心文件(models.py、views.py、urls.py、apps.py)
-- 在数据库模型文档中添加了租户模块的详细表结构
-- 在系统线框图文档中添加了租户模块的架构和API信息
-- 完善了多租户架构实现的技术说明
+### 本次会话的主要目标
+实现一个获取管理员菜单的API接口，用于前端动态生成管理员菜单。
 
-## 采用的技术方案及决策理由
-- 通过实际代码分析确保文档与代码实现一致
-- 保留了原有文档结构，在适当位置增加租户模块信息
-- 采用图表形式展示租户模块架构，提高可读性
+### 已完成的具体任务
+1. 创建了Config模型，用于存储系统级别的配置信息
+2. 实现了管理员菜单路由API（`/api/v1/common/routes/`）
+3. 创建了初始化超级管理员菜单配置的命令（`init_super_admin_menu`）
+4. 编写了测试用例，验证API的正确性
 
-## 使用的主要技术栈
-- Django REST Framework (用于租户模块API实现)
-- Django ORM (用于租户数据模型定义)
-- 多租户中间件 (实现租户上下文和数据隔离)
+### 采用的技术方案及决策理由
+- 使用Config模型存储菜单配置，便于通过管理界面动态修改
+- 实现了RecursiveField序列化器，支持无限层级的菜单结构
+- 根据用户角色返回不同的菜单配置，实现权限控制
+- 使用JSONField存储菜单结构，提供灵活的数据结构支持
 
-## 变更的文件清单
-- docs/aquaculture_system/aquaculture_database_model.md - 添加租户模块表结构和实现信息
-- docs/aquaculture_system/system_wireframe.md - 添加租户模块架构和API信息
-- README.md - 添加本次会话总结 
+### 使用的主要技术栈
+- Django REST Framework
+- Django ORM (JSONField)
+- Django Management Commands
+- Django Testing Framework
+
+### 变更的文件清单
+- `common/models.py`：添加Config模型
+- `common/admin.py`：注册Config模型到管理界面
+- `common/views.py`：添加管理员菜单路由API视图
+- `common/urls.py`：添加API路由配置
+- `common/management/commands/init_super_admin_menu.py`：创建初始化命令
+- `common/tests.py`：添加API测试用例 
+
+## 2023-06-07：优化管理员菜单路由API
+
+### 本次会话的主要目标
+- 将管理员菜单路由API从common模块移动到menus模块
+- 将Config模型加入Django admin管理界面
+- 为API添加OpenAPI/Swagger文档支持
+
+### 已完成的具体任务
+- 将`/api/v1/common/routes/` API从common模块移动到menus模块
+- 增强了AdminRoutesView视图，支持租户管理员菜单查询
+- 通过查询租户菜单表实现了租户管理员的菜单权限控制
+- 确认Config模型已正确注册到Django admin
+- 为API添加了drf_spectacular支持，完善了API文档
+
+### 采用的技术方案及决策理由
+- 将菜单路由API移至menus模块，提高代码组织的逻辑性
+- 利用menus模块中的TenantMenu模型，实现租户管理员的菜单权限控制
+- 使用drf_spectacular为API添加文档支持，提高API可用性
+- 保持与原有API响应格式一致，确保前端兼容性
+
+### 使用的主要技术栈
+- Django REST Framework
+- drf-spectacular (OpenAPI文档)
+- Django ORM
+- Django Admin
+
+### 变更的文件清单
+- `common/urls.py`：移除AdminRoutesView路由
+- `common/views.py`：移除AdminRoutesView及相关序列化器
+- `menus/serializers.py`：添加路由相关序列化器
+- `menus/views.py`：添加AdminRoutesView视图类
+- `menus/urls.py`：添加routes路由
+- `README.md`：更新会话记录 

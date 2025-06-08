@@ -11,7 +11,7 @@ import type {
 } from "./types.d";
 import { stringify } from "qs";
 import NProgress from "../progress";
-import { getToken, formatToken } from "@/utils/auth";
+import { getToken, formatToken, logTokenLifecycle } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 import { formatResponse, showApiError } from "./response";
 
@@ -27,7 +27,7 @@ const defaultConfig: AxiosRequestConfig = {
   // API请求的基础URL
   baseURL: FULL_BASE_URL,
   // 请求超时时间
-  timeout: 10000,
+  timeout: 5000,
   headers: {
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json",
@@ -41,10 +41,6 @@ const defaultConfig: AxiosRequestConfig = {
 
 // 输出当前API基础URL到控制台，方便调试
 console.log(`[API配置] 当前API基础URL: ${FULL_BASE_URL}`);
-
-// 判断是否启用Mock
-const USE_MOCK = String(import.meta.env.VITE_USE_MOCK).toLowerCase() === "true";
-console.log(`[API配置] Mock状态: ${USE_MOCK ? '启用' : '禁用'}`);
 
 class PureHttp {
   constructor() {
@@ -68,7 +64,7 @@ class PureHttp {
   private static retryOriginalRequest(config: PureHttpRequestConfig) {
     return new Promise(resolve => {
       PureHttp.requests.push((token: string) => {
-        console.log(`[API 重试请求] ${config.method?.toUpperCase()} ${config.url} - 使用新Token`);
+        console.log(`[Token生命周期] 重试请求 ${config.method?.toUpperCase()} ${config.url} - 使用新Token`);
         config.headers["Authorization"] = formatToken(token);
         resolve(config);
       });
@@ -95,49 +91,92 @@ class PureHttp {
           return config;
         }
         /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
-        const whiteList = ["/refresh-token", "/login"];
-        return whiteList.some(url => config.url.endsWith(url))
-          ? config
-          : new Promise(resolve => {
-              const data = getToken();
-              if (data) {
-                const now = new Date().getTime();
-                const expired = parseInt(data.expires) - now <= 0;
-                if (expired) {
-                  console.log(`[API Token过期] ${config.url} - 尝试刷新Token`);
-                  if (!PureHttp.isRefreshing) {
-                    PureHttp.isRefreshing = true;
-                    // token过期刷新
-                    useUserStoreHook()
-                      .handRefreshToken({ refreshToken: data.refreshToken })
-                      .then(res => {
-                        const token = res.data.accessToken;
-                        console.log(`[API Token刷新成功] ${config.url} - 新的Token已获取`);
-                        config.headers["Authorization"] = formatToken(token);
-                        PureHttp.requests.forEach(cb => cb(token));
-                        PureHttp.requests = [];
-                      })
-                      .catch(refreshError => {
-                        console.error(`[API Token刷新失败] ${config.url}`, refreshError);
-                      })
-                      .finally(() => {
-                        PureHttp.isRefreshing = false;
-                      });
-                  }
-                  console.log(`[API 请求重试] ${config.url} - 等待新Token`);
-                  resolve(PureHttp.retryOriginalRequest(config));
-                } else {
-                  config.headers["Authorization"] = formatToken(
-                    data.accessToken
-                  );
-                  console.log(`[API Token有效] ${config.url} - 使用现有Token`);
-                  resolve(config);
+        const whiteList = ["/refresh-token", "/login", "/auth/login/", "/auth/token/refresh/"];
+        const isWhitelisted = whiteList.some(url => config.url.includes(url));
+        
+        if (isWhitelisted) {
+          console.log(`[API Token白名单] ${config.url} - 无需Token验证`);
+          return config;
+        } else {
+          console.log(`[API Token验证] ${config.url} - 开始验证Token`);
+          
+          return new Promise(resolve => {
+            const data = getToken();
+            
+            if (data && data.accessToken) {
+              console.log(`[API Token验证] ${config.url} - 找到Token数据`);
+              
+              const now = new Date().getTime();
+              const expired = parseInt(data.expires) - now <= 0;
+              
+              if (expired) {
+                console.group(`[Token生命周期] Token已过期 - ${config.url}`);
+                console.log(`当前时间: ${new Date(now).toLocaleString()}`);
+                console.log(`过期时间: ${new Date(parseInt(data.expires)).toLocaleString()}`);
+                console.log(`过期状态: 已过期`);
+                console.groupEnd();
+                
+                if (!PureHttp.isRefreshing && data.refreshToken) {
+                  PureHttp.isRefreshing = true;
+                  console.group(`[Token生命周期] 开始刷新Token`);
+                  console.log(`刷新Token开始时间: ${new Date().toLocaleString()}`);
+                  console.log(`使用的refreshToken: ${data.refreshToken ? data.refreshToken.substring(0, 10) + "..." : "无"}`);
+                  console.groupEnd();
+                  
+                  // token过期刷新
+                  useUserStoreHook()
+                    .handRefreshToken({ refreshToken: data.refreshToken })
+                    .then(res => {
+                      const token = res.data.accessToken;
+                      console.group(`[Token生命周期] Token刷新成功`);
+                      console.log(`刷新完成时间: ${new Date().toLocaleString()}`);
+                      console.log(`新的accessToken: ${token ? token.substring(0, 10) + "..." : "无效Token"}`);
+                      console.log(`新的过期时间: ${new Date(res.data.expires).toLocaleString()}`);
+                      console.log(`等待重试的请求数量: ${PureHttp.requests.length}`);
+                      console.groupEnd();
+                      
+                      config.headers["Authorization"] = formatToken(token);
+                      PureHttp.requests.forEach(cb => cb(token));
+                      PureHttp.requests = [];
+                    })
+                    .catch(refreshError => {
+                      console.group(`[Token生命周期] Token刷新失败`);
+                      console.error(`失败原因:`, refreshError);
+                      console.log(`刷新失败时间: ${new Date().toLocaleString()}`);
+                      console.groupEnd();
+                    })
+                    .finally(() => {
+                      PureHttp.isRefreshing = false;
+                    });
+                } else if (!data.refreshToken) {
+                  console.warn(`[Token生命周期] Token已过期但没有refreshToken，无法刷新`);
                 }
+                
+                console.log(`[Token生命周期] 请求 ${config.url} 加入等待队列，等待Token刷新完成`);
+                resolve(PureHttp.retryOriginalRequest(config));
               } else {
-                console.log(`[API 无Token] ${config.url} - 未找到Token信息`);
+                const authHeader = formatToken(data.accessToken);
+                config.headers["Authorization"] = authHeader;
+                
+                console.group(`[Token生命周期] 使用有效Token - ${config.url}`);
+                console.log(`当前时间: ${new Date(now).toLocaleString()}`);
+                console.log(`过期时间: ${new Date(parseInt(data.expires)).toLocaleString()}`);
+                console.log(`剩余有效期: ${Math.floor((parseInt(data.expires) - now) / 1000 / 60)}分钟`);
+                console.log(`使用的Token: ${authHeader.substring(0, 16)}...`);
+                console.groupEnd();
+                
                 resolve(config);
               }
-            });
+            } else {
+              console.warn(`[API 无Token] ${config.url} - 未找到有效Token信息，请求可能会被拒绝`);
+              // 检查当前URL是否需要认证
+              if (config.url.includes('/menus/routes/')) {
+                console.error(`[API 路由请求无Token] 获取路由的请求需要认证，但未找到有效Token`);
+              }
+              resolve(config);
+            }
+          });
+        }
       },
       error => {
         console.error(`[API 请求拦截错误]`, error);
@@ -194,11 +233,6 @@ class PureHttp {
         } else if (error.request) {
           // 请求已发送但未收到响应
           console.error(`[API 网络错误] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, error.message);
-          // 如果启用了Mock但服务器无响应，可能是Mock服务器未启动或配置有误
-          if (USE_MOCK && error.config?.url?.includes("/get-async-routes")) {
-            console.warn("[API mock警告] Mock服务可能未启动或配置错误，尝试使用备用路由");
-            // 在这种情况下，错误会被传递到API调用处理函数，让路由加载逻辑使用本地路由
-          }
         } else {
           // 请求设置时发生错误
           console.error(`[API 错误处理]`, error.message);

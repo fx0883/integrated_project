@@ -9,6 +9,12 @@ import { createApp, type Directive } from "vue";
 import { useVxeTable } from "@/plugins/vxeTable";
 import { useElementPlus } from "@/plugins/elementPlus";
 import { injectResponsiveStorage } from "@/utils/responsive";
+import { usePermissionStoreHook } from "@/store/modules/permission";
+
+// 添加应用初始化日志
+console.group("[应用初始化] 开始加载应用");
+console.time("[应用初始化] 总耗时");
+console.log(`[应用初始化] 时间: ${new Date().toLocaleString()}`);
 
 import Table from "@pureadmin/table";
 import PureDescriptions from "@pureadmin/descriptions";
@@ -24,7 +30,10 @@ import "element-plus/dist/index.css";
 import "./assets/iconfont/iconfont.js";
 import "./assets/iconfont/iconfont.css";
 
+console.log("[应用初始化] 样式和图标加载完成");
+
 const app = createApp(App);
+console.log("[应用初始化] Vue应用实例创建完成");
 
 // 自定义指令
 import * as directives from "@/directives";
@@ -35,6 +44,7 @@ Object.keys(directives).forEach(key => {
 // 注册权限指令
 import { setupPermissionDirectives } from "@/directives/permission";
 setupPermissionDirectives(app);
+console.log("[应用初始化] 指令注册完成");
 
 // 全局注册@iconify/vue图标库
 import {
@@ -61,6 +71,7 @@ app.component("ReEditor", ReEditor);
 app.component("ReImageUploader", ReImageUploader);
 app.component("ReTagSelector", ReTagSelector);
 app.component("ReTenantSelector", ReTenantSelector);
+console.log("[应用初始化] 全局组件注册完成");
 
 // 全局注册vue-tippy
 import "tippy.js/dist/tippy.css";
@@ -73,12 +84,24 @@ import lazyLoad from "@/directives/lazyLoad";
 
 // 注册图片懒加载指令
 app.use(lazyLoad);
+console.log("[应用初始化] 插件注册完成");
 
 getPlatformConfig(app).then(async config => {
+  console.log("[应用初始化] 平台配置加载完成", config);
+  
+  console.log("[应用初始化] 开始设置状态管理");
   setupStore(app);
+  
+  console.log("[应用初始化] 开始设置路由");
   app.use(router);
+  
+  console.log("[应用初始化] 等待路由就绪");
   await router.isReady();
+  console.log("[应用初始化] 路由就绪完成");
+  
   injectResponsiveStorage(app, config);
+  console.log("[应用初始化] 响应式存储注入完成");
+  
   app
     .use(MotionPlugin)
     .use(useI18n)
@@ -87,5 +110,11 @@ getPlatformConfig(app).then(async config => {
     .use(useVxeTable)
     .use(PureDescriptions)
     .use(useEcharts);
+  
+  console.log("[应用初始化] 所有插件加载完成，准备挂载应用");
+  
   app.mount("#app");
+  console.log("[应用初始化] 应用挂载完成");
+  console.timeEnd("[应用初始化] 总耗时");
+  console.groupEnd();
 });

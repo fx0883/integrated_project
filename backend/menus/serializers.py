@@ -124,4 +124,40 @@ class UserMenuSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Menu
-        fields = ['id', 'name', 'code', 'icon', 'path', 'component', 'order'] 
+        fields = ['id', 'name', 'code', 'icon', 'path', 'component', 'order']
+
+
+# 定义一个递归字段，用于处理嵌套路由
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
+
+# 路由菜单序列化器
+class RouteMetaSerializer(serializers.Serializer):
+    """路由元数据序列化器"""
+    title = serializers.CharField(help_text="菜单标题")
+    icon = serializers.CharField(help_text="菜单图标", required=False, allow_null=True)
+    rank = serializers.IntegerField(help_text="菜单排序", required=False, allow_null=True)
+    roles = serializers.ListField(child=serializers.CharField(), help_text="可访问角色", required=False)
+    showLink = serializers.BooleanField(help_text="是否在菜单中显示", required=False, default=True)
+    activePath = serializers.CharField(help_text="激活路径", required=False, allow_null=True)
+
+
+class RouteSerializer(serializers.Serializer):
+    """路由序列化器"""
+    path = serializers.CharField(help_text="路由路径")
+    name = serializers.CharField(help_text="路由名称")
+    component = serializers.CharField(help_text="组件路径")
+    redirect = serializers.CharField(help_text="重定向路径", required=False, allow_null=True)
+    meta = RouteMetaSerializer(help_text="路由元数据")
+    children = serializers.ListField(child=RecursiveField(), help_text="子路由", required=False)
+
+
+class RoutesResponseSerializer(serializers.Serializer):
+    """路由响应序列化器"""
+    success = serializers.BooleanField(help_text="是否成功")
+    code = serializers.IntegerField(help_text="状态码")
+    message = serializers.CharField(help_text="消息")
+    data = serializers.ListField(child=RouteSerializer(), help_text="路由数据") 

@@ -47,4 +47,17 @@ export type userType = {
   currentPage?: number;
   isRemembered?: boolean;
   loginDay?: number;
+  userId?: number;
+  tenantId?: number;
+  deptId?: number;
+  userInfo?: {
+    id?: number;
+    username?: string;
+    email?: string;
+    nick_name?: string;
+    is_admin?: boolean;
+    is_super_admin?: boolean;
+    avatar?: string;
+    [key: string]: any;
+  };
 };

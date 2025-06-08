@@ -4,7 +4,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from menus.views import MenuViewSet, AdminMenuViewSet, UserMenuViewSet
+from menus.views import MenuViewSet, AdminMenuViewSet, UserMenuViewSet, AdminRoutesView
 
 # 应用名称，用于URL命名空间
 app_name = 'menus'
@@ -20,5 +20,7 @@ router.register(r'user', UserMenuViewSet, basename='user-menu')
 router.register(r'', MenuViewSet, basename='menu')
 
 urlpatterns = [
+    # 管理员菜单路由
+    path('routes/', AdminRoutesView.as_view(), name='admin-routes'),
     path('', include(router.urls)),
 ] 

@@ -14,9 +14,7 @@ import { useUserStoreHook } from "./user";
 import { useMultiTagsStoreHook } from "./multiTags";
 
 // 导入路由模块
-import tenant from "@/router/modules/tenant";
-import user from "@/router/modules/user";
-import menu from "@/router/modules/menu";
+import error from "@/router/modules/error";
 
 export const usePermissionStore = defineStore("pure-permission", {
   state: () => ({
@@ -39,13 +37,7 @@ export const usePermissionStore = defineStore("pure-permission", {
     // 检查是否有某个按钮权限
     hasButtonPermission: state => (permission: string) => {
       const userStore = useUserStoreHook();
-      const userRoles = userStore.roles;
       const userPermissions = userStore.permissions;
-      
-      // 超级管理员拥有所有权限
-      if (userRoles.includes('super_admin')) {
-        return true;
-      }
       
       // 检查具体权限
       if (userPermissions && userPermissions.length) {
@@ -58,76 +50,69 @@ export const usePermissionStore = defineStore("pure-permission", {
   actions: {
     /** 组装整体路由生成的菜单 */
     handleWholeMenus(routes: any[]) {
-      // 获取用户角色
-      const roles = useUserStoreHook().roles || [];
+      console.group("[菜单处理] 开始处理菜单");
+      console.time("[菜单处理] 总耗时");
+      console.log(`[菜单处理] 处理时间: ${new Date().toLocaleString()}`);
+      console.log("[菜单处理] 接收到的路由数量:", routes.length);
       
-      // 超级管理员特殊处理 - 只显示租户管理、用户管理和菜单管理
-      if (roles.includes('super_admin')) {
-        console.log("[菜单] 超级管理员登录，仅显示指定菜单");
+      try {
+        // 排序路由
+        console.time("[菜单处理] 路由排序耗时");
+        const sortedRoutes = ascending(routes);
+        console.timeEnd("[菜单处理] 路由排序耗时");
+        console.log("[菜单处理] 路由排序完成");
         
-        // 只保留租户管理、用户管理和菜单管理三个菜单
-        const allowedMenus = [tenant, user, menu];
+        // 过滤路由树
+        console.time("[菜单处理] 路由过滤耗时");
+        this.wholeMenus = filterTree(sortedRoutes);
+        console.timeEnd("[菜单处理] 路由过滤耗时");
+        console.log("[菜单处理] 菜单树生成完成，菜单数量:", this.wholeMenus.length);
         
-        // 组装菜单
-        this.wholeMenus = filterTree(ascending(allowedMenus));
-        this.flatteningRoutes = formatFlatteningRoutes(allowedMenus as any);
+        // 扁平化路由
+        console.time("[菜单处理] 路由扁平化耗时");
+        this.flatteningRoutes = formatFlatteningRoutes(routes as any);
+        console.timeEnd("[菜单处理] 路由扁平化耗时");
+        console.log("[菜单处理] 扁平路由生成完成，路由数量:", this.flatteningRoutes.length);
         
         // 初始化按钮权限
+        console.time("[菜单处理] 按钮权限初始化耗时");
         this.initButtonPermissions();
-        return;
+        console.timeEnd("[菜单处理] 按钮权限初始化耗时");
+        
+        console.log("[菜单处理] 菜单处理完成");
+        console.timeEnd("[菜单处理] 总耗时");
+        console.groupEnd();
+      } catch (error) {
+        console.error("[菜单处理] 处理菜单时出错:", error);
+        console.timeEnd("[菜单处理] 总耗时");
+        console.groupEnd();
+        throw error;
       }
-      
-      // 普通用户 - 过滤路由基于角色
-      const filterRoutesByRole = (routes: any[]) => {
-        return routes.filter(route => {
-          // 如果没有meta或没有roles字段，则默认所有人可见
-          if (!route.meta || !route.meta.roles) {
-            return true;
-          }
-          
-          // 判断当前用户角色是否有权限访问
-          const hasRole = roles.some(role => route.meta.roles.includes(role));
-          
-          // 递归处理子路由
-          if (hasRole && route.children && route.children.length) {
-            route.children = filterRoutesByRole(route.children);
-          }
-          
-          return hasRole;
-        });
-      };
-      
-      // 过滤后的路由
-      const filteredRoutes = filterRoutesByRole(routes);
-      
-      // 组装菜单
-      this.wholeMenus = filterNoPermissionTree(
-        filterTree(ascending(this.constantMenus.concat(filteredRoutes)))
-      );
-      
-      this.flatteningRoutes = formatFlatteningRoutes(
-        this.constantMenus.concat(filteredRoutes) as any
-      );
-      
-      // 初始化按钮权限
-      this.initButtonPermissions();
     },
     
     /** 初始化按钮级别权限 */
     initButtonPermissions() {
+      console.group("[权限初始化] 初始化按钮权限");
       const userStore = useUserStoreHook();
-      this.buttonPermissions = userStore.permissions || [];
+      const permissions = userStore.permissions || [];
+      console.log(`[权限初始化] 用户权限数量: ${permissions.length}`);
+      this.buttonPermissions = permissions;
+      console.groupEnd();
     },
     
     /** 检查是否拥有某个权限 */
     hasPermission(permission: string): boolean {
-      return this.hasButtonPermission(permission);
+      const result = this.hasButtonPermission(permission);
+      console.log(`[权限检查] 检查权限 "${permission}": ${result ? '有权限' : '无权限'}`);
+      return result;
     },
     
     /** 检查是否拥有指定角色 */
     hasRole(role: string): boolean {
       const userRoles = useUserStoreHook().roles || [];
-      return userRoles.includes(role);
+      const result = userRoles.includes(role);
+      console.log(`[角色检查] 检查角色 "${role}": ${result ? '有角色' : '无角色'}, 用户角色: ${JSON.stringify(userRoles)}`);
+      return result;
     },
     
     cacheOperate({ mode, name }: cacheType) {
@@ -160,9 +145,7 @@ export const usePermissionStore = defineStore("pure-permission", {
     },
     /** 清空缓存页面 */
     clearAllCachePage() {
-      this.wholeMenus = [];
       this.cachePageList = [];
-      this.buttonPermissions = [];
     }
   }
 });
