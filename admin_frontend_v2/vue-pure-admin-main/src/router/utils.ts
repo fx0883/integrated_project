@@ -560,6 +560,26 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
       // 递归处理子路由
       if (v?.children && v.children.length) {
         console.log(`[路由] 处理子路由: ${v.name ? String(v.name) : v.path}, 子路由数量: ${v.children.length}`);
+        
+        // 确保子路由的路径格式正确，但仅为路由导航时使用，不改变原始路径
+        v.children.forEach(child => {
+          // 如果子路由路径不是以/开头，且父路由路径存在，则为其添加完整路径属性
+          if (child.path && !child.path.startsWith('/') && v.path) {
+            const parentPath = v.path.endsWith('/') ? v.path.slice(0, -1) : v.path;
+            const fullPath = `${parentPath}/${child.path}`;
+            console.log(`[路由] 为子路由添加完整路径属性: ${child.name ? String(child.name) : ''} ${child.path} -> ${fullPath}`);
+            // 添加一个额外的属性存储完整路径，而不修改原始path
+            if (!child.meta) {
+              child.meta = {
+                title: child.name as string || '未命名路由',
+                fullPath: fullPath
+              };
+            } else {
+              child.meta.fullPath = fullPath;
+            }
+          }
+        });
+        
         addAsyncRoutes(v.children);
       }
     });
@@ -625,10 +645,51 @@ function handleTopMenu(route) {
 
 /** 获取所有菜单中的第一个菜单（顶级菜单）*/
 function getTopMenu(tag = false): menuType {
-  const topMenu = handleTopMenu(
-    usePermissionStoreHook().wholeMenus[0]?.children[0]
-  );
-  tag && useMultiTagsStoreHook().handleTags("push", topMenu);
+  // 检查菜单是否存在
+  const wholeMenus = usePermissionStoreHook().wholeMenus;
+  if (!wholeMenus || wholeMenus.length === 0) {
+    console.warn("[路由] 菜单列表为空，返回默认菜单");
+    return { 
+      path: "/dashboard", 
+      meta: { title: "首页" },
+      value: null
+    };
+  }
+  
+  // 获取第一个菜单
+  const firstMenu = wholeMenus[0];
+  if (!firstMenu?.children || firstMenu.children.length === 0) {
+    console.log("[路由] 第一个菜单没有子菜单，使用自身作为顶级菜单");
+    // 只在需要时添加标签，避免重复添加
+    if (tag) {
+      // 检查是否已存在相同路径的标签
+      const multiTagsStore = useMultiTagsStoreHook();
+      const tagExists = multiTagsStore.multiTags.some(item => item.path === firstMenu.path);
+      
+      if (!tagExists) {
+        multiTagsStore.handleTags("push", firstMenu);
+      }
+    }
+    return firstMenu;
+  }
+  
+  // 使用处理函数获取顶部菜单
+  const topMenu = handleTopMenu(firstMenu?.children[0]);
+  
+  // 记录菜单信息以便调试
+  console.log(`[路由] getTopMenu 返回菜单: 路径=${topMenu?.path || '未设置'}, 名称=${topMenu?.name || '未命名'}`);
+  
+  // 只在需要时添加标签，避免重复添加
+  if (tag) {
+    // 检查是否已存在相同路径的标签
+    const multiTagsStore = useMultiTagsStoreHook();
+    const tagExists = multiTagsStore.multiTags.some(item => item.path === topMenu.path);
+    
+    if (!tagExists) {
+      multiTagsStore.handleTags("push", topMenu);
+    }
+  }
+  
   return topMenu;
 }
 

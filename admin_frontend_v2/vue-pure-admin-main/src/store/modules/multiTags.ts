@@ -24,10 +24,12 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
           `${responsiveStorageNameSpace()}tags`
         )
       : ([
-          ...routerArrays,
-          ...usePermissionStoreHook().flatteningRoutes.filter(
-            v => v?.meta?.fixedTag
-          )
+          // 初始只保留一个首页标签，不再添加其他固定标签
+          ...routerArrays
+          // 移除固定标签，避免初始加载时显示多个标签
+          // ...usePermissionStoreHook().flatteningRoutes.filter(
+          //   v => v?.meta?.fixedTag
+          // )
         ] as any),
     multiTagsCache: storageLocal().getItem<StorageConfigs>(
       `${responsiveStorageNameSpace()}configure`
@@ -64,7 +66,32 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
     ): T {
       switch (mode) {
         case "equal":
-          this.multiTags = value;
+          // 确保不会覆盖所有标签，只添加新标签
+          if (Array.isArray(value) && value.length > 0) {
+            // 如果是设置初始标签，则只保留一个首页标签
+            if (this.multiTags.length === 0) {
+              // 只保留第一个标签（首页）
+              const firstTag = Array.isArray(value) && value.length > 0 ? value[0] : value;
+              this.multiTags = [firstTag];
+            } else {
+              // 否则合并标签，保留现有标签
+              const newTags = Array.isArray(value) ? value : [value];
+              
+              // 过滤掉已存在的标签
+              const uniqueTags = newTags.filter(newTag => {
+                return !this.multiTags.some(existingTag => 
+                  existingTag.path === newTag.path && 
+                  isEqual(existingTag.query, newTag.query) && 
+                  isEqual(existingTag.params, newTag.params)
+                );
+              });
+              
+              // 添加新标签
+              this.multiTags = [...this.multiTags, ...uniqueTags];
+            }
+          } else {
+            this.multiTags = value;
+          }
           this.tagsCache(this.multiTags);
           break;
         case "push":
@@ -80,22 +107,16 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
             if (isBoolean(tagVal?.meta?.showLink) && !tagVal?.meta?.showLink)
               return;
             const tagPath = tagVal.path;
-            // 判断tag是否已存在
-            const tagHasExits = this.multiTags.some(tag => {
-              return tag.path === tagPath;
+            
+            // 检查是否已存在相同的标签（路径、查询参数和路由参数都相同）
+            const tagExists = this.multiTags.some(tag => {
+              return tag.path === tagPath && 
+                     isEqual(tag?.query, tagVal?.query) && 
+                     isEqual(tag?.params, tagVal?.params);
             });
 
-            // 判断tag中的query键值是否相等
-            const tagQueryHasExits = this.multiTags.some(tag => {
-              return isEqual(tag?.query, tagVal?.query);
-            });
-
-            // 判断tag中的params键值是否相等
-            const tagParamsHasExits = this.multiTags.some(tag => {
-              return isEqual(tag?.params, tagVal?.params);
-            });
-
-            if (tagHasExits && tagQueryHasExits && tagParamsHasExits) return;
+            // 如果标签已存在，不再添加
+            if (tagExists) return;
 
             // 动态路由可打开的最大数量
             const dynamicLevel = tagVal?.meta?.dynamicLevel ?? -1;
@@ -111,13 +132,18 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
                 index !== -1 && this.multiTags.splice(index, 1);
               }
             }
+            
+            // 添加新标签
             this.multiTags.push(value);
             this.tagsCache(this.multiTags);
+            
+            // 处理最大标签数量限制
             if (
               getConfig()?.MaxTagsLevel &&
               isNumber(getConfig().MaxTagsLevel)
             ) {
               if (this.multiTags.length > getConfig().MaxTagsLevel) {
+                // 保留第一个标签（首页），移除第二个标签
                 this.multiTags.splice(1, 1);
               }
             }

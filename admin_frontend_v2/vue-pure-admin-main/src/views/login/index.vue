@@ -126,11 +126,44 @@ const onLogin = async (formEl: FormInstance | undefined) => {
               console.log("[登录流程] 路由初始化完成");
               disabled.value = true;
               
-              const topMenuPath = getTopMenu(true).path;
+              const topMenu = getTopMenu(true);
+              const topMenuPath = topMenu.path;
               console.log(`[登录流程] 获取顶部菜单路径: ${topMenuPath}`);
               
+              // 确保跳转路径有效，避免404
+              let targetPath = topMenuPath;
+              
+              // 尝试获取路由的完整路径
+              if (topMenu.meta && topMenu.meta.fullPath) {
+                targetPath = topMenu.meta.fullPath;
+                console.log(`[登录流程] 使用路由的完整路径: ${targetPath}`);
+              }
+              // 确保路径以/开头
+              else if (targetPath && !targetPath.startsWith('/')) {
+                // 尝试从路由匹配中找到正确的路径
+                const allRoutes = router.getRoutes();
+                console.log(`[登录流程] 尝试查找匹配路由，当前路由数量: ${allRoutes.length}`);
+                
+                // 尝试找到包含此路径的路由
+                const matchingRoute = allRoutes.find(route => 
+                  route.path.includes(targetPath) || 
+                  (topMenu.name && route.name === topMenu.name)
+                );
+                
+                if (matchingRoute) {
+                  targetPath = matchingRoute.path;
+                  console.log(`[登录流程] 找到匹配路由: ${targetPath}`);
+                } else {
+                  // 如果找不到匹配，使用默认路径
+                  targetPath = '/dashboard';
+                  console.log(`[登录流程] 未找到匹配路由，使用默认路径: ${targetPath}`);
+                }
+              }
+              
+              console.log(`[登录流程] 最终导航路径: ${targetPath}`);
+              
               router
-                .push(topMenuPath)
+                .push(targetPath)
                 .then(() => {
                   console.log("[登录流程] 导航到首页成功");
                   message(t("login.pureLoginSuccess"), { type: "success" });

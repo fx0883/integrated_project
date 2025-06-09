@@ -465,30 +465,50 @@ router.beforeEach((to: ToRouteType, _from, next) => {
                 path,
                 router.options.routes[0]?.children || []
               );
+              
+              // 首先添加首页标签（如果不存在）
               getTopMenu(true);
+              
+              // 如果当前路由不是首页，并且路由有效，则添加当前路由的标签
               // query、params模式路由传参数的标签页不在此处处理
-              if (route && route.meta?.title) {
+              if (route && route.meta?.title && path !== getTopMenu().path) {
+                console.log(`[路由守卫] 检查是否需要添加路由标签: ${path}`);
+                
                 if (isAllEmpty(route.parentId) && route.meta?.backstage) {
                   // 此处为动态顶级路由（目录）
                   if (route.children && route.children.length > 0) {
                     const { path, name, meta } = route.children[0];
                     console.log(`[路由守卫] 添加顶级路由子路由标签: ${path}`);
-                    useMultiTagsStoreHook().handleTags("push", {
-                      path,
-                      name,
-                      meta
-                    });
+                    
+                    // 检查是否已存在相同的标签
+                    const multiTagsStore = useMultiTagsStoreHook();
+                    const tagExists = multiTagsStore.multiTags.some(item => item.path === path);
+                    
+                    if (!tagExists) {
+                      multiTagsStore.handleTags("push", {
+                        path,
+                        name,
+                        meta
+                      });
+                    }
                   } else {
                     console.warn("[路由守卫] 动态顶级路由没有子路由", route.path);
                   }
                 } else {
                   const { path, name, meta } = route;
                   console.log(`[路由守卫] 添加普通路由标签: ${path}`);
-                  useMultiTagsStoreHook().handleTags("push", {
-                    path,
-                    name,
-                    meta
-                  });
+                  
+                  // 检查是否已存在相同的标签
+                  const multiTagsStore = useMultiTagsStoreHook();
+                  const tagExists = multiTagsStore.multiTags.some(item => item.path === path);
+                  
+                  if (!tagExists) {
+                    multiTagsStore.handleTags("push", {
+                      path,
+                      name,
+                      meta
+                    });
+                  }
                 }
               }
             } catch (error) {
