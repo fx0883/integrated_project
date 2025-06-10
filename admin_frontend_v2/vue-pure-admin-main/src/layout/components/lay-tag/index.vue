@@ -180,26 +180,30 @@ const smoothScroll = (offset: number): void => {
 };
 
 function dynamicRouteTag(value: string): void {
-  const hasValue = multiTags.value.some(item => {
-    return item.path === value;
-  });
+  // 检查标签是否已存在（对所有标签进行检查，包括首页标签）
+  const existingTag = multiTags.value.find(item => item.path === value);
+  
+  // 如果标签已存在，直接跳转到该标签
+  if (existingTag) {
+    tagOnClick(existingTag);
+    return;
+  }
 
+  // 如果标签不存在，则创建新标签
   function concatPath(arr: object[], value: string) {
-    if (!hasValue) {
-      arr.forEach((arrItem: any) => {
-        if (arrItem.path === value) {
-          useMultiTagsStoreHook().handleTags("push", {
-            path: value,
-            meta: arrItem.meta,
-            name: arrItem.name
-          });
-        } else {
-          if (arrItem.children && arrItem.children.length > 0) {
-            concatPath(arrItem.children, value);
-          }
+    arr.forEach((arrItem: any) => {
+      if (arrItem.path === value) {
+        useMultiTagsStoreHook().handleTags("push", {
+          path: value,
+          meta: arrItem.meta,
+          name: arrItem.name
+        });
+      } else {
+        if (arrItem.children && arrItem.children.length > 0) {
+          concatPath(arrItem.children, value);
         }
-      });
-    }
+      }
+    });
   }
   concatPath(router.options.routes as any, value);
 }
@@ -542,7 +546,9 @@ onMounted(() => {
 
   //  接收侧边栏切换传递过来的参数
   emitter.on("changLayoutRoute", indexPath => {
+    // 直接调用dynamicRouteTag函数，它会处理所有标签的检查和跳转逻辑
     dynamicRouteTag(indexPath);
+    
     setTimeout(() => {
       showMenuModel(indexPath);
     });

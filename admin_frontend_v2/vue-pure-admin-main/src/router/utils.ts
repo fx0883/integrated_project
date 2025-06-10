@@ -1,29 +1,40 @@
-import {
-  type RouterHistory,
-  type RouteRecordRaw,
-  type RouteComponent,
-  createWebHistory,
-  createWebHashHistory
-} from "vue-router";
-import { router } from "./index";
-import { isProxy, toRaw } from "vue";
-import { useTimeoutFn } from "@vueuse/core";
-import {
-  isString,
-  cloneDeep,
-  isAllEmpty,
-  intersection,
-  storageLocal,
-  isIncludeAllChildren
-} from "@pureadmin/utils";
+import "@/utils/sso";
 import { getConfig } from "@/config";
+import { message } from "@/utils/message";
+import { ElMessage } from "element-plus";
+import { getAsyncRoutes } from "@/api/routes";
+import { transformI18n } from "@/plugins/i18n";
 import { buildHierarchyTree } from "@/utils/tree";
-import { userKey, type DataInfo } from "@/utils/auth";
-import { type menuType, routerArrays } from "@/layout/types";
+import { useTimeoutFn } from "@vueuse/core";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { usePermissionStoreHook } from "@/store/modules/permission";
+import { routerArrays } from "@/layout/types";
+import {
+  isUrl,
+  storageLocal,
+  isAllEmpty,
+  cloneDeep,
+  intersection,
+  isString,
+  isIncludeAllChildren
+} from "@pureadmin/utils";
+import {
+  Router,
+  RouteRecordRaw,
+  RouteComponent,
+  RouteRecordName,
+  createRouter,
+  RouteRecordNormalized,
+  createWebHistory,
+  createWebHashHistory,
+  RouterHistory
+} from "vue-router";
+import { computed, isProxy, toRaw } from "vue";
+import { router } from "./index";
+import { userKey, type DataInfo } from "@/utils/auth";
+import { type menuType } from "@/layout/types";
 import { resetRouter } from "./index";
-import { ElMessage } from "element-plus";
+
 const IFrame = () => import("@/layout/frame.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
@@ -33,9 +44,6 @@ const LoginPage = () => import(/* webpackChunkName: "login" */ "@/views/login/in
 const Error404Page = () => import(/* webpackChunkName: "error404" */ "@/views/error/404.vue");
 const Error403Page = () => import(/* webpackChunkName: "error403" */ "@/views/error/403.vue");
 const Error500Page = () => import(/* webpackChunkName: "error500" */ "@/views/error/500.vue");
-
-// 动态路由
-import { getAsyncRoutes } from "@/api/routes";
 
 function handRank(routeInfo: any) {
   const { name, path, parentId, meta } = routeInfo;
@@ -229,13 +237,38 @@ function handleAsyncRoutes(routeList) {
       throw new Error("处理后的动态路由列表为空");
     }
     
-    // 扁平化路由
-    console.time("[路由处理] 路由扁平化耗时");
+    // 扁平化路由，方便查找和处理
+    console.time("[路由处理] 扁平化路由耗时");
     const flattenedRoutes = formatFlatteningRoutes(asyncRouteList);
-    console.timeEnd("[路由处理] 路由扁平化耗时");
-    console.log("[路由处理] 扁平化后的路由数量:", flattenedRoutes ? flattenedRoutes.length : 0);
+    console.timeEnd("[路由处理] 扁平化路由耗时");
+    console.log("[路由处理] 扁平化后的路由数量:", flattenedRoutes.length);
     
-    // 添加路由
+    // 查找首页路由
+    const dashboardRoute = flattenedRoutes.find(route => 
+      route.name === 'DashboardIndex' || 
+      route.path.includes('/dashboard/index')
+    );
+    
+    // 如果找到首页路由，将其添加到routerArrays中
+    if (dashboardRoute) {
+      console.log("[路由处理] 找到首页路由，添加到routerArrays:", dashboardRoute.path);
+      
+      // 清空routerArrays，确保只有一个首页标签
+      routerArrays.length = 0;
+      
+      // 添加首页路由到routerArrays
+      routerArrays.push({
+        path: dashboardRoute.path,
+        name: dashboardRoute.name,
+        meta: dashboardRoute.meta
+      });
+      
+      console.log("[路由处理] routerArrays更新完成:", routerArrays);
+    } else {
+      console.warn("[路由处理] 未找到首页路由，无法添加首页标签");
+    }
+    
+    // 注册路由
     console.time("[路由处理] 路由注册耗时");
     let addedCount = 0;
     asyncRouteList.forEach(route => {
@@ -331,7 +364,7 @@ function initRouter() {
             } else if (Array.isArray(response)) {
               data = response;
               console.log("[路由初始化] 从response数组中获取路由数据", data);
-            } else {
+          } else {
               console.error("[路由初始化] 无法从响应中获取路由数据", response);
               ElMessage.error("无法从响应中获取路由数据");
               reject(new Error("无法从响应中获取路由数据"));
@@ -650,7 +683,8 @@ function getTopMenu(tag = false): menuType {
   if (!wholeMenus || wholeMenus.length === 0) {
     console.warn("[路由] 菜单列表为空，返回默认菜单");
     return { 
-      path: "/dashboard", 
+      path: "/dashboard/index", 
+      name: "DashboardIndex",
       meta: { title: "首页" },
       value: null
     };
@@ -660,16 +694,7 @@ function getTopMenu(tag = false): menuType {
   const firstMenu = wholeMenus[0];
   if (!firstMenu?.children || firstMenu.children.length === 0) {
     console.log("[路由] 第一个菜单没有子菜单，使用自身作为顶级菜单");
-    // 只在需要时添加标签，避免重复添加
-    if (tag) {
-      // 检查是否已存在相同路径的标签
-      const multiTagsStore = useMultiTagsStoreHook();
-      const tagExists = multiTagsStore.multiTags.some(item => item.path === firstMenu.path);
-      
-      if (!tagExists) {
-        multiTagsStore.handleTags("push", firstMenu);
-      }
-    }
+    // 不再自动添加标签
     return firstMenu;
   }
   
@@ -679,17 +704,7 @@ function getTopMenu(tag = false): menuType {
   // 记录菜单信息以便调试
   console.log(`[路由] getTopMenu 返回菜单: 路径=${topMenu?.path || '未设置'}, 名称=${topMenu?.name || '未命名'}`);
   
-  // 只在需要时添加标签，避免重复添加
-  if (tag) {
-    // 检查是否已存在相同路径的标签
-    const multiTagsStore = useMultiTagsStoreHook();
-    const tagExists = multiTagsStore.multiTags.some(item => item.path === topMenu.path);
-    
-    if (!tagExists) {
-      multiTagsStore.handleTags("push", topMenu);
-    }
-  }
-  
+  // 不再自动添加标签
   return topMenu;
 }
 

@@ -90,7 +90,7 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
               this.multiTags = [...this.multiTags, ...uniqueTags];
             }
           } else {
-            this.multiTags = value;
+          this.multiTags = value;
           }
           this.tagsCache(this.multiTags);
           break;
@@ -102,7 +102,7 @@ export const useMultiTagsStore = defineStore("pure-multiTags", {
             // 如果是外链无需添加信息到标签页
             if (isUrl(tagVal?.name)) return;
             // 如果title为空拒绝添加空信息到标签页
-            if (tagVal?.meta?.title.length === 0) return;
+            if (tagVal?.meta?.title && tagVal?.meta?.title.length === 0) return;
             // showLink:false 不添加到标签页
             if (isBoolean(tagVal?.meta?.showLink) && !tagVal?.meta?.showLink)
               return;

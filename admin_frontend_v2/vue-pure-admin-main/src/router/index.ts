@@ -265,8 +265,20 @@ router.beforeEach((to: ToRouteType, _from, next) => {
     console.log("[路由守卫] 访问根路径且已登录，尝试获取菜单并导航");
     // 如果菜单已加载，直接导航到首页
     if (usePermissionStoreHook().wholeMenus.length > 0) {
-      const topMenuPath = getTopMenu(true).path;
+      const topMenu = getTopMenu(true);
+      const topMenuPath = topMenu.path;
       console.log(`[路由守卫] 菜单已加载，导航到顶部菜单: ${topMenuPath}`);
+
+      // 确保首页标签存在
+      if (topMenu && topMenu.name) {
+        console.log("[路由守卫] 添加首页标签:", topMenu.name);
+        useMultiTagsStoreHook().handleTags("push", {
+          path: topMenuPath,
+          name: topMenu.name,
+          meta: topMenu.meta
+        });
+      }
+
       next(topMenuPath);
       console.timeEnd("[路由守卫] 导航耗时");
       console.groupEnd();
@@ -465,25 +477,25 @@ router.beforeEach((to: ToRouteType, _from, next) => {
                 path,
                 router.options.routes[0]?.children || []
               );
-              
-              // 首先添加首页标签（如果不存在）
-              getTopMenu(true);
-              
-              // 如果当前路由不是首页，并且路由有效，则添加当前路由的标签
+
+              // 不再自动添加首页标签
+              // getTopMenu(true);
+
+              // 如果当前路由有效，则添加当前路由的标签
               // query、params模式路由传参数的标签页不在此处处理
-              if (route && route.meta?.title && path !== getTopMenu().path) {
+              if (route && route.meta?.title) {
                 console.log(`[路由守卫] 检查是否需要添加路由标签: ${path}`);
-                
+
                 if (isAllEmpty(route.parentId) && route.meta?.backstage) {
                   // 此处为动态顶级路由（目录）
                   if (route.children && route.children.length > 0) {
                     const { path, name, meta } = route.children[0];
                     console.log(`[路由守卫] 添加顶级路由子路由标签: ${path}`);
-                    
+
                     // 检查是否已存在相同的标签
                     const multiTagsStore = useMultiTagsStoreHook();
                     const tagExists = multiTagsStore.multiTags.some(item => item.path === path);
-                    
+
                     if (!tagExists) {
                       multiTagsStore.handleTags("push", {
                         path,
@@ -497,11 +509,11 @@ router.beforeEach((to: ToRouteType, _from, next) => {
                 } else {
                   const { path, name, meta } = route;
                   console.log(`[路由守卫] 添加普通路由标签: ${path}`);
-                  
+
                   // 检查是否已存在相同的标签
                   const multiTagsStore = useMultiTagsStoreHook();
                   const tagExists = multiTagsStore.multiTags.some(item => item.path === path);
-                  
+
                   if (!tagExists) {
                     multiTagsStore.handleTags("push", {
                       path,

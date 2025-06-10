@@ -457,3 +457,27 @@ docker run -dp 8080:80  --name pure-admin vue-pure-admin
 3. src/store/modules/menu.ts (新建)
 4. src/views/menu/index.vue (新建)
 5. src/router/index.ts (修改)
+
+## 会话总结 - 2025/6/10
+
+### 主要目标
+修复首页标签路径不匹配导致点击第一个菜单时创建重复标签的问题
+
+### 已完成的具体任务
+1. 诊断了首页标签路径不匹配的根本原因：`routerArrays` 中没有正确定义首页标签，导致标签路径与实际路由路径不一致
+2. 修改了 `src/router/utils.ts` 中的 `handleAsyncRoutes` 函数，实现动态获取首页标签信息并添加到 `routerArrays` 中
+3. 优化了标签页处理逻辑，确保首页标签路径与后端返回的路由路径保持一致
+
+### 采用的技术方案及决策理由
+- 不使用硬编码方式定义首页标签，而是通过代码动态获取首页路由信息
+- 在路由处理过程中，从后端返回的路由数据中查找首页路由，并将其添加到 `routerArrays` 中
+- 这种方式更加灵活，能够适应不同的后端路由配置，避免了硬编码可能带来的路径不匹配问题
+
+### 使用的主要技术栈
+- Vue 3
+- Vue Router
+- TypeScript
+- Pinia 状态管理
+
+### 变更的文件清单
+- vue-pure-admin-main/src/router/utils.ts

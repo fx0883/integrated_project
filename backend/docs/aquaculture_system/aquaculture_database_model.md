@@ -211,6 +211,253 @@
 | created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
 | updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
 
+### 4. 基地信息表 (bases)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 基地ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| name | VARCHAR(100) | 基地名称 | 非空 |
+| code | VARCHAR(50) | 基地编码 | 可空, 唯一(租户内) |
+| location | VARCHAR(255) | 地理位置 | 非空 |
+| area | DECIMAL(10,2) | 面积(亩) | 非空 |
+| latitude | DECIMAL(10,6) | 纬度 | 可空 |
+| longitude | DECIMAL(10,6) | 经度 | 可空 |
+| address | VARCHAR(255) | 详细地址 | 非空 |
+| contact_person | VARCHAR(50) | 联系人 | 可空 |
+| contact_phone | VARCHAR(20) | 联系电话 | 可空 |
+| description | TEXT | 基地描述 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:正常,2:停用) | 非空, 默认1 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 5. 池塘信息表 (ponds)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 池塘ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| base_id | BIGINT UNSIGNED | 基地ID | 外键, 非空, 关联基地表 |
+| name | VARCHAR(100) | 池塘名称 | 非空 |
+| code | VARCHAR(50) | 池塘编码 | 可空, 唯一(租户内) |
+| area | DECIMAL(10,2) | 面积(亩) | 非空 |
+| depth | DECIMAL(5,2) | 水深(米) | 非空 |
+| volume | DECIMAL(10,2) | 容积(立方米) | 可空 |
+| shape | VARCHAR(50) | 形状 | 可空 |
+| material | VARCHAR(50) | 材质 | 可空 |
+| water_source | VARCHAR(50) | 水源 | 可空 |
+| drainage_method | VARCHAR(50) | 排水方式 | 可空 |
+| aeration_equipment | VARCHAR(255) | 增氧设备 | 可空 |
+| monitoring_equipment | VARCHAR(255) | 监测设备 | 可空 |
+| construction_date | DATE | 建造日期 | 可空 |
+| last_maintenance_date | DATE | 上次维护日期 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:空闲,2:使用中,3:维护中,4:停用) | 非空, 默认1 |
+| description | TEXT | 描述 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 6. 养殖品种表 (species)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 品种ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| name | VARCHAR(100) | 品种名称 | 非空 |
+| scientific_name | VARCHAR(100) | 学名 | 可空 |
+| code | VARCHAR(50) | 品种编码 | 可空, 唯一(租户内) |
+| category | VARCHAR(50) | 类别(鱼类/虾类/蟹类等) | 非空 |
+| growth_cycle | INT | 生长周期(天) | 可空 |
+| optimal_temperature_min | DECIMAL(5,2) | 最适生长温度下限(°C) | 可空 |
+| optimal_temperature_max | DECIMAL(5,2) | 最适生长温度上限(°C) | 可空 |
+| optimal_ph_min | DECIMAL(4,2) | 最适pH值下限 | 可空 |
+| optimal_ph_max | DECIMAL(4,2) | 最适pH值上限 | 可空 |
+| optimal_dissolved_oxygen | DECIMAL(5,2) | 最适溶解氧(mg/L) | 可空 |
+| feeding_habits | VARCHAR(255) | 饲养习性 | 可空 |
+| common_diseases | TEXT | 常见疾病 | 可空 |
+| market_value | DECIMAL(10,2) | 市场价值(元/kg) | 可空 |
+| image_url | VARCHAR(255) | 图片URL | 可空 |
+| description | TEXT | 描述 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:启用,2:停用) | 非空, 默认1 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 7. 生产批次表 (production_batches)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 批次ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| batch_number | VARCHAR(50) | 批次编号 | 非空, 唯一(租户内) |
+| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空, 关联池塘表 |
+| species_id | BIGINT UNSIGNED | 品种ID | 外键, 非空, 关联品种表 |
+| start_date | DATE | 开始日期 | 非空 |
+| expected_end_date | DATE | 预计结束日期 | 可空 |
+| actual_end_date | DATE | 实际结束日期 | 可空 |
+| initial_quantity | INT | 初始数量 | 非空 |
+| initial_quantity_unit | VARCHAR(20) | 初始数量单位(尾/kg) | 非空 |
+| initial_weight | DECIMAL(10,2) | 初始重量(kg) | 可空 |
+| initial_avg_weight | DECIMAL(10,2) | 初始平均体重(g) | 可空 |
+| expected_survival_rate | DECIMAL(5,2) | 预期成活率(%) | 可空 |
+| actual_survival_rate | DECIMAL(5,2) | 实际成活率(%) | 可空 |
+| expected_yield | DECIMAL(10,2) | 预期产量(kg) | 可空 |
+| actual_yield | DECIMAL(10,2) | 实际产量(kg) | 可空 |
+| seed_source | VARCHAR(255) | 种苗来源 | 可空 |
+| seed_batch_number | VARCHAR(50) | 种苗批次号 | 可空 |
+| seed_cost | DECIMAL(10,2) | 种苗成本(元) | 可空 |
+| feed_cost | DECIMAL(10,2) | 饲料成本(元) | 可空 |
+| medicine_cost | DECIMAL(10,2) | 药品成本(元) | 可空 |
+| labor_cost | DECIMAL(10,2) | 人工成本(元) | 可空 |
+| other_cost | DECIMAL(10,2) | 其他成本(元) | 可空 |
+| total_cost | DECIMAL(10,2) | 总成本(元) | 可空 |
+| sales_revenue | DECIMAL(10,2) | 销售收入(元) | 可空 |
+| profit | DECIMAL(10,2) | 利润(元) | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:进行中,2:已完成,3:已终止) | 非空, 默认1 |
+| termination_reason | VARCHAR(255) | 终止原因 | 可空 |
+| description | TEXT | 描述 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 8. 水质监测表 (water_quality)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空, 关联生产批次表 |
+| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空, 关联池塘表 |
+| test_time | TIMESTAMP | 监测时间 | 非空 |
+| temperature | DECIMAL(5,2) | 水温(°C) | 可空 |
+| ph | DECIMAL(4,2) | pH值 | 可空 |
+| dissolved_oxygen | DECIMAL(5,2) | 溶解氧(mg/L) | 可空 |
+| ammonia_nitrogen | DECIMAL(5,2) | 氨氮(mg/L) | 可空 |
+| nitrite | DECIMAL(5,2) | 亚硝酸盐(mg/L) | 可空 |
+| nitrate | DECIMAL(5,2) | 硝酸盐(mg/L) | 可空 |
+| phosphate | DECIMAL(5,2) | 磷酸盐(mg/L) | 可空 |
+| turbidity | DECIMAL(5,2) | 浊度(NTU) | 可空 |
+| transparency | DECIMAL(5,2) | 透明度(cm) | 可空 |
+| salinity | DECIMAL(5,2) | 盐度(‰) | 可空 |
+| conductivity | DECIMAL(8,2) | 电导率(μS/cm) | 可空 |
+| alkalinity | DECIMAL(5,2) | 碱度(mg/L) | 可空 |
+| hardness | DECIMAL(5,2) | 硬度(mg/L) | 可空 |
+| hydrogen_sulfide | DECIMAL(5,2) | 硫化氢(mg/L) | 可空 |
+| chlorophyll | DECIMAL(5,2) | 叶绿素(μg/L) | 可空 |
+| weather | VARCHAR(50) | 天气 | 可空 |
+| water_color | VARCHAR(50) | 水色 | 可空 |
+| water_smell | VARCHAR(50) | 水味 | 可空 |
+| abnormal_phenomena | TEXT | 异常现象 | 可空 |
+| treatment_measures | TEXT | 处理措施 | 可空 |
+| test_method | VARCHAR(50) | 测试方法(手动/自动) | 非空, 默认'手动' |
+| test_equipment | VARCHAR(100) | 测试设备 | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 9. 饲料管理表 (feeds)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 饲料ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| name | VARCHAR(100) | 饲料名称 | 非空 |
+| code | VARCHAR(50) | 饲料编码 | 可空, 唯一(租户内) |
+| type | VARCHAR(50) | 类型(颗粒饲料/粉状饲料等) | 非空 |
+| specification | VARCHAR(100) | 规格 | 可空 |
+| manufacturer | VARCHAR(100) | 生产厂家 | 可空 |
+| protein_content | DECIMAL(5,2) | 蛋白质含量(%) | 可空 |
+| fat_content | DECIMAL(5,2) | 脂肪含量(%) | 可空 |
+| fiber_content | DECIMAL(5,2) | 纤维含量(%) | 可空 |
+| ash_content | DECIMAL(5,2) | 灰分含量(%) | 可空 |
+| moisture_content | DECIMAL(5,2) | 水分含量(%) | 可空 |
+| calcium_content | DECIMAL(5,2) | 钙含量(%) | 可空 |
+| phosphorus_content | DECIMAL(5,2) | 磷含量(%) | 可空 |
+| other_nutrients | TEXT | 其他营养成分 | 可空 |
+| applicable_species | VARCHAR(255) | 适用品种 | 可空 |
+| applicable_stage | VARCHAR(50) | 适用阶段(苗种期/生长期/育成期等) | 可空 |
+| storage_conditions | VARCHAR(255) | 存储条件 | 可空 |
+| shelf_life | INT | 保质期(天) | 可空 |
+| unit_price | DECIMAL(10,2) | 单价(元/kg) | 可空 |
+| current_stock | DECIMAL(10,2) | 当前库存(kg) | 非空, 默认0 |
+| stock_warning_threshold | DECIMAL(10,2) | 库存预警阈值(kg) | 可空 |
+| description | TEXT | 描述 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:正常,2:停用) | 非空, 默认1 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 10. 投喂记录表 (feeding_records)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空, 关联生产批次表 |
+| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空, 关联池塘表 |
+| feed_id | BIGINT UNSIGNED | 饲料ID | 外键, 非空, 关联饲料表 |
+| feeding_time | TIMESTAMP | 投喂时间 | 非空 |
+| feed_amount | DECIMAL(10,2) | 投喂量(kg) | 非空 |
+| feed_cost | DECIMAL(10,2) | 饲料成本(元) | 可空 |
+| feeding_method | VARCHAR(50) | 投喂方式(人工/自动) | 非空, 默认'人工' |
+| feeding_location | VARCHAR(50) | 投喂位置 | 可空 |
+| water_temperature | DECIMAL(5,2) | 水温(°C) | 可空 |
+| weather | VARCHAR(50) | 天气 | 可空 |
+| feeding_behavior | VARCHAR(255) | 摄食行为 | 可空 |
+| feeding_response | VARCHAR(50) | 摄食反应(良好/一般/差) | 可空 |
+| leftover_feed | DECIMAL(5,2) | 剩余饲料估计(%) | 可空 |
+| abnormal_phenomena | TEXT | 异常现象 | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 11. 生长记录表 (growth_records)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空, 关联生产批次表 |
+| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空, 关联池塘表 |
+| sample_time | TIMESTAMP | 采样时间 | 非空 |
+| sample_quantity | INT | 采样数量(尾) | 非空 |
+| avg_weight | DECIMAL(10,2) | 平均体重(g) | 非空 |
+| avg_length | DECIMAL(10,2) | 平均体长(cm) | 可空 |
+| max_weight | DECIMAL(10,2) | 最大体重(g) | 可空 |
+| min_weight | DECIMAL(10,2) | 最小体重(g) | 可空 |
+| weight_variance | DECIMAL(10,2) | 体重方差 | 可空 |
+| daily_growth_rate | DECIMAL(5,2) | 日增长率(%) | 可空 |
+| feed_conversion_ratio | DECIMAL(5,2) | 饲料转化率 | 可空 |
+| estimated_survival_rate | DECIMAL(5,2) | 估计成活率(%) | 可空 |
+| estimated_biomass | DECIMAL(10,2) | 估计生物量(kg) | 可空 |
+| health_status | VARCHAR(50) | 健康状态(良好/一般/较差) | 可空 |
+| abnormal_signs | TEXT | 异常迹象 | 可空 |
+| sampling_method | VARCHAR(50) | 采样方法 | 可空 |
+| sampling_location | VARCHAR(50) | 采样位置 | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
 ## 数据库表结构概览
 
 | 序号 | 表名 | 描述 |

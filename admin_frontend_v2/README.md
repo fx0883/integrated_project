@@ -153,4 +153,32 @@
 ### 变更的文件清单
 - vue-pure-admin-main/src/api/routes.ts
 - vue-pure-admin-main/src/utils/http/index.ts
-- vue-pure-admin-main/src/router/utils.ts 
+- vue-pure-admin-main/src/router/utils.ts
+
+## 会话总结 - 2025/6/9 (2)
+
+### 主要目标
+修复登录后系统首页标签页不显示的问题
+
+### 已完成的具体任务
+1. 诊断了首页标签页不显示的根本原因：登录后没有为首页路由自动创建标签
+2. 修改了 `handleAsyncRoutes` 函数，在路由处理完成后为首页路由添加标签
+3. 修改了 `multiTags` 存储中的 `push` 逻辑，确保即使 `meta.title` 不存在也能添加标签
+4. 修改了路由守卫，确保在导航到首页时添加首页标签
+5. 修改了 `getTopMenu` 函数，确保它能正确返回首页菜单，并添加了 `name` 属性
+
+### 采用的技术方案及决策理由
+- 在多个关键位置添加首页标签创建逻辑，确保无论从哪个入口进入系统，首页标签都能正确显示
+- 优化了标签页创建逻辑，增强了代码的健壮性，处理了可能的边缘情况
+- 修复了 `getTopMenu` 函数返回的默认菜单，确保它包含正确的路径和名称
+
+### 使用的主要技术栈
+- Vue 3
+- Vue Router
+- Pinia 状态管理
+- TypeScript
+
+### 变更的文件清单
+- vue-pure-admin-main/src/router/utils.ts
+- vue-pure-admin-main/src/store/modules/multiTags.ts
+- vue-pure-admin-main/src/router/index.ts 

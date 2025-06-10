@@ -102,7 +102,12 @@ export function useNav() {
   }
 
   function backTopMenu() {
-    router.push(getTopMenu()?.path);
+    // 获取首页路径
+    const topMenuPath = getTopMenu()?.path;
+    // 使用emitter发出changLayoutRoute事件，让标签处理逻辑统一处理
+    if (topMenuPath) {
+      emitter.emit("changLayoutRoute", topMenuPath);
+    }
   }
 
   function onPanel() {
