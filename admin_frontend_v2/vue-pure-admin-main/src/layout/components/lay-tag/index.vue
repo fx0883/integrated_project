@@ -180,30 +180,26 @@ const smoothScroll = (offset: number): void => {
 };
 
 function dynamicRouteTag(value: string): void {
-  // 检查标签是否已存在（对所有标签进行检查，包括首页标签）
-  const existingTag = multiTags.value.find(item => item.path === value);
-  
-  // 如果标签已存在，直接跳转到该标签
-  if (existingTag) {
-    tagOnClick(existingTag);
-    return;
-  }
+  const hasValue = multiTags.value.some(item => {
+    return item.path === value;
+  });
 
-  // 如果标签不存在，则创建新标签
   function concatPath(arr: object[], value: string) {
-    arr.forEach((arrItem: any) => {
-      if (arrItem.path === value) {
-        useMultiTagsStoreHook().handleTags("push", {
-          path: value,
-          meta: arrItem.meta,
-          name: arrItem.name
-        });
-      } else {
-        if (arrItem.children && arrItem.children.length > 0) {
-          concatPath(arrItem.children, value);
+    if (!hasValue) {
+      arr.forEach((arrItem: any) => {
+        if (arrItem.path === value) {
+          useMultiTagsStoreHook().handleTags("push", {
+            path: value,
+            meta: arrItem.meta,
+            name: arrItem.name
+          });
+        } else {
+          if (arrItem.children && arrItem.children.length > 0) {
+            concatPath(arrItem.children, value);
+          }
         }
-      }
-    });
+      });
+    }
   }
   concatPath(router.options.routes as any, value);
 }

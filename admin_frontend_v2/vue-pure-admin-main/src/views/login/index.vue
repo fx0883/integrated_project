@@ -126,7 +126,8 @@ const onLogin = async (formEl: FormInstance | undefined) => {
               console.log("[登录流程] 路由初始化完成");
               disabled.value = true;
               
-              const topMenu = getTopMenu(true);
+              // 获取顶部菜单信息，但不传true参数，避免重复添加标签
+              const topMenu = getTopMenu();
               const topMenuPath = topMenu.path;
               console.log(`[登录流程] 获取顶部菜单路径: ${topMenuPath}`);
               
@@ -163,7 +164,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
               console.log(`[登录流程] 最终导航路径: ${targetPath}`);
               
               router
-                .push(targetPath)
+                .push(getTopMenu(true).path)
                 .then(() => {
                   console.log("[登录流程] 导航到首页成功");
                   message(t("login.pureLoginSuccess"), { type: "success" });
