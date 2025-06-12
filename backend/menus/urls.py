@@ -21,6 +21,6 @@ router.register(r'', MenuViewSet, basename='menu')
 
 urlpatterns = [
     # 管理员菜单路由
-    path('routes/', AdminRoutesView.as_view(), name='admin-routes'),
+    path('admin/routes/', AdminRoutesView.as_view(), name='admin-routes'),
     path('', include(router.urls)),
 ] 

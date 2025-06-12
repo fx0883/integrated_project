@@ -153,7 +153,7 @@
 ### 变更的文件清单
 - vue-pure-admin-main/src/api/routes.ts
 - vue-pure-admin-main/src/utils/http/index.ts
-- vue-pure-admin-main/src/router/utils.ts
+- vue-pure-admin-main/src/router/utils.ts 
 
 ## 会话总结 - 2025/6/9 (2)
 

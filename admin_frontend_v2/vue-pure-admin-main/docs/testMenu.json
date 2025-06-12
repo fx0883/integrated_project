@@ -1,0 +1,38 @@
+[
+    {
+      "path": "/dashboard",
+      "name": "Dashboard",
+      "component": "Layout",
+      "redirect": "/dashboard/index",
+      "meta": {
+        "icon": "ep:data-board",
+        "title": "仪表盘",
+        "rank": 1,
+        "showLink": true,
+        "roles": [
+          "super_admin"
+        ]
+      },
+      "children": [
+        {
+          "path": "/dashboard/index",
+          "name": "DashboardIndex",
+          "component": "/src/views/dashboard/index",
+          "meta": {
+            "title": "仪表盘",
+            "icon": "ep:monitor",
+            "showLink": true,
+            "roles": [
+              "super_admin"
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
+          }
+        }
+      ]
+    }
+]

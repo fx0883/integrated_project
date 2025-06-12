@@ -678,10 +678,37 @@ function handleTopMenu(route) {
 
 /** 获取所有菜单中的第一个菜单（顶级菜单）*/
 function getTopMenu(tag = false): menuType {
-  const topMenu = handleTopMenu(
-    usePermissionStoreHook().wholeMenus[0]?.children[0]
-  );
+  // 检查菜单是否存在
+  const wholeMenus = usePermissionStoreHook().wholeMenus;
+  if (!wholeMenus || wholeMenus.length === 0) {
+    console.warn("[路由] 菜单列表为空，返回默认菜单");
+    return { 
+      path: "/dashboard/index", 
+      name: "DashboardIndex",
+      meta: { title: "首页" },
+      value: null
+    };
+  }
+  
+  // 获取第一个菜单
+  const firstMenu = wholeMenus[0];
+  
+  // 记录菜单信息以便调试
+  console.log(`[路由] getTopMenu 菜单结构:`, firstMenu);
+  
+  // 处理菜单结构
+  let topMenu;
+  if (firstMenu?.children && firstMenu.children.length > 0) {
+    topMenu = handleTopMenu(firstMenu.children[0]);
+  } else {
+    topMenu = firstMenu;
+  }
+  
+  console.log(`[路由] getTopMenu 返回菜单: 路径=${topMenu?.path || '未设置'}, 名称=${topMenu?.name || '未命名'}`);
+  
+  // 如果tag为true，添加到标签页
   tag && useMultiTagsStoreHook().handleTags("push", topMenu);
+  
   return topMenu;
 }
 

@@ -12,21 +12,29 @@
         "icon": "ep:data-board",
         "title": "仪表盘",
         "rank": 1,
+        "showLink": true,
         "roles": [
           "super_admin"
         ]
       },
       "children": [
         {
-          "path": "index",
+          "path": "/dashboard/index",
           "name": "DashboardIndex",
           "component": "/src/views/dashboard/index",
           "meta": {
             "title": "系统概览",
             "icon": "ep:monitor",
+            "showLink": true,
             "roles": [
               "super_admin"
-            ]
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
           }
         }
       ]
@@ -40,24 +48,30 @@
         "icon": "ep:office-building",
         "title": "租户管理",
         "rank": 2,
+        "showLink": true,
         "roles": [
           "super_admin"
         ]
       },
       "children": [
         {
-          "path": "list",
+          "path": "/tenant/list",
           "name": "TenantList",
           "component": "/src/views/tenant/list",
           "meta": {
             "title": "租户列表",
+            "showLink": true,
             "roles": [
               "super_admin"
-            ]
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade"
+            }
           }
         },
         {
-          "path": "detail/:id",
+          "path": "/tenant/detail/:id",
           "name": "TenantDetail",
           "component": "/src/views/tenant/detail",
           "meta": {
@@ -66,11 +80,15 @@
             "activePath": "/tenant/list",
             "roles": [
               "super_admin"
-            ]
+            ],
+            "keepAlive": false,
+            "transition": {
+              "name": "fade"
+            }
           }
         },
         {
-          "path": "create",
+          "path": "/tenant/create",
           "name": "TenantCreate",
           "component": "/src/views/tenant/form",
           "meta": {
@@ -79,11 +97,15 @@
             "activePath": "/tenant/list",
             "roles": [
               "super_admin"
-            ]
+            ],
+            "keepAlive": false,
+            "transition": {
+              "name": "fade"
+            }
           }
         },
         {
-          "path": "edit/:id",
+          "path": "/tenant/edit/:id",
           "name": "TenantEdit",
           "component": "/src/views/tenant/form",
           "meta": {
@@ -92,7 +114,11 @@
             "activePath": "/tenant/list",
             "roles": [
               "super_admin"
-            ]
+            ],
+            "keepAlive": false,
+            "transition": {
+              "name": "fade"
+            }
           }
         }
       ]
@@ -106,6 +132,7 @@
         "icon": "ri:user-line",
         "title": "用户管理",
         "rank": 3,
+        "showLink": true,
         "roles": [
           "super_admin",
           "admin"
@@ -113,19 +140,24 @@
       },
       "children": [
         {
-          "path": "list",
+          "path": "/user/list",
           "name": "UserList",
           "component": "/src/views/user/list/index",
           "meta": {
             "title": "用户列表",
+            "showLink": true,
             "roles": [
               "super_admin",
               "admin"
-            ]
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade"
+            }
           }
         },
         {
-          "path": "detail/:id",
+          "path": "/user/detail/:id",
           "name": "UserDetail",
           "component": "/src/views/user/detail/index",
           "meta": {
@@ -135,7 +167,11 @@
             "roles": [
               "super_admin",
               "admin"
-            ]
+            ],
+            "keepAlive": false,
+            "transition": {
+              "name": "fade"
+            }
           }
         }
       ]
@@ -149,20 +185,26 @@
         "icon": "ep:menu",
         "title": "菜单管理",
         "rank": 4,
+        "showLink": true,
         "roles": [
           "super_admin"
         ]
       },
       "children": [
         {
-          "path": "list",
+          "path": "/menu/list",
           "name": "MenuList",
           "component": "/src/views/menu/index",
           "meta": {
             "title": "菜单列表",
+            "showLink": true,
             "roles": [
               "super_admin"
-            ]
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade"
+            }
           }
         }
       ]
@@ -176,6 +218,7 @@
         "icon": "ep:setting",
         "title": "系统设置",
         "rank": 5,
+        "showLink": true,
         "roles": [
           "super_admin",
           "admin"
@@ -183,27 +226,37 @@
       },
       "children": [
         {
-          "path": "config",
+          "path": "/system/config",
           "name": "SystemConfig",
           "component": "/src/views/system/config/index",
           "meta": {
             "title": "系统配置",
+            "showLink": true,
             "roles": [
               "super_admin",
               "admin"
-            ]
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade"
+            }
           }
         },
         {
-          "path": "log",
+          "path": "/system/log",
           "name": "SystemLog",
           "component": "/src/views/system/log/index",
           "meta": {
             "title": "系统日志",
+            "showLink": true,
             "roles": [
               "super_admin",
               "admin"
-            ]
+            ],
+            "keepAlive": true,
+            "transition": {
+              "name": "fade"
+            }
           }
         }
       ]

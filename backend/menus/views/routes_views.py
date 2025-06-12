@@ -26,7 +26,7 @@ class AdminRoutesView(APIView):
         responses={200: RoutesResponseSerializer()},
         description="获取管理员菜单路由",
         summary="获取管理员菜单路由",
-        tags=["系统", "菜单"]
+        tags=["菜单"]
     )
     def get(self, request):
         """
