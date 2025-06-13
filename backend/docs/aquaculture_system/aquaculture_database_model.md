@@ -458,6 +458,213 @@
 | updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
 | is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
 
+### 12. 药品管理表 (medicines)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 药品ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| name | VARCHAR(100) | 药品名称 | 非空 |
+| code | VARCHAR(50) | 药品编码 | 可空, 唯一(租户内) |
+| type | VARCHAR(50) | 类型(消毒剂/抗生素/驱虫剂等) | 非空 |
+| specification | VARCHAR(100) | 规格 | 可空 |
+| manufacturer | VARCHAR(100) | 生产厂家 | 可空 |
+| approval_number | VARCHAR(50) | 批准文号 | 可空 |
+| main_ingredients | TEXT | 主要成分 | 可空 |
+| indications | TEXT | 适应症 | 可空 |
+| usage_method | TEXT | 使用方法 | 可空 |
+| dosage | VARCHAR(255) | 用量 | 可空 |
+| contraindications | TEXT | 禁忌症 | 可空 |
+| side_effects | TEXT | 副作用 | 可空 |
+| storage_conditions | VARCHAR(255) | 存储条件 | 可空 |
+| shelf_life | INT | 保质期(天) | 可空 |
+| production_date | DATE | 生产日期 | 可空 |
+| expiry_date | DATE | 有效期至 | 可空 |
+| unit_price | DECIMAL(10,2) | 单价(元) | 可空 |
+| unit | VARCHAR(20) | 单位(瓶/盒/袋等) | 非空 |
+| current_stock | DECIMAL(10,2) | 当前库存 | 非空, 默认0 |
+| stock_warning_threshold | DECIMAL(10,2) | 库存预警阈值 | 可空 |
+| description | TEXT | 描述 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:正常,2:停用) | 非空, 默认1 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 13. 病害防治表 (disease_prevention)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空, 关联生产批次表 |
+| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 非空, 关联池塘表 |
+| disease_id | BIGINT UNSIGNED | 疾病ID | 外键, 可空, 关联疾病信息表 |
+| medicine_id | BIGINT UNSIGNED | 药品ID | 外键, 可空, 关联药品表 |
+| treatment_time | TIMESTAMP | 处理时间 | 非空 |
+| disease_name | VARCHAR(100) | 疾病名称 | 非空(当disease_id为空时) |
+| symptoms | TEXT | 症状描述 | 可空 |
+| diagnosis | TEXT | 诊断结果 | 可空 |
+| treatment_method | VARCHAR(255) | 处理方法 | 非空 |
+| medicine_name | VARCHAR(100) | 药品名称 | 可空(当medicine_id为空时) |
+| dosage | VARCHAR(100) | 用药剂量 | 可空 |
+| usage | TEXT | 使用方法 | 可空 |
+| treatment_result | VARCHAR(50) | 处理结果(有效/部分有效/无效) | 可空 |
+| mortality | INT | 死亡数量 | 可空 |
+| mortality_unit | VARCHAR(20) | 死亡数量单位(尾/kg) | 可空 |
+| mortality_rate | DECIMAL(5,2) | 死亡率(%) | 可空 |
+| cost | DECIMAL(10,2) | 防治成本(元) | 可空 |
+| prevention_measures | TEXT | 预防措施 | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 14. 设备管理表 (equipment)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 设备ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| base_id | BIGINT UNSIGNED | 基地ID | 外键, 非空, 关联基地表 |
+| pond_id | BIGINT UNSIGNED | 池塘ID | 外键, 可空, 关联池塘表 |
+| name | VARCHAR(100) | 设备名称 | 非空 |
+| code | VARCHAR(50) | 设备编码 | 可空, 唯一(租户内) |
+| type | VARCHAR(50) | 类型(增氧机/投饵机/水质监测仪等) | 非空 |
+| model | VARCHAR(100) | 型号 | 可空 |
+| specification | VARCHAR(100) | 规格 | 可空 |
+| manufacturer | VARCHAR(100) | 生产厂家 | 可空 |
+| serial_number | VARCHAR(100) | 序列号 | 可空 |
+| purchase_date | DATE | 购买日期 | 可空 |
+| purchase_price | DECIMAL(10,2) | 购买价格(元) | 可空 |
+| warranty_period | INT | 保修期(月) | 可空 |
+| warranty_end_date | DATE | 保修截止日期 | 可空 |
+| power | VARCHAR(50) | 功率 | 可空 |
+| voltage | VARCHAR(50) | 电压 | 可空 |
+| installation_date | DATE | 安装日期 | 可空 |
+| installation_location | VARCHAR(255) | 安装位置 | 可空 |
+| maintenance_cycle | INT | 维护周期(天) | 可空 |
+| last_maintenance_date | DATE | 上次维护日期 | 可空 |
+| next_maintenance_date | DATE | 下次维护日期 | 可空 |
+| maintenance_records | TEXT | 维护记录 | 可空 |
+| running_status | TINYINT UNSIGNED | 运行状态(1:正常,2:故障,3:维修中,4:停用) | 非空, 默认1 |
+| fault_description | TEXT | 故障描述 | 可空 |
+| responsible_person | VARCHAR(50) | 责任人 | 可空 |
+| contact_phone | VARCHAR(20) | 联系电话 | 可空 |
+| description | TEXT | 描述 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:正常,2:停用) | 非空, 默认1 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 15. 销售记录表 (sales_records)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| batch_id | BIGINT UNSIGNED | 批次ID | 外键, 非空, 关联生产批次表 |
+| sale_number | VARCHAR(50) | 销售编号 | 非空, 唯一(租户内) |
+| sale_date | DATE | 销售日期 | 非空 |
+| customer_name | VARCHAR(100) | 客户名称 | 非空 |
+| customer_contact | VARCHAR(50) | 客户联系人 | 可空 |
+| customer_phone | VARCHAR(20) | 客户电话 | 可空 |
+| customer_address | VARCHAR(255) | 客户地址 | 可空 |
+| species_id | BIGINT UNSIGNED | 品种ID | 外键, 非空, 关联品种表 |
+| species_name | VARCHAR(100) | 品种名称 | 非空 |
+| quantity | DECIMAL(10,2) | 销售数量 | 非空 |
+| quantity_unit | VARCHAR(20) | 数量单位(尾/kg) | 非空 |
+| unit_price | DECIMAL(10,2) | 单价(元) | 非空 |
+| total_amount | DECIMAL(10,2) | 总金额(元) | 非空 |
+| payment_method | VARCHAR(50) | 支付方式(现金/转账/支票等) | 可空 |
+| payment_status | TINYINT UNSIGNED | 支付状态(1:未支付,2:部分支付,3:已支付) | 非空, 默认1 |
+| paid_amount | DECIMAL(10,2) | 已支付金额(元) | 非空, 默认0 |
+| payment_date | DATE | 支付日期 | 可空 |
+| invoice_number | VARCHAR(50) | 发票号码 | 可空 |
+| invoice_date | DATE | 开票日期 | 可空 |
+| invoice_amount | DECIMAL(10,2) | 开票金额(元) | 可空 |
+| transport_method | VARCHAR(50) | 运输方式 | 可空 |
+| transport_cost | DECIMAL(10,2) | 运输成本(元) | 可空 |
+| delivery_date | DATE | 交付日期 | 可空 |
+| delivery_address | VARCHAR(255) | 交付地址 | 可空 |
+| quality_grade | VARCHAR(50) | 质量等级 | 可空 |
+| average_weight | DECIMAL(10,2) | 平均体重(g) | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 16. 环境监测表 (environment_monitoring)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 记录ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| base_id | BIGINT UNSIGNED | 基地ID | 外键, 非空, 关联基地表 |
+| monitor_time | TIMESTAMP | 监测时间 | 非空 |
+| air_temperature | DECIMAL(5,2) | 气温(°C) | 可空 |
+| air_humidity | DECIMAL(5,2) | 空气湿度(%) | 可空 |
+| wind_direction | VARCHAR(50) | 风向 | 可空 |
+| wind_speed | DECIMAL(5,2) | 风速(m/s) | 可空 |
+| rainfall | DECIMAL(5,2) | 降雨量(mm) | 可空 |
+| sunshine_duration | DECIMAL(5,2) | 日照时长(h) | 可空 |
+| atmospheric_pressure | DECIMAL(8,2) | 大气压(hPa) | 可空 |
+| weather_condition | VARCHAR(50) | 天气状况 | 可空 |
+| soil_temperature | DECIMAL(5,2) | 土壤温度(°C) | 可空 |
+| soil_moisture | DECIMAL(5,2) | 土壤湿度(%) | 可空 |
+| soil_ph | DECIMAL(4,2) | 土壤pH值 | 可空 |
+| light_intensity | DECIMAL(10,2) | 光照强度(lux) | 可空 |
+| co2_concentration | DECIMAL(6,2) | 二氧化碳浓度(ppm) | 可空 |
+| monitor_method | VARCHAR(50) | 监测方法(手动/自动) | 非空, 默认'手动' |
+| monitor_equipment | VARCHAR(100) | 监测设备 | 可空 |
+| monitor_location | VARCHAR(255) | 监测位置 | 可空 |
+| abnormal_phenomena | TEXT | 异常现象 | 可空 |
+| remark | TEXT | 备注 | 可空 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
+### 17. 疾病信息表 (diseases)
+
+| 字段名 | 数据类型 | 描述 | 约束 |
+|--------|----------|------|------|
+| id | BIGINT UNSIGNED | 疾病ID | 主键, 自增 |
+| tenant_id | BIGINT UNSIGNED | 租户ID | 外键, 非空 |
+| name | VARCHAR(100) | 疾病名称 | 非空 |
+| code | VARCHAR(50) | 疾病编码 | 可空, 唯一(租户内) |
+| scientific_name | VARCHAR(100) | 学名 | 可空 |
+| category | VARCHAR(50) | 类别(病毒性/细菌性/寄生虫等) | 非空 |
+| pathogen | VARCHAR(255) | 病原体 | 可空 |
+| applicable_species | VARCHAR(255) | 适用品种 | 可空 |
+| symptoms | TEXT | 症状 | 可空 |
+| diagnosis_method | TEXT | 诊断方法 | 可空 |
+| treatment_method | TEXT | 治疗方法 | 可空 |
+| prevention_method | TEXT | 预防方法 | 可空 |
+| recommended_medicines | TEXT | 推荐药品 | 可空 |
+| infection_route | VARCHAR(255) | 感染途径 | 可空 |
+| incubation_period | VARCHAR(100) | 潜伏期 | 可空 |
+| mortality_rate | VARCHAR(50) | 死亡率 | 可空 |
+| seasonal_characteristics | VARCHAR(255) | 季节特性 | 可空 |
+| environmental_factors | TEXT | 环境因素 | 可空 |
+| image_url | VARCHAR(255) | 图片URL | 可空 |
+| reference | TEXT | 参考文献 | 可空 |
+| description | TEXT | 描述 | 可空 |
+| status | TINYINT UNSIGNED | 状态(1:启用,2:停用) | 非空, 默认1 |
+| created_at | TIMESTAMP | 创建时间 | 非空, 默认当前时间 |
+| updated_at | TIMESTAMP | 更新时间 | 非空, 默认当前时间, ON UPDATE当前时间 |
+| created_by | BIGINT UNSIGNED | 创建人ID | 外键, 非空, 关联用户表 |
+| updated_by | BIGINT UNSIGNED | 更新人ID | 外键, 可空, 关联用户表 |
+| is_deleted | BOOLEAN | 是否删除 | 非空, 默认false |
+
 ## 数据库表结构概览
 
 | 序号 | 表名 | 描述 |
@@ -467,16 +674,16 @@
 | 3 | 租户企业信息表(tenant_business_info) | 记录租户的公司注册信息和营业执照 |
 | 4 | 基地信息表(bases) | 记录养殖基地的基本信息 |
 | 5 | 池塘信息表(ponds) | 记录养殖池塘的基本信息 |
-| 6 | 水质监测表(water_quality) | 记录水质监测数据 |
-| 7 | 投喂记录表(feeding_records) | 记录日常投喂情况 |
-| 8 | 生长记录表(growth_records) | 记录养殖品种的生长情况 |
-| 9 | 病害防治表(disease_prevention) | 记录疾病防治情况 |
-| 10 | 药品管理表(medicines) | 记录药品使用和库存 |
-| 11 | 设备管理表(equipment) | 记录养殖设备信息 |
-| 12 | 生产批次表(production_batches) | 记录养殖批次信息 |
-| 13 | 销售记录表(sales_records) | 记录产品销售情况 |
-| 14 | 养殖品种表(species) | 记录养殖的品种信息 |
-| 15 | 饲料管理表(feeds) | 记录饲料使用和库存 |
+| 6 | 养殖品种表(species) | 记录养殖的品种信息 |
+| 7 | 生产批次表(production_batches) | 记录养殖批次信息 |
+| 8 | 水质监测表(water_quality) | 记录水质监测数据 |
+| 9 | 饲料管理表(feeds) | 记录饲料使用和库存 |
+| 10 | 投喂记录表(feeding_records) | 记录日常投喂情况 |
+| 11 | 生长记录表(growth_records) | 记录养殖品种的生长情况 |
+| 12 | 药品管理表(medicines) | 记录药品使用和库存 |
+| 13 | 病害防治表(disease_prevention) | 记录疾病防治情况 |
+| 14 | 设备管理表(equipment) | 记录养殖设备信息 |
+| 15 | 销售记录表(sales_records) | 记录产品销售情况 |
 | 16 | 环境监测表(environment_monitoring) | 记录养殖环境监测数据 |
 | 17 | 疾病信息表(diseases) | 记录疾病的基本信息 |
 | 18 | 角色表(roles) | 定义系统角色 |

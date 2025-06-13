@@ -96,6 +96,9 @@ urlpatterns = [
         # 菜单管理系统路由
         path('menus/', include('menus.urls', namespace='menus')),
         
+        # 图表数据API
+        path('admin/charts/', include('charts.urls', namespace='charts')),
+        
         # API 文档
         path('schema/', LoggingSpectacularAPIView.as_view(), name='schema'),
         path('docs/', LoggingSpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

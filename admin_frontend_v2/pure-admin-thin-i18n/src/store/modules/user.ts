@@ -131,11 +131,11 @@ export const useUserStore = defineStore("pure-user", {
             if (data?.success) {
               // 适配后端返回的数据结构
               const { token, refresh_token, user } = data.data;
-              
+
               // 存储token到localStorage
               localStorage.setItem('access_token', token);
               localStorage.setItem('refresh_token', refresh_token);
-              
+
               const userData = {
                 accessToken: token,
                 refreshToken: refresh_token,
@@ -153,13 +153,13 @@ export const useUserStore = defineStore("pure-user", {
                 tenant: user.tenant,
                 parent: user.parent,
                 avatar: user.avatar || "",
-                roles: [user.is_super_admin ? "super" : (user.is_admin ? "admin" : "member")],
+                roles: [user.is_super_admin ? "super_admin" : (user.is_admin ? "admin" : "member")],
                 permissions: ["*:*:*"] // 假设拥有所有权限，根据实际情况调整
               };
-              
+
               // 存储用户信息
               setToken(userData);
-              
+
               // 存储原始用户信息到localStorage
               localStorage.setItem('user_info', JSON.stringify(user));
             }
@@ -175,15 +175,15 @@ export const useUserStore = defineStore("pure-user", {
       this.username = "";
       this.roles = [];
       this.permissions = [];
-      
+
       // 清除localStorage中的token和用户信息
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user_info');
-      
+
       // 清除cookie中的token
       removeToken();
-      
+
       useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
       resetRouter();
       router.push("/login");
@@ -196,11 +196,11 @@ export const useUserStore = defineStore("pure-user", {
             if (data?.success) {
               // 适配后端返回的数据结构
               const { token, refresh_token } = data.data;
-              
+
               // 更新localStorage中的token
               localStorage.setItem('access_token', token);
               localStorage.setItem('refresh_token', refresh_token);
-              
+
               const userData = {
                 accessToken: token,
                 refreshToken: refresh_token,

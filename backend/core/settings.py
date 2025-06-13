@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'check_system',  # 打卡系统应用
     'cms',  # CMS应用
     'menus',  # 菜单管理应用
+    'charts',  # 图表应用
 ]
 
 MIDDLEWARE = [
