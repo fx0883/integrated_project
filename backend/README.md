@@ -473,3 +473,34 @@ cms/
 - `charts/tests.py`: API测试用例
 - `core/settings.py`: 注册charts应用
 - `core/urls.py`: 添加charts应用URL路由 
+
+## 会话总结：修复图表API数据问题 (2023-06-13)
+
+### 本次会话的主要目标
+修复租户仪表盘的图表API返回空数据数组的问题。尽管数据库中有租户记录，图表API返回的labels和datasets均为空数组。
+
+### 已完成的具体任务
+1. 分析了数据库中的租户数据和时区设置
+2. 创建了测试脚本验证数据库中确实存在租户记录
+3. 定位了问题根源：Django的日期截断函数(TruncDay/TruncMonth等)在某些数据库配置下可能存在问题
+4. 修改了图表API中的日期处理逻辑，使用Python代码手动处理日期分组而不依赖数据库函数
+5. 编写了测试脚本验证修复的有效性
+
+### 采用的技术方案及决策理由
+- 使用Python的`defaultdict`和日期处理函数手动分组汇总数据，规避了Django ORM中日期截断函数的问题
+- 使用`strftime`格式化日期字符串，确保了月份格式的一致性
+- 保持了API的接口不变，仅修改了内部实现，确保前端无需做任何更改
+
+### 使用的主要技术栈
+- Django REST Framework (API框架)
+- Python datetime (日期处理)
+- Django ORM (数据查询)
+- Python collections.defaultdict (数据分组)
+
+### 变更的文件清单
+- charts/views.py - 修改了租户趋势图和租户创建速率图API的实现
+- check_tenants.py - 新增测试脚本，用于分析租户数据
+- test_charts_api.py - 新增测试脚本，用于验证API修复
+
+### 根本问题分析
+图表API返回空数据数组的问题主要是由于Django的日期截断函数(如TruncMonth)在处理数据库日期时的兼容性问题导致。当使用这些函数对数据进行分组时，可能因为数据库时区设置或日期格式的差异，导致查询结果为空。改用Python代码手动处理日期分组解决了这个问题，确保了图表数据正确显示。 

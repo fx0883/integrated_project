@@ -1,91 +1,125 @@
 buttons:
-  pureLoginOut: LoginOut
+  pureLoginOut: Logout
   pureLogin: Login
-  pureOpenSystemSet: Open System Configs
+  pureOpenSystemSet: Open System Settings
   pureReload: Reload
-  pureCloseCurrentTab: Close CurrentTab
-  pureCloseLeftTabs: Close LeftTabs
-  pureCloseRightTabs: Close RightTabs
-  pureCloseOtherTabs: Close OtherTabs
-  pureCloseAllTabs: Close AllTabs
-  pureContentFullScreen: Content FullScreen
-  pureContentExitFullScreen: Content ExitFullScreen
-  pureClickCollapse: Collapse
-  pureClickExpand: Expand
+  pureCloseCurrentTab: Close Current Tab
+  pureCloseLeftTabs: Close Left Tabs
+  pureCloseRightTabs: Close Right Tabs
+  pureCloseOtherTabs: Close Other Tabs
+  pureCloseAllTabs: Close All Tabs
+  pureContentFullScreen: Content Full Screen
+  pureContentExitFullScreen: Content Exit Full Screen
+  pureClickCollapse: Click Collapse
+  pureClickExpand: Click Expand
   pureConfirm: Confirm
   pureSwitch: Switch
   pureClose: Close
-  pureBackTop: BackTop
-  pureOpenText: Open
-  pureCloseText: Close
+  pureBackTop: Back to Top
+  pureOpenText: On
+  pureCloseText: Off
 search:
   pureTotal: Total
-  pureHistory: History
-  pureCollect: Collect
-  pureDragSort: （Drag Sort）
-  pureEmpty: Empty
-  purePlaceholder: Search Menu
+  pureHistory: Search History
+  pureCollect: Favorites
+  pureDragSort: (Drag to sort)
+  pureEmpty: No search results
+  purePlaceholder: Search menu (supports pinyin)
 panel:
-  pureSystemSet: System Configs
-  pureCloseSystemSet: Close System Configs
+  pureSystemSet: System Settings
+  pureCloseSystemSet: Close Settings
   pureClearCacheAndToLogin: Clear cache and return to login page
   pureClearCache: Clear Cache
   pureOverallStyle: Overall Style
   pureOverallStyleLight: Light
-  pureOverallStyleLightTip: Set sail freshly and light up the comfortable work interface
+  pureOverallStyleLightTip: Fresh start, light and comfortable interface
   pureOverallStyleDark: Dark
-  pureOverallStyleDarkTip: Moonlight Overture, indulge in the tranquility and elegance of the night
+  pureOverallStyleDarkTip: Moonlight sonata, immersed in the night's elegant tranquility
   pureOverallStyleSystem: Auto
-  pureOverallStyleSystemTip: Synchronize time, the interface naturally responds to morning and dusk
+  pureOverallStyleSystemTip: Sync with time, interface naturally responds to dawn and dusk
   pureThemeColor: Theme Color
-  pureLayoutModel: Layout Model
-  pureVerticalTip: The menu on the left is familiar and friendly
+  pureLayoutModel: Navigation Mode
+  pureVerticalTip: Left menu, familiar and friendly
   pureHorizontalTip: Top menu, concise overview
-  pureMixTip: Mixed menu, flexible
-  pureStretch: Stretch Page
+  pureMixTip: Mixed menu, flexible and versatile
+  pureStretch: Page Width
   pureStretchFixed: Fixed
-  pureStretchFixedTip: Compact pages make it easy to find the information you need
+  pureStretchFixedTip: Compact page, easily find the information you need
   pureStretchCustom: Custom
-  pureStretchCustomTip: Minimum 1280, maximum 1600
-  pureTagsStyle: Tags Style
+  pureStretchCustomTip: Min 1280, Max 1600
+  pureTagsStyle: Tab Style
   pureTagsStyleSmart: Smart
-  pureTagsStyleSmartTip: Smart tags add fun and brilliance
+  pureTagsStyleSmartTip: Smart tabs, adding fun and brilliance
   pureTagsStyleCard: Card
-  pureTagsStyleCardTip: Card tags for efficient browsing
+  pureTagsStyleCardTip: Card tabs, efficient browsing
   pureTagsStyleChrome: Chrome
-  pureTagsStyleChromeTip: Chrome style is classic and elegant
+  pureTagsStyleChromeTip: Chrome style, classic and beautiful
   pureInterfaceDisplay: Interface Display
-  pureGreyModel: Grey Model
-  pureWeakModel: Weak Model
-  pureHiddenTags: Hidden Tags
-  pureHiddenFooter: Hidden Footer
-  pureMultiTagsCache: MultiTags Cache
+  pureGreyModel: Grey Mode
+  pureWeakModel: Weak Mode
+  pureHiddenTags: Hide Tags
+  pureHiddenFooter: Hide Footer
+  pureMultiTagsCache: Tags Persistence
 menus:
   pureHome: Home
   pureLogin: Login
-  pureAbnormal: Abnormal Page
+  pureAbnormal: Error Page
   pureFourZeroFour: "404"
   pureFourZeroOne: "403"
   pureFive: "500"
-  purePermission: Permission Manage
+  purePermission: Permission
   purePermissionPage: Page Permission
   purePermissionButton: Button Permission
-  purePermissionButtonRouter: Route return button permission
-  purePermissionButtonLogin: Login interface return button permission
+  purePermissionButtonRouter: Router Button Permission
+  purePermissionButtonLogin: Login Button Permission
 status:
   pureLoad: Loading...
   pureMessage: Message
   pureNotify: Notify
   pureTodo: Todo
-  pureNoMessage: No Message
-  pureNoNotify: No Notify
-  pureNoTodo: No Todo
+  pureNoMessage: No messages
+  pureNoNotify: No notifications
+  pureNoTodo: No todos
 login:
   pureUsername: Username
   purePassword: Password
   pureLogin: Login
-  pureLoginSuccess: Login Success
-  pureLoginFail: Login Fail
+  pureLoginSuccess: Login successful
+  pureLoginFail: Login failed
   pureUsernameReg: Please enter username
   purePassWordReg: Please enter password
-  purePassWordRuleReg: The password format should be any combination of 8-18 digits
+  purePassWordRuleReg: Password should be 8-18 characters with at least 2 types of digits, letters or symbols
+dashboard:
+  title: Management Console
+  tenantChartsTitle: Tenant Statistics
+  tenantTrend: Tenant Count Trend
+  tenantStatus: Tenant Status Distribution
+  tenantCreationRate: Tenant Creation Rate
+  tenantCount: Tenant Count
+  newTenants: New Tenants
+  tenantTotal: Total Tenants
+  growthRate: Growth Rate
+  avgGrowth: Average Growth
+  loading: Loading...
+  noData: No Data
+  fetchDataFailed: Failed to fetch data
+  today: Today
+  thisWeek: This Week
+  thisMonth: This Month
+  last30Days: Last 30 Days
+  last3Months: Last 3 Months
+  thisYear: This Year
+  to: to
+  startDate: Start Date
+  endDate: End Date
+  daily: Daily
+  weekly: Weekly
+  monthly: Monthly
+  quarterly: Quarterly
+  yearly: Yearly
+  day: Day
+  week: Week
+  month: Month
+  quarter: Quarter
+  year: Year
+  average: Average

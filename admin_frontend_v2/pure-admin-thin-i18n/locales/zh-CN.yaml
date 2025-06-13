@@ -89,3 +89,37 @@ login:
   pureUsernameReg: 请输入账号
   purePassWordReg: 请输入密码
   purePassWordRuleReg: 密码格式应为8-18位数字、字母、符号的任意两种组合
+dashboard:
+  title: 管理控制台
+  tenantChartsTitle: 租户统计
+  tenantTrend: 租户数量趋势
+  tenantStatus: 租户状态分布
+  tenantCreationRate: 租户创建速率
+  tenantCount: 租户数量
+  newTenants: 新增租户
+  tenantTotal: 租户总数
+  growthRate: 增长率
+  avgGrowth: 平均增长
+  loading: 加载中...
+  noData: 暂无数据
+  fetchDataFailed: 数据加载失败
+  today: 今天
+  thisWeek: 本周
+  thisMonth: 本月
+  last30Days: 近30天
+  last3Months: 近3个月
+  thisYear: 本年度
+  to: 至
+  startDate: 开始日期
+  endDate: 结束日期
+  daily: 日
+  weekly: 周
+  monthly: 月
+  quarterly: 季
+  yearly: 年
+  day: 天
+  week: 周
+  month: 月
+  quarter: 季度
+  year: 年
+  average: 平均值

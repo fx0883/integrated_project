@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django.db.models import Count, Q
 from django.core.cache import cache
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 from tenants.models import Tenant
 from .permissions import IsSuperAdminOnly
@@ -117,39 +118,44 @@ class TenantTrendChartView(BaseChartView):
         
         # 查询数据
         try:
-            # 获取时间截断函数
-            trunc_func = get_date_trunc_func(period)
+            # 转换日期为datetime对象并添加时区信息
+            start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+            end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
             
-            # 按时间段查询租户创建数量
-            tenant_counts = (
+            # 使用Python手动按时间段统计，而不是依赖数据库函数
+            all_tenants = (
                 Tenant.objects
-                .filter(created_at__date__range=(start_date, end_date))
-                .annotate(period=trunc_func('created_at'))
-                .values('period')
-                .annotate(count=Count('id'))
-                .order_by('period')
+                .filter(created_at__range=(start_datetime, end_datetime))
+                .order_by('created_at')
             )
             
-            logger.debug(f"查询到 {tenant_counts.count()} 条租户趋势数据")
+            logger.debug(f"查询到 {all_tenants.count()} 条租户数据")
             
-            # 处理数据，计算累计值
-            dates = []
+            # 手动按周期分组
+            period_counts = defaultdict(int)
+            for tenant in all_tenants:
+                if period == 'daily':
+                    period_key = tenant.created_at.strftime('%Y-%m-%d')
+                elif period == 'weekly':
+                    # 使用ISO周格式，例如：2025-W16
+                    period_key = f"{tenant.created_at.isocalendar()[0]}-W{tenant.created_at.isocalendar()[1]:02d}"
+                elif period == 'monthly':
+                    period_key = tenant.created_at.strftime('%Y-%m')
+                elif period == 'quarterly':
+                    quarter = (tenant.created_at.month - 1) // 3 + 1
+                    period_key = f"{tenant.created_at.year}-Q{quarter}"
+                else:  # yearly
+                    period_key = str(tenant.created_at.year)
+                
+                period_counts[period_key] += 1
+            
+            # 按时间排序并计算累计值
+            dates = sorted(period_counts.keys())
             counts = []
             cumulative = 0
             
-            for item in tenant_counts:
-                period_date = item['period'].date() if hasattr(item['period'], 'date') else item['period']
-                period_str = period_date.strftime('%Y-%m-%d') if period == 'daily' else (
-                    period_date.strftime('%Y-%m-%d') if period == 'weekly' else (
-                        period_date.strftime('%Y-%m') if period == 'monthly' else (
-                            f"{period_date.year}-Q{(period_date.month-1)//3+1}" if period == 'quarterly' else 
-                            str(period_date.year)
-                        )
-                    )
-                )
-                
-                cumulative += item['count']
-                dates.append(period_str)
+            for date in dates:
+                cumulative += period_counts[date]
                 counts.append(cumulative)
             
             # 计算汇总数据
@@ -179,6 +185,11 @@ class TenantTrendChartView(BaseChartView):
                     "average_period_growth": round(avg_growth, 1)
                 }
             )
+            
+            # 如果没有数据，返回空图表
+            if not dates:
+                logger.debug(f"租户趋势图无数据: period={period}, start_date={start_date}, end_date={end_date}")
+                result = empty_chart_response("租户数量趋势", "该时间段内无租户数据", "line")
             
             # 缓存数据
             self.set_cached_data(cache_key, result)
@@ -356,31 +367,33 @@ class TenantCreationRateView(BaseChartView):
             return self.format_response(cached_data)
         
         try:
-            # 获取时间截断函数
-            trunc_func = get_date_trunc_func(period)
+            # 转换日期为datetime对象并添加时区信息
+            start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+            end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
             
-            # 按时间段查询租户创建数量
-            creation_counts = (
+            # 使用Python手动按时间段统计，而不是依赖数据库函数
+            all_tenants = (
                 Tenant.objects
-                .filter(created_at__date__range=(start_date, end_date))
-                .annotate(period=trunc_func('created_at'))
-                .values('period')
-                .annotate(count=Count('id'))
-                .order_by('period')
+                .filter(created_at__range=(start_datetime, end_datetime))
+                .order_by('created_at')
             )
             
-            logger.debug(f"查询到 {creation_counts.count()} 条租户创建速率数据")
+            logger.debug(f"查询到 {all_tenants.count()} 条租户数据")
             
-            # 处理数据
-            periods = []
-            counts = []
-            
-            for item in creation_counts:
-                period_date = item['period'].date() if hasattr(item['period'], 'date') else item['period']
-                period_str = period_date.strftime('%Y-%m-%d') if period == 'weekly' else period_date.strftime('%Y-%m')
+            # 手动按周期分组
+            period_counts = defaultdict(int)
+            for tenant in all_tenants:
+                if period == 'weekly':
+                    # 使用ISO周格式，例如：2025-W16
+                    period_key = f"{tenant.created_at.isocalendar()[0]}-W{tenant.created_at.isocalendar()[1]:02d}"
+                else:  # monthly
+                    period_key = tenant.created_at.strftime('%Y-%m')
                 
-                periods.append(period_str)
-                counts.append(item['count'])
+                period_counts[period_key] += 1
+            
+            # 按时间排序
+            periods = sorted(period_counts.keys())
+            counts = [period_counts[period_key] for period_key in periods]
             
             # 没有数据时返回空图表
             if not counts:
