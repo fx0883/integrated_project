@@ -8,9 +8,18 @@ import { useEcharts } from "@/plugins/echarts";
 import { createApp, type Directive } from "vue";
 import { useElementPlus } from "@/plugins/elementPlus";
 import { injectResponsiveStorage } from "@/utils/responsive";
+import logger from "@/utils/logger"; // 导入日志工具
 
 import Table from "@pureadmin/table";
 // import PureDescriptions from "@pureadmin/descriptions";
+
+// 初始化日志配置
+logger.configure({
+  enabled: true, 
+  level: logger.LogLevel.DEBUG,
+  apiLogging: true,
+  apiLogFullResponse: false
+});
 
 // 引入重置样式
 import "./style/reset.scss";

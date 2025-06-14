@@ -5,6 +5,10 @@ import { Loading } from "@element-plus/icons-vue";
 import type { EChartsOption } from "echarts/types/dist/shared";
 import type { TenantChartData, ChartPeriod } from "@/types/tenant";
 import { useChart } from "@/hooks/useChart";
+import logger from "@/utils/logger";
+
+// 生成组件唯一ID
+const componentId = `trend_chart_${Math.random().toString(36).slice(2, 9)}`;
 
 // 定义props
 const props = defineProps({
@@ -32,6 +36,11 @@ const { t } = useI18n();
 // 图表DOM引用
 const chartRef = ref<HTMLDivElement | null>(null);
 
+logger.debug(`【租户趋势图】组件创建 ID:${componentId}`, {
+  period: props.period,
+  hasData: !!props.data && !!props.data.labels && props.data.labels.length > 0
+});
+
 // 图表配置
 const chartOptions = computed<EChartsOption>(() => {
   if (
@@ -40,10 +49,17 @@ const chartOptions = computed<EChartsOption>(() => {
     !props.data.datasets ||
     props.data.datasets.length === 0
   ) {
+    logger.debug(`【租户趋势图】生成图表配置：数据为空 ID:${componentId}`);
     return {};
   }
 
   const dataset = props.data.datasets[0];
+
+  logger.debug(`【租户趋势图】生成图表配置 ID:${componentId}`, {
+    labelCount: props.data.labels.length,
+    dataCount: dataset.data.length,
+    period: props.period
+  });
 
   return {
     tooltip: {
@@ -126,8 +142,17 @@ const {
 watch(
   () => props.data,
   newData => {
+    logger.debug(`【租户趋势图】数据变更 ID:${componentId}`, {
+      hasData: !!newData && !!newData.labels && newData.labels.length > 0,
+      labelCount: newData?.labels?.length || 0,
+      dataCount: newData?.datasets?.[0]?.data?.length || 0
+    });
+
+    console.log(`【租户趋势图】数据变更:`, JSON.parse(JSON.stringify(newData)));
+
     if (newData && newData.labels && newData.datasets) {
-      options.value = chartOptions.value;
+      // 使用深拷贝确保数据不会因引用问题而丢失
+      options.value = JSON.parse(JSON.stringify(chartOptions.value));
     }
   },
   { deep: true }
@@ -137,9 +162,17 @@ watch(
 watch(
   () => props.loading,
   newLoading => {
+    logger.debug(`【租户趋势图】加载状态变更 ID:${componentId}`, {
+      loading: newLoading
+    });
     setLoading(newLoading);
   }
 );
+
+// 组件挂载
+onMounted(() => {
+  logger.debug(`【租户趋势图】组件挂载完成 ID:${componentId}`);
+});
 </script>
 
 <template>
@@ -175,11 +208,14 @@ watch(
   width: 100%;
   height: 100%;
   position: relative;
+  min-height: 250px;
+  flex: 1;
 }
 
 .chart {
   width: 100%;
   height: 100%;
+  min-height: 250px;
 }
 
 .chart-loading,

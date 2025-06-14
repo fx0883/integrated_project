@@ -14,6 +14,7 @@ import NProgress from "../progress";
 import { getToken, formatToken } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 import { message } from "@/utils/message";
+import logger from "@/utils/logger"; // 导入日志工具
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
@@ -31,6 +32,14 @@ const defaultConfig: AxiosRequestConfig = {
     serialize: stringify as unknown as CustomParamsSerializer
   }
 };
+
+// 初始化日志配置
+logger.configure({
+  enabled: true,
+  level: logger.LogLevel.DEBUG,
+  apiLogging: true,
+  apiLogFullResponse: true
+});
 
 class PureHttp {
   constructor() {
@@ -90,6 +99,8 @@ class PureHttp {
         /** 请求白名单，放置一些不需要`token`的接口 */
         const whiteList = ["/auth/login/"];
         if (whiteList.some(url => config.url.endsWith(url))) {
+          // 记录请求日志
+          logger.logRequest(config);
           return config;
         }
         
@@ -99,9 +110,14 @@ class PureHttp {
           config.headers["Authorization"] = `Bearer ${token}`;
         }
         
+        // 记录请求日志
+        logger.logRequest(config);
+        
         return config;
       },
       error => {
+        // 记录错误日志
+        logger.error('请求拦截器错误', error);
         return Promise.reject(error);
       }
     );
@@ -118,10 +134,14 @@ class PureHttp {
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
           $config.beforeResponseCallback(response);
+          // 记录响应日志
+          logger.logResponse(response);
           return response.data;
         }
         if (PureHttp.initConfig.beforeResponseCallback) {
           PureHttp.initConfig.beforeResponseCallback(response);
+          // 记录响应日志
+          logger.logResponse(response);
           return response.data;
         }
         
@@ -130,6 +150,8 @@ class PureHttp {
         
         // 已经符合标准格式的响应直接返回
         if (res.success !== undefined && res.code !== undefined && res.message !== undefined) {
+          // 记录响应日志
+          logger.logResponse(response);
           return res;
         }
         
@@ -140,6 +162,9 @@ class PureHttp {
           message: '操作成功',
           data: res
         };
+        
+        // 记录响应日志
+        logger.logResponse({...response, data: standardResponse});
         
         return standardResponse;
       },
@@ -183,6 +208,9 @@ class PureHttp {
                   errorResponse.message = '认证失败，请重新登录';
                 }
               } catch (refreshError) {
+                // 记录Token刷新错误
+                logger.error('Token刷新错误', refreshError);
+                
                 // 刷新Token出错，跳转到登录页
                 this.logout();
                 errorResponse.code = 4001;
@@ -256,6 +284,12 @@ class PureHttp {
           errorResponse.message = '网络连接失败，请检查您的网络';
         }
         
+        // 记录错误日志
+        logger.logError({
+          ...error,
+          errorResponse
+        });
+        
         // 显示错误消息
         message(errorResponse.message, { type: 'error' });
         
@@ -270,10 +304,13 @@ class PureHttp {
       // 获取刷新Token
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
+        logger.warn('刷新Token失败：refreshToken不存在');
         return false;
       }
       
       // 调用刷新Token接口
+      logger.info('尝试刷新Token', { refreshToken: '******' });
+      
       const response = await Axios.post(
         `${defaultConfig.baseURL}/auth/refresh/`,
         { refresh_token: refreshToken },
@@ -297,13 +334,16 @@ class PureHttp {
           if (newRefreshToken) {
             localStorage.setItem('refresh_token', newRefreshToken);
           }
+          
+          logger.info('Token刷新成功');
           return true;
         }
       }
       
+      logger.warn('刷新Token失败：响应格式错误', response.data);
       return false;
     } catch (error) {
-      console.error('刷新Token失败:', error);
+      logger.error('刷新Token失败', error);
       return false;
     }
   }
@@ -319,16 +359,25 @@ class PureHttp {
         config.headers['Authorization'] = `Bearer ${token}`;
       }
       
+      logger.info('重试请求', { url: config.url, method: config.method });
+      
       // 重新发起请求
       const response = await Axios(config);
+      
+      // 记录响应
+      logger.logResponse(response);
+      
       return response.data;
     } catch (error) {
+      logger.error('重试请求失败', error);
       return Promise.reject(error);
     }
   }
 
   /** 登出方法 */
   private logout(): void {
+    logger.info('用户登出，清除凭证');
+    
     // 清除localStorage中的token和用户信息
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');

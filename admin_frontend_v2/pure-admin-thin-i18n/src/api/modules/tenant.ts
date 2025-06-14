@@ -6,6 +6,32 @@ import type {
   TenantCreationData, 
   ChartPeriod 
 } from "@/types/tenant";
+import logger from "@/utils/logger"; // 导入日志工具
+
+/**
+ * 格式化图表数据，确保格式一致性
+ */
+export function formatChartData(data: any): TenantChartData {
+  // 检查数据是否存在
+  if (!data) {
+    console.log("图表数据为空，返回空数据结构");
+    return { hasData: false, labels: [], datasets: [] };
+  }
+  
+  // 处理可能嵌套的数据结构
+  const chartData = data.data || data;
+  
+  const formattedData = {
+    hasData: !!(chartData.labels && chartData.datasets && chartData.labels.length > 0),
+    labels: chartData.labels || [],
+    datasets: chartData.datasets || [],
+    summary: chartData.summary || {}
+  };
+  
+  console.log("图表数据格式化结果:", JSON.parse(JSON.stringify(formattedData)));
+  
+  return formattedData;
+}
 
 /**
  * 获取租户数量趋势数据
@@ -13,7 +39,7 @@ import type {
  * @param startDate 开始日期(YYYY-MM-DD)
  * @param endDate 结束日期(YYYY-MM-DD)
  */
-export function fetchTenantTrendData(
+export async function fetchTenantTrendData(
   period: ChartPeriod = 'monthly', 
   startDate?: string, 
   endDate?: string
@@ -22,17 +48,104 @@ export function fetchTenantTrendData(
   if (startDate) url += `&start_date=${startDate}`;
   if (endDate) url += `&end_date=${endDate}`;
   
-  return http.request<ApiResponse<TenantChartData>>("get", url);
+  logger.debug("请求租户数量趋势数据", { period, startDate, endDate });
+  // 直接打印到控制台，确保可见
+  console.log("API请求：租户数量趋势数据", { period, startDate, endDate, url });
+  
+  try {
+    const response = await http.request<ApiResponse<any>>("get", url);
+    // 打印完整的API响应结构，便于调试
+    console.log("API租户趋势数据完整响应:", JSON.stringify(response));
+    
+    // 确保响应正确并且没有被缓存
+    if (response.success) {
+      // 处理嵌套数据结构
+      if (response.data && response.data.data) {
+        console.log("检测到嵌套数据结构，正在提取内层数据");
+        // 深拷贝数据，避免引用问题
+        const extractedData = JSON.parse(JSON.stringify(response.data.data));
+        response.data = extractedData;
+      }
+      
+      logger.debug("租户数量趋势数据响应", { 
+        labels: response.data?.labels,
+        dataPoints: response.data?.datasets?.[0]?.data,
+        period
+      });
+      
+            // 直接打印到控制台，确保可见
+      console.log("API响应（已处理）：租户数量趋势数据成功", { 
+        success: response.success,
+        code: response.code,
+        labels: response.data?.labels?.length,
+        data: response.data
+      });
+      
+      return response;
+    } else {
+      logger.warn("租户趋势数据请求失败", { 
+        code: response.code, 
+        message: response.message 
+      });
+      throw new Error(response.message || "获取数据失败");
+    }
+  } catch (error) {
+    logger.error("获取租户数量趋势数据失败", error);
+    // 直接打印到控制台，确保可见
+    console.error("API错误：租户数量趋势数据请求失败", error);
+    throw error;
+  }
 }
 
 /**
  * 获取租户状态分布数据
  */
-export function fetchTenantStatusDistribution() {
-  return http.request<ApiResponse<TenantStatusData>>(
-    "get", 
-    "/admin/charts/tenant-status-distribution/"
-  );
+export async function fetchTenantStatusDistribution() {
+  logger.debug("请求租户状态分布数据");
+  
+  try {
+    const response = await http.request<ApiResponse<any>>(
+      "get", 
+      "/admin/charts/tenant-status-distribution/"
+    );
+    
+    // 打印完整的API响应结构，便于调试
+    console.log("API租户状态分布完整响应:", JSON.stringify(response));
+    
+    if (response.success) {
+      // 处理嵌套数据结构
+      if (response.data && response.data.data) {
+        console.log("检测到嵌套数据结构，正在提取内层数据");
+        // 深拷贝数据，避免引用问题
+        const extractedData = JSON.parse(JSON.stringify(response.data.data));
+        response.data = extractedData;
+      }
+      
+      logger.debug("租户状态分布数据响应", { 
+        labels: response.data?.labels,
+        data: response.data?.datasets?.[0]?.data
+      });
+      
+            // 直接打印到控制台，确保可见
+      console.log("API响应（已处理）：租户状态分布数据成功", {
+        success: response.success,
+        code: response.code,
+        labels: response.data?.labels?.length,
+        data: response.data
+      });
+      
+      return response;
+    } else {
+      logger.warn("租户状态分布数据请求失败", { 
+        code: response.code, 
+        message: response.message 
+      });
+      throw new Error(response.message || "获取数据失败");
+    }
+  } catch (error) {
+    logger.error("获取租户状态分布数据失败", error);
+    throw error;
+  }
 }
 
 /**
@@ -41,7 +154,7 @@ export function fetchTenantStatusDistribution() {
  * @param startDate 开始日期(YYYY-MM-DD)
  * @param endDate 结束日期(YYYY-MM-DD)
  */
-export function fetchTenantCreationRate(
+export async function fetchTenantCreationRate(
   period: ChartPeriod = 'monthly', 
   startDate?: string, 
   endDate?: string
@@ -50,7 +163,49 @@ export function fetchTenantCreationRate(
   if (startDate) url += `&start_date=${startDate}`;
   if (endDate) url += `&end_date=${endDate}`;
   
-  return http.request<ApiResponse<TenantCreationData>>("get", url);
+  logger.debug("请求租户创建速率数据", { period, startDate, endDate });
+  
+  try {
+    const response = await http.request<ApiResponse<any>>("get", url);
+    
+    // 打印完整的API响应结构，便于调试
+    console.log("API租户创建速率完整响应:", JSON.stringify(response));
+    
+    if (response.success) {
+      // 处理嵌套数据结构
+      if (response.data && response.data.data) {
+        console.log("检测到嵌套数据结构，正在提取内层数据");
+        // 深拷贝数据，避免引用问题
+        const extractedData = JSON.parse(JSON.stringify(response.data.data));
+        response.data = extractedData;
+      }
+      
+      logger.debug("租户创建速率数据响应", { 
+        labels: response.data?.labels,
+        dataPoints: response.data?.datasets?.[0]?.data,
+        period
+      });
+      
+            // 直接打印到控制台，确保可见
+      console.log("API响应（已处理）：租户创建速率数据成功", {
+        success: response.success,
+        code: response.code,
+        labels: response.data?.labels?.length,
+        data: response.data
+      });
+      
+      return response;
+    } else {
+      logger.warn("租户创建速率数据请求失败", { 
+        code: response.code, 
+        message: response.message 
+      });
+      throw new Error(response.message || "获取数据失败");
+    }
+  } catch (error) {
+    logger.error("获取租户创建速率数据失败", error);
+    throw error;
+  }
 }
 
 /**
@@ -59,7 +214,17 @@ export function fetchTenantCreationRate(
  * @param trendData 租户趋势数据
  */
 export function calculateTenantSummary(trendData: TenantChartData) {
+  logger.debug("计算租户汇总数据", { trendData });
+  // 直接打印到控制台，确保可见
+  console.log("计算租户汇总数据", { 
+    hasData: !!trendData && !!trendData.datasets && !!trendData.datasets[0],
+    labels: trendData?.labels,
+    datasets: trendData?.datasets
+  });
+  
   if (!trendData || !trendData.datasets || !trendData.datasets[0] || !trendData.datasets[0].data.length) {
+    logger.warn("租户趋势数据为空或格式不正确");
+    console.warn("警告：租户趋势数据为空或格式不正确", trendData);
     return {
       total: 0,
       growthRate: 0,
@@ -85,9 +250,15 @@ export function calculateTenantSummary(trendData: TenantChartData) {
     avgGrowth = Number((growth / (data.length - 1)).toFixed(2));
   }
   
-  return {
+  const result = {
     total,
     growthRate,
     avgGrowth
   };
+  
+  logger.debug("租户汇总数据计算结果", result);
+  // 直接打印到控制台，确保可见
+  console.log("租户汇总数据计算结果", result);
+  
+  return result;
 } 

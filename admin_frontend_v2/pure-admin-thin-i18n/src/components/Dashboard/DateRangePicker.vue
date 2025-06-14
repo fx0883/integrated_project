@@ -30,6 +30,7 @@ watch(
   ([newStartDate, newEndDate]) => {
     if (newStartDate && newEndDate) {
       dateRange.value = [newStartDate, newEndDate];
+      console.log("日期范围已初始化", dateRange.value);
     }
   },
   { immediate: true }
@@ -39,62 +40,43 @@ watch(
  * 日期变更处理
  */
 const handleDateChange = (val: string[]) => {
+  console.log("日期选择变更", val);
   if (val && val.length === 2) {
+    console.log("发送日期范围更新", { startDate: val[0], endDate: val[1] });
     emit("update:range", { startDate: val[0], endDate: val[1] });
   } else {
+    console.log("清除日期范围");
     emit("update:range", { startDate: "", endDate: "" });
   }
 };
 
 /**
  * 获取快捷选项
+ * 注意: 系统中仅存在2025年4月和5月的数据
  */
 const getShortcuts = () => [
   {
-    text: t("dashboard.today"),
+    text: "数据时间范围(全部)",
     value: () => {
-      const today = dayjs().format("YYYY-MM-DD");
-      return [today, today];
+      return ["2025-03-13", "2025-06-13"];
     }
   },
   {
-    text: t("dashboard.thisWeek"),
+    text: "2025年5月",
     value: () => {
-      const end = dayjs().format("YYYY-MM-DD");
-      const start = dayjs().subtract(6, "day").format("YYYY-MM-DD");
-      return [start, end];
+      return ["2025-05-01", "2025-05-31"];
     }
   },
   {
-    text: t("dashboard.thisMonth"),
+    text: "2025年4月",
     value: () => {
-      const end = dayjs().format("YYYY-MM-DD");
-      const start = dayjs().startOf("month").format("YYYY-MM-DD");
-      return [start, end];
+      return ["2025-04-01", "2025-04-30"];
     }
   },
   {
-    text: t("dashboard.last30Days"),
+    text: "2025年4-5月",
     value: () => {
-      const end = dayjs().format("YYYY-MM-DD");
-      const start = dayjs().subtract(29, "day").format("YYYY-MM-DD");
-      return [start, end];
-    }
-  },
-  {
-    text: t("dashboard.last3Months"),
-    value: () => {
-      const end = dayjs().format("YYYY-MM-DD");
-      const start = dayjs().subtract(3, "month").format("YYYY-MM-DD");
-      return [start, end];
-    }
-  },
-  {
-    text: t("dashboard.thisYear"),
-    value: () => {
-      const end = dayjs().format("YYYY-MM-DD");
-      const start = dayjs().startOf("year").format("YYYY-MM-DD");
-      return [start, end];
+      return ["2025-04-01", "2025-05-31"];
     }
   }
 ];
@@ -102,6 +84,7 @@ const getShortcuts = () => [
 
 <template>
   <div class="date-range-picker">
+    <div class="date-range-tip">系统中仅有2025年4月-5月数据</div>
     <el-date-picker
       v-model="dateRange"
       type="daterange"
@@ -119,5 +102,15 @@ const getShortcuts = () => [
 <style scoped>
 .date-range-picker {
   display: inline-block;
+}
+
+.date-range-tip {
+  font-size: 12px;
+  color: #f56c6c;
+  margin-bottom: 5px;
+  background-color: #fef0f0;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid #fcdee2;
 }
 </style>
