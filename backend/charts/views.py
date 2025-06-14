@@ -13,11 +13,14 @@ from collections import defaultdict
 from tenants.models import Tenant
 from .permissions import IsSuperAdminOnly
 from .utils import (
-    get_date_trunc_func, get_cache_key, format_chart_response, empty_chart_response
+    get_date_trunc_func, get_cache_key, format_chart_response, empty_chart_response,
+    get_user_growth_trend, get_user_role_distribution, get_active_users, get_login_heatmap
 )
 from .schema import (
     tenant_trend_responses, tenant_status_distribution_responses, 
-    tenant_creation_rate_responses
+    tenant_creation_rate_responses, user_growth_trend_responses,
+    user_role_distribution_responses, active_users_responses,
+    login_heatmap_responses, period_param, date_params
 )
 
 import logging
@@ -40,7 +43,7 @@ class BaseChartView(APIView):
     def format_response(self, data):
         """格式化API响应"""
         return Response({
-            "code": 200,
+            "code": 2000,
             "message": "success",
             "data": data
         })
@@ -450,3 +453,163 @@ class TenantCreationRateView(BaseChartView):
                 "message": f"获取租户创建速率数据失败: {str(e)}",
                 "data": None
             }, status=500)
+
+
+class UserGrowthTrendView(BaseChartView):
+    """用户总量与增长趋势图API"""
+    
+    @extend_schema(
+        summary="获取用户总量与增长趋势图数据",
+        description="显示系统内所有用户数量的时间序列图，可按日/周/月/季度/年统计。仅超级管理员可访问。",
+        parameters=[period_param] + date_params,
+        responses=user_growth_trend_responses,
+        tags=["用户统计图表"]
+    )
+    def get(self, request):
+        # 获取请求参数
+        period = request.query_params.get('period', 'monthly')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        
+        # 设置默认日期范围
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=365)  # 默认最近一年
+        
+        # 解析日期参数
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # 记录查询参数
+        logger.info(f"用户增长趋势图查询参数: period={period}, start_date={start_date}, end_date={end_date}")
+        
+        # 获取数据
+        data = get_user_growth_trend(start_date, end_date, period)
+        
+        return self.format_response(data)
+
+
+class UserRoleDistributionView(BaseChartView):
+    """用户角色分布图API"""
+    
+    @extend_schema(
+        summary="获取用户角色分布数据",
+        description="显示超级管理员、租户管理员、普通用户的比例。仅超级管理员可访问。",
+        responses=user_role_distribution_responses,
+        tags=["用户统计图表"]
+    )
+    def get(self, request):
+        # 记录查询
+        logger.info("请求用户角色分布数据")
+        
+        # 获取数据
+        data = get_user_role_distribution()
+        
+        return self.format_response(data)
+
+
+class ActiveUsersView(BaseChartView):
+    """活跃用户统计API"""
+    
+    @extend_schema(
+        summary="获取活跃用户统计数据",
+        description="按日/周/月统计的活跃用户数量。仅超级管理员可访问。",
+        parameters=[
+            OpenApiParameter(
+                name='period',
+                description='统计周期',
+                required=False,
+                type=str,
+                enum=['daily', 'weekly', 'monthly'],
+                default='daily'
+            )
+        ] + date_params,
+        responses=active_users_responses,
+        tags=["用户统计图表"]
+    )
+    def get(self, request):
+        # 获取请求参数
+        period = request.query_params.get('period', 'daily')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        
+        # 设置默认日期范围
+        end_date = timezone.now().date()
+        
+        # 根据周期设置默认开始日期
+        if period == 'daily':
+            start_date = end_date - timedelta(days=30)  # 最近30天
+        elif period == 'weekly':
+            start_date = end_date - timedelta(days=90)  # 最近13周
+        else:  # monthly
+            start_date = end_date - timedelta(days=365)  # 最近12个月
+        
+        # 解析日期参数
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # 记录查询参数
+        logger.info(f"活跃用户统计图查询参数: period={period}, start_date={start_date}, end_date={end_date}")
+        
+        # 获取数据
+        data = get_active_users(start_date, end_date, period)
+        
+        return self.format_response(data)
+
+
+class LoginHeatmapView(BaseChartView):
+    """用户登录热力图API"""
+    
+    @extend_schema(
+        summary="获取用户登录热力图数据",
+        description="显示不同时间段的登录活跃度。仅超级管理员可访问。",
+        parameters=date_params,
+        responses=login_heatmap_responses,
+        tags=["用户统计图表"]
+    )
+    def get(self, request):
+        # 获取请求参数
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        
+        # 设置默认日期范围
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=30)  # 最近30天
+        
+        # 解析日期参数
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # 记录查询参数
+        logger.info(f"用户登录热力图查询参数: start_date={start_date}, end_date={end_date}")
+        
+        # 获取数据
+        data = get_login_heatmap(start_date, end_date)
+        
+        return self.format_response(data)
