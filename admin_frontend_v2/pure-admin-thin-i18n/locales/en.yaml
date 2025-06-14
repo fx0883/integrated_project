@@ -92,17 +92,36 @@ login:
 dashboard:
   title: Management Console
   tenantChartsTitle: Tenant Statistics
+  userChartsTitle: User Statistics
   tenantTrend: Tenant Count Trend
   tenantStatus: Tenant Status Distribution
   tenantCreationRate: Tenant Creation Rate
   tenantCount: Tenant Count
   newTenants: New Tenants
   tenantTotal: Total Tenants
+  userGrowthTrend: User Growth Trend
+  userRoleDistribution: User Role Distribution
+  activeUsers: Active Users
+  loginHeatmap: Login Heatmap
+  userCount: User Count
+  newUsers: New Users
+  userTotal: Total Users
+  activeRate: Active Rate
+  superAdmin: Super Admin
+  tenantAdmin: Tenant Admin
+  regularUser: Regular User
+  activeUserCount: Active Users
+  peakHour: Peak Hour
+  lowestHour: Lowest Hour
+  totalLogins: Total Logins
   growthRate: Growth Rate
   avgGrowth: Average Growth
   loading: Loading...
   noData: No Data
   fetchDataFailed: Failed to fetch data
+  updatingCharts: Updating Charts...
+  fetchAllDataFailed: Failed to fetch all data
+  maxRetryExceeded: Maximum retry attempts exceeded, please check network or API status
   today: Today
   thisWeek: This Week
   thisMonth: This Month

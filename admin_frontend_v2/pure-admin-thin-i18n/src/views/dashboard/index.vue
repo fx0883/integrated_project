@@ -1,8 +1,11 @@
 <script lang="ts" setup>
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import TenantCharts from "@/components/Dashboard/TenantCharts.vue";
+import UserCharts from "@/components/Dashboard/UserCharts.vue";
 
 const { t } = useI18n();
+const activeTab = ref("tenant"); // 默认选中租户统计tab
 </script>
 
 <template>
@@ -14,13 +17,19 @@ const { t } = useI18n();
         </div>
       </template>
 
-      <!-- 租户图表 -->
-      <div class="dashboard-section">
-        <h3 class="section-title">{{ t("dashboard.tenantChartsTitle") }}</h3>
-        <TenantCharts />
-      </div>
-
-      <!-- 这里可以添加更多的Dashboard组件 -->
+      <!-- Tab页切换 -->
+      <el-tabs v-model="activeTab" class="dashboard-tabs">
+        <el-tab-pane name="tenant" :label="t('dashboard.tenantChartsTitle')">
+          <div class="dashboard-section">
+            <TenantCharts />
+          </div>
+        </el-tab-pane>
+        <el-tab-pane name="user" :label="t('dashboard.userChartsTitle')">
+          <div class="dashboard-section" v-if="activeTab === 'user'">
+            <UserCharts />
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
@@ -50,11 +59,24 @@ const { t } = useI18n();
   margin-bottom: 30px;
 }
 
+.dashboard-tabs {
+  width: 100%;
+}
+
 .section-title {
   font-size: 18px;
   font-weight: 500;
   margin-bottom: 20px;
   padding-left: 10px;
   border-left: 4px solid #409eff;
+}
+
+.placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #909399;
+  font-size: 14px;
 }
 </style>
