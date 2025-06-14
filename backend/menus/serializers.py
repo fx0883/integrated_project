@@ -20,8 +20,12 @@ class MenuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu
         fields = [
-            'id', 'name', 'code', 'icon', 'path', 'component',
-            'order', 'parent_id', 'is_active', 'created_at', 'updated_at'
+            'id', 'name', 'code', 'path', 'component', 'redirect',
+            'title', 'icon', 'extra_icon', 'rank', 'show_link', 'show_parent',
+            'roles', 'auths', 'keep_alive', 'frame_src', 'frame_loading',
+            'hidden_tag', 'dynamic_level', 'active_path',
+            'transition_name', 'enter_transition', 'leave_transition',
+            'parent_id', 'is_active', 'remarks', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -95,6 +99,7 @@ class UserMenuDetailSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     menu_id = serializers.IntegerField(source='menu.id', read_only=True)
+    menu_title = serializers.CharField(source='menu.title', read_only=True)
     menu_name = serializers.CharField(source='menu.name', read_only=True)
     menu_code = serializers.CharField(source='menu.code', read_only=True)
     
@@ -102,7 +107,7 @@ class UserMenuDetailSerializer(serializers.ModelSerializer):
         model = UserMenu
         fields = [
             'id', 'user_id', 'username', 'menu_id', 
-            'menu_name', 'menu_code', 'is_active', 
+            'menu_title', 'menu_name', 'menu_code', 'is_active', 
             'created_at', 'updated_at'
         ]
 
@@ -124,7 +129,7 @@ class UserMenuSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Menu
-        fields = ['id', 'name', 'code', 'icon', 'path', 'component', 'order']
+        fields = ['id', 'name', 'code', 'title', 'icon', 'path', 'component', 'rank']
 
 
 # 定义一个递归字段，用于处理嵌套路由
@@ -134,22 +139,39 @@ class RecursiveField(serializers.Serializer):
         return serializer.data
 
 
+# 路由转场动画序列化器
+class RouteTransitionSerializer(serializers.Serializer):
+    """路由转场动画序列化器"""
+    name = serializers.CharField(help_text="页面动画名称", required=False, allow_null=True)
+    enterTransition = serializers.CharField(help_text="进场动画", required=False, allow_null=True)
+    leaveTransition = serializers.CharField(help_text="离场动画", required=False, allow_null=True)
+
+
 # 路由菜单序列化器
 class RouteMetaSerializer(serializers.Serializer):
     """路由元数据序列化器"""
     title = serializers.CharField(help_text="菜单标题")
     icon = serializers.CharField(help_text="菜单图标", required=False, allow_null=True)
+    extraIcon = serializers.CharField(help_text="额外图标", required=False, allow_null=True)
     rank = serializers.IntegerField(help_text="菜单排序", required=False, allow_null=True)
-    roles = serializers.ListField(child=serializers.CharField(), help_text="可访问角色", required=False)
+    roles = serializers.ListField(child=serializers.CharField(), help_text="可访问角色", required=False, allow_null=True)
+    auths = serializers.ListField(child=serializers.CharField(), help_text="按钮级别权限", required=False, allow_null=True)
     showLink = serializers.BooleanField(help_text="是否在菜单中显示", required=False, default=True)
-    activePath = serializers.CharField(help_text="激活路径", required=False, allow_null=True)
+    showParent = serializers.BooleanField(help_text="是否显示父级菜单", required=False, default=True)
+    keepAlive = serializers.BooleanField(help_text="是否缓存路由页面", required=False, default=False)
+    frameSrc = serializers.CharField(help_text="iframe链接地址", required=False, allow_null=True)
+    frameLoading = serializers.BooleanField(help_text="iframe是否开启首次加载动画", required=False, default=True)
+    hiddenTag = serializers.BooleanField(help_text="禁止添加到标签页", required=False, default=False)
+    dynamicLevel = serializers.IntegerField(help_text="标签页最大数量", required=False, allow_null=True)
+    activePath = serializers.CharField(help_text="激活菜单的路径", required=False, allow_null=True)
+    transition = RouteTransitionSerializer(help_text="页面加载动画", required=False, allow_null=True)
 
 
 class RouteSerializer(serializers.Serializer):
     """路由序列化器"""
     path = serializers.CharField(help_text="路由路径")
     name = serializers.CharField(help_text="路由名称")
-    component = serializers.CharField(help_text="组件路径")
+    component = serializers.CharField(help_text="组件路径", required=False, allow_null=True)
     redirect = serializers.CharField(help_text="重定向路径", required=False, allow_null=True)
     meta = RouteMetaSerializer(help_text="路由元数据")
     children = serializers.ListField(child=RecursiveField(), help_text="子路由", required=False)
