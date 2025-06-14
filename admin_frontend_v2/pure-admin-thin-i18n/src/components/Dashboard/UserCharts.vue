@@ -89,10 +89,44 @@ const activeUsersData = ref<ActiveUsersData | null>(null);
 const heatmapData = ref<LoginHeatmapData | null>(null);
 const summaryData = ref<UserSummary | null>(null);
 
+// 图表初始化状态跟踪
+const chartInitStatus = reactive({
+  growth: false,
+  role: false,
+  active: false,
+  heatmap: false
+});
+
+// 图表引用
+const growthChartRef = ref(null);
+const roleChartRef = ref(null);
+const activeChartRef = ref(null);
+const heatmapChartRef = ref(null);
+
 /**
- * 获取用户增长趋势数据
+ * 处理图表初始化完成事件
  */
-async function fetchGrowthData() {
+function handleChartInitComplete(chartId) {
+  logger.debug(`图表初始化完成: ${chartId}`);
+
+  // 根据图表ID更新初始化状态
+  if (chartId.includes("growth")) {
+    chartInitStatus.growth = true;
+  } else if (chartId.includes("role")) {
+    chartInitStatus.role = true;
+  } else if (chartId.includes("active")) {
+    chartInitStatus.active = true;
+  } else if (chartId.includes("heatmap")) {
+    chartInitStatus.heatmap = true;
+  }
+
+  logger.debug("图表初始化状态:", chartInitStatus);
+}
+
+/**
+ * 获取用户增长趋势数据 - 适配新的图表组件
+ */
+async function fetchGrowthDataFn() {
   logger.debug("开始获取用户增长趋势数据", {
     period: period.value,
     startDate: startDate.value,
@@ -132,20 +166,22 @@ async function fetchGrowthData() {
         dataPoints: response.data?.datasets?.[0]?.data?.length
       });
 
-      growthData.value = formatChartData(response.data);
+      const formattedData = formatChartData(response.data);
       console.log(
         "【用户增长趋势】数据处理结果:",
-        JSON.stringify(growthData.value)
+        JSON.stringify(formattedData)
       );
 
       // 计算汇总数据
-      if (growthData.value) {
+      if (formattedData) {
         summaryData.value = calculateUserSummary(
-          growthData.value,
+          formattedData,
           activeUsersData.value
         );
         logger.debug("用户汇总数据计算完成", summaryData.value);
       }
+
+      return formattedData;
     } else {
       logger.warn("用户增长趋势数据请求失败", {
         code: response.code,
@@ -153,22 +189,23 @@ async function fetchGrowthData() {
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error("用户增长趋势数据异常", {
       message: err.message,
       error: err
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.growth = false;
   }
 }
 
 /**
- * 获取用户角色分布数据
+ * 获取用户角色分布数据 - 适配新的图表组件
  */
-async function fetchRoleData() {
+async function fetchRoleDataFn() {
   logger.debug("开始获取用户角色分布数据");
 
   console.log("【API请求开始】fetchRoleData", {
@@ -197,11 +234,9 @@ async function fetchRoleData() {
         data: response.data?.datasets?.[0]?.data?.length
       });
 
-      roleData.value = formatChartData(response.data);
-      console.log(
-        "【用户角色分布】数据处理结果:",
-        JSON.stringify(roleData.value)
-      );
+      const formattedData = formatChartData(response.data);
+      roleData.value = formattedData;
+      return formattedData;
     } else {
       logger.warn("用户角色分布数据请求失败", {
         code: response.code,
@@ -209,30 +244,33 @@ async function fetchRoleData() {
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error("用户角色分布数据异常", {
       message: err.message,
       error: err
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.role = false;
   }
 }
 
 /**
- * 获取活跃用户统计数据
+ * 获取活跃用户数据 - 适配新的图表组件
  */
-async function fetchActiveUsersData() {
-  logger.debug("开始获取活跃用户统计数据", {
-    period: period.value,
+async function fetchActiveDataFn(periodParam = null) {
+  const currentPeriod = periodParam || period.value;
+
+  logger.debug("开始获取活跃用户数据", {
+    period: currentPeriod,
     startDate: startDate.value,
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchActiveUsersData", {
-    period: period.value,
+  console.log("【API请求开始】fetchActiveData", {
+    period: currentPeriod,
     startDate: startDate.value,
     endDate: endDate.value,
     timestamp: new Date().toISOString()
@@ -244,14 +282,14 @@ async function fetchActiveUsersData() {
   try {
     const startTime = Date.now();
     const response = await fetchActiveUsers(
-      period.value,
+      currentPeriod,
       startDate.value,
       endDate.value
     );
     const endTime = Date.now();
 
     console.log(
-      `【API请求完成】fetchActiveUsersData，耗时: ${endTime - startTime}ms`,
+      `【API请求完成】fetchActiveData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
         timestamp: new Date().toISOString()
@@ -259,47 +297,48 @@ async function fetchActiveUsersData() {
     );
 
     if (response.success) {
-      logger.debug("活跃用户统计数据获取成功", {
+      logger.debug("活跃用户数据获取成功", {
         labels: response.data?.labels?.length,
-        dataPoints: response.data?.datasets?.[0]?.data?.length
+        datasets: response.data?.datasets?.length
       });
-      activeUsersData.value = formatChartData(response.data);
-      console.log(
-        "【活跃用户统计】数据处理结果:",
-        JSON.stringify(activeUsersData.value)
-      );
 
-      // 更新汇总数据中的活跃率
-      if (activeUsersData.value && summaryData.value) {
+      const formattedData = formatChartData(response.data);
+      activeUsersData.value = formattedData;
+
+      // 更新汇总数据
+      if (growthData.value) {
         summaryData.value = calculateUserSummary(
           growthData.value,
-          activeUsersData.value
+          formattedData
         );
       }
+
+      return formattedData;
     } else {
-      logger.warn("活跃用户统计数据请求失败", {
+      logger.warn("活跃用户数据请求失败", {
         code: response.code,
         message: response.message
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
-    logger.error("活跃用户统计数据异常", {
+  } catch (err) {
+    logger.error("活跃用户数据异常", {
       message: err.message,
       error: err
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.active = false;
   }
 }
 
 /**
- * 获取用户登录热力图数据
+ * 获取登录热力图数据 - 适配新的图表组件
  */
-async function fetchHeatmapData() {
-  logger.debug("开始获取用户登录热力图数据", {
+async function fetchHeatmapDataFn() {
+  logger.debug("开始获取登录热力图数据", {
     startDate: startDate.value,
     endDate: endDate.value
   });
@@ -327,32 +366,55 @@ async function fetchHeatmapData() {
     );
 
     if (response.success) {
-      logger.debug("用户登录热力图数据获取成功", {
+      logger.debug("登录热力图数据获取成功", {
         xLabels: response.data?.x_labels?.length,
         yLabels: response.data?.y_labels?.length,
-        dataPoints: response.data?.dataset?.length
+        dataset: response.data?.dataset?.length
       });
-      heatmapData.value = response.data;
-      console.log(
-        "【用户登录热力图】数据处理结果:",
-        JSON.stringify(heatmapData.value)
-      );
+
+      const formattedData = response.data;
+      heatmapData.value = formattedData;
+      return formattedData;
     } else {
-      logger.warn("用户登录热力图数据请求失败", {
+      logger.warn("登录热力图数据请求失败", {
         code: response.code,
         message: response.message
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
-    logger.error("用户登录热力图数据异常", {
+  } catch (err) {
+    logger.error("登录热力图数据异常", {
       message: err.message,
       error: err
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.heatmap = false;
+  }
+}
+
+/**
+ * 处理图表数据加载完成事件
+ */
+function handleDataLoaded(chartType, data) {
+  logger.debug(`${chartType}图表数据加载完成`, data);
+
+  // 根据图表类型更新相应数据
+  switch (chartType) {
+    case "growth":
+      growthData.value = data;
+      break;
+    case "role":
+      roleData.value = data;
+      break;
+    case "active":
+      activeUsersData.value = data;
+      break;
+    case "heatmap":
+      heatmapData.value = data;
+      break;
   }
 }
 
@@ -360,121 +422,47 @@ async function fetchHeatmapData() {
  * 获取所有图表数据
  */
 async function fetchAllData() {
-  logger.debug("开始获取所有用户图表数据");
-  console.log("【数据获取】开始获取所有用户图表数据", {
+  logger.debug("开始获取所有图表数据");
+  console.log("开始获取所有图表数据", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
-    isDateChanging: isDateChanging.value
+    timestamp: new Date().toISOString()
   });
+
   error.value = "";
   fullscreenLoading.value = true;
 
-  // 重置错误状态
-  if (dataFetchAttempts.value >= MAX_RETRY_ATTEMPTS) {
-    logger.warn(
-      `已达到最大重试次数(${MAX_RETRY_ATTEMPTS})，请检查网络或API状态`
-    );
-    dataFetchAttempts.value = 0;
-    error.value = t("dashboard.maxRetryExceeded");
-    ElMessage.warning(error.value);
-    fullscreenLoading.value = false;
-    return;
-  }
-
-  // 并行请求数据
   try {
-    console.log("【数据获取】开始发送API请求", {
-      period: period.value,
-      startDate: startDate.value,
-      endDate: endDate.value
+    // 不再直接调用API，而是等待图表组件自行加载数据
+    // 图表组件会在DOM就绪后自动调用fetchDataFn获取数据
+
+    // 显示全屏加载状态，防止用户进行其他操作
+    const loadingInstance = ElLoading.service({
+      lock: true,
+      text: t("dashboard.updatingCharts"),
+      background: "rgba(255, 255, 255, 0.7)"
     });
 
-    const startTime = Date.now();
-    await Promise.all([
-      fetchGrowthData(),
-      fetchRoleData(),
-      fetchActiveUsersData(),
-      fetchHeatmapData()
-    ]);
-    const endTime = Date.now();
+    // 重置图表渲染尝试次数
+    chartRenderingAttempts.value = 0;
 
-    console.log(`【数据获取】所有API请求完成，耗时: ${endTime - startTime}ms`);
-    logger.debug("所有用户图表数据获取完成");
+    // 等待一段时间，确保DOM更新和图表初始化
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // 检查数据有效性
-    const hasValidData = Boolean(
-      (growthData.value &&
-        growthData.value.labels &&
-        growthData.value.labels.length) ||
-        (roleData.value &&
-          roleData.value.labels &&
-          roleData.value.labels.length) ||
-        (activeUsersData.value &&
-          activeUsersData.value.labels &&
-          activeUsersData.value.labels.length) ||
-        (heatmapData.value &&
-          heatmapData.value.x_labels &&
-          heatmapData.value.x_labels.length)
-    );
+    // 关闭加载状态
+    loadingInstance.close();
 
-    console.log("【数据获取】数据有效性检查", {
-      hasValidData,
-      growthDataValid: !!growthData.value?.labels?.length,
-      roleDataValid: !!roleData.value?.labels?.length,
-      activeUsersDataValid: !!activeUsersData.value?.labels?.length,
-      heatmapDataValid: !!heatmapData.value?.x_labels?.length
+    logger.debug("图表数据加载流程启动完成");
+  } catch (err) {
+    logger.error("获取图表数据异常", {
+      message: err.message,
+      error: err
     });
-
-    if (!hasValidData && dataFetchAttempts.value < MAX_RETRY_ATTEMPTS) {
-      dataFetchAttempts.value++;
-      logger.warn(
-        `没有有效数据，${1000 * dataFetchAttempts.value}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-      console.log(
-        `【数据获取】没有有效数据，${1000 * dataFetchAttempts.value}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-      setTimeout(() => {
-        fetchAllData();
-      }, 1000 * dataFetchAttempts.value);
-    } else {
-      // 重置尝试计数器
-      dataFetchAttempts.value = 0;
-
-      // 确保图表重新渲染
-      nextTick(() => {
-        // 通知子组件强制重新初始化图表
-        console.log("【数据获取】数据有效，准备强制重新初始化图表");
-        forceReinitCharts();
-      });
-    }
-  } catch (err: any) {
-    logger.error("获取用户图表数据过程中发生错误", err);
-    console.log("【数据获取】获取用户图表数据过程中发生错误", err);
-
-    // 在错误情况下尝试重试
-    if (dataFetchAttempts.value < MAX_RETRY_ATTEMPTS) {
-      dataFetchAttempts.value++;
-      const retryDelay = 1000 * dataFetchAttempts.value;
-      logger.warn(
-        `数据获取失败，${retryDelay}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-      console.log(
-        `【数据获取】数据获取失败，${retryDelay}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-
-      setTimeout(() => {
-        fetchAllData();
-      }, retryDelay);
-    } else {
-      error.value = err.message || t("dashboard.fetchAllDataFailed");
-      ElMessage.error(error.value);
-      dataFetchAttempts.value = 0;
-      console.log("【数据获取】达到最大重试次数，放弃重试");
-    }
+    error.value = err.message || t("dashboard.fetchDataFailed");
+    ElMessage.error(error.value);
   } finally {
     fullscreenLoading.value = false;
-    console.log("【数据获取】数据获取流程结束，关闭加载状态");
   }
 }
 
@@ -493,11 +481,36 @@ function forceReinitCharts() {
     `强制重新初始化图表 (${chartRenderingAttempts.value + 1}/${MAX_CHART_RENDER_ATTEMPTS})`
   );
 
-  // 发出事件通知子组件重新初始化图表
+  // 直接调用图表组件的forceReInit方法
   nextTick(() => {
-    // 使用自定义事件触发子组件的图表重新初始化
-    const event = new CustomEvent("force-chart-reinit");
-    document.dispatchEvent(event);
+    // 调用各图表组件的forceReInit方法
+    if (
+      growthChartRef.value &&
+      typeof growthChartRef.value.forceReInit === "function"
+    ) {
+      growthChartRef.value.forceReInit();
+    }
+
+    if (
+      roleChartRef.value &&
+      typeof roleChartRef.value.forceReInit === "function"
+    ) {
+      roleChartRef.value.forceReInit();
+    }
+
+    if (
+      activeChartRef.value &&
+      typeof activeChartRef.value.forceReInit === "function"
+    ) {
+      activeChartRef.value.forceReInit();
+    }
+
+    if (
+      heatmapChartRef.value &&
+      typeof heatmapChartRef.value.forceReInit === "function"
+    ) {
+      heatmapChartRef.value.forceReInit();
+    }
 
     chartRenderingAttempts.value++;
 
@@ -628,7 +641,16 @@ watch(
 onMounted(() => {
   logger.debug("UserCharts组件挂载，开始加载初始数据");
   console.log("UserCharts组件挂载，开始加载初始数据");
-  fetchAllData();
+
+  // 延迟加载数据，确保DOM已完全渲染
+  setTimeout(() => {
+    fetchAllData();
+
+    // 在数据加载后，再次尝试强制重新初始化图表
+    setTimeout(() => {
+      forceReinitCharts();
+    }, 500);
+  }, 300);
 
   // 监听浏览器窗口大小变化，在窗口大小变化时强制重新初始化图表
   window.addEventListener(
@@ -683,9 +705,12 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <UserGrowthChart
-                :data="growthData"
+                ref="growthChartRef"
                 :loading="loading.growth"
                 :period="period"
+                :fetchDataFn="fetchGrowthDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('growth', data)"
                 :key="`growth-${startDate}-${endDate}-${period}`"
               />
             </div>
@@ -703,13 +728,19 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <UserRoleChart
-                :data="roleData"
+                ref="roleChartRef"
                 :loading="loading.role"
+                :fetchDataFn="fetchRoleDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('role', data)"
                 :key="`role-${startDate}-${endDate}`"
               />
             </div>
           </div>
         </el-col>
+      </el-row>
+
+      <el-row :gutter="20" class="mt-20">
         <el-col :span="24" :lg="12">
           <div class="chart-card">
             <div class="chart-header">
@@ -722,9 +753,12 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <ActiveUsersChart
-                :data="activeUsersData"
+                ref="activeChartRef"
                 :loading="loading.active"
                 :period="period"
+                :fetchDataFn="fetchActiveDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('active', data)"
                 :key="`active-${startDate}-${endDate}-${period}`"
               />
             </div>
@@ -742,8 +776,11 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <LoginHeatmapChart
-                :data="heatmapData"
+                ref="heatmapChartRef"
                 :loading="loading.heatmap"
+                :fetchDataFn="fetchHeatmapDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('heatmap', data)"
                 :key="`heatmap-${startDate}-${endDate}`"
               />
             </div>

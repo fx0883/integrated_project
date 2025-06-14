@@ -181,3 +181,99 @@
 6. `src/components/Dashboard/Charts/TenantTrendChart.vue`（修改）- 趋势图组件日志增强
 7. `src/components/Dashboard/Charts/TenantStatusChart.vue`（修改）- 状态图组件日志增强
 8. `src/components/Dashboard/Charts/TenantCreationChart.vue`（修改）- 创建速率图组件日志增强
+
+## 图表组件优化记录 - 2023-11-18
+
+### 本次会话的主要目标
+优化 dashboard 中所有图表组件的数据加载流程，实现更合理的初始化和数据获取顺序。
+
+### 已完成的具体任务
+1. 创建了新的 `useChartDataFlow` hook，实现正确的图表初始化和数据加载流程
+2. 修改了所有图表组件（LoginHeatmapChart、ActiveUsersChart、TenantTrendChart、TenantStatusChart、TenantCreationChart等）
+3. 调整了 UserCharts 和 TenantCharts 容器组件，使其适配新的图表组件流程
+4. 修改了数据获取函数，使其在图表初始化完成后再调用 API
+
+### 采用的技术方案及决策理由
+采用了"先初始化图表再加载数据"的流程，主要解决了以下问题：
+1. 解决了由于 DOM 未就绪导致图表初始化失败的问题
+2. 使用 MutationObserver 监听 DOM 变化，确保图表容器已完全渲染
+3. 实现了图表组件与数据获取的解耦，提高了组件的复用性
+4. 通过事件通知机制，实现了父子组件之间的协调
+
+### 使用的主要技术栈
+- Vue 3 Composition API
+- TypeScript
+- ECharts
+- MutationObserver API
+
+### 变更的文件清单
+1. src/hooks/useChartDataFlow.ts (新增)
+2. src/components/Dashboard/Charts/LoginHeatmapChart.vue
+3. src/components/Dashboard/Charts/ActiveUsersChart.vue
+4. src/components/Dashboard/Charts/TenantTrendChart.vue
+5. src/components/Dashboard/Charts/TenantStatusChart.vue
+6. src/components/Dashboard/Charts/TenantCreationChart.vue
+7. src/components/Dashboard/UserCharts.vue
+8. src/components/Dashboard/TenantCharts.vue
+
+## 图表组件DOM未就绪问题修复 (2024-06-14)
+
+### 本次会话的主要目标
+解决Dashboard图表组件中的DOM未就绪问题，确保图表正确初始化和渲染。
+
+### 已完成的具体任务
+1. 修复了图表组件DOM未就绪问题，解决了控制台中持续显示的"DOM未就绪"错误
+2. 改进了图表组件的模板结构，确保图表容器DOM元素始终存在，不受数据加载状态的影响
+3. 优化了`useChartDataFlow`钩子的实现，增加了强制初始化选项和更灵活的DOM检测机制
+4. 缩短了等待DOM就绪的超时时间，提高了图表初始化的效率
+5. 添加了重试机制，确保图表能够在各种情况下正确初始化
+
+### 采用的技术方案及决策理由
+1. **DOM结构优化**：将图表容器DOM元素移出条件渲染逻辑，确保其始终存在，解决了循环依赖问题（图表初始化需要DOM就绪，而DOM渲染又依赖于数据加载）
+2. **覆盖层设计**：使用绝对定位的覆盖层显示加载状态和无数据状态，而不是替换图表容器
+3. **强制初始化选项**：添加forceInit参数，允许在特定情况下跳过DOM就绪检查，直接初始化图表
+4. **增强的重试机制**：实现了更健壮的初始化重试逻辑，确保图表能够在各种环境下正确渲染
+
+### 使用的主要技术栈
+- Vue 3 组合式API
+- ECharts 图表库
+- CSS绝对定位和覆盖层
+- MutationObserver API
+
+### 变更的文件清单
+1. src/hooks/useChartDataFlow.ts
+2. src/components/Dashboard/Charts/LoginHeatmapChart.vue
+3. src/components/Dashboard/Charts/ActiveUsersChart.vue
+4. src/components/Dashboard/Charts/TenantTrendChart.vue
+5. src/components/Dashboard/Charts/TenantStatusChart.vue
+6. src/components/Dashboard/Charts/TenantCreationChart.vue
+
+## 用户统计图表DOM未就绪问题修复 (2024-06-14)
+
+### 本次会话的主要目标
+解决Dashboard中用户统计图表组件的DOM未就绪问题，确保所有图表能够正确初始化和渲染。
+
+### 已完成的具体任务
+1. 修复了UserGrowthChart和UserRoleChart组件中的DOM未就绪问题
+2. 改进了图表组件的模板结构，确保图表容器DOM元素始终存在，不受数据加载状态的影响
+3. 将这两个图表组件迁移到使用useChartDataFlow钩子，与其他图表组件保持一致
+4. 修改了UserCharts父组件中的forceReinitCharts函数，使其直接调用子组件方法而不是通过事件触发
+5. 优化了组件挂载逻辑，确保DOM有足够时间渲染后再加载数据
+
+### 采用的技术方案及决策理由
+1. **DOM结构优化**：将图表容器DOM元素移出条件渲染逻辑，确保其始终存在，解决了循环依赖问题
+2. **统一钩子使用**：将所有图表组件迁移到使用同一个useChartDataFlow钩子，保持代码一致性
+3. **直接方法调用**：使用组件引用直接调用子组件方法，而不是通过事件通知，提高了代码的可维护性
+4. **延迟初始化**：在组件挂载后添加适当的延迟，确保DOM完全渲染后再进行图表初始化
+
+### 使用的主要技术栈
+- Vue 3 组合式API
+- ECharts 图表库
+- CSS绝对定位和覆盖层
+- Vue组件间通信（props、events、refs）
+
+### 变更的文件清单
+1. src/components/Dashboard/Charts/UserGrowthChart.vue
+2. src/components/Dashboard/Charts/UserRoleChart.vue
+3. src/components/Dashboard/UserCharts.vue
+4. README.md

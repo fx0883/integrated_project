@@ -361,46 +361,58 @@ def get_active_users(start_date, end_date, period='daily'):
         start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
         end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
         
-        # 获取时间截断函数
-        trunc_func = get_date_trunc_func(period)
-        
-        # 查询每个时间段的活跃用户数
-        active_users = (
+        # 不使用数据库时区功能，直接获取所有记录并在Python中处理
+        api_logs = (
             APILog.objects
             .filter(created_at__range=(start_datetime, end_datetime), user__isnull=False)
-            .annotate(period=trunc_func('created_at'))
-            .values('period')
-            .annotate(active_count=Count('user', distinct=True))
-            .order_by('period')
+            .select_related('user')
+            .values('created_at', 'user')
+            .order_by('created_at')
         )
         
-        # 准备数据
-        dates = []
-        active_counts = []
-        active_rates = []
+        # 手动按周期分组
+        period_user_sets = defaultdict(set)
         
-        for item in active_users:
-            period_date = item['period']
+        for log in api_logs:
+            created_at = log['created_at']
+            user_id = log['user']
             
             if period == 'daily':
-                period_key = period_date.strftime('%Y-%m-%d')
+                period_key = created_at.strftime('%Y-%m-%d')
             elif period == 'weekly':
-                period_key = f"{period_date.isocalendar()[0]}-W{period_date.isocalendar()[1]:02d}"
+                period_key = f"{created_at.isocalendar()[0]}-W{created_at.isocalendar()[1]:02d}"
             elif period == 'monthly':
-                period_key = period_date.strftime('%Y-%m')
+                period_key = created_at.strftime('%Y-%m')
             else:
-                period_key = period_date.strftime('%Y-%m-%d')
+                period_key = created_at.strftime('%Y-%m-%d')
             
-            dates.append(period_key)
-            active_counts.append(item['active_count'])
+            period_user_sets[period_key].add(user_id)
+        
+        # 按时间排序
+        dates = sorted(period_user_sets.keys())
+        active_counts = [len(period_user_sets[date]) for date in dates]
+        active_rates = []
+        
+        # 计算每个时间段的活跃率
+        for date in dates:
+            if period == 'daily':
+                period_date = datetime.strptime(date, '%Y-%m-%d').date()
+            elif period == 'weekly':
+                year, week = date.split('-W')
+                period_date = datetime.strptime(f"{year}-{week}-1", '%Y-%W-%w').date()
+            elif period == 'monthly':
+                period_date = datetime.strptime(date + '-01', '%Y-%m-%d').date()
+            else:
+                period_date = datetime.strptime(date, '%Y-%m-%d').date()
             
             # 获取该时间段之前注册的总用户数
+            period_datetime = timezone.make_aware(datetime.combine(period_date, datetime.max.time()))
             total_users = User.objects.filter(
-                date_joined__lte=period_date,
+                date_joined__lte=period_datetime,
                 is_deleted=False
             ).count()
             
-            active_rate = (item['active_count'] / total_users) * 100 if total_users > 0 else 0
+            active_rate = (len(period_user_sets[date]) / total_users) * 100 if total_users > 0 else 0
             active_rates.append(round(active_rate, 1))
         
         # 计算汇总数据

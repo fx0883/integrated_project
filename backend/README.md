@@ -540,3 +540,34 @@ cms/
 5. charts/tests.py - 添加用户统计图表相关的测试用例
 6. docs/admin_dashboard_charts/02_user_statistics_charts_frontend_guide.md - 创建前端集成指南
 7. docs/admin_dashboard_charts/user_statistics_charts_summary.md - 创建实现总结文档 
+
+## 会话总结：修复MySQL时区问题 (2023-06-14)
+
+### 本次会话的主要目标
+修复活跃用户统计API返回的时区错误问题："Database returned an invalid datetime value. Are time zone definitions for your database installed?"
+
+### 已完成的具体任务
+1. 分析了活跃用户统计API的错误原因，确认为MySQL时区配置问题
+2. 修改了`charts/utils.py`中的`get_active_users`函数，不再依赖数据库时区功能
+3. 创建了`fix_timezone.py`脚本，用于检查和修复MySQL时区表
+4. 创建了`fix_mysql_timezone.sql`脚本，用于设置MySQL时区为+08:00
+5. 创建了`update_mysql_config.py`工具，用于永久更新MySQL配置文件的时区设置
+6. 编写了详细的`timezone_fix_README.md`文档，提供多种解决方案和操作步骤
+
+### 采用的技术方案及决策理由
+1. **代码修改方案**：修改`get_active_users`函数，使用Python处理时区而非依赖数据库函数，这是最简单直接的解决方案，无需修改数据库配置
+2. **数据库配置方案**：提供了两种修改MySQL时区配置的方法（临时设置和永久设置），适用于需要在数据库级别解决问题的情况
+3. **时区表安装方案**：提供了在不同操作系统上安装MySQL时区表的指南，这是最彻底的解决方案
+
+### 使用的主要技术栈
+- Django ORM
+- Python datetime处理
+- MySQL时区配置
+- Python文件操作和正则表达式
+
+### 变更的文件清单
+1. charts/utils.py - 修改了`get_active_users`函数的实现
+2. fix_timezone.py - 新增脚本，用于检查和修复MySQL时区表
+3. fix_mysql_timezone.sql - 新增SQL脚本，用于设置MySQL时区
+4. update_mysql_config.py - 新增工具，用于更新MySQL配置文件
+5. timezone_fix_README.md - 新增文档，详细说明解决方案和操作步骤 

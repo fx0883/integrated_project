@@ -84,10 +84,40 @@ const statusData = ref<TenantStatusData | null>(null);
 const creationRateData = ref<TenantCreationData | null>(null);
 const summaryData = ref<TenantSummary | null>(null);
 
+// 图表初始化状态跟踪
+const chartInitStatus = reactive({
+  trend: false,
+  status: false,
+  creation: false
+});
+
+// 图表引用
+const trendChartRef = ref(null);
+const statusChartRef = ref(null);
+const creationChartRef = ref(null);
+
 /**
- * 获取租户趋势数据
+ * 处理图表初始化完成事件
  */
-async function fetchTrendData() {
+function handleChartInitComplete(chartId) {
+  logger.debug(`图表初始化完成: ${chartId}`);
+
+  // 根据图表ID更新初始化状态
+  if (chartId.includes("trend")) {
+    chartInitStatus.trend = true;
+  } else if (chartId.includes("status")) {
+    chartInitStatus.status = true;
+  } else if (chartId.includes("creation")) {
+    chartInitStatus.creation = true;
+  }
+
+  logger.debug("图表初始化状态:", chartInitStatus);
+}
+
+/**
+ * 获取租户趋势数据 - 适配新的图表组件
+ */
+async function fetchTrendDataFn() {
   logger.debug("开始获取租户趋势数据", {
     period: period.value,
     startDate: startDate.value,
@@ -128,14 +158,16 @@ async function fetchTrendData() {
       });
 
       // 使用格式化函数处理数据，确保数据结构一致且避免引用问题
-      trendData.value = formatChartData(response.data);
-      console.log("【租户趋势】数据处理结果:", JSON.stringify(trendData.value));
+      const formattedData = formatChartData(response.data);
+      console.log("【租户趋势】数据处理结果:", JSON.stringify(formattedData));
 
       // 计算汇总数据
-      if (trendData.value) {
-        summaryData.value = calculateTenantSummary(trendData.value);
+      if (formattedData) {
+        summaryData.value = calculateTenantSummary(formattedData);
         logger.debug("租户汇总数据计算完成", summaryData.value);
       }
+
+      return formattedData;
     } else {
       logger.warn("租户趋势数据请求失败", {
         code: response.code,
@@ -148,7 +180,7 @@ async function fetchTrendData() {
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error("租户趋势数据异常", {
       message: err.message,
       error: err
@@ -159,6 +191,7 @@ async function fetchTrendData() {
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.trend = false;
     console.log("【API请求结束】fetchTrendData", {
@@ -168,9 +201,9 @@ async function fetchTrendData() {
 }
 
 /**
- * 获取租户状态分布数据
+ * 获取租户状态分布数据 - 适配新的图表组件
  */
-async function fetchStatusData() {
+async function fetchStatusDataFn() {
   logger.debug("开始获取租户状态分布数据");
 
   console.log("【API请求开始】fetchStatusData", {
@@ -199,12 +232,13 @@ async function fetchStatusData() {
         data: response.data?.datasets?.[0]?.data?.length
       });
 
-      // 使用格式化函数处理数据，确保数据结构一致且避免引用问题
-      statusData.value = formatChartData(response.data);
+      const formattedData = formatChartData(response.data);
       console.log(
-        "【租户状态】数据处理结果:",
-        JSON.stringify(statusData.value)
+        "【租户状态分布】数据处理结果:",
+        JSON.stringify(formattedData)
       );
+
+      return formattedData;
     } else {
       logger.warn("租户状态分布数据请求失败", {
         code: response.code,
@@ -217,7 +251,7 @@ async function fetchStatusData() {
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error("租户状态分布数据异常", {
       message: err.message,
       error: err
@@ -228,6 +262,7 @@ async function fetchStatusData() {
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.status = false;
     console.log("【API请求结束】fetchStatusData", {
@@ -237,16 +272,16 @@ async function fetchStatusData() {
 }
 
 /**
- * 获取租户创建速率数据
+ * 获取租户创建速率数据 - 适配新的图表组件
  */
-async function fetchCreationRateData() {
+async function fetchCreationDataFn() {
   logger.debug("开始获取租户创建速率数据", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchCreationRateData", {
+  console.log("【API请求开始】fetchCreationData", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -266,7 +301,7 @@ async function fetchCreationRateData() {
     const endTime = Date.now();
 
     console.log(
-      `【API请求完成】fetchCreationRateData，耗时: ${endTime - startTime}ms`,
+      `【API请求完成】fetchCreationData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
         timestamp: new Date().toISOString()
@@ -278,39 +313,63 @@ async function fetchCreationRateData() {
         labels: response.data?.labels?.length,
         dataPoints: response.data?.datasets?.[0]?.data?.length
       });
-      creationRateData.value = response.data;
+
+      const formattedData = formatChartData(response.data);
       console.log(
         "【租户创建速率】数据处理结果:",
-        JSON.stringify(creationRateData.value)
+        JSON.stringify(formattedData)
       );
+
+      return formattedData;
     } else {
       logger.warn("租户创建速率数据请求失败", {
         code: response.code,
         message: response.message
       });
-      console.log("【API请求失败】fetchCreationRateData", {
+      console.log("【API请求失败】fetchCreationData", {
         code: response.code,
         message: response.message,
         timestamp: new Date().toISOString()
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error("租户创建速率数据异常", {
       message: err.message,
       error: err
     });
-    console.log("【API请求异常】fetchCreationRateData", {
+    console.log("【API请求异常】fetchCreationData", {
       message: err.message,
       timestamp: new Date().toISOString()
     });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
+    throw err;
   } finally {
     loading.creation = false;
-    console.log("【API请求结束】fetchCreationRateData", {
+    console.log("【API请求结束】fetchCreationData", {
       timestamp: new Date().toISOString()
     });
+  }
+}
+
+/**
+ * 处理图表数据加载完成事件
+ */
+function handleDataLoaded(chartType, data) {
+  logger.debug(`${chartType}图表数据加载完成`, data);
+
+  // 根据图表类型更新相应数据
+  switch (chartType) {
+    case "trend":
+      trendData.value = data;
+      break;
+    case "status":
+      statusData.value = data;
+      break;
+    case "creation":
+      creationRateData.value = data;
+      break;
   }
 }
 
@@ -319,115 +378,46 @@ async function fetchCreationRateData() {
  */
 async function fetchAllData() {
   logger.debug("开始获取所有图表数据");
-  console.log("【数据获取】开始获取所有图表数据", {
+  console.log("开始获取所有图表数据", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
-    isDateChanging: isDateChanging.value
+    timestamp: new Date().toISOString()
   });
+
   error.value = "";
   fullscreenLoading.value = true;
 
-  // 重置错误状态
-  if (dataFetchAttempts.value >= MAX_RETRY_ATTEMPTS) {
-    logger.warn(
-      `已达到最大重试次数(${MAX_RETRY_ATTEMPTS})，请检查网络或API状态`
-    );
-    dataFetchAttempts.value = 0;
-    error.value = t("dashboard.maxRetryExceeded");
-    ElMessage.warning(error.value);
-    fullscreenLoading.value = false;
-    return;
-  }
-
-  // 并行请求数据
   try {
-    console.log("【数据获取】开始发送API请求", {
-      period: period.value,
-      startDate: startDate.value,
-      endDate: endDate.value
+    // 不再直接调用API，而是等待图表组件自行加载数据
+    // 图表组件会在DOM就绪后自动调用fetchDataFn获取数据
+
+    // 显示全屏加载状态，防止用户进行其他操作
+    const loadingInstance = ElLoading.service({
+      lock: true,
+      text: t("dashboard.updatingCharts"),
+      background: "rgba(255, 255, 255, 0.7)"
     });
 
-    const startTime = Date.now();
-    await Promise.all([
-      fetchTrendData(),
-      fetchStatusData(),
-      fetchCreationRateData()
-    ]);
-    const endTime = Date.now();
+    // 重置图表渲染尝试次数
+    chartRenderingAttempts.value = 0;
 
-    console.log(`【数据获取】所有API请求完成，耗时: ${endTime - startTime}ms`);
-    logger.debug("所有图表数据获取完成");
+    // 等待一段时间，确保DOM更新和图表初始化
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // 检查数据有效性
-    const hasValidData = Boolean(
-      (trendData.value &&
-        trendData.value.labels &&
-        trendData.value.labels.length) ||
-        (statusData.value &&
-          statusData.value.labels &&
-          statusData.value.labels.length) ||
-        (creationRateData.value &&
-          creationRateData.value.labels &&
-          creationRateData.value.labels.length)
-    );
+    // 关闭加载状态
+    loadingInstance.close();
 
-    console.log("【数据获取】数据有效性检查", {
-      hasValidData,
-      trendDataValid: !!trendData.value?.labels?.length,
-      statusDataValid: !!statusData.value?.labels?.length,
-      creationRateDataValid: !!creationRateData.value?.labels?.length
+    logger.debug("图表数据加载流程启动完成");
+  } catch (err) {
+    logger.error("获取图表数据异常", {
+      message: err.message,
+      error: err
     });
-
-    if (!hasValidData && dataFetchAttempts.value < MAX_RETRY_ATTEMPTS) {
-      dataFetchAttempts.value++;
-      logger.warn(
-        `没有有效数据，${1000 * dataFetchAttempts.value}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-      console.log(
-        `【数据获取】没有有效数据，${1000 * dataFetchAttempts.value}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-      setTimeout(() => {
-        fetchAllData();
-      }, 1000 * dataFetchAttempts.value);
-    } else {
-      // 重置尝试计数器
-      dataFetchAttempts.value = 0;
-
-      // 确保图表重新渲染
-      nextTick(() => {
-        // 通知子组件强制重新初始化图表
-        console.log("【数据获取】数据有效，准备强制重新初始化图表");
-        forceReinitCharts();
-      });
-    }
-  } catch (err: any) {
-    logger.error("获取图表数据过程中发生错误", err);
-    console.log("【数据获取】获取图表数据过程中发生错误", err);
-
-    // 在错误情况下尝试重试
-    if (dataFetchAttempts.value < MAX_RETRY_ATTEMPTS) {
-      dataFetchAttempts.value++;
-      const retryDelay = 1000 * dataFetchAttempts.value;
-      logger.warn(
-        `数据获取失败，${retryDelay}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-      console.log(
-        `【数据获取】数据获取失败，${retryDelay}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
-      );
-
-      setTimeout(() => {
-        fetchAllData();
-      }, retryDelay);
-    } else {
-      error.value = err.message || t("dashboard.fetchAllDataFailed");
-      ElMessage.error(error.value);
-      dataFetchAttempts.value = 0;
-      console.log("【数据获取】达到最大重试次数，放弃重试");
-    }
+    error.value = err.message || t("dashboard.fetchDataFailed");
+    ElMessage.error(error.value);
   } finally {
     fullscreenLoading.value = false;
-    console.log("【数据获取】数据获取流程结束，关闭加载状态");
   }
 }
 
@@ -633,9 +623,12 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <TenantTrendChart
-                :data="trendData"
+                ref="trendChartRef"
                 :loading="loading.trend"
                 :period="period"
+                :fetchDataFn="fetchTrendDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('trend', data)"
                 :key="`trend-${startDate}-${endDate}-${period}`"
               />
             </div>
@@ -644,7 +637,7 @@ onMounted(() => {
         <el-col :span="24" :lg="12">
           <div class="chart-card">
             <div class="chart-header">
-              <h3>{{ t("dashboard.tenantStatus") }}</h3>
+              <h3>{{ t("dashboard.tenantStatusDistribution") }}</h3>
               <div v-if="loading.status" class="chart-loading-indicator">
                 <el-icon class="is-loading"
                   ><svg-icon name="ep:loading"
@@ -653,14 +646,20 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <TenantStatusChart
-                :data="statusData"
+                ref="statusChartRef"
                 :loading="loading.status"
+                :fetchDataFn="fetchStatusDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('status', data)"
                 :key="`status-${startDate}-${endDate}`"
               />
             </div>
           </div>
         </el-col>
-        <el-col :span="24">
+      </el-row>
+
+      <el-row :gutter="20" class="mt-20">
+        <el-col :span="24" :lg="12">
           <div class="chart-card">
             <div class="chart-header">
               <h3>{{ t("dashboard.tenantCreationRate") }}</h3>
@@ -672,9 +671,12 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <TenantCreationChart
-                :data="creationRateData"
+                ref="creationChartRef"
                 :loading="loading.creation"
                 :period="period"
+                :fetchDataFn="fetchCreationDataFn"
+                @init-complete="handleChartInitComplete"
+                @data-loaded="data => handleDataLoaded('creation', data)"
                 :key="`creation-${startDate}-${endDate}-${period}`"
               />
             </div>

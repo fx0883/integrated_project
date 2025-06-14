@@ -1,10 +1,18 @@
 <script lang="ts" setup>
-import { ref, computed, defineProps, watch, onMounted, onUnmounted } from "vue";
+import {
+  ref,
+  computed,
+  defineProps,
+  defineEmits,
+  watch,
+  onMounted,
+  onUnmounted
+} from "vue";
 import { useI18n } from "vue-i18n";
 import { Loading } from "@element-plus/icons-vue";
 import type { EChartsOption } from "echarts/types/dist/shared";
 import type { LoginHeatmapData } from "@/types/user";
-import { useChart } from "@/hooks/useChart";
+import { useChartDataFlow } from "@/hooks/useChartDataFlow";
 import logger from "@/utils/logger";
 
 // 生成组件唯一ID
@@ -12,14 +20,6 @@ const componentId = `login_heatmap_chart_${Math.random().toString(36).slice(2, 9
 
 // 定义props
 const props = defineProps({
-  data: {
-    type: Object as () => LoginHeatmapData,
-    default: () => ({
-      x_labels: [],
-      y_labels: [],
-      dataset: []
-    })
-  },
   loading: {
     type: Boolean,
     default: false
@@ -27,8 +27,15 @@ const props = defineProps({
   height: {
     type: String,
     default: "100%"
+  },
+  fetchDataFn: {
+    type: Function,
+    default: null
   }
 });
+
+// 定义事件
+const emit = defineEmits(["data-loaded", "init-complete", "error"]);
 
 // i18n支持
 const { t } = useI18n();
@@ -36,29 +43,30 @@ const { t } = useI18n();
 // 图表DOM引用
 const chartRef = ref<HTMLDivElement | null>(null);
 
-logger.debug(`【用户登录热力图】组件创建 ID:${componentId}`, {
-  hasData: !!props.data && !!props.data.dataset && props.data.dataset.length > 0
-});
+// 图表数据
+const chartData = ref<LoginHeatmapData | null>(null);
+
+logger.debug(`【用户登录热力图】组件创建 ID:${componentId}`);
 
 // 图表配置
 const chartOptions = computed<EChartsOption>(() => {
   if (
-    !props.data ||
-    !props.data.x_labels ||
-    !props.data.y_labels ||
-    !props.data.dataset ||
-    props.data.dataset.length === 0
+    !chartData.value ||
+    !chartData.value.x_labels ||
+    !chartData.value.y_labels ||
+    !chartData.value.dataset ||
+    chartData.value.dataset.length === 0
   ) {
     logger.debug(`【用户登录热力图】生成图表配置：数据为空 ID:${componentId}`);
     return {};
   }
 
-  const dataset = props.data.dataset;
+  const dataset = chartData.value.dataset;
   const maxValue = Math.max(...dataset.map(item => item[2]));
 
   logger.debug(`【用户登录热力图】生成图表配置 ID:${componentId}`, {
-    xLabelsCount: props.data.x_labels.length,
-    yLabelsCount: props.data.y_labels.length,
+    xLabelsCount: chartData.value.x_labels.length,
+    yLabelsCount: chartData.value.y_labels.length,
     dataCount: dataset.length,
     maxValue
   });
@@ -68,7 +76,7 @@ const chartOptions = computed<EChartsOption>(() => {
       position: "top",
       formatter: (params: any) => {
         const value = params.value;
-        return `${props.data.x_labels[value[0]]} ${props.data.y_labels[value[1]]}<br/>${t("dashboard.totalLogins")}: ${value[2]}`;
+        return `${chartData.value?.x_labels[value[0]]} ${chartData.value?.y_labels[value[1]]}<br/>${t("dashboard.totalLogins")}: ${value[2]}`;
       }
     },
     grid: {
@@ -79,14 +87,14 @@ const chartOptions = computed<EChartsOption>(() => {
     },
     xAxis: {
       type: "category",
-      data: props.data.x_labels,
+      data: chartData.value.x_labels,
       splitArea: {
         show: true
       }
     },
     yAxis: {
       type: "category",
-      data: props.data.y_labels,
+      data: chartData.value.y_labels,
       splitArea: {
         show: true
       }
@@ -134,55 +142,53 @@ const chartOptions = computed<EChartsOption>(() => {
 
 // 使用自定义钩子管理图表
 const options = ref<EChartsOption>({});
+
+// 数据获取函数
+async function fetchData() {
+  if (!props.fetchDataFn) {
+    logger.warn(`【用户登录热力图】未提供数据获取函数 ID:${componentId}`);
+    return null;
+  }
+
+  try {
+    const data = await props.fetchDataFn();
+    logger.debug(`【用户登录热力图】数据获取成功 ID:${componentId}`);
+
+    // 更新图表数据
+    chartData.value = data;
+
+    // 更新图表配置
+    options.value = JSON.parse(JSON.stringify(chartOptions.value));
+
+    // 通知父组件数据已加载
+    emit("data-loaded", data);
+
+    return data;
+  } catch (error) {
+    logger.error(`【用户登录热力图】数据获取失败 ID:${componentId}`, error);
+    emit("error", error);
+    throw error;
+  }
+}
+
+// 使用新的图表数据流管理Hook
 const {
   chartInstance,
-  loading: chartLoading,
-  setLoading,
-  forceReInit,
-  initChart
-} = useChart(chartRef, options);
+  isChartInitialized,
+  isDataLoaded,
+  isLoading,
+  error,
+  loadData,
+  reloadData,
+  forceReInit
+} = useChartDataFlow(chartRef, options, fetchData, componentId, true);
 
-// 当props.data变化时更新图表
-watch(
-  () => props.data,
-  newData => {
-    logger.debug(`【用户登录热力图】数据变更 ID:${componentId}`, {
-      hasData: !!newData && !!newData.dataset && newData.dataset.length > 0,
-      xLabelsCount: newData?.x_labels?.length || 0,
-      yLabelsCount: newData?.y_labels?.length || 0,
-      dataCount: newData?.dataset?.length || 0
-    });
-
-    console.log(
-      `【用户登录热力图】数据变更:`,
-      JSON.parse(JSON.stringify(newData))
-    );
-
-    if (newData && newData.x_labels && newData.y_labels && newData.dataset) {
-      // 使用深拷贝确保数据不会因引用问题而丢失
-      options.value = JSON.parse(JSON.stringify(chartOptions.value));
-
-      // 在数据变更后，尝试强制重新初始化图表
-      setTimeout(() => {
-        if (chartRef.value) {
-          forceReInit();
-        }
-      }, 100);
-    }
-  },
-  { deep: true }
-);
-
-// 当loading状态变化时更新图表加载状态
-watch(
-  () => props.loading,
-  newLoading => {
-    logger.debug(`【用户登录热力图】加载状态变更 ID:${componentId}`, {
-      loading: newLoading
-    });
-    setLoading(newLoading);
+// 当图表初始化完成时通知父组件
+watch(isChartInitialized, initialized => {
+  if (initialized) {
+    emit("init-complete", componentId);
   }
-);
+});
 
 // 处理强制重新初始化图表事件
 function handleForceReinit() {
@@ -196,16 +202,6 @@ onMounted(() => {
 
   // 监听强制重新初始化图表事件
   document.addEventListener("force-chart-reinit", handleForceReinit);
-
-  // 确保初始化时图表正确渲染
-  if (props.data && props.data.dataset && props.data.dataset.length > 0) {
-    options.value = JSON.parse(JSON.stringify(chartOptions.value));
-
-    // 延迟初始化，确保DOM已就绪
-    setTimeout(() => {
-      forceReInit();
-    }, 200);
-  }
 });
 
 // 组件卸载
@@ -215,33 +211,46 @@ onUnmounted(() => {
   // 移除事件监听器
   document.removeEventListener("force-chart-reinit", handleForceReinit);
 });
+
+// 暴露方法给父组件
+defineExpose({
+  reloadData,
+  forceReInit,
+  chartInstance,
+  isChartInitialized,
+  isDataLoaded
+});
 </script>
 
 <template>
   <div class="chart-container" :style="{ height }">
-    <div v-if="loading" class="chart-loading">
-      <el-icon class="is-loading"><Loading /></el-icon>
-      <span>{{ t("dashboard.loading") }}</span>
-    </div>
+    <!-- 图表DOM容器始终存在，不受数据加载状态影响 -->
     <div
-      v-else-if="
-        !data ||
-        !data.x_labels ||
-        !data.y_labels ||
-        !data.dataset ||
-        data.dataset.length === 0
-      "
-      class="chart-empty"
-    >
-      <el-empty :description="t('dashboard.noData')" />
-    </div>
-    <div
-      v-else
       ref="chartRef"
       class="chart"
       role="img"
       :aria-label="`${t('dashboard.loginHeatmap')}`"
     ></div>
+
+    <!-- 加载状态覆盖层 -->
+    <div v-if="isLoading || props.loading" class="chart-overlay chart-loading">
+      <el-icon class="is-loading"><Loading /></el-icon>
+      <span>{{ t("dashboard.loading") }}</span>
+    </div>
+
+    <!-- 无数据状态覆盖层 -->
+    <div
+      v-else-if="
+        !chartData ||
+        !chartData.x_labels ||
+        !chartData.y_labels ||
+        !chartData.dataset ||
+        chartData.dataset.length === 0
+      "
+      class="chart-overlay chart-empty"
+    >
+      <el-empty :description="t('dashboard.noData')" />
+    </div>
   </div>
 </template>
 
@@ -260,8 +269,7 @@ onUnmounted(() => {
   min-height: 250px;
 }
 
-.chart-loading,
-.chart-empty {
+.chart-overlay {
   position: absolute;
   top: 0;
   left: 0;
