@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, defineProps, watch, onMounted } from "vue";
+import { ref, computed, defineProps, watch, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { Loading } from "@element-plus/icons-vue";
 import type { EChartsOption } from "echarts/types/dist/shared";
@@ -135,7 +135,9 @@ const options = ref<EChartsOption>({});
 const {
   chartInstance,
   loading: chartLoading,
-  setLoading
+  setLoading,
+  forceReInit,
+  initChart
 } = useChart(chartRef, options);
 
 // 当props.data变化时更新图表
@@ -153,9 +155,29 @@ watch(
     if (newData && newData.labels && newData.datasets) {
       // 使用深拷贝确保数据不会因引用问题而丢失
       options.value = JSON.parse(JSON.stringify(chartOptions.value));
+
+      // 在数据变更后，尝试强制重新初始化图表
+      setTimeout(() => {
+        if (chartRef.value) {
+          forceReInit();
+        }
+      }, 100);
     }
   },
   { deep: true }
+);
+
+// 当period变化时强制重新初始化图表
+watch(
+  () => props.period,
+  () => {
+    logger.debug(
+      `【租户趋势图】周期变更，强制重新初始化图表 ID:${componentId}`
+    );
+    setTimeout(() => {
+      forceReInit();
+    }, 100);
+  }
 );
 
 // 当loading状态变化时更新图表加载状态
@@ -169,9 +191,36 @@ watch(
   }
 );
 
+// 处理强制重新初始化图表事件
+function handleForceReinit() {
+  logger.debug(`【租户趋势图】接收到强制重新初始化事件 ID:${componentId}`);
+  forceReInit();
+}
+
 // 组件挂载
 onMounted(() => {
   logger.debug(`【租户趋势图】组件挂载完成 ID:${componentId}`);
+
+  // 监听强制重新初始化图表事件
+  document.addEventListener("force-chart-reinit", handleForceReinit);
+
+  // 确保初始化时图表正确渲染
+  if (props.data && props.data.labels && props.data.labels.length > 0) {
+    options.value = JSON.parse(JSON.stringify(chartOptions.value));
+
+    // 延迟初始化，确保DOM已就绪
+    setTimeout(() => {
+      forceReInit();
+    }, 200);
+  }
+});
+
+// 组件卸载
+onUnmounted(() => {
+  logger.debug(`【租户趋势图】组件卸载 ID:${componentId}`);
+
+  // 移除事件监听器
+  document.removeEventListener("force-chart-reinit", handleForceReinit);
 });
 </script>
 

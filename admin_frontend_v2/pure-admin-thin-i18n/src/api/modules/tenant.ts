@@ -51,11 +51,17 @@ export async function fetchTenantTrendData(
   logger.debug("请求租户数量趋势数据", { period, startDate, endDate });
   // 直接打印到控制台，确保可见
   console.log("API请求：租户数量趋势数据", { period, startDate, endDate, url });
+  console.log("【API调用】fetchTenantTrendData", { period, startDate, endDate, url });
   
   try {
     const response = await http.request<ApiResponse<any>>("get", url);
     // 打印完整的API响应结构，便于调试
     console.log("API租户趋势数据完整响应:", JSON.stringify(response));
+    console.log("【API响应】fetchTenantTrendData 成功", { 
+      success: response.success,
+      code: response.code,
+      dataSize: JSON.stringify(response).length
+    });
     
     // 确保响应正确并且没有被缓存
     if (response.success) {
@@ -87,12 +93,17 @@ export async function fetchTenantTrendData(
         code: response.code, 
         message: response.message 
       });
+      console.log("【API响应】fetchTenantTrendData 失败", { 
+        code: response.code, 
+        message: response.message 
+      });
       throw new Error(response.message || "获取数据失败");
     }
   } catch (error) {
     logger.error("获取租户数量趋势数据失败", error);
     // 直接打印到控制台，确保可见
     console.error("API错误：租户数量趋势数据请求失败", error);
+    console.log("【API错误】fetchTenantTrendData", error);
     throw error;
   }
 }
@@ -102,6 +113,7 @@ export async function fetchTenantTrendData(
  */
 export async function fetchTenantStatusDistribution() {
   logger.debug("请求租户状态分布数据");
+  console.log("【API调用】fetchTenantStatusDistribution");
   
   try {
     const response = await http.request<ApiResponse<any>>(
@@ -111,6 +123,11 @@ export async function fetchTenantStatusDistribution() {
     
     // 打印完整的API响应结构，便于调试
     console.log("API租户状态分布完整响应:", JSON.stringify(response));
+    console.log("【API响应】fetchTenantStatusDistribution 成功", { 
+      success: response.success,
+      code: response.code,
+      dataSize: JSON.stringify(response).length
+    });
     
     if (response.success) {
       // 处理嵌套数据结构
@@ -140,10 +157,15 @@ export async function fetchTenantStatusDistribution() {
         code: response.code, 
         message: response.message 
       });
+      console.log("【API响应】fetchTenantStatusDistribution 失败", { 
+        code: response.code, 
+        message: response.message 
+      });
       throw new Error(response.message || "获取数据失败");
     }
   } catch (error) {
     logger.error("获取租户状态分布数据失败", error);
+    console.log("【API错误】fetchTenantStatusDistribution", error);
     throw error;
   }
 }
@@ -164,12 +186,18 @@ export async function fetchTenantCreationRate(
   if (endDate) url += `&end_date=${endDate}`;
   
   logger.debug("请求租户创建速率数据", { period, startDate, endDate });
+  console.log("【API调用】fetchTenantCreationRate", { period, startDate, endDate, url });
   
   try {
     const response = await http.request<ApiResponse<any>>("get", url);
     
     // 打印完整的API响应结构，便于调试
     console.log("API租户创建速率完整响应:", JSON.stringify(response));
+    console.log("【API响应】fetchTenantCreationRate 成功", { 
+      success: response.success,
+      code: response.code,
+      dataSize: JSON.stringify(response).length
+    });
     
     if (response.success) {
       // 处理嵌套数据结构
@@ -200,10 +228,15 @@ export async function fetchTenantCreationRate(
         code: response.code, 
         message: response.message 
       });
+      console.log("【API响应】fetchTenantCreationRate 失败", { 
+        code: response.code, 
+        message: response.message 
+      });
       throw new Error(response.message || "获取数据失败");
     }
   } catch (error) {
     logger.error("获取租户创建速率数据失败", error);
+    console.log("【API错误】fetchTenantCreationRate", error);
     throw error;
   }
 }

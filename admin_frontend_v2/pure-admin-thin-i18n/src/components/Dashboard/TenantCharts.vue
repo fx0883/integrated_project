@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { ref, reactive, onMounted, watch } from "vue";
+import { ref, reactive, onMounted, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElLoading } from "element-plus";
 import dayjs from "dayjs";
 import { debounce } from "@pureadmin/utils"; // 添加引入debounce
 
@@ -58,6 +58,10 @@ const startDate = ref<string>(props.initialDateRange.startDate);
 const endDate = ref<string>(props.initialDateRange.endDate);
 const dataFetchAttempts = ref(0); // 添加重试计数器
 const MAX_RETRY_ATTEMPTS = 3; // 最大重试次数
+const chartRenderingAttempts = ref(0); // 图表渲染尝试次数
+const MAX_CHART_RENDER_ATTEMPTS = 3; // 最大图表渲染尝试次数
+const isDateChanging = ref(false); // 日期变更中标志
+const fullscreenLoading = ref(false); // 全屏加载状态
 
 logger.debug("TenantCharts组件初始化", {
   initialPeriod: props.initialPeriod,
@@ -90,14 +94,31 @@ async function fetchTrendData() {
     endDate: endDate.value
   });
 
+  console.log("【API请求开始】fetchTrendData", {
+    period: period.value,
+    startDate: startDate.value,
+    endDate: endDate.value,
+    timestamp: new Date().toISOString()
+  });
+
   loading.trend = true;
   error.value = "";
 
   try {
+    const startTime = Date.now();
     const response = await fetchTenantTrendData(
       period.value,
       startDate.value,
       endDate.value
+    );
+    const endTime = Date.now();
+
+    console.log(
+      `【API请求完成】fetchTrendData，耗时: ${endTime - startTime}ms`,
+      {
+        success: response.success,
+        timestamp: new Date().toISOString()
+      }
     );
 
     if (response.success) {
@@ -120,6 +141,11 @@ async function fetchTrendData() {
         code: response.code,
         message: response.message
       });
+      console.log("【API请求失败】fetchTrendData", {
+        code: response.code,
+        message: response.message,
+        timestamp: new Date().toISOString()
+      });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
   } catch (err: any) {
@@ -127,10 +153,17 @@ async function fetchTrendData() {
       message: err.message,
       error: err
     });
+    console.log("【API请求异常】fetchTrendData", {
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
   } finally {
     loading.trend = false;
+    console.log("【API请求结束】fetchTrendData", {
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
@@ -140,11 +173,25 @@ async function fetchTrendData() {
 async function fetchStatusData() {
   logger.debug("开始获取租户状态分布数据");
 
+  console.log("【API请求开始】fetchStatusData", {
+    timestamp: new Date().toISOString()
+  });
+
   loading.status = true;
   error.value = "";
 
   try {
+    const startTime = Date.now();
     const response = await fetchTenantStatusDistribution();
+    const endTime = Date.now();
+
+    console.log(
+      `【API请求完成】fetchStatusData，耗时: ${endTime - startTime}ms`,
+      {
+        success: response.success,
+        timestamp: new Date().toISOString()
+      }
+    );
 
     if (response.success) {
       logger.debug("租户状态分布数据获取成功", {
@@ -163,6 +210,11 @@ async function fetchStatusData() {
         code: response.code,
         message: response.message
       });
+      console.log("【API请求失败】fetchStatusData", {
+        code: response.code,
+        message: response.message,
+        timestamp: new Date().toISOString()
+      });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
   } catch (err: any) {
@@ -170,10 +222,17 @@ async function fetchStatusData() {
       message: err.message,
       error: err
     });
+    console.log("【API请求异常】fetchStatusData", {
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
   } finally {
     loading.status = false;
+    console.log("【API请求结束】fetchStatusData", {
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
@@ -187,14 +246,31 @@ async function fetchCreationRateData() {
     endDate: endDate.value
   });
 
+  console.log("【API请求开始】fetchCreationRateData", {
+    period: period.value,
+    startDate: startDate.value,
+    endDate: endDate.value,
+    timestamp: new Date().toISOString()
+  });
+
   loading.creation = true;
   error.value = "";
 
   try {
+    const startTime = Date.now();
     const response = await fetchTenantCreationRate(
       period.value,
       startDate.value,
       endDate.value
+    );
+    const endTime = Date.now();
+
+    console.log(
+      `【API请求完成】fetchCreationRateData，耗时: ${endTime - startTime}ms`,
+      {
+        success: response.success,
+        timestamp: new Date().toISOString()
+      }
     );
 
     if (response.success) {
@@ -203,10 +279,19 @@ async function fetchCreationRateData() {
         dataPoints: response.data?.datasets?.[0]?.data?.length
       });
       creationRateData.value = response.data;
+      console.log(
+        "【租户创建速率】数据处理结果:",
+        JSON.stringify(creationRateData.value)
+      );
     } else {
       logger.warn("租户创建速率数据请求失败", {
         code: response.code,
         message: response.message
+      });
+      console.log("【API请求失败】fetchCreationRateData", {
+        code: response.code,
+        message: response.message,
+        timestamp: new Date().toISOString()
       });
       throw new Error(response.message || t("dashboard.fetchDataFailed"));
     }
@@ -215,10 +300,17 @@ async function fetchCreationRateData() {
       message: err.message,
       error: err
     });
+    console.log("【API请求异常】fetchCreationRateData", {
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
     error.value = err.message || t("dashboard.fetchDataFailed");
     ElMessage.error(error.value);
   } finally {
     loading.creation = false;
+    console.log("【API请求结束】fetchCreationRateData", {
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
@@ -227,7 +319,14 @@ async function fetchCreationRateData() {
  */
 async function fetchAllData() {
   logger.debug("开始获取所有图表数据");
+  console.log("【数据获取】开始获取所有图表数据", {
+    period: period.value,
+    startDate: startDate.value,
+    endDate: endDate.value,
+    isDateChanging: isDateChanging.value
+  });
   error.value = "";
+  fullscreenLoading.value = true;
 
   // 重置错误状态
   if (dataFetchAttempts.value >= MAX_RETRY_ATTEMPTS) {
@@ -237,17 +336,27 @@ async function fetchAllData() {
     dataFetchAttempts.value = 0;
     error.value = t("dashboard.maxRetryExceeded");
     ElMessage.warning(error.value);
+    fullscreenLoading.value = false;
     return;
   }
 
   // 并行请求数据
   try {
+    console.log("【数据获取】开始发送API请求", {
+      period: period.value,
+      startDate: startDate.value,
+      endDate: endDate.value
+    });
+
+    const startTime = Date.now();
     await Promise.all([
       fetchTrendData(),
       fetchStatusData(),
       fetchCreationRateData()
     ]);
+    const endTime = Date.now();
 
+    console.log(`【数据获取】所有API请求完成，耗时: ${endTime - startTime}ms`);
     logger.debug("所有图表数据获取完成");
 
     // 检查数据有效性
@@ -263,10 +372,20 @@ async function fetchAllData() {
           creationRateData.value.labels.length)
     );
 
+    console.log("【数据获取】数据有效性检查", {
+      hasValidData,
+      trendDataValid: !!trendData.value?.labels?.length,
+      statusDataValid: !!statusData.value?.labels?.length,
+      creationRateDataValid: !!creationRateData.value?.labels?.length
+    });
+
     if (!hasValidData && dataFetchAttempts.value < MAX_RETRY_ATTEMPTS) {
       dataFetchAttempts.value++;
       logger.warn(
         `没有有效数据，${1000 * dataFetchAttempts.value}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
+      );
+      console.log(
+        `【数据获取】没有有效数据，${1000 * dataFetchAttempts.value}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
       );
       setTimeout(() => {
         fetchAllData();
@@ -274,9 +393,17 @@ async function fetchAllData() {
     } else {
       // 重置尝试计数器
       dataFetchAttempts.value = 0;
+
+      // 确保图表重新渲染
+      nextTick(() => {
+        // 通知子组件强制重新初始化图表
+        console.log("【数据获取】数据有效，准备强制重新初始化图表");
+        forceReinitCharts();
+      });
     }
   } catch (err: any) {
     logger.error("获取图表数据过程中发生错误", err);
+    console.log("【数据获取】获取图表数据过程中发生错误", err);
 
     // 在错误情况下尝试重试
     if (dataFetchAttempts.value < MAX_RETRY_ATTEMPTS) {
@@ -284,6 +411,9 @@ async function fetchAllData() {
       const retryDelay = 1000 * dataFetchAttempts.value;
       logger.warn(
         `数据获取失败，${retryDelay}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
+      );
+      console.log(
+        `【数据获取】数据获取失败，${retryDelay}ms后重试 (${dataFetchAttempts.value}/${MAX_RETRY_ATTEMPTS})`
       );
 
       setTimeout(() => {
@@ -293,8 +423,44 @@ async function fetchAllData() {
       error.value = err.message || t("dashboard.fetchAllDataFailed");
       ElMessage.error(error.value);
       dataFetchAttempts.value = 0;
+      console.log("【数据获取】达到最大重试次数，放弃重试");
     }
+  } finally {
+    fullscreenLoading.value = false;
+    console.log("【数据获取】数据获取流程结束，关闭加载状态");
   }
+}
+
+/**
+ * 强制重新初始化所有图表
+ * 用于确保日期变更后图表正确渲染
+ */
+function forceReinitCharts() {
+  if (chartRenderingAttempts.value >= MAX_CHART_RENDER_ATTEMPTS) {
+    logger.warn(`已达到最大图表渲染尝试次数(${MAX_CHART_RENDER_ATTEMPTS})`);
+    chartRenderingAttempts.value = 0;
+    return;
+  }
+
+  logger.debug(
+    `强制重新初始化图表 (${chartRenderingAttempts.value + 1}/${MAX_CHART_RENDER_ATTEMPTS})`
+  );
+
+  // 发出事件通知子组件重新初始化图表
+  nextTick(() => {
+    // 使用自定义事件触发子组件的图表重新初始化
+    const event = new CustomEvent("force-chart-reinit");
+    document.dispatchEvent(event);
+
+    chartRenderingAttempts.value++;
+
+    // 如果图表仍未正确渲染，再次尝试
+    if (chartRenderingAttempts.value < MAX_CHART_RENDER_ATTEMPTS) {
+      setTimeout(() => {
+        forceReinitCharts();
+      }, 300);
+    }
+  });
 }
 
 /**
@@ -311,8 +477,32 @@ function handleDateRangeChange(range: { startDate: string; endDate: string }) {
     to: range
   });
 
+  // 设置日期变更标志
+  isDateChanging.value = true;
+
+  // 显示全屏加载状态，防止用户进行其他操作
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: t("dashboard.updatingCharts"),
+    background: "rgba(255, 255, 255, 0.7)"
+  });
+
+  // 更新日期值
   startDate.value = range.startDate;
   endDate.value = range.endDate;
+
+  // 重置图表渲染尝试次数
+  chartRenderingAttempts.value = 0;
+
+  // 显式调用数据获取函数
+  console.log("日期变更后立即调用fetchAllData");
+  fetchAllData();
+
+  // 延迟关闭加载状态，确保DOM有足够时间更新
+  setTimeout(() => {
+    loadingInstance.close();
+    isDateChanging.value = false;
+  }, 500);
 }
 
 /**
@@ -324,24 +514,68 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
     to: newPeriod
   });
 
+  console.log("周期变更", {
+    from: period.value,
+    to: newPeriod
+  });
+
+  // 设置日期变更标志
+  isDateChanging.value = true;
+
+  // 显示全屏加载状态
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: t("dashboard.updatingCharts"),
+    background: "rgba(255, 255, 255, 0.7)"
+  });
+
   period.value = newPeriod;
+
+  // 重置图表渲染尝试次数
+  chartRenderingAttempts.value = 0;
+
+  // 显式调用数据获取函数
+  console.log("周期变更后立即调用fetchAllData");
+  fetchAllData();
+
+  // 延迟关闭加载状态
+  setTimeout(() => {
+    loadingInstance.close();
+    isDateChanging.value = false;
+  }, 500);
 }
 
 // 使用debounce防抖处理筛选条件变化
 const debouncedFetchData = debounce(() => {
-  fetchAllData();
-}, 300);
+  // 避免在日期变更过程中触发数据获取
+  if (!isDateChanging.value) {
+    console.log("通过watch触发的数据获取");
+    fetchAllData();
+  } else {
+    console.log("日期变更中，跳过watch触发的数据获取");
+  }
+}, 500); // 增加防抖时间
 
 // 监听日期和周期变化，重新加载数据
-watch([() => startDate.value, () => endDate.value, () => period.value], () => {
-  logger.debug("检测到筛选条件变更，重新加载数据", {
-    period: period.value,
-    startDate: startDate.value,
-    endDate: endDate.value
-  });
+watch(
+  [() => startDate.value, () => endDate.value, () => period.value],
+  () => {
+    logger.debug("检测到筛选条件变更，重新加载数据", {
+      period: period.value,
+      startDate: startDate.value,
+      endDate: endDate.value
+    });
 
-  debouncedFetchData(); // 使用防抖函数
-});
+    // 仅在非日期变更过程中触发
+    if (!isDateChanging.value) {
+      console.log("检测到筛选条件变更，准备调用debouncedFetchData");
+      debouncedFetchData(); // 使用防抖函数
+    } else {
+      console.log("日期变更中，跳过watch触发的数据获取");
+    }
+  },
+  { deep: true }
+); // 添加深度监听
 
 // 组件挂载时加载数据
 onMounted(() => {
@@ -349,6 +583,16 @@ onMounted(() => {
   // 直接在控制台输出信息
   console.log("TenantCharts组件挂载，开始加载初始数据");
   fetchAllData();
+
+  // 监听浏览器窗口大小变化，在窗口大小变化时强制重新初始化图表
+  window.addEventListener(
+    "resize",
+    debounce(() => {
+      if (!isDateChanging.value) {
+        forceReinitCharts();
+      }
+    }, 300)
+  );
 });
 </script>
 
@@ -360,8 +604,13 @@ onMounted(() => {
         :start-date="startDate"
         :end-date="endDate"
         @update:range="handleDateRangeChange"
+        :disabled="fullscreenLoading"
       />
-      <PeriodSelector :value="period" @update:period="handlePeriodChange" />
+      <PeriodSelector
+        :value="period"
+        @update:period="handlePeriodChange"
+        :disabled="fullscreenLoading"
+      />
     </div>
 
     <!-- 汇总数据卡片 -->
@@ -376,12 +625,18 @@ onMounted(() => {
           <div class="chart-card">
             <div class="chart-header">
               <h3>{{ t("dashboard.tenantTrend") }}</h3>
+              <div v-if="loading.trend" class="chart-loading-indicator">
+                <el-icon class="is-loading"
+                  ><svg-icon name="ep:loading"
+                /></el-icon>
+              </div>
             </div>
             <div class="chart-body">
               <TenantTrendChart
                 :data="trendData"
                 :loading="loading.trend"
                 :period="period"
+                :key="`trend-${startDate}-${endDate}-${period}`"
               />
             </div>
           </div>
@@ -390,9 +645,18 @@ onMounted(() => {
           <div class="chart-card">
             <div class="chart-header">
               <h3>{{ t("dashboard.tenantStatus") }}</h3>
+              <div v-if="loading.status" class="chart-loading-indicator">
+                <el-icon class="is-loading"
+                  ><svg-icon name="ep:loading"
+                /></el-icon>
+              </div>
             </div>
             <div class="chart-body">
-              <TenantStatusChart :data="statusData" :loading="loading.status" />
+              <TenantStatusChart
+                :data="statusData"
+                :loading="loading.status"
+                :key="`status-${startDate}-${endDate}`"
+              />
             </div>
           </div>
         </el-col>
@@ -400,12 +664,18 @@ onMounted(() => {
           <div class="chart-card">
             <div class="chart-header">
               <h3>{{ t("dashboard.tenantCreationRate") }}</h3>
+              <div v-if="loading.creation" class="chart-loading-indicator">
+                <el-icon class="is-loading"
+                  ><svg-icon name="ep:loading"
+                /></el-icon>
+              </div>
             </div>
             <div class="chart-body">
               <TenantCreationChart
                 :data="creationRateData"
                 :loading="loading.creation"
                 :period="period"
+                :key="`creation-${startDate}-${endDate}-${period}`"
               />
             </div>
           </div>
@@ -455,6 +725,9 @@ onMounted(() => {
 .chart-header {
   padding: 12px 20px;
   border-bottom: 1px solid #ebeef5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .chart-header h3 {
@@ -463,12 +736,18 @@ onMounted(() => {
   font-weight: 500;
 }
 
+.chart-loading-indicator {
+  color: #409eff;
+  font-size: 16px;
+}
+
 .chart-body {
   padding: 20px;
   min-height: 300px;
   height: 300px;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 @media (max-width: 768px) {
