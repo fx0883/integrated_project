@@ -571,3 +571,41 @@ cms/
 3. fix_mysql_timezone.sql - 新增SQL脚本，用于设置MySQL时区
 4. update_mysql_config.py - 新增工具，用于更新MySQL配置文件
 5. timezone_fix_README.md - 新增文档，详细说明解决方案和操作步骤 
+
+# 用户系统拆分设计
+
+## 会话总结
+
+### 本次会话的主要目标
+设计将现有的单一User模型拆分为User和Member两个独立模型的方案，其中User模型只包含超级管理员和租户管理员，Member模型只包含普通成员并保留父子账号关系。
+
+### 已完成的具体任务
+1. 创建了完整的用户系统拆分设计文档，包括：
+   - 概述文档：系统拆分的背景、需求和方案选择
+   - 模型设计文档：详细的模型结构、字段和方法设计
+   - 认证系统设计文档：支持两种用户模型的认证机制
+   - API设计文档：API端点调整和权限控制方案
+   - 数据迁移方案：详细的迁移步骤、注意事项和回滚策略
+   - 总结文档：设计方案的优势、挑战和解决方案
+
+### 采用的技术方案及决策理由
+采用**共享基类方案**，创建一个抽象基类`BaseUserModel`，User和Member模型继承该基类。选择此方案的原因：
+- 减少代码重复，共享基本用户字段和方法
+- 统一认证机制，简化用户登录和验证流程
+- 简化权限控制，基于用户类型实现细粒度权限
+- 便于未来扩展，两个模型可以独立演化
+
+### 使用的主要技术栈
+- Django ORM：模型设计和数据库交互
+- Django AbstractUser：用户模型基类
+- JWT (JSON Web Token)：用户认证
+- Django REST Framework：API设计和权限控制
+- Django迁移框架：数据迁移
+
+### 变更的文件清单
+- docs/member/overview.md：用户系统拆分概述
+- docs/member/model_design.md：模型设计文档
+- docs/member/auth_design.md：认证系统设计文档
+- docs/member/api_design.md：API设计文档
+- docs/member/migration_plan.md：数据迁移方案
+- docs/member/summary.md：设计方案总结 
