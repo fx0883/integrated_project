@@ -27,7 +27,7 @@ from rest_framework import serializers
 from drf_spectacular.utils import OpenApiResponse, OpenApiExample
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from users.models import User
+from users.models import User, Member
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class LoginView(APIView):
     
     @extend_schema(
         summary="用户登录",
-        description="用户登录接口，验证用户名和密码，返回JWT令牌",
+        description="用户登录接口，验证用户名/邮箱和密码，返回JWT令牌",
         request=LoginSerializer,
         responses=login_responses,
         examples=login_request_examples + login_response_examples,
@@ -148,16 +148,26 @@ class LoginView(APIView):
             user.last_login_ip = ip
             user.save(update_fields=['last_login_ip', 'last_login'])
             
-            # 构建用户信息
+            # 构建用户信息，区分User和Member模型
             user_data = {
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
                 'nick_name': user.nick_name or '',
-                'is_admin': user.is_admin,
-                'is_super_admin': user.is_super_admin,
                 'avatar': user.avatar or '',
             }
+            
+            # 根据用户类型添加对应字段
+            from users.models import User as AdminUser
+            if isinstance(user, AdminUser):
+                user_data['is_admin'] = user.is_admin
+                user_data['is_super_admin'] = user.is_super_admin
+                user_data['is_member'] = False
+            else:  # Member类型
+                user_data['is_admin'] = False
+                user_data['is_super_admin'] = False
+                user_data['is_member'] = True
+                user_data['is_sub_account'] = user.is_sub_account if hasattr(user, 'is_sub_account') else False
             
             # 添加租户信息
             if user.tenant:
@@ -184,7 +194,7 @@ class LoginView(APIView):
         return Response({
             'success': False,
             'code': 4002,
-            'message': '用户名或密码错误',
+            'message': '用户名/邮箱或密码错误',
             'data': None
         }, status=status.HTTP_401_UNAUTHORIZED)
     
@@ -242,55 +252,78 @@ class TokenRefreshView(APIView):
                 raise jwt.InvalidTokenError('令牌类型错误')
             
             # 获取用户
-            from users.models import User
             user_id = payload.get('user_id')
             if not user_id:
                 raise jwt.InvalidTokenError('令牌中缺少用户ID')
             
-            user = User.objects.get(id=user_id)
+            # 根据model_type确定用户模型
+            model_type = payload.get('model_type', 'user')
+            
+            # 导入模型
+            from users.models import User, Member
+            
+            # 根据模型类型查询用户
+            if model_type == 'member':
+                user = Member.objects.get(id=user_id, is_active=True, is_deleted=False)
+            else:
+                user = User.objects.get(id=user_id, is_active=True, is_deleted=False)
             
             # 检查用户状态
-            if not user.is_active:
-                return Response({
-                    'success': False,
-                    'code': 4003,
-                    'message': '用户已被禁用',
-                    'data': None
-                }, status=status.HTTP_403_FORBIDDEN)
+            if user.status != 'active':
+                logger.warning(f"刷新令牌时发现用户状态异常: {user.username} ({user.status})")
+                raise jwt.InvalidTokenError('用户状态异常')
+                
+            # 检查是否为子账号
+            if hasattr(user, 'parent') and user.parent:
+                logger.warning(f"子账号尝试刷新令牌: {user.username}")
+                raise jwt.InvalidTokenError('子账号不允许登录')
             
-            # 生成新令牌
+            # 检查用户的租户状态
+            if user.tenant and not getattr(user, 'is_super_admin', False):
+                if user.tenant.status != 'active' or user.tenant.is_deleted:
+                    logger.warning(f"用户 {user.username} 的租户状态异常")
+                    raise jwt.InvalidTokenError('所属租户已被禁用或删除')
+            
+            # 生成新的令牌
             tokens = generate_jwt_token(user)
-            token = tokens['access_token']
-            new_refresh_token = tokens['refresh_token']
             
+            # 记录刷新成功
             logger.info(f"用户 {user.username} 刷新令牌成功")
             
             return Response({
                 'success': True,
                 'code': 2000,
-                'message': '令牌刷新成功',
+                'message': '刷新令牌成功',
                 'data': {
-                    'token': token,
-                    'refresh_token': new_refresh_token
+                    'token': tokens['access_token'],
+                    'refresh_token': tokens['refresh_token']
                 }
             })
             
-        except jwt.ExpiredSignatureError:
-            return Response({
-                'success': False,
-                'code': 4001,
-                'message': '刷新令牌已过期',
-                'data': None
-            }, status=status.HTTP_401_UNAUTHORIZED)
-            
-        except (jwt.InvalidTokenError, User.DoesNotExist) as e:
+        except (jwt.InvalidTokenError, jwt.DecodeError) as e:
             logger.warning(f"刷新令牌失败: {str(e)}")
             return Response({
                 'success': False,
-                'code': 4000,
+                'code': 4001,
                 'message': '无效的刷新令牌',
                 'data': None
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        except (User.DoesNotExist, Member.DoesNotExist) as e:
+            logger.warning(f"刷新令牌对应的用户不存在或已被禁用: {str(e)}")
+            return Response({
+                'success': False,
+                'code': 4001,
+                'message': '用户不存在或已被禁用',
+                'data': None
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            logger.error(f"刷新令牌时发生未知错误: {str(e)}")
+            return Response({
+                'success': False,
+                'code': 5000,
+                'message': '刷新令牌失败',
+                'data': None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class TokenVerifyView(APIView):
@@ -308,20 +341,30 @@ class TokenVerifyView(APIView):
     )
     def get(self, request):
         """
-        验证当前令牌是否有效
-        如果请求能到达这里，说明令牌有效，因为已经通过了认证中间件
+        验证当前用户令牌
         """
         user = request.user
         
-        # 构建用户信息
+        # 构建用户信息，区分User和Member模型
         user_data = {
             'id': user.id,
             'username': user.username,
             'email': user.email,
             'nick_name': user.nick_name or '',
-            'is_admin': user.is_admin,
-            'is_super_admin': user.is_super_admin
+            'avatar': user.avatar or '',
         }
+        
+        # 根据用户类型添加对应字段
+        from users.models import User as AdminUser
+        if isinstance(user, AdminUser):
+            user_data['is_admin'] = user.is_admin
+            user_data['is_super_admin'] = user.is_super_admin
+            user_data['is_member'] = False
+        else:  # Member类型
+            user_data['is_admin'] = False
+            user_data['is_super_admin'] = False
+            user_data['is_member'] = True
+            user_data['is_sub_account'] = user.is_sub_account if hasattr(user, 'is_sub_account') else False
         
         # 添加租户信息
         if user.tenant:
@@ -335,7 +378,6 @@ class TokenVerifyView(APIView):
             'code': 2000,
             'message': '令牌有效',
             'data': {
-                'is_valid': True,
                 'user': user_data
             }
         })

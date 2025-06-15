@@ -18,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
     tenant_name = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -26,10 +27,9 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name', 'is_active', 'avatar', 'tenant', 'tenant_name', 
             'is_admin', 'is_member', 'is_super_admin', 'role', 'date_joined'
         ]
-        read_only_fields = ['id', 'date_joined', 'role', 'tenant_name']
+        read_only_fields = ['id', 'date_joined', 'role', 'tenant_name', 'is_member']
         extra_kwargs = {
             'is_admin': {'read_only': True},
-            'is_member': {'read_only': True},
             'is_super_admin': {'read_only': True},
         }
     
@@ -42,6 +42,11 @@ class UserSerializer(serializers.ModelSerializer):
     def get_role(self, obj) -> str:
         """获取用户角色"""
         return obj.display_role
+    
+    def get_is_member(self, obj) -> bool:
+        """获取是否为普通成员"""
+        # 对于User模型实例，默认不是普通成员
+        return getattr(obj, 'is_member', False)
     
     def get_avatar(self, obj) -> str:
         """获取完整的头像URL"""
@@ -81,6 +86,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         source='tenant',
         write_only=True
     )
+    is_member = serializers.BooleanField(write_only=True, required=False, default=True)
     
     class Meta:
         model = User
@@ -91,7 +97,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'password': {'write_only': True},
-            'id': {'read_only': True}
+            'id': {'read_only': True},
+            'is_admin': {'write_only': True}
         }
     
     def validate(self, data):
@@ -110,6 +117,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         """
         创建用户
         """
+        # 从validated_data中移除is_member字段，因为User模型中实际不存在这个字段
+        is_member = validated_data.pop('is_member', True)
+        
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -123,7 +133,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         
         # 设置角色
         user.is_admin = validated_data.get('is_admin', False)
-        user.is_member = validated_data.get('is_member', True)
+        # 不需要设置is_member，因为User模型中没有这个字段
         
         user.save()
         return user
@@ -289,37 +299,41 @@ class UserRoleUpdateSerializer(serializers.Serializer):
 
 class UserRoleSerializer(serializers.ModelSerializer):
     """
-    用户角色序列化器
+    用户角色序列化器，用于更新用户角色
     """
+    is_member = serializers.BooleanField(required=False)
+    
     class Meta:
         model = User
         fields = ['id', 'is_admin', 'is_member']
         read_only_fields = ['id']
-    
+        
     def validate(self, data):
         """
-        验证角色变更
+        验证角色数据
         """
-        # 角色验证规则
-        if not data.get('is_admin') and not data.get('is_member'):
-            raise serializers.ValidationError("用户必须至少有一个角色")
-        
+        # 检查是否至少有一个角色
+        if not data.get('is_admin') and not data.get('is_member', True):
+            raise serializers.ValidationError({"non_field_errors": "用户必须至少有一个角色"})
         return data
     
     def update(self, instance, validated_data):
         """
         更新用户角色
         """
-        # 如果用户变成管理员，检查配额
-        if validated_data.get('is_admin', False) and not instance.is_admin and instance.tenant:
-            quota = instance.tenant.quota
-            if not quota.can_add_user(is_admin=True):
-                raise serializers.ValidationError({"is_admin": "租户管理员配额已满"})
-        
-        # 更新角色
+        # 更新Admin角色
         instance.is_admin = validated_data.get('is_admin', instance.is_admin)
-        instance.is_member = validated_data.get('is_member', instance.is_member)
         
+        # 移除is_member字段，因为User模型中实际不存在
+        if 'is_member' in validated_data:
+            validated_data.pop('is_member')
+        
+        # 设置普通管理员还是超级管理员
+        if instance.is_super_admin and not instance.is_admin:
+            instance.is_super_admin = False
+            instance.is_staff = False
+            instance.is_superuser = False
+            
         instance.save()
         return instance
 
@@ -333,11 +347,49 @@ class LoginSerializer(serializers.Serializer):
     
     def validate(self, data):
         """
-        验证用户名和密码
+        验证用户名/邮箱和密码
+        从User和Member两个模型中查找用户
         """
-        user = authenticate(username=data['username'], password=data['password'])
+        username_or_email = data['username']
+        password = data['password']
+        
+        # 尝试通过用户名登录
+        user = authenticate(username=username_or_email, password=password)
+        
+        # 如果用户名登录失败，尝试通过邮箱登录
         if not user:
-            raise serializers.ValidationError("用户名或密码错误")
+            # 从User模型中查找邮箱匹配的用户
+            try:
+                user_by_email = User.objects.get(email=username_or_email, is_deleted=False)
+                # 验证密码
+                if user_by_email.check_password(password):
+                    user = user_by_email
+            except User.DoesNotExist:
+                # 尝试从Member模型中查找
+                from users.models import Member
+                try:
+                    member_by_email = Member.objects.get(email=username_or_email, is_deleted=False)
+                    # 验证密码
+                    if member_by_email.check_password(password):
+                        user = member_by_email
+                except Member.DoesNotExist:
+                    # 邮箱也找不到，保持user = None
+                    pass
+        
+        # 如果仍未找到用户，尝试在Member模型中通过用户名查找
+        if not user:
+            from users.models import Member
+            try:
+                member = Member.objects.get(username=username_or_email, is_deleted=False)
+                # 验证密码
+                if member.check_password(password):
+                    user = member
+            except Member.DoesNotExist:
+                # 用户名也找不到，保持user = None
+                pass
+        
+        if not user:
+            raise serializers.ValidationError("用户名/邮箱或密码错误")
         
         # 验证用户状态
         if not user.is_active:
@@ -346,13 +398,14 @@ class LoginSerializer(serializers.Serializer):
         if user.is_deleted:
             raise serializers.ValidationError("用户已被删除")
             
-        # 检查用户是否为子账号
-        if user.parent:
+        # 检查用户是否为子账号（适用于Member模型）
+        if hasattr(user, 'parent') and user.parent:
             raise serializers.ValidationError("子账号不允许登录")
             
         # 验证租户状态
-        if user.tenant and user.tenant.status != 'active':
-            raise serializers.ValidationError("所属租户已被禁用或暂停")
+        if user.tenant and not getattr(user, 'is_super_admin', False):
+            if user.tenant.status != 'active':
+                raise serializers.ValidationError("所属租户已被禁用或暂停")
         
         data['user'] = user
         return data
@@ -411,6 +464,7 @@ class UserListSerializer(serializers.ModelSerializer):
     tenant_name = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -430,6 +484,11 @@ class UserListSerializer(serializers.ModelSerializer):
     def get_role(self, obj) -> str:
         """获取用户角色"""
         return obj.display_role
+        
+    def get_is_member(self, obj) -> bool:
+        """获取是否为普通成员"""
+        # 对于User模型实例，默认不是普通成员
+        return getattr(obj, 'is_member', False)
         
     def get_avatar(self, obj) -> str:
         """获取完整的头像URL"""
@@ -556,13 +615,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             if field in validated_data:
                 setattr(user, field, validated_data[field])
         
-        # 设置为普通会员
-        user.is_member = True
+        # 设置管理员状态
         user.is_admin = False
         user.status = 'active'
         
         user.save()
-        return user 
+        return user
 
 
 class SubAccountCreateSerializer(serializers.ModelSerializer):
@@ -627,9 +685,8 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
             if field in validated_data:
                 setattr(user, field, validated_data[field])
         
-        # 子账号默认为普通成员
+        # 子账号权限设置
         user.is_admin = False
-        user.is_member = True
         user.is_super_admin = False
         user.is_staff = False
         user.is_superuser = False

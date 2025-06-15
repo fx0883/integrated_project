@@ -609,3 +609,38 @@ cms/
 - docs/member/api_design.md：API设计文档
 - docs/member/migration_plan.md：数据迁移方案
 - docs/member/summary.md：设计方案总结 
+
+# 用户系统拆分迁移记录
+
+## 2025-06-15 用户模型拆分为User和Member
+
+### 本次会话的主要目标
+将Django项目中的单一User模型拆分为User和Member两个独立模型，实现不同类型用户的职责分离。
+
+### 已完成的具体任务
+1. 创建了BaseUserModel抽象基类，包含所有用户类型共有的字段和方法
+2. 修改了User模型，移除is_member字段，添加is_admin字段，仅保留管理员用户
+3. 创建了新的Member模型，专门用于普通成员，保留父子账号关系
+4. 更新了admin.py，添加了MemberAdmin类用于管理普通成员
+5. 创建了三个数据库迁移文件：
+   - 0003_create_member_model.py：创建Member模型结构
+   - 0004_migrate_member_data.py：将普通成员数据从User表迁移到Member表
+   - 0005_cleanup_user_model.py：清理User表中的普通成员数据，移除parent字段
+
+### 采用的技术方案及决策理由
+采用了共享基类方案，通过创建抽象基类BaseUserModel实现代码复用。这种方案的优势：
+1. 减少代码重复，统一认证机制
+2. 简化权限控制，便于未来扩展
+3. 保持数据库结构清晰，职责单一
+
+### 使用的主要技术栈
+- Django ORM
+- Django Admin
+- Django数据库迁移系统
+
+### 变更的文件清单
+1. users/models.py - 添加BaseUserModel抽象类，修改User模型，添加Member模型
+2. users/admin.py - 更新UserAdmin类，添加MemberAdmin类
+3. users/migrations/0003_create_member_model.py - 创建Member模型结构
+4. users/migrations/0004_migrate_member_data.py - 数据迁移脚本
+5. users/migrations/0005_cleanup_user_model.py - 清理脚本 

@@ -8,12 +8,22 @@ from rest_framework import status
 # 登录请求示例
 login_request_examples = [
     OpenApiExample(
-        name="标准登录",
+        name="用户名登录",
         summary="使用用户名和密码登录",
         description="提供用户名和密码进行登录",
         value={
-            "username": "check_admin",
-            "password": "admin_main"
+            "username": "admin",
+            "password": "admin_password"
+        },
+        request_only=True
+    ),
+    OpenApiExample(
+        name="邮箱登录",
+        summary="使用邮箱和密码登录",
+        description="提供邮箱和密码进行登录",
+        value={
+            "username": "admin@example.com",
+            "password": "admin_password"
         },
         request_only=True
     )
@@ -22,9 +32,9 @@ login_request_examples = [
 # 登录响应示例
 login_response_examples = [
     OpenApiExample(
-        name="登录成功",
-        summary="登录成功响应",
-        description="用户登录成功的响应示例",
+        name="管理员登录成功",
+        summary="管理员登录成功响应",
+        description="管理员用户登录成功的响应示例",
         value={
             "success": True,
             "code": 2000,
@@ -39,7 +49,35 @@ login_response_examples = [
                     "nick_name": "管理员",
                     "is_admin": True,
                     "is_super_admin": True,
+                    "is_member": False,
                     "avatar": ""
+                }
+            }
+        }
+    ),
+    OpenApiExample(
+        name="普通成员登录成功",
+        summary="普通成员登录成功响应",
+        description="普通成员用户登录成功的响应示例",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "登录成功",
+            "data": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "user": {
+                    "id": 2,
+                    "username": "member",
+                    "email": "member@example.com",
+                    "nick_name": "普通成员",
+                    "is_admin": False,
+                    "is_super_admin": False,
+                    "is_member": True,
+                    "is_sub_account": False,
+                    "avatar": "",
+                    "tenant_id": 1,
+                    "tenant_name": "测试租户"
                 }
             }
         }
@@ -47,11 +85,11 @@ login_response_examples = [
     OpenApiExample(
         name="登录失败",
         summary="登录失败响应",
-        description="用户名或密码错误的响应示例",
+        description="用户名/邮箱或密码错误的响应示例",
         value={
             "success": False,
             "code": 4002,
-            "message": "用户名或密码错误",
+            "message": "用户名/邮箱或密码错误",
             "data": None
         },
         status_codes=["401"]
@@ -80,7 +118,7 @@ token_refresh_response_examples = [
         value={
             "success": True,
             "code": 2000,
-            "message": "令牌刷新成功",
+            "message": "刷新令牌成功",
             "data": {
                 "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -94,7 +132,7 @@ token_refresh_response_examples = [
         value={
             "success": False,
             "code": 4001,
-            "message": "刷新令牌已过期",
+            "message": "无效的刷新令牌",
             "data": None
         },
         status_codes=["401"]
@@ -104,22 +142,48 @@ token_refresh_response_examples = [
 # 验证令牌响应示例
 token_verify_response_examples = [
     OpenApiExample(
-        name="验证成功",
-        summary="令牌验证成功响应",
-        description="令牌有效的响应示例",
+        name="管理员令牌验证成功",
+        summary="管理员令牌验证成功响应",
+        description="管理员用户令牌有效的响应示例",
         value={
             "success": True,
             "code": 2000,
             "message": "令牌有效",
             "data": {
-                "is_valid": True,
                 "user": {
                     "id": 1,
                     "username": "admin",
                     "email": "admin@example.com",
                     "nick_name": "管理员",
                     "is_admin": True,
-                    "is_super_admin": True
+                    "is_super_admin": True,
+                    "is_member": False,
+                    "avatar": ""
+                }
+            }
+        }
+    ),
+    OpenApiExample(
+        name="普通成员令牌验证成功",
+        summary="普通成员令牌验证成功响应",
+        description="普通成员用户令牌有效的响应示例",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "令牌有效",
+            "data": {
+                "user": {
+                    "id": 2,
+                    "username": "member",
+                    "email": "member@example.com",
+                    "nick_name": "普通成员",
+                    "is_admin": False,
+                    "is_super_admin": False,
+                    "is_member": True,
+                    "is_sub_account": False,
+                    "avatar": "",
+                    "tenant_id": 1,
+                    "tenant_name": "测试租户"
                 }
             }
         }
@@ -280,11 +344,11 @@ login_responses = {
         description="登录失败",
         examples=[
             OpenApiExample(
-                name="用户名或密码错误",
+                name="用户名或邮箱或密码错误",
                 value={
                     "success": False,
                     "code": 4002,
-                    "message": "用户名或密码错误",
+                    "message": "用户名/邮箱或密码错误",
                     "data": None
                 }
             )
@@ -313,14 +377,37 @@ token_refresh_responses = {
         ]
     ),
     401: OpenApiResponse(
-        description="刷新令牌已过期",
+        description="令牌验证失败",
         examples=[
             OpenApiExample(
-                name="令牌过期",
+                name="令牌无效",
                 value={
                     "success": False,
                     "code": 4001,
-                    "message": "刷新令牌已过期",
+                    "message": "无效的刷新令牌",
+                    "data": None
+                }
+            ),
+            OpenApiExample(
+                name="用户不存在",
+                value={
+                    "success": False,
+                    "code": 4001,
+                    "message": "用户不存在或已被禁用",
+                    "data": None
+                }
+            )
+        ]
+    ),
+    500: OpenApiResponse(
+        description="服务器错误",
+        examples=[
+            OpenApiExample(
+                name="服务器错误",
+                value={
+                    "success": False,
+                    "code": 5000,
+                    "message": "刷新令牌失败",
                     "data": None
                 }
             )

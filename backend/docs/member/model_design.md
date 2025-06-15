@@ -334,7 +334,6 @@ class Member(BaseUserModel):
 | first_name | CharField | 名 | blank=True |
 | last_name | CharField | 姓 | blank=True |
 | is_active | BooleanField | 是否激活 | default=True |
-| is_staff | BooleanField | 是否可登录管理后台 | default=False |
 | is_superuser | BooleanField | 是否超级用户 | default=False |
 | is_deleted | BooleanField | 是否删除 | default=False |
 | status | CharField | 状态 | default='active' |

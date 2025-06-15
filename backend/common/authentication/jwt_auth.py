@@ -8,8 +8,16 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import authentication
 from rest_framework import exceptions
+from django.db.models import Q
 
+# 获取User模型和Member模型
 User = get_user_model()
+# 导入Member模型
+try:
+    from users.models import Member
+except ImportError:
+    Member = None
+
 logger = logging.getLogger(__name__)
 
 class JWTAuthentication(authentication.BaseAuthentication):
@@ -59,8 +67,14 @@ class JWTAuthentication(authentication.BaseAuthentication):
         # 获取用户
         try:
             user_id = payload.get('user_id')
-            user = User.objects.get(pk=user_id, is_active=True, is_deleted=False)
-        except User.DoesNotExist:
+            model_type = payload.get('model_type', 'user')  # 默认为User模型
+            
+            if model_type == 'member' and Member:
+                user = Member.objects.get(pk=user_id, is_active=True, is_deleted=False)
+            else:
+                user = User.objects.get(pk=user_id, is_active=True, is_deleted=False)
+                
+        except (User.DoesNotExist, Member.DoesNotExist) if Member else User.DoesNotExist:
             logger.warning(f"用户不存在或已被禁用: {user_id}")
             raise exceptions.AuthenticationFailed('用户不存在或已被禁用')
         
@@ -70,12 +84,12 @@ class JWTAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('用户状态异常')
             
         # 检查是否为子账号
-        if user.parent:
+        if hasattr(user, 'parent') and user.parent:
             logger.warning(f"子账号尝试认证: {user.username}")
             raise exceptions.AuthenticationFailed('子账号不允许登录')
         
         # 检查用户的租户状态
-        if user.tenant and not user.is_super_admin:
+        if user.tenant and not getattr(user, 'is_super_admin', False):
             if user.tenant.status != 'active' or user.tenant.is_deleted:
                 logger.warning(f"用户 {user.username} 的租户 {user.tenant.name} 状态异常")
                 raise exceptions.AuthenticationFailed('您所属的租户已被禁用或删除')
@@ -122,18 +136,24 @@ def generate_jwt_token(user):
     token_expiry = datetime.now() + timedelta(seconds=settings.JWT_AUTH['JWT_EXPIRATION_DELTA'])
     refresh_expiry = datetime.now() + timedelta(seconds=settings.JWT_AUTH['JWT_REFRESH_EXPIRATION_DELTA'])
     
+    # 确定用户模型类型
+    from users.models import Member, User as AdminUser
+    model_type = 'member' if isinstance(user, Member) else 'user'
+    
     # 创建访问令牌
     access_payload = {
         'user_id': user.id,
         'username': user.username,
         'exp': token_expiry,
-        'is_admin': user.is_admin,
-        'is_super_admin': user.is_super_admin
+        'model_type': model_type,
+        'is_admin': getattr(user, 'is_admin', False),
+        'is_super_admin': getattr(user, 'is_super_admin', False)
     }
     
     # 创建刷新令牌
     refresh_payload = {
         'user_id': user.id,
+        'model_type': model_type,
         'exp': refresh_expiry,
         'token_type': 'refresh'
     }
@@ -208,8 +228,14 @@ def refresh_jwt_token(refresh_token):
         # 获取用户
         try:
             user_id = payload.get('user_id')
-            user = User.objects.get(pk=user_id, is_active=True, is_deleted=False)
-        except User.DoesNotExist:
+            model_type = payload.get('model_type', 'user')  # 默认为User模型
+            
+            if model_type == 'member' and Member:
+                user = Member.objects.get(pk=user_id, is_active=True, is_deleted=False)
+            else:
+                user = User.objects.get(pk=user_id, is_active=True, is_deleted=False)
+                
+        except (User.DoesNotExist, Member.DoesNotExist) if Member else User.DoesNotExist:
             logger.warning(f"刷新令牌对应的用户不存在或已被禁用: {user_id}")
             raise exceptions.ValidationError('用户不存在或已被禁用')
         
@@ -225,8 +251,9 @@ def refresh_jwt_token(refresh_token):
             'user_id': user.id,
             'username': user.username,
             'exp': token_expiry,
-            'is_admin': user.is_admin,
-            'is_super_admin': user.is_super_admin
+            'model_type': model_type,
+            'is_admin': getattr(user, 'is_admin', False),
+            'is_super_admin': getattr(user, 'is_super_admin', False)
         }
         
         access_token = jwt.encode(
