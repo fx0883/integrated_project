@@ -13,9 +13,5 @@ class RbacConfig(AppConfig):
     
     def ready(self):
         """应用准备就绪时执行的操作"""
-        try:
-            # 导入并应用OpenAPI模式定制
-            from .schemas import apply_openapi_schema
-            apply_openapi_schema()
-        except ImportError:
-            pass
+        # 不再需要导入schemas模块
+        pass

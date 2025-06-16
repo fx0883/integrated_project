@@ -44,27 +44,33 @@ logger = logging.getLogger(__name__)
             OpenApiParameter(name='search', description='搜索关键词(针对name, code, description)', required=False, type=str),
             OpenApiParameter(name='category', description='按类别过滤', required=False, type=str),
             OpenApiParameter(name='is_system', description='是否系统权限(true/false)', required=False, type=bool),
-        ]
+        ],
+        tags=["RBAC系统"]
     ),
     retrieve=extend_schema(
         summary="获取权限详情",
-        description="获取单个权限的详细信息"
+        description="获取单个权限的详细信息",
+        tags=["RBAC系统"]
     ),
     create=extend_schema(
         summary="创建权限",
-        description="创建新权限"
+        description="创建新权限",
+        tags=["RBAC系统"]
     ),
     update=extend_schema(
         summary="更新权限",
-        description="更新现有权限"
+        description="更新现有权限",
+        tags=["RBAC系统"]
     ),
     partial_update=extend_schema(
         summary="部分更新权限",
-        description="部分更新现有权限"
+        description="部分更新现有权限",
+        tags=["RBAC系统"]
     ),
     destroy=extend_schema(
         summary="删除权限",
-        description="删除权限(系统权限不可删除)"
+        description="删除权限(系统权限不可删除)",
+        tags=["RBAC系统"]
     )
 )
 class PermissionViewSet(viewsets.ModelViewSet):
@@ -134,7 +140,8 @@ class PermissionViewSet(viewsets.ModelViewSet):
     
     @extend_schema(
         summary="获取权限类别",
-        description="获取系统中所有权限类别"
+        description="获取系统中所有权限类别",
+        tags=["RBAC系统"]
     )
     @action(detail=False, methods=['get'])
     def categories(self, request):
@@ -148,7 +155,8 @@ class PermissionViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(name='code', description='权限代码', required=True, type=str),
         ],
-        responses={200: PermissionCheckResponseSerializer}
+        responses={200: PermissionCheckResponseSerializer},
+        tags=["RBAC系统"]
     )
     @action(detail=False, methods=['get'])
     def check(self, request):
@@ -170,7 +178,8 @@ class PermissionViewSet(viewsets.ModelViewSet):
         summary="批量检查权限",
         description="批量检查当前用户是否拥有多个权限",
         request=PermissionBatchCheckSerializer,
-        responses={200: PermissionBatchCheckResponseSerializer}
+        responses={200: PermissionBatchCheckResponseSerializer},
+        tags=["RBAC系统"]
     )
     @action(detail=False, methods=['post'])
     def batch_check(self, request):
@@ -193,27 +202,33 @@ class PermissionViewSet(viewsets.ModelViewSet):
             OpenApiParameter(name='search', description='搜索关键词(针对name, code, description)', required=False, type=str),
             OpenApiParameter(name='tenant_id', description='按租户过滤(超管可用)', required=False, type=int),
             OpenApiParameter(name='is_system', description='是否系统角色(true/false)', required=False, type=bool),
-        ]
+        ],
+        tags=["RBAC系统"]
     ),
     retrieve=extend_schema(
         summary="获取角色详情",
-        description="获取角色详情，包括关联的权限"
+        description="获取角色详情，包括关联的权限",
+        tags=["RBAC系统"]
     ),
     create=extend_schema(
         summary="创建角色",
-        description="创建新角色"
+        description="创建新角色",
+        tags=["RBAC系统"]
     ),
     update=extend_schema(
         summary="更新角色",
-        description="更新角色信息"
+        description="更新角色信息",
+        tags=["RBAC系统"]
     ),
     partial_update=extend_schema(
         summary="部分更新角色",
-        description="部分更新角色信息"
+        description="部分更新角色信息",
+        tags=["RBAC系统"]
     ),
     destroy=extend_schema(
         summary="删除角色",
-        description="删除角色(系统角色不可删除)"
+        description="删除角色(系统角色不可删除)",
+        tags=["RBAC系统"]
     )
 )
 class RoleViewSet(viewsets.ModelViewSet):
@@ -317,7 +332,8 @@ class RoleViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         summary="获取角色权限",
-        description="获取角色关联的所有权限"
+        description="获取角色关联的所有权限",
+        tags=["RBAC系统"]
     )
     @action(detail=True, methods=['get'])
     def permissions(self, request, pk=None):
@@ -330,85 +346,108 @@ class RoleViewSet(viewsets.ModelViewSet):
     @extend_schema(
         summary="分配权限到角色",
         description="分配一个或多个权限给角色",
-        request=RolePermissionSerializer
+        request=RolePermissionSerializer,
+        tags=["RBAC系统"]
     )
     @action(detail=True, methods=['post'], url_path='permissions')
     def add_permissions(self, request, pk=None):
-        """分配权限到角色"""
+        """分配一个或多个权限给角色"""
         role = self.get_object()
-        serializer = self.get_serializer(data=request.data)
+        serializer = RolePermissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         permission_ids = serializer.validated_data['permission_ids']
+        permissions = Permission.objects.filter(id__in=permission_ids)
         
-        with transaction.atomic():
-            # 添加新权限
-            for permission_id in permission_ids:
-                RolePermission.objects.get_or_create(
-                    role=role,
-                    permission_id=permission_id
-                )
-        
-        # 刷新使用该角色的用户的权限缓存
-        self._refresh_users_permissions_cache(role)
+        # 检查权限是否存在
+        if len(permissions) != len(permission_ids):
+            return Response(
+                {"detail": "部分权限不存在"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
             
-        return Response({"detail": f"已成功添加{len(permission_ids)}个权限"})
+        # 添加权限到角色
+        for permission in permissions:
+            RolePermission.objects.get_or_create(role=role, permission=permission)
+            
+        # 刷新用户权限缓存
+        self._refresh_users_permissions_cache(role)
+        
+        logger.info(f"用户 {request.user.username} 为角色 {role.name} 添加了权限: {', '.join([p.code for p in permissions])}")
+        
+        return Response({"detail": "权限已成功添加到角色"})
     
     @extend_schema(
         summary="从角色移除权限",
-        description="从角色中移除指定权限"
+        description="从角色中移除指定权限",
+        tags=["RBAC系统"]
     )
     @action(detail=True, methods=['delete'], url_path='permissions/(?P<permission_id>[^/.]+)')
     def remove_permission(self, request, pk=None, permission_id=None):
-        """从角色移除权限"""
+        """从角色中移除指定权限"""
         role = self.get_object()
         
         try:
-            role_permission = RolePermission.objects.get(
-                role=role,
-                permission_id=permission_id
+            permission = Permission.objects.get(id=permission_id)
+        except Permission.DoesNotExist:
+            return Response(
+                {"detail": "权限不存在"},
+                status=status.HTTP_404_NOT_FOUND
             )
+            
+        try:
+            role_permission = RolePermission.objects.get(role=role, permission=permission)
             role_permission.delete()
             
-            # 刷新使用该角色的用户的权限缓存
+            # 刷新用户权限缓存
             self._refresh_users_permissions_cache(role)
             
-            return Response({"detail": "已成功移除权限"})
+            logger.info(f"用户 {request.user.username} 从角色 {role.name} 移除了权限: {permission.code}")
+            
+            return Response({"detail": "权限已成功从角色移除"})
         except RolePermission.DoesNotExist:
             return Response(
-                {"detail": "该角色未分配此权限"},
+                {"detail": "该权限未分配给该角色"},
                 status=status.HTTP_404_NOT_FOUND
             )
     
     @extend_schema(
         summary="批量更新角色权限",
         description="批量更新角色的全部权限(替换现有权限)",
-        request=RolePermissionSerializer
+        request=RolePermissionSerializer,
+        tags=["RBAC系统"]
     )
     @action(detail=True, methods=['put'], url_path='permissions')
     def update_permissions(self, request, pk=None):
-        """批量更新角色权限"""
+        """批量更新角色的全部权限"""
         role = self.get_object()
-        serializer = self.get_serializer(data=request.data)
+        serializer = RolePermissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        permission_ids = set(serializer.validated_data['permission_ids'])
+        permission_ids = serializer.validated_data['permission_ids']
+        permissions = Permission.objects.filter(id__in=permission_ids)
         
+        # 检查权限是否存在
+        if len(permissions) != len(permission_ids) and permission_ids:
+            return Response(
+                {"detail": "部分权限不存在"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         with transaction.atomic():
-            # 删除现有权限
-            role.role_permissions.all().delete()
+            # 清除现有权限
+            RolePermission.objects.filter(role=role).delete()
             
             # 添加新权限
-            for permission_id in permission_ids:
-                RolePermission.objects.create(
-                    role=role,
-                    permission_id=permission_id
-                )
-        
-        # 刷新使用该角色的用户的权限缓存
+            for permission in permissions:
+                RolePermission.objects.create(role=role, permission=permission)
+                
+        # 刷新用户权限缓存
         self._refresh_users_permissions_cache(role)
-            
-        return Response({"detail": f"已成功更新为{len(permission_ids)}个权限"})
+        
+        logger.info(f"用户 {request.user.username} 更新了角色 {role.name} 的权限: {', '.join([p.code for p in permissions])}")
+        
+        return Response({"detail": "角色权限已成功更新"})
     
     def _refresh_users_permissions_cache(self, role):
         """刷新使用该角色的用户的权限缓存"""
@@ -431,23 +470,28 @@ class RoleViewSet(viewsets.ModelViewSet):
             OpenApiParameter(name='user_id', description='用户ID', required=False, type=int),
             OpenApiParameter(name='role_id', description='角色ID', required=False, type=int),
             OpenApiParameter(name='is_active', description='是否激活', required=False, type=bool),
-        ]
+        ],
+        tags=["RBAC系统"]
     ),
     retrieve=extend_schema(
         summary="获取用户角色详情",
-        description="获取单个用户角色关联的详细信息"
+        description="获取单个用户角色关联的详细信息",
+        tags=["RBAC系统"]
     ),
     update=extend_schema(
         summary="更新用户角色",
-        description="更新用户角色关联信息"
+        description="更新用户角色关联信息",
+        tags=["RBAC系统"]
     ),
     partial_update=extend_schema(
         summary="部分更新用户角色",
-        description="部分更新用户角色关联信息"
+        description="部分更新用户角色关联信息",
+        tags=["RBAC系统"]
     ),
     destroy=extend_schema(
         summary="删除用户角色",
-        description="删除用户角色关联"
+        description="删除用户角色关联",
+        tags=["RBAC系统"]
     )
 )
 class UserRoleViewSet(viewsets.ModelViewSet):
@@ -535,12 +579,14 @@ class UserRoleViewSet(viewsets.ModelViewSet):
 @extend_schema_view(
     list=extend_schema(
         summary="获取指定用户的角色",
-        description="获取指定用户关联的所有角色"
+        description="获取指定用户关联的所有角色",
+        tags=["RBAC系统"]
     ),
     create=extend_schema(
         summary="为用户分配角色",
         description="为指定用户分配一个角色",
-        request=UserRoleCreateSerializer
+        request=UserRoleCreateSerializer,
+        tags=["RBAC系统"]
     )
 )
 class UserRolesViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -618,19 +664,23 @@ class UserRolesViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.
 @extend_schema_view(
     retrieve=extend_schema(
         summary="获取用户角色关联",
-        description="获取指定用户与指定角色的关联详情"
+        description="获取指定用户与指定角色的关联详情",
+        tags=["RBAC系统"]
     ),
     update=extend_schema(
         summary="更新用户角色关联",
-        description="更新用户角色关联的属性(如有效期、激活状态)"
+        description="更新用户角色关联的属性(如有效期、激活状态)",
+        tags=["RBAC系统"]
     ),
     partial_update=extend_schema(
         summary="部分更新用户角色关联",
-        description="部分更新用户角色关联的属性"
+        description="部分更新用户角色关联的属性",
+        tags=["RBAC系统"]
     ),
     destroy=extend_schema(
         summary="从用户移除角色",
-        description="从用户中移除指定角色"
+        description="从用户中移除指定角色",
+        tags=["RBAC系统"]
     )
 )
 class UserRoleDetailViewSet(mixins.RetrieveModelMixin, 
@@ -690,7 +740,8 @@ class UserRoleDetailViewSet(mixins.RetrieveModelMixin,
 @extend_schema_view(
     list=extend_schema(
         summary="获取用户权限",
-        description="获取指定用户拥有的所有权限"
+        description="获取指定用户拥有的所有权限",
+        tags=["RBAC系统"]
     )
 )
 class UserPermissionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -745,7 +796,8 @@ class UserPermissionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     create=extend_schema(
         summary="刷新权限缓存",
         description="刷新所有权限缓存",
-        responses={200: CacheRefreshResponseSerializer}
+        responses={200: CacheRefreshResponseSerializer},
+        tags=["RBAC系统"]
     )
 )
 class CacheRefreshViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -758,26 +810,34 @@ class CacheRefreshViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     }
     serializer_class = CacheRefreshResponseSerializer
     
+    @extend_schema(
+        summary="刷新所有权限缓存",
+        description="刷新系统中所有用户的权限缓存",
+        responses={200: CacheRefreshResponseSerializer},
+        tags=["RBAC系统"]
+    )
     def create(self, request, *args, **kwargs):
         """刷新所有权限缓存"""
-        # 获取所有使用过缓存的用户
-        cache_keys = []
+        # 清除所有权限缓存
+        cache_keys = cache.keys('user_permissions_*')
+        if cache_keys:
+            cache.delete_many(cache_keys)
         
-        # 理论上应该列出所有缓存键，但在内存缓存中无法直接获取所有键
-        # 所以这里只是清除所有缓存，依赖于Django的缓存后端实现
-        cache.clear()
-        
+        # 记录操作
         logger.info(f"用户 {request.user.username} 刷新了所有权限缓存")
+        
         return Response({
-            "success": True,
-            "message": "已成功刷新所有权限缓存"
+            'success': True,
+            'message': '所有权限缓存已刷新',
+            'timestamp': timezone.now().isoformat()
         })
 
 @extend_schema_view(
     create=extend_schema(
         summary="刷新指定用户权限缓存",
         description="刷新指定用户的权限缓存",
-        responses={200: CacheRefreshResponseSerializer}
+        responses={200: CacheRefreshResponseSerializer},
+        tags=["RBAC系统"]
     )
 )
 class UserCacheRefreshViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -790,36 +850,58 @@ class UserCacheRefreshViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     }
     serializer_class = CacheRefreshResponseSerializer
     
+    @extend_schema(
+        summary="刷新指定用户权限缓存",
+        description="刷新指定用户的权限缓存",
+        responses={200: CacheRefreshResponseSerializer},
+        tags=["RBAC系统"]
+    )
     def create(self, request, *args, **kwargs):
         """刷新指定用户的权限缓存"""
         user_type = kwargs.get('user_type')
         user_id = kwargs.get('user_id')
         
-        if not user_type or not user_id:
+        # 验证用户类型
+        if user_type not in ['user', 'member']:
             return Response(
-                {"detail": "未提供用户类型或用户ID"},
+                {"detail": "无效的用户类型，必须是'user'或'member'"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
-        # 清除用户权限缓存
-        cache_key = f"rbac_user_permissions_{user_type}_{user_id}"
-        cache.delete(cache_key)
         
-        logger.info(f"用户 {request.user.username} 刷新了 {user_type} ID:{user_id} 的权限缓存")
+        # 获取用户
+        from users.models import User, Member
+        UserModel = User if user_type == 'user' else Member
+        
+        try:
+            user = UserModel.objects.get(id=user_id)
+        except UserModel.DoesNotExist:
+            return Response(
+                {"detail": f"{user_type.capitalize()} ID {user_id} 不存在"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 清除用户权限缓存
+        invalidate_permissions_cache(user)
+        
+        # 记录操作
+        logger.info(f"用户 {request.user.username} 刷新了 {user.username} 的权限缓存")
+        
         return Response({
-            "success": True,
-            "message": f"已成功刷新用户 {user_type} ID:{user_id} 的权限缓存"
+            'success': True,
+            'message': f'用户 {user.username} 的权限缓存已刷新',
+            'timestamp': timezone.now().isoformat()
         })
 
 @extend_schema_view(
     list=extend_schema(
         summary="获取租户角色列表",
-        description="获取指定租户的所有角色"
+        description="获取指定租户的所有角色",
+        tags=["RBAC系统"]
     ),
 )
 class TenantRolesViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    获取租户角色API
+    租户角色管理API
     """
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated, RBACPermissionRequired]
@@ -829,70 +911,69 @@ class TenantRolesViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     }
     
     def get_queryset(self):
-        """获取指定租户的所有角色"""
+        """获取指定租户的角色"""
         tenant_id = self.kwargs.get('tenant_id')
-        
-        if not tenant_id:
-            return Role.objects.none()
-            
         return Role.objects.filter(tenant_id=tenant_id)
     
     @extend_schema(
         summary="从系统角色创建租户角色",
         description="从系统角色模板创建租户特定角色",
         request=TenantRoleCreateFromTemplateSerializer,
-        responses={201: RoleSerializer}
+        responses={201: RoleSerializer},
+        tags=["RBAC系统"]
     )
     @action(detail=False, methods=['post'], url_path='from-template')
     def create_from_template(self, request, tenant_id=None):
-        """从系统角色模板创建租户特定角色"""
-        if not tenant_id:
-            return Response(
-                {"detail": "未提供租户ID"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
+        """从系统角色模板创建租户角色"""
         serializer = TenantRoleCreateFromTemplateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        data = serializer.validated_data
-        template_role_id = data.get('template_role_id')
+        template_role_id = serializer.validated_data['template_role_id']
         
-        # 获取模板角色
         try:
-            template_role = Role.objects.get(id=template_role_id)
+            template_role = Role.objects.get(id=template_role_id, is_system=True, tenant=None)
         except Role.DoesNotExist:
             return Response(
-                {"detail": f"系统角色ID {template_role_id} 不存在"},
+                {"detail": "系统角色模板不存在"},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-        if template_role.tenant is not None:
+            
+        from tenants.models import Tenant
+        try:
+            tenant = Tenant.objects.get(id=tenant_id)
+        except Tenant.DoesNotExist:
             return Response(
-                {"detail": "只能从系统角色创建租户角色"},
+                {"detail": "租户不存在"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # 检查是否已存在同名角色
+        if Role.objects.filter(name=template_role.name, tenant=tenant).exists():
+            return Response(
+                {"detail": f"租户已存在名为'{template_role.name}'的角色"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # 创建租户角色
+            
+        # 创建新角色
         with transaction.atomic():
-            # 创建角色
-            new_role = Role(
-                name=data.get('name', template_role.name),
-                code=data.get('code', template_role.code),
-                description=data.get('description', template_role.description),
-                tenant_id=tenant_id,
-                is_system=False
+            new_role = Role.objects.create(
+                name=template_role.name,
+                code=template_role.code,
+                description=template_role.description,
+                tenant=tenant,
+                is_system=False,
+                created_by=request.user
             )
-            new_role.save()
             
             # 复制权限
-            template_permissions = template_role.role_permissions.all()
-            for perm in template_permissions:
+            template_permissions = template_role.permissions.all()
+            for permission in template_permissions:
                 RolePermission.objects.create(
                     role=new_role,
-                    permission=perm.permission
+                    permission=permission
                 )
+                
+        logger.info(f"用户 {request.user.username} 基于模板 '{template_role.name}' 为租户 '{tenant.name}' 创建了角色 '{new_role.name}'")
         
-        # 返回创建的角色
-        result_serializer = RoleSerializer(new_role)
-        return Response(result_serializer.data, status=status.HTTP_201_CREATED)
+        serializer = RoleSerializer(new_role)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

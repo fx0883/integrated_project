@@ -243,3 +243,46 @@ class Member(BaseUserModel):
             return "子账号"
         else:
             return "普通成员"
+
+class PasswordResetToken(models.Model):
+    """
+    密码重置令牌模型
+    """
+    user = models.ForeignKey(
+        'users.User', 
+        on_delete=models.CASCADE,
+        related_name='password_reset_tokens',
+        verbose_name=_("用户")
+    )
+    token = models.CharField(_("重置令牌"), max_length=64, unique=True)
+    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
+    expires_at = models.DateTimeField(_("过期时间"))
+    is_used = models.BooleanField(_("是否已使用"), default=False)
+    
+    class Meta:
+        verbose_name = _('密码重置令牌')
+        verbose_name_plural = _('密码重置令牌')
+        db_table = 'password_reset_token'
+    
+    def __str__(self):
+        return f"{self.user.username}的重置令牌 ({self.created_at})"
+    
+    def is_expired(self):
+        """
+        检查令牌是否已过期
+        """
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """
+        检查令牌是否有效（未过期且未使用）
+        """
+        return not self.is_used and not self.is_expired()
+    
+    def mark_as_used(self):
+        """
+        标记令牌为已使用
+        """
+        self.is_used = True
+        self.save(update_fields=['is_used'])

@@ -24,4 +24,9 @@ urlpatterns = [
     
     # 管理员修改用户密码
     path('<int:user_id>/change-password/', auth_views.AdminChangePasswordView.as_view(), name='admin-change-password'),
+    
+    # 密码重置
+    path('password-reset/request/', auth_views.PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('password-reset/verify/', auth_views.PasswordResetVerifyView.as_view(), name='password-reset-verify'),
+    path('password-reset/confirm/', auth_views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 ] 

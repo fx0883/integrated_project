@@ -4,7 +4,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import gettext_lazy as _
-from users.models import User, Member
+from users.models import User, Member, PasswordResetToken
 from common.admin import TenantAdminMixin
 
 # 添加调试信息
@@ -156,6 +156,24 @@ class MemberAdmin(TenantAdminMixin, DjangoUserAdmin):
         """
         return obj.display_role
     display_role.short_description = _('角色')
+
+@admin.register(PasswordResetToken)
+class PasswordResetTokenAdmin(admin.ModelAdmin):
+    """
+    密码重置令牌管理
+    """
+    list_display = ('user', 'token', 'created_at', 'expires_at', 'is_used', 'is_expired')
+    list_filter = ('is_used', 'created_at')
+    search_fields = ('user__username', 'user__email', 'token')
+    readonly_fields = ('token', 'created_at')
+    
+    def is_expired(self, obj):
+        """
+        检查令牌是否已过期
+        """
+        return obj.is_expired()
+    is_expired.boolean = True
+    is_expired.short_description = "是否过期"
 
 # 添加调试信息
 print("=== users/admin.py execution completed ===")

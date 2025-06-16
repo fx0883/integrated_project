@@ -675,4 +675,289 @@ sub_account_create_responses = {
             )
         ]
     )
+}
+
+# 密码重置请求示例和响应
+password_reset_request_examples = [
+    OpenApiExample(
+        name="密码重置请求示例",
+        value={
+            "email": "user@example.com"
+        },
+        request_only=True
+    )
+]
+
+password_reset_response_examples = [
+    OpenApiExample(
+        name="密码重置请求成功响应",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "密码重置链接已发送到您的邮箱",
+            "data": {
+                "detail": "密码重置链接已发送到您的邮箱"
+            }
+        },
+        response_only=True
+    ),
+    OpenApiExample(
+        name="邮箱不存在响应",
+        value={
+            "success": False,
+            "code": 4000,
+            "message": "请求数据无效",
+            "data": {
+                "email": ["未找到使用此邮箱的活跃账户"]
+            }
+        },
+        response_only=True
+    )
+]
+
+password_reset_request_responses = {
+    200: OpenApiResponse(
+        description="密码重置链接发送成功",
+        examples=[
+            OpenApiExample(
+                name="密码重置请求成功响应",
+                value={
+                    "success": True,
+                    "code": 2000,
+                    "message": "密码重置链接已发送到您的邮箱",
+                    "data": {
+                        "detail": "密码重置链接已发送到您的邮箱"
+                    }
+                }
+            )
+        ]
+    ),
+    400: OpenApiResponse(
+        description="请求数据无效",
+        examples=[
+            OpenApiExample(
+                name="邮箱不存在响应",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "请求数据无效",
+                    "data": {
+                        "email": ["未找到使用此邮箱的活跃账户"]
+                    }
+                }
+            )
+        ]
+    ),
+    429: OpenApiResponse(
+        description="请求过于频繁",
+        examples=[
+            OpenApiExample(
+                name="请求频率限制响应",
+                value={
+                    "success": False,
+                    "code": 4029,
+                    "message": "请求过于频繁，请稍后再试",
+                    "data": {
+                        "detail": "请求过于频繁，请稍后再试"
+                    }
+                }
+            )
+        ]
+    )
+}
+
+# 密码重置令牌验证示例和响应
+password_reset_verify_examples = [
+    OpenApiExample(
+        name="验证令牌请求示例",
+        value={
+            "token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+        },
+        request_only=True
+    )
+]
+
+password_reset_verify_response_examples = [
+    OpenApiExample(
+        name="令牌验证成功响应",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "重置令牌有效",
+            "data": {
+                "detail": "重置令牌有效",
+                "user_email": "user@example.com"
+            }
+        },
+        response_only=True
+    ),
+    OpenApiExample(
+        name="令牌无效响应",
+        value={
+            "success": False,
+            "code": 4000,
+            "message": "请求数据无效",
+            "data": {
+                "token": ["无效的重置令牌"]
+            }
+        },
+        response_only=True
+    ),
+    OpenApiExample(
+        name="令牌过期响应",
+        value={
+            "success": False,
+            "code": 4000,
+            "message": "请求数据无效",
+            "data": {
+                "token": ["重置令牌已过期"]
+            }
+        },
+        response_only=True
+    )
+]
+
+password_reset_verify_responses = {
+    200: OpenApiResponse(
+        description="令牌验证成功",
+        examples=[
+            OpenApiExample(
+                name="令牌验证成功响应",
+                value={
+                    "success": True,
+                    "code": 2000,
+                    "message": "重置令牌有效",
+                    "data": {
+                        "detail": "重置令牌有效",
+                        "user_email": "user@example.com"
+                    }
+                }
+            )
+        ]
+    ),
+    400: OpenApiResponse(
+        description="令牌无效或已过期",
+        examples=[
+            OpenApiExample(
+                name="令牌无效响应",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "请求数据无效",
+                    "data": {
+                        "token": ["无效的重置令牌"]
+                    }
+                }
+            ),
+            OpenApiExample(
+                name="令牌过期响应",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "请求数据无效",
+                    "data": {
+                        "token": ["重置令牌已过期"]
+                    }
+                }
+            )
+        ]
+    )
+}
+
+# 密码重置确认示例和响应
+password_reset_confirm_examples = [
+    OpenApiExample(
+        name="密码重置确认请求示例",
+        value={
+            "token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+            "new_password": "newPassword123",
+            "confirm_password": "newPassword123"
+        },
+        request_only=True
+    )
+]
+
+password_reset_confirm_response_examples = [
+    OpenApiExample(
+        name="密码重置成功响应",
+        value={
+            "success": True,
+            "code": 2000,
+            "message": "密码重置成功",
+            "data": {
+                "detail": "密码重置成功，请使用新密码登录"
+            }
+        },
+        response_only=True
+    ),
+    OpenApiExample(
+        name="密码不匹配响应",
+        value={
+            "success": False,
+            "code": 4000,
+            "message": "请求数据无效",
+            "data": {
+                "confirm_password": ["两次输入的密码不一致"]
+            }
+        },
+        response_only=True
+    ),
+    OpenApiExample(
+        name="令牌无效响应",
+        value={
+            "success": False,
+            "code": 4000,
+            "message": "请求数据无效",
+            "data": {
+                "token": ["无效的重置令牌"]
+            }
+        },
+        response_only=True
+    )
+]
+
+password_reset_confirm_responses = {
+    200: OpenApiResponse(
+        description="密码重置成功",
+        examples=[
+            OpenApiExample(
+                name="密码重置成功响应",
+                value={
+                    "success": True,
+                    "code": 2000,
+                    "message": "密码重置成功",
+                    "data": {
+                        "detail": "密码重置成功，请使用新密码登录"
+                    }
+                }
+            )
+        ]
+    ),
+    400: OpenApiResponse(
+        description="请求数据无效",
+        examples=[
+            OpenApiExample(
+                name="密码不匹配响应",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "请求数据无效",
+                    "data": {
+                        "confirm_password": ["两次输入的密码不一致"]
+                    }
+                }
+            ),
+            OpenApiExample(
+                name="令牌无效响应",
+                value={
+                    "success": False,
+                    "code": 4000,
+                    "message": "请求数据无效",
+                    "data": {
+                        "token": ["无效的重置令牌"]
+                    }
+                }
+            )
+        ]
+    )
 } 

@@ -695,4 +695,69 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
         user.save()
         
         logger.info(f"用户 {parent_user.username} 创建了子账号 {user.username}，使用{'默认' if password == '123456' else '自定义'}密码")
-        return user 
+        return user
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    请求密码重置的序列化器
+    """
+    email = serializers.EmailField(required=True)
+    
+    def validate_email(self, value):
+        """
+        验证邮箱是否存在
+        """
+        from users.models import User
+        user = User.objects.filter(email=value, is_active=True, is_deleted=False).first()
+        if not user:
+            raise serializers.ValidationError("未找到使用此邮箱的活跃账户")
+        return value
+
+
+class PasswordResetVerifySerializer(serializers.Serializer):
+    """
+    验证密码重置令牌的序列化器
+    """
+    token = serializers.CharField(required=True)
+    
+    def validate_token(self, value):
+        """
+        验证令牌是否有效
+        """
+        from users.models import PasswordResetToken
+        token_obj = PasswordResetToken.objects.filter(token=value, is_used=False).first()
+        if not token_obj:
+            raise serializers.ValidationError("无效的重置令牌")
+        if token_obj.is_expired():
+            raise serializers.ValidationError("重置令牌已过期")
+        return value
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    确认密码重置的序列化器
+    """
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+    
+    def validate(self, data):
+        """
+        验证数据
+        """
+        # 验证密码是否匹配
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": ["两次输入的密码不一致"]})
+        
+        # 验证令牌是否有效
+        from users.models import PasswordResetToken
+        token_obj = PasswordResetToken.objects.filter(token=data['token'], is_used=False).first()
+        if not token_obj:
+            raise serializers.ValidationError({"token": ["无效的重置令牌"]})
+        if token_obj.is_expired():
+            raise serializers.ValidationError({"token": ["重置令牌已过期"]})
+        
+        # 将token对象添加到验证后的数据中
+        data['token_obj'] = token_obj
+        return data 
