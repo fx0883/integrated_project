@@ -596,6 +596,77 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
 }
 ```
 
+### 获取租户完整信息
+
+获取指定租户的所有相关信息，包括基本信息、配额信息、使用情况以及企业信息。
+
+- **URL**: `/api/v1/tenants/{id}/comprehensive/`
+- **方法**: `GET`
+- **权限要求**: 超级管理员可查看任意租户，租户管理员只能查看自己所在的租户
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取租户信息成功",
+  "data": {
+    "id": 1,
+    "name": "测试租户",
+    "code": "TEST001",
+    "status": "active",
+    "status_display": "活跃",
+    "contact_name": "测试联系人",
+    "contact_email": "test@example.com",
+    "contact_phone": "13800138000",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-10T00:00:00Z",
+    "is_active": true,
+    "user_count": 15,
+    "admin_count": 3,
+    "quota": {
+      "max_users": 100,
+      "max_admins": 10,
+      "max_storage_mb": 10240,
+      "max_products": 50,
+      "current_storage_used_mb": 1024,
+      "usage_percentage": {
+        "users": 15.0,
+        "admins": 30.0,
+        "storage": 10.0,
+        "products": 0.0
+      }
+    },
+    "business_info": {
+      "company_name": "测试企业有限公司",
+      "legal_representative": "张三",
+      "unified_social_credit_code": "91310000XXXXXXXX1A",
+      "registration_number": "123456789",
+      "company_type": "有限责任公司",
+      "registered_capital": 1000000,
+      "registered_capital_currency": "CNY",
+      "business_scope": "软件开发、信息技术服务",
+      "establishment_date": "2020-01-01",
+      "business_term_start": "2020-01-01",
+      "business_term_end": "2040-01-01",
+      "registration_authority": "上海市市场监督管理局",
+      "approval_date": "2020-01-01",
+      "business_status": "正常营业",
+      "registered_address": "上海市浦东新区XX路XX号",
+      "office_address": "上海市浦东新区XX路XX号",
+      "contact_person": "李四",
+      "contact_phone": "13900001111",
+      "email": "contact@example.com",
+      "website": "https://example.com",
+      "license_image_url": "https://example.com/license.jpg",
+      "verification_status": "verified",
+      "verification_status_display": "已验证"
+    }
+  }
+}
+```
+
 ### 更新租户信息
 
 更新指定租户的信息。
@@ -679,9 +750,11 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "获取成功",
   "data": {
-    "tenant_id": 1,
     "max_users": 100,
-    "max_storage": 10240,
+    "max_admins": 10,
+    "max_storage_mb": 10240,
+    "max_products": 50,
+    "current_storage_used_mb": 1024,
     "created_at": "2023-01-01T00:00:00Z",
     "updated_at": "2023-01-10T00:00:00Z"
   }
@@ -701,14 +774,18 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|-----|-----|
 | max_users | Integer | 是 | 最大用户数量 |
-| max_storage | Integer | 是 | 最大存储空间（MB） |
+| max_admins | Integer | 是 | 最大管理员数量 |
+| max_storage_mb | Integer | 是 | 最大存储空间（MB） |
+| max_products | Integer | 是 | 最大产品数量 |
 
 #### 请求示例
 
 ```json
 {
   "max_users": 150,
-  "max_storage": 20480
+  "max_admins": 15,
+  "max_storage_mb": 20480,
+  "max_products": 75
 }
 ```
 
@@ -720,9 +797,11 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "更新成功",
   "data": {
-    "tenant_id": 1,
     "max_users": 150,
-    "max_storage": 20480,
+    "max_admins": 15,
+    "max_storage_mb": 20480,
+    "max_products": 75,
+    "current_storage_used_mb": 1024,
     "created_at": "2023-01-01T00:00:00Z",
     "updated_at": "2023-01-11T00:00:00Z"
   }
@@ -735,7 +814,7 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
 
 - **URL**: `/api/v1/tenants/{id}/quota/usage/`
 - **方法**: `GET`
-- **权限要求**: 超级管理员
+- **权限要求**: 超级管理员可查看任意租户，租户管理员只能查看自己租户
 
 #### 响应示例
 
@@ -745,13 +824,19 @@ GET /api/v1/tenants/?search=测试&page=1&page_size=10
   "code": 2000,
   "message": "获取成功",
   "data": {
-    "tenant_id": 1,
+    "tenant": 1,
+    "tenant_name": "测试租户",
     "max_users": 150,
-    "current_users": 5,
-    "users_usage_percent": 3.33,
-    "max_storage": 20480,
-    "current_storage": 1024,
-    "storage_usage_percent": 5.0
+    "max_admins": 15,
+    "max_storage_mb": 20480,
+    "max_products": 75,
+    "current_storage_used_mb": 1024,
+    "usage_percentage": {
+      "users": 3.33,
+      "admins": 20.0,
+      "storage": 5.0,
+      "products": 0.0
+    }
   }
 }
 ```

@@ -21,7 +21,10 @@ class TenantSerializer(serializers.ModelSerializer):
     
     def get_quota(self, obj):
         """获取租户配额"""
-        return TenantQuotaSerializer(obj.tenantquota_set.first()).data
+        try:
+            return TenantQuotaSerializer(obj.quota).data
+        except TenantQuota.DoesNotExist:
+            return None
     
     def get_has_business_info(self, obj):
         """检查租户是否有企业信息"""
