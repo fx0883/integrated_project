@@ -71,7 +71,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # 文档查看应用路由
-    path('', include('docs_view.urls')),
+    path('docs/', include('docs_view.urls')),
     
     # API版本1路由
     path('api/v1/', include([
@@ -83,6 +83,9 @@ urlpatterns = [
         
         # 租户相关路由
         path('tenants/', include('tenants.urls', namespace='tenants')),
+        
+        # RBAC权限系统路由
+        path('rbac/', include('rbac.urls', namespace='rbac')),
         
         # 通用功能路由
         path('common/', include('common.urls', namespace='common')),

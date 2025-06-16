@@ -224,7 +224,6 @@ class Member(BaseUserModel):
         
         # 确保普通成员没有管理后台权限
         self.is_staff = False
-        self.is_superuser = False
         
         super().save(*args, **kwargs)
     

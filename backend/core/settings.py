@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'common',
     'tenants',
     'users',
+    'rbac',  # RBAC权限系统
     'docs_view',  # 新添加的文档查看应用
     'check_system',  # 打卡系统应用
     'cms',  # CMS应用

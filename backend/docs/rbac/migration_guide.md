@@ -1,10 +1,55 @@
 # RBAC迁移指南
 
-本文档提供从现有权限系统迁移到RBAC权限控制系统的详细步骤和注意事项。
+本文档提供从现有权限系统（基于角色标志）迁移到RBAC（基于角色的访问控制）系统的详细步骤和注意事项，特别关注如何处理系统中的双用户模型（User和Member）情况。
 
 ## 1. 迁移概述
 
-从现有的基于角色标志（`is_super_admin`、`is_admin`、`is_member`）的权限系统迁移到完整的RBAC系统需要分阶段进行，确保系统在迁移过程中持续可用。
+### 1.1 现有权限系统
+
+当前系统基于角色标志实现权限控制：
+
+- **User模型**
+  - `is_super_admin`标志：标识超级管理员
+  - `is_admin`标志：标识租户管理员
+
+- **Member模型**
+  - 无特殊权限标志，基本权限由代码控制
+
+### 1.2 目标RBAC系统
+
+迁移目标是实现完整的RBAC系统：
+
+- **Permission（权限）**：最小粒度的权限单元
+- **Role（角色）**：权限的集合，可分配给用户
+- **UserRole（用户-角色关联）**：连接用户和角色，支持双用户模型
+
+### 1.3 迁移架构图
+
+```
++--------------------+                         +--------------------+
+|   现有权限系统     |                         |   目标RBAC系统     |
++--------------------+         迁移            +--------------------+
+| - 基于角色标志     |  ------------------>   | - 基于角色的权限   |
+| - 硬编码权限控制   |                         | - 动态权限分配     |
+| - 简单权限类       |                         | - 细粒度权限控制   |
++--------------------+                         +--------------------+
+        |                                               |
+        v                                               v
++--------------------+                         +--------------------+
+|   User模型         |       权限映射          |   User模型         |
++--------------------+  ------------------>   +--------------------+
+| - is_super_admin   |                         | - RBAC用户权限接口 |
+| - is_admin         |                         | - 角色关联         |
++--------------------+                         +--------------------+
+        |                                               |
+        v                                               v
++--------------------+                         +--------------------+
+|   Member模型       |       权限映射          |   Member模型       |
++--------------------+  ------------------>   +--------------------+
+| - 基础权限         |                         | - RBAC用户权限接口 |
+| - 代码控制         |                         | - 角色关联         |
++--------------------+                         +--------------------+
+```
 
 ## 2. 迁移策略
 
@@ -16,545 +61,456 @@
 2. **第二阶段**：逐步将权限检查切换到RBAC系统，但保留旧系统作为备份
 3. **第三阶段**：完全切换到RBAC系统，旧系统仅作为兼容层
 
-### 2.2 回滚机制
+### 2.2 平行迁移架构图
+
+```
++-----------------------------------------------------+
+|              应用层                                 |
++---------------------+-------------------------------+
+|    原有功能模块     |      新功能模块              |
++---------------------+-------------------------------+
+|    旧权限检查机制   |      RBAC权限检查机制        |
++---------------------+-------------------------------+
+        |                           |
+        v                           v
++---------------------+    +------------------------+
+|   角色标志检查      |    |   RBAC权限检查        |
++---------------------+    +------------------------+
+|   is_super_admin    |    |   has_permission()    |
+|   is_admin          |    |   has_any_permission()|
++---------------------+    +------------------------+
+                                    |
+                                    v
+                          +------------------------+
+                          |     兼容层            |
+                          +------------------------+
+                          | 角色标志 → RBAC权限映射 |
+                          +------------------------+
+```
+
+### 2.3 回滚机制
 
 为确保安全，我们将实现以下回滚机制：
 
-1. 特性开关：通过配置控制是否使用RBAC系统
-2. 双重检查：关键操作同时使用新旧系统进行权限检查
-3. 监控告警：监控权限检查异常，及时发现问题
+1. **特性开关**：通过配置控制是否使用RBAC系统
+2. **双重检查**：关键操作同时使用新旧系统进行权限检查
+3. **监控告警**：监控权限检查异常，及时发现问题
+
+### 2.4 回滚策略流程图
+
+```
++------------------+     +------------------+     +------------------+
+|  权限检查请求    |---->|  检查特性开关    |---->|  使用RBAC权限    |
++------------------+     +------------------+     +------------------+
+                                 |                        |
+                                 | 开关关闭               | 异常监控
+                                 v                        v
+                         +------------------+    +------------------+
+                         |  使用传统权限    |    |  告警系统        |
+                         +------------------+    +------------------+
+                                                         |
+                                                         | 触发阈值
+                                                         v
+                                                +------------------+
+                                                |  自动回滚到      |
+                                                |  传统权限系统    |
+                                                +------------------+
+```
 
 ## 3. 准备工作
 
-### 3.1 现有权限映射
+### 3.1 角色映射
 
-首先，我们需要将现有的角色标志映射到RBAC权限：
+将现有角色标志映射到RBAC角色：
 
-| 角色标志 | 对应RBAC角色 | 包含权限 |
-|---------|-------------|---------|
-| is_super_admin | 系统超级管理员 | 所有系统权限 |
-| is_admin (tenant) | 租户管理员 | 租户内所有权限 |
-| is_member | 普通成员 | 基本操作权限 |
+| 角色标志 | RBAC角色 | 说明 |
+|---------|---------|------|
+| is_super_admin=True | 超级管理员角色 | 拥有所有权限 |
+| is_admin=True, is_super_admin=False | 租户管理员角色 | 拥有租户内所有资源的管理权限 |
+| User无角色标志 | 普通用户角色 | 基本操作权限 |
+| Member | 普通成员角色 | 基本操作权限 |
 
-### 3.2 创建权限和角色映射表
+### 3.2 权限映射
 
-创建详细的权限映射文档，记录每个现有视图函数/API的权限要求及其对应的RBAC权限：
+将现有的权限类映射到RBAC权限：
 
-```python
-# 权限映射示例
-PERMISSION_MAPPING = {
-    # 用户管理
-    'users.views.UserViewSet.list': ['user:view'],
-    'users.views.UserViewSet.create': ['user:create'],
-    'users.views.UserViewSet.update': ['user:edit'],
-    'users.views.UserViewSet.destroy': ['user:delete'],
-    
-    # 租户管理
-    'tenants.views.TenantViewSet.list': ['tenant:view'],
-    'tenants.views.TenantViewSet.create': ['tenant:create'],
-    # ...更多映射
-}
+| 现有权限类 | 对应RBAC权限 |
+|----------|-------------|
+| IsSuperAdmin | 超级管理员角色，拥有所有权限 |
+| IsAdmin | 租户管理员角色，拥有租户管理相关权限 |
+| IsOwnerOrAdmin | 资源所有者权限+管理员权限 |
+| IsSameTenantUser | 同租户权限检查 |
+
+### 3.3 角色权限映射图
+
+```
++--------------------+        +--------------------+        +--------------------+
+|  超级管理员        |        |  租户管理员        |        |  普通用户          |
++--------------------+        +--------------------+        +--------------------+
+| - 所有系统权限     |        | - 租户用户管理权限  |        | - 基本查看权限     |
+| - 所有租户管理权限 |        | - 租户资源管理权限  |        | - 个人资料管理权限 |
+| - 所有配置权限     |        | - 租户配置权限      |        | - 有限的操作权限   |
++--------------------+        +--------------------+        +--------------------+
+        |                             |                             |
+        v                             v                             v
++--------------------+        +--------------------+        +--------------------+
+| system:* 权限      |        | tenant:* 权限      |        | user:view 权限     |
+| tenant:* 权限      |        | user:* 权限        |        | profile:* 权限     |
+| user:* 权限        |        | resource:* 权限    |        | resource:view 权限 |
+| config:* 权限      |        | config:view 权限   |        |                    |
++--------------------+        +--------------------+        +--------------------+
 ```
 
-## 4. 数据迁移
+## 4. 迁移步骤
 
-### 4.1 创建初始权限数据
+### 4.1 迁移计划概览
 
-```bash
-# 运行初始化命令创建基本权限和角色
-python manage.py init_rbac
+迁移将按照以下步骤进行：
+
+1. 准备阶段：设计和开发RBAC系统
+2. 数据迁移：创建权限、角色和用户角色映射
+3. 系统集成：整合RBAC系统到现有架构
+4. 功能迁移：逐步将功能从旧系统迁移到RBAC系统
+5. 验证和测试：确保迁移的正确性和性能
+6. 完全切换：全面启用RBAC系统
+
+### 4.2 迁移路线图
+
+```
++------------------+     +------------------+     +------------------+
+|  准备阶段        |---->|  数据迁移        |---->|  系统集成        |
++------------------+     +------------------+     +------------------+
+        |                        |                        |
+        v                        v                        v
++------------------+     +------------------+     +------------------+
+| - 设计权限模型   |     | - 创建权限记录   |     | - 实现兼容层    |
+| - 开发RBAC应用   |     | - 创建角色记录   |     | - 整合认证系统  |
+| - 设计迁移策略   |     | - 用户角色映射   |     | - 添加缓存机制  |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  完全切换        |<----|  验证和测试      |<----|  功能迁移        |
++------------------+     +------------------+     +------------------+
+        |                        |                        |
+        v                        v                        v
++------------------+     +------------------+     +------------------+
+| - 移除兼容层     |     | - 功能测试       |     | - 新功能使用RBAC |
+| - 清理旧代码     |     | - 性能测试       |     | - 迁移现有视图   |
+| - 完成文档更新   |     | - 安全测试       |     | - 添加过渡逻辑   |
++------------------+     +------------------+     +------------------+
 ```
 
-### 4.2 为现有用户分配角色
+### 4.3 数据迁移流程
 
-创建迁移脚本`rbac/management/commands/migrate_user_roles.py`：
+数据迁移将按照以下顺序进行：
 
-```python
-from django.core.management.base import BaseCommand
-from django.db import transaction
-from users.models import User
-from rbac.models import Role, UserRole
+1. 创建基础权限数据
+2. 创建系统角色数据
+3. 建立权限与角色的关联
+4. 将用户映射到对应角色
 
-class Command(BaseCommand):
-    help = '为现有用户分配RBAC角色'
+#### 4.3.1 数据迁移流程图
 
-    def handle(self, *args, **kwargs):
-        self.stdout.write('开始为现有用户分配RBAC角色...')
-        
-        # 获取预定义角色
-        try:
-            super_admin_role = Role.objects.get(code='system_admin')
-            tenant_admin_role = Role.objects.get(code='tenant_admin')
-            member_role = Role.objects.get(code='tenant_member')
-        except Role.DoesNotExist:
-            self.stdout.write(self.style.ERROR('预定义角色不存在，请先运行init_rbac命令'))
-            return
-        
-        # 为用户分配角色
-        with transaction.atomic():
-            # 处理超级管理员
-            super_admins = User.objects.filter(is_super_admin=True)
-            self.assign_role(super_admins, super_admin_role, '超级管理员')
-            
-            # 处理租户管理员
-            tenant_admins = User.objects.filter(is_admin=True, is_super_admin=False)
-            self.assign_role(tenant_admins, tenant_admin_role, '租户管理员')
-            
-            # 处理普通成员
-            members = User.objects.filter(is_member=True, is_admin=False, is_super_admin=False)
-            self.assign_role(members, member_role, '普通成员')
-            
-        self.stdout.write(self.style.SUCCESS('用户角色分配完成!'))
-    
-    def assign_role(self, users, role, role_name):
-        """为用户分配角色"""
-        count = 0
-        for user in users:
-            # 检查是否已分配该角色
-            if not UserRole.objects.filter(user=user, role=role).exists():
-                UserRole.objects.create(user=user, role=role, is_active=True)
-                count += 1
-        
-        self.stdout.write(f'为 {count} 个{role_name}分配了角色 {role.name}')
+```
++------------------+     +------------------+     +------------------+
+|  创建基础权限    |---->|  创建系统角色    |---->|  角色权限关联    |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  迁移Member用户  |<----|  迁移User用户    |<----|  创建租户角色    |
++------------------+     +------------------+     +------------------+
 ```
 
-运行迁移命令：
+### 4.4 代码迁移策略
 
-```bash
-python manage.py migrate_user_roles
+代码迁移将通过兼容层实现平滑过渡：
+
+#### 4.4.1 权限检查兼容层设计
+
+兼容层将同时支持新旧两种权限检查方式，确保系统在迁移过程中正常运行。
+
+```
++------------------+
+|  业务逻辑        |
++------------------+
+         |
+         v
++------------------+
+|  权限检查调用    |
++------------------+
+         |
+         v
++------------------+     +------------------+
+|  权限兼容层      |---->|  旧权限检查      |
++------------------+     +------------------+
+         |                       |
+         |                       v
+         |              +------------------+
+         |              |  角色标志判断    |
+         |              +------------------+
+         v
++------------------+     +------------------+
+|  RBAC权限检查    |---->|  用户权限缓存    |
++------------------+     +------------------+
+                                 |
+                                 v
+                          +------------------+
+                          |  数据库权限查询  |
+                          +------------------+
 ```
 
-## 5. 代码迁移
+#### 4.4.2 权限检查迁移路径
 
-### 5.1 创建兼容层
+对于每个功能模块，我们将按照以下路径进行权限检查迁移：
 
-在`rbac/compatibility.py`中创建兼容层：
+1. 添加RBAC权限检查，但保留原始权限检查
+2. 监控RBAC权限检查的正确性和性能
+3. 当确认RBAC权限检查稳定后，移除原始权限检查
 
-```python
-from django.conf import settings
+#### 4.4.3 视图权限迁移图
 
-# 是否启用RBAC
-RBAC_ENABLED = getattr(settings, 'RBAC_ENABLED', False)
-
-def check_permission_compatibility(user, permission_code):
-    """
-    兼容层权限检查
-    
-    如果启用RBAC，使用RBAC权限检查
-    否则使用旧的角色标志检查
-    
-    Args:
-        user: 用户对象
-        permission_code: RBAC权限代码
-    
-    Returns:
-        布尔值，指示用户是否有权限
-    """
-    # 未认证用户没有权限
-    if not user.is_authenticated:
-        return False
-    
-    # 如果启用RBAC，使用RBAC权限检查
-    if RBAC_ENABLED:
-        return user.has_permission(permission_code)
-    
-    # 否则使用旧的角色标志检查
-    
-    # 超级管理员拥有所有权限
-    if user.is_super_admin:
-        return True
-    
-    # 用户管理权限
-    if permission_code.startswith('user:'):
-        # 租户管理员可以管理用户
-        if user.is_admin:
-            return True
-        # 普通用户只能查看
-        if permission_code == 'user:view' and user.is_member:
-            return True
-    
-    # 租户管理权限
-    if permission_code.startswith('tenant:'):
-        # 只有超级管理员可以管理租户（前面已处理）
-        return False
-    
-    # 默认拒绝
-    return False
+```
++------------------+               +------------------+
+|  旧视图权限控制  |    ------->   |  过渡期视图权限  |
++------------------+               +------------------+
+| - IsAdmin        |               | - 兼容层权限类    |
+| - IsSuperAdmin   |               | - 双重权限检查    |
++------------------+               +------------------+
+                                            |
+                                            v
+                                   +------------------+
+                                   |  RBAC视图权限    |
+                                   +------------------+
+                                   | - HasPermission  |
+                                   | - 细粒度权限控制 |
+                                   +------------------+
 ```
 
-### 5.2 更新权限检查装饰器
+## 5. 验证与测试
 
-创建兼容性装饰器`rbac/decorators_compat.py`：
+### 5.1 测试策略框架
 
-```python
-from functools import wraps
-from django.core.exceptions import PermissionDenied
-from django.utils.translation import gettext as _
-from .compatibility import check_permission_compatibility
+迁移过程中的测试策略包括：
 
-def permission_required_compat(permission_code):
-    """
-    兼容版权限检查装饰器
-    
-    Args:
-        permission_code: 权限代码
-    """
-    def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            if not request.user.is_authenticated:
-                raise PermissionDenied(_("用户未认证"))
-            
-            if not check_permission_compatibility(request.user, permission_code):
-                raise PermissionDenied(_("权限不足"))
-            
-            return view_func(request, *args, **kwargs)
-        return _wrapped_view
-    return decorator
+```
++------------------+     +------------------+     +------------------+
+|  单元测试        |---->|  集成测试        |---->|  系统测试        |
++------------------+     +------------------+     +------------------+
+        |                        |                        |
+        v                        v                        v
++------------------+     +------------------+     +------------------+
+| - 权限检查逻辑   |     | - API权限控制    |     | - 端到端业务流程 |
+| - 角色权限管理   |     | - 认证集成       |     | - 多租户场景     |
+| - 缓存机制       |     | - 数据隔离       |     | - 用户体验       |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  用户接受测试    |<----|  性能测试        |<----|  安全测试        |
++------------------+     +------------------+     +------------------+
+        |                        |                        |
+        v                        v                        v
++------------------+     +------------------+     +------------------+
+| - 实际用户验证   |     | - 负载测试       |     | - 权限绕过测试   |
+| - 权限管理体验   |     | - 响应时间       |     | - 越权测试       |
+| - 工作流评估     |     | - 缓存效率       |     | - 认证安全       |
++------------------+     +------------------+     +------------------+
 ```
 
-### 5.3 更新DRF权限类
+### 5.2 验证指标
 
-创建兼容性权限类`rbac/permissions_compat.py`：
+以下是迁移过程中需要验证的关键指标：
 
-```python
-from rest_framework import permissions
-from .compatibility import check_permission_compatibility
+1. **功能正确性**：
+   - 权限检查结果与预期一致
+   - 角色分配正常工作
+   - 租户隔离有效实现
 
-class HasPermissionCompat(permissions.BasePermission):
-    """
-    兼容版权限检查类
-    """
-    def __init__(self, required_permission):
-        self.required_permission = required_permission
-        
-    def has_permission(self, request, view):
-        return check_permission_compatibility(request.user, self.required_permission)
+2. **性能指标**：
+   - 权限检查响应时间
+   - 缓存命中率
+   - 系统整体性能影响
+
+3. **安全指标**：
+   - 权限边界测试
+   - 跨租户访问限制
+   - 权限提升漏洞检测
+
+### 5.3 测试用例设计框架
+
+```
++------------------+     +------------------+     +------------------+
+|  基础功能测试    |     |  权限边界测试    |     |  异常场景测试    |
++------------------+     +------------------+     +------------------+
+| - 权限授予/撤销  |     | - 权限边缘情况   |     | - 缺失权限数据   |
+| - 角色分配/移除  |     | - 特殊权限检查   |     | - 权限冲突       |
+| - 权限检查流程   |     | - 权限继承关系   |     | - 系统错误处理   |
++------------------+     +------------------+     +------------------+
+
++------------------+     +------------------+     +------------------+
+|  多租户测试      |     |  权限缓存测试    |     |  迁移完整性测试  |
++------------------+     +------------------+     +------------------+
+| - 租户隔离检查   |     | - 缓存一致性     |     | - 数据迁移完整性 |
+| - 跨租户操作限制 |     | - 缓存失效机制   |     | - 权限映射准确性 |
+| - 租户特定权限   |     | - 缓存更新触发   |     | - 角色映射准确性 |
++------------------+     +------------------+     +------------------+
 ```
 
-## 6. 逐步替换现有权限检查
+## 6. 问题排查与回滚
 
-### 6.1 配置特性开关
+### 6.1 常见问题及解决方案
 
-在`core/settings.py`中添加：
+#### 6.1.1 权限检查问题排查流程
 
-```python
-# RBAC特性开关
-RBAC_ENABLED = os.getenv('RBAC_ENABLED', 'False').lower() == 'true'
+```
++------------------+     +------------------+     +------------------+
+|  权限检查失败    |---->|  检查用户角色    |---->|  检查角色权限    |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  应用修复方案    |<----|  确定问题类型    |<----|  检查权限缓存    |
++------------------+     +------------------+     +------------------+
 ```
 
-### 6.2 替换权限检查
+1. **权限检查失败**
+   - 问题：用户无法访问应有权限的资源
+   - 排查：检查用户角色映射、角色权限分配、权限缓存状态
+   - 解决：更新用户角色映射、刷新权限缓存、修复权限数据
 
-逐步将现有权限检查替换为兼容版：
+2. **性能问题**
+   - 问题：权限检查导致系统响应变慢
+   - 排查：检查缓存效率、数据库查询性能、查询频率
+   - 解决：优化缓存策略、添加数据库索引、减少冗余查询
 
-```python
-# 旧代码
-from common.permissions import IsAdmin
+3. **租户隔离问题**
+   - 问题：租户间数据权限混乱
+   - 排查：检查权限数据的租户ID、权限过滤逻辑
+   - 解决：修复租户过滤机制、校正角色租户关联
 
-class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAdmin]
+### 6.2 回滚流程
+
+如果迁移过程中出现严重问题，按照以下步骤回滚：
+
+```
++------------------+     +------------------+     +------------------+
+|  发现严重问题    |---->|  激活回滚开关    |---->|  停用RBAC检查    |
++------------------+     +------------------+     +------------------+
+        |                                                 |
+        v                                                 v
++------------------+                            +------------------+
+|  告知团队和用户  |                            |  恢复旧权限检查  |
++------------------+                            +------------------+
+        |                                                 |
+        v                                                 v
++------------------+     +------------------+     +------------------+
+|  修复问题        |<----|  诊断根本原因    |<----|  验证系统恢复    |
++------------------+     +------------------+     +------------------+
+        |
+        v
++------------------+     +------------------+
+|  重新开始迁移    |---->|  加强测试        |
++------------------+     +------------------+
 ```
 
-替换为：
+### 6.3 监控策略
 
-```python
-# 新代码
-from rbac.permissions_compat import HasPermissionCompat
+实施以下监控策略及早发现迁移过程中的问题：
 
-class UserViewSet(viewsets.ModelViewSet):
-    def get_permissions(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [HasPermissionCompat('user:view')]
-        elif self.action == 'create':
-            permission_classes = [HasPermissionCompat('user:create')]
-        elif self.action in ['update', 'partial_update']:
-            permission_classes = [HasPermissionCompat('user:edit')]
-        elif self.action == 'destroy':
-            permission_classes = [HasPermissionCompat('user:delete')]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        
-        return [permission() for permission in permission_classes]
+1. **权限检查监控**：
+   - 记录权限检查结果
+   - 跟踪权限检查性能
+   - 监控权限缓存命中率
+
+2. **系统性能监控**：
+   - API响应时间
+   - 数据库查询性能
+   - 系统资源使用情况
+
+3. **异常监控**：
+   - 权限相关异常
+   - 认证失败
+   - 数据库错误
+
+## 7. 迁移后的工作
+
+### 7.1 后迁移清理流程
+
+```
++------------------+     +------------------+     +------------------+
+|  验证功能完整    |---->|  移除兼容层      |---->|  优化系统性能    |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  维护文档更新    |<----|  用户培训        |<----|  清理旧代码      |
++------------------+     +------------------+     +------------------+
 ```
 
-## 7. 测试和验证
+### 7.2 长期维护计划
 
-### 7.1 单元测试
+迁移完成后，实施以下长期维护计划：
 
-创建测试用例验证权限检查：
+1. **定期权限审计**：
+   - 系统权限分配审计
+   - 用户角色分配审计
+   - 权限使用情况分析
 
-```python
-from django.test import TestCase
-from django.urls import reverse
-from rest_framework.test import APIClient
-from users.models import User
-from rbac.models import Permission, Role, UserRole
+2. **权限系统优化**：
+   - 基于使用情况优化权限粒度
+   - 改进权限缓存策略
+   - 优化权限检查性能
 
-class RBACCompatibilityTestCase(TestCase):
-    def setUp(self):
-        # 创建测试用户
-        self.admin_user = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_admin=True
-        )
-        
-        self.normal_user = User.objects.create_user(
-            username='user',
-            password='password',
-            is_member=True
-        )
-        
-        # 创建测试权限和角色
-        self.view_permission = Permission.objects.create(
-            code='user:view',
-            name='查看用户',
-            category='用户管理'
-        )
-        
-        self.admin_role = Role.objects.create(
-            name='管理员',
-            code='admin'
-        )
-        self.admin_role.permissions.add(self.view_permission)
-        
-        # 分配角色
-        UserRole.objects.create(
-            user=self.admin_user,
-            role=self.admin_role,
-            is_active=True
-        )
-        
-        # 创建API客户端
-        self.client = APIClient()
-    
-    def test_rbac_disabled_compatibility(self):
-        """测试RBAC禁用时的兼容性"""
-        with self.settings(RBAC_ENABLED=False):
-            # 管理员应该可以访问
-            self.client.force_authenticate(user=self.admin_user)
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 200)
-            
-            # 普通用户应该可以访问（根据旧权限规则）
-            self.client.force_authenticate(user=self.normal_user)
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 200)
-    
-    def test_rbac_enabled(self):
-        """测试RBAC启用时的权限检查"""
-        with self.settings(RBAC_ENABLED=True):
-            # 管理员应该可以访问（有角色和权限）
-            self.client.force_authenticate(user=self.admin_user)
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 200)
-            
-            # 普通用户应该被拒绝（没有分配角色和权限）
-            self.client.force_authenticate(user=self.normal_user)
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 403)
-```
+3. **持续培训**：
+   - 为新管理员提供培训
+   - 更新操作文档
+   - 收集用户反馈持续改进
 
-### 7.2 集成测试
+## 8. 迁移时间表
 
-创建端到端测试验证完整流程：
+| 阶段 | 时间估计 | 主要任务 | 里程碑 |
+|-----|---------|---------|-------|
+| 准备阶段 | 1-2周 | 设计RBAC架构<br>准备数据模型<br>开发基础组件 | RBAC系统设计完成 |
+| 数据迁移 | 1周 | 创建权限数据<br>创建角色数据<br>映射用户角色 | 初始数据迁移完成 |
+| 系统集成 | 2周 | 实现权限兼容层<br>整合认证系统<br>实现缓存机制 | 系统集成完成 |
+| 功能迁移（一期） | 2周 | 迁移非核心功能<br>添加监控<br>收集反馈 | 首批功能迁移完成 |
+| 验证与调整 | 1周 | 测试迁移功能<br>性能评估<br>调整迁移策略 | 迁移策略优化完成 |
+| 功能迁移（二期） | 2周 | 迁移核心功能<br>全面权限检查<br>完善文档 | 全部功能迁移完成 |
+| 最终验证 | 1周 | 系统测试<br>性能测试<br>安全测试 | 系统验证通过 |
+| 切换与清理 | 1周 | 启用纯RBAC模式<br>移除兼容层<br>清理旧代码 | 迁移项目完成 |
 
-```python
-from django.test import TestCase
-from django.urls import reverse
-from rest_framework.test import APIClient
-from users.models import User
-from rbac.models import Permission, Role, UserRole
+## 9. 迁移检查清单
 
-class RBACIntegrationTestCase(TestCase):
-    def setUp(self):
-        # 创建测试数据
-        self.setup_users()
-        self.setup_rbac()
-        self.client = APIClient()
-    
-    def setup_users(self):
-        # 创建各类用户
-        self.super_admin = User.objects.create_user(
-            username='superadmin',
-            password='password',
-            is_super_admin=True
-        )
-        
-        self.tenant_admin = User.objects.create_user(
-            username='tenantadmin',
-            password='password',
-            is_admin=True
-        )
-        
-        self.normal_user = User.objects.create_user(
-            username='normaluser',
-            password='password',
-            is_member=True
-        )
-    
-    def setup_rbac(self):
-        # 创建权限
-        self.view_user_perm = Permission.objects.create(
-            code='user:view',
-            name='查看用户',
-            category='用户管理'
-        )
-        
-        self.create_user_perm = Permission.objects.create(
-            code='user:create',
-            name='创建用户',
-            category='用户管理'
-        )
-        
-        # 创建角色
-        self.admin_role = Role.objects.create(
-            name='系统管理员',
-            code='system_admin',
-            is_system=True
-        )
-        self.admin_role.permissions.add(self.view_user_perm, self.create_user_perm)
-        
-        self.tenant_admin_role = Role.objects.create(
-            name='租户管理员',
-            code='tenant_admin',
-            is_system=True
-        )
-        self.tenant_admin_role.permissions.add(self.view_user_perm)
-        
-        # 分配角色
-        UserRole.objects.create(
-            user=self.super_admin,
-            role=self.admin_role,
-            is_active=True
-        )
-        
-        UserRole.objects.create(
-            user=self.tenant_admin,
-            role=self.tenant_admin_role,
-            is_active=True
-        )
-    
-    def test_full_rbac_workflow(self):
-        """测试完整RBAC工作流程"""
-        with self.settings(RBAC_ENABLED=True):
-            # 1. 超级管理员可以查看和创建用户
-            self.client.force_authenticate(user=self.super_admin)
-            
-            # 查看用户列表
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 200)
-            
-            # 创建用户
-            response = self.client.post(reverse('user-list'), {
-                'username': 'newuser',
-                'password': 'password',
-                'email': 'newuser@example.com'
-            })
-            self.assertEqual(response.status_code, 201)
-            
-            # 2. 租户管理员可以查看但不能创建用户
-            self.client.force_authenticate(user=self.tenant_admin)
-            
-            # 查看用户列表
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 200)
-            
-            # 尝试创建用户（应该被拒绝）
-            response = self.client.post(reverse('user-list'), {
-                'username': 'anotheruser',
-                'password': 'password',
-                'email': 'another@example.com'
-            })
-            self.assertEqual(response.status_code, 403)
-            
-            # 3. 普通用户不能查看或创建用户
-            self.client.force_authenticate(user=self.normal_user)
-            
-            # 尝试查看用户列表
-            response = self.client.get(reverse('user-list'))
-            self.assertEqual(response.status_code, 403)
-            
-            # 尝试创建用户
-            response = self.client.post(reverse('user-list'), {
-                'username': 'yetanotheruser',
-                'password': 'password',
-                'email': 'yetanother@example.com'
-            })
-            self.assertEqual(response.status_code, 403)
-```
+### 9.1 准备阶段检查项
 
-## 8. 部署和切换
+- [ ] RBAC权限模型设计完成
+- [ ] 角色设计与现有角色标志映射明确
+- [ ] 权限粒度定义合理
+- [ ] 迁移策略文档完成
+- [ ] 回滚机制设计完成
+- [ ] 团队成员理解迁移计划
 
-### 8.1 部署步骤
+### 9.2 执行阶段检查项
 
-1. 部署RBAC代码但保持禁用状态
-2. 运行数据迁移脚本
-3. 在测试环境中启用RBAC
-4. 验证功能正常后在生产环境中启用
+- [ ] 基础权限数据创建完成
+- [ ] 系统角色创建完成
+- [ ] 权限与角色关联完成
+- [ ] 用户角色映射完成
+- [ ] 权限兼容层实现完成
+- [ ] 缓存机制实现完成
+- [ ] 监控机制部署完成
+- [ ] 初步功能测试通过
+- [ ] 性能指标达到预期
 
-### 8.2 切换计划
+### 9.3 完成阶段检查项
 
-| 阶段 | 时间 | 操作 |
-|-----|------|-----|
-| 准备阶段 | 第1周 | 部署代码，运行数据迁移 |
-| 测试阶段 | 第2周 | 在测试环境启用RBAC |
-| 灰度发布 | 第3周 | 对部分用户启用RBAC |
-| 全面切换 | 第4周 | 对所有用户启用RBAC |
-| 清理阶段 | 第5周 | 移除旧权限代码 |
-
-### 8.3 监控和告警
-
-设置以下监控指标：
-
-1. 权限检查失败率
-2. API错误率
-3. 用户投诉数量
-
-如果指标异常，立即回滚到旧系统。
-
-## 9. 培训和文档
-
-### 9.1 开发人员培训
-
-为开发团队提供以下培训：
-
-1. RBAC基本概念
-2. 如何使用新的权限API
-3. 如何编写权限测试
-
-### 9.2 管理员培训
-
-为系统管理员提供以下培训：
-
-1. 如何管理角色和权限
-2. 如何分配用户角色
-3. 如何排查权限问题
-
-### 9.3 用户文档
-
-更新用户手册，包括：
-
-1. 权限系统变更说明
-2. 新功能使用指南
-3. 常见问题解答
-
-## 10. 后续优化
-
-### 10.1 性能优化
-
-1. 优化权限缓存策略
-2. 减少数据库查询
-3. 实现权限预加载
-
-### 10.2 功能增强
-
-1. 实现权限继承机制
-2. 添加时间限制权限
-3. 实现动态权限规则
-
-### 10.3 工具支持
-
-1. 开发权限分析工具
-2. 实现权限可视化界面
-3. 创建权限审计报告 
+- [ ] 所有功能迁移完成
+- [ ] 系统测试通过
+- [ ] 性能测试通过
+- [ ] 安全测试通过
+- [ ] 用户培训完成
+- [ ] 文档更新完成
+- [ ] 兼容层移除完成
+- [ ] 旧代码清理完成 

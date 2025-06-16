@@ -1,604 +1,358 @@
 # RBAC API设计
 
-本文档定义了RBAC权限控制系统的API接口设计。
+本文档定义了RBAC权限控制系统的API接口设计。这些接口将支持系统中的两种用户模型（User和Member）管理权限和角色。
 
-## 1. 权限管理API
+## 1. API概述
 
-### 1.1 获取权限列表
+RBAC API主要包括以下几个部分：
 
-**请求**:
+- 权限管理API
+- 角色管理API
+- 用户角色管理API
+- 权限验证API
+
+所有接口都遵循RESTful设计原则，支持标准的HTTP方法，并返回统一格式的JSON响应。
+
+### 1.1 API架构图
+
 ```
-GET /api/rbac/permissions/
++------------------+     +------------------+     +------------------+
+|  前端应用        |---->|  API网关         |---->|  认证授权层     |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  数据响应        |<----|  业务逻辑层      |<----|  API控制器      |
++------------------+     +------------------+     +------------------+
 ```
 
-**参数**:
-- `category`: 权限类别过滤
-- `search`: 搜索关键词
-- `page`: 页码
-- `page_size`: 每页数量
+### 1.2 API分组结构
 
-**响应**:
-```json
+```
++---------------------------+
+|       RBAC API体系        |
++---------------------------+
+|                           |
+|  +-------------------+    |
+|  |  权限管理API      |    |
+|  +-------------------+    |
+|                           |
+|  +-------------------+    |
+|  |  角色管理API      |    |
+|  +-------------------+    |
+|                           |
+|  +-------------------+    |
+|  |  用户角色API      |    |
+|  +-------------------+    |
+|                           |
+|  +-------------------+    |
+|  |  权限验证API      |    |
+|  +-------------------+    |
+|                           |
++---------------------------+
+```
+
+## 2. 统一响应格式
+
+所有API响应都遵循以下统一格式：
+
+**成功响应**:
+```
 {
   "code": 200,
   "message": "success",
   "data": {
-    "count": 100,
-    "next": "http://example.com/api/rbac/permissions/?page=2",
-    "previous": null,
-    "results": [
-      {
-        "id": 1,
-        "code": "user:view",
-        "name": "查看用户",
-        "description": "允许查看用户列表和详情",
-        "category": "用户管理",
-        "is_system": true,
-        "created_at": "2023-01-01T00:00:00Z"
-      },
-      // ...更多权限
-    ]
+    // 响应数据
   }
 }
 ```
 
-### 1.2 创建权限
-
-**请求**:
+**错误响应**:
 ```
-POST /api/rbac/permissions/
-```
-
-**请求体**:
-```json
 {
-  "code": "user:create",
-  "name": "创建用户",
-  "description": "允许创建新用户",
-  "category": "用户管理",
-  "is_system": false
-}
-```
-
-**响应**:
-```json
-{
-  "code": 201,
-  "message": "权限创建成功",
-  "data": {
-    "id": 2,
-    "code": "user:create",
-    "name": "创建用户",
-    "description": "允许创建新用户",
-    "category": "用户管理",
-    "is_system": false,
-    "created_at": "2023-01-01T00:00:00Z"
+  "code": 400,
+  "message": "错误描述",
+  "errors": {
+    // 详细错误信息
   }
 }
 ```
 
-### 1.3 获取权限详情
+### 2.1 状态码设计
 
-**请求**:
-```
-GET /api/rbac/permissions/{id}/
-```
+| 状态码 | 描述 |
+|-------|------|
+| 200 | 请求成功 |
+| 201 | 资源创建成功 |
+| 400 | 请求参数错误 |
+| 401 | 未授权 |
+| 403 | 权限不足 |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |
 
-**响应**:
-```json
+## 3. 权限管理API
+
+### 3.1 API端点设计
+
+| 方法 | 路径 | 描述 |
+|-----|------|------|
+| GET | /api/rbac/permissions/ | 获取权限列表 |
+| GET | /api/rbac/permissions/{id}/ | 获取权限详情 |
+| POST | /api/rbac/permissions/ | 创建权限 |
+| PUT | /api/rbac/permissions/{id}/ | 更新权限 |
+| DELETE | /api/rbac/permissions/{id}/ | 删除权限 |
+| GET | /api/rbac/permissions/categories/ | 获取权限类别 |
+| GET | /api/rbac/permissions/check/ | 权限检查 |
+
+### 3.2 数据结构
+
+**权限对象**:
+```
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": 1,
-    "code": "user:view",
-    "name": "查看用户",
-    "description": "允许查看用户列表和详情",
-    "category": "用户管理",
-    "is_system": true,
-    "created_at": "2023-01-01T00:00:00Z",
-    "roles": [
-      {
-        "id": 1,
-        "name": "管理员",
-        "code": "admin"
-      },
-      // ...更多角色
-    ]
-  }
+  "id": "权限ID",
+  "code": "权限代码",
+  "name": "权限名称",
+  "description": "权限描述",
+  "category": "权限类别",
+  "is_system": "是否系统权限"
 }
 ```
 
-### 1.4 更新权限
+### 3.3 请求流程图
 
-**请求**:
 ```
-PUT /api/rbac/permissions/{id}/
++------------------+     +------------------+     +------------------+
+|  客户端          |---->|  权限列表请求    |---->|  权限过滤处理   |
++------------------+     +------------------+     +------------------+
+        ^                                                 |
+        |                                                 v
++------------------+     +------------------+     +------------------+
+|  展示权限列表    |<----|  响应处理        |<----|  查询数据库     |
++------------------+     +------------------+     +------------------+
 ```
 
-**请求体**:
-```json
+## 4. 角色管理API
+
+### 4.1 API端点设计
+
+| 方法 | 路径 | 描述 |
+|-----|------|------|
+| GET | /api/rbac/roles/ | 获取角色列表 |
+| GET | /api/rbac/roles/{id}/ | 获取角色详情 |
+| POST | /api/rbac/roles/ | 创建角色 |
+| PUT | /api/rbac/roles/{id}/ | 更新角色 |
+| DELETE | /api/rbac/roles/{id}/ | 删除角色 |
+| GET | /api/rbac/roles/{id}/permissions/ | 获取角色权限 |
+| POST | /api/rbac/roles/{id}/permissions/ | 分配权限到角色 |
+| DELETE | /api/rbac/roles/{id}/permissions/{permission_id}/ | 从角色移除权限 |
+
+### 4.2 数据结构
+
+**角色对象**:
+```
 {
-  "name": "查看用户信息",
-  "description": "允许查看用户列表和详细信息",
-  "category": "用户管理"
+  "id": "角色ID",
+  "code": "角色代码",
+  "name": "角色名称",
+  "description": "角色描述",
+  "tenant_id": "租户ID",
+  "is_system": "是否系统角色"
 }
 ```
 
-**响应**:
-```json
+### 4.3 角色权限管理流程图
+
+```
++------------------+     +------------------+     +------------------+
+|  管理员          |---->|  角色权限分配    |---->|  校验权限       |
++------------------+     +------------------+     +------------------+
+        ^                                                 |
+        |                                                 v
++------------------+     +------------------+     +------------------+
+|  更新结果通知    |<----|  更新权限缓存    |<----|  更新数据库     |
++------------------+     +------------------+     +------------------+
+```
+
+## 5. 用户角色管理API
+
+### 5.1 API端点设计
+
+| 方法 | 路径 | 描述 |
+|-----|------|------|
+| GET | /api/rbac/user-roles/ | 获取用户角色列表 |
+| GET | /api/rbac/users/{user_type}/{user_id}/roles/ | 获取指定用户的角色 |
+| POST | /api/rbac/users/{user_type}/{user_id}/roles/ | 为用户分配角色 |
+| DELETE | /api/rbac/users/{user_type}/{user_id}/roles/{role_id}/ | 从用户移除角色 |
+| PUT | /api/rbac/users/{user_type}/{user_id}/roles/{role_id}/ | 更新用户角色关联 |
+
+### 5.2 数据结构
+
+**用户角色对象**:
+```
 {
-  "code": 200,
-  "message": "权限更新成功",
-  "data": {
-    "id": 1,
-    "code": "user:view",
-    "name": "查看用户信息",
-    "description": "允许查看用户列表和详细信息",
-    "category": "用户管理",
-    "is_system": true,
-    "created_at": "2023-01-01T00:00:00Z"
-  }
+  "id": "关联ID",
+  "user_type": "用户类型(user/member)",
+  "user_id": "用户ID",
+  "role_id": "角色ID",
+  "role": {
+    "id": "角色ID",
+    "name": "角色名称",
+    "code": "角色代码"
+  },
+  "is_active": "是否激活",
+  "start_date": "生效日期",
+  "end_date": "过期日期"
 }
 ```
 
-### 1.5 删除权限
+### 5.3 用户角色关系图
 
-**请求**:
 ```
-DELETE /api/rbac/permissions/{id}/
-```
-
-**响应**:
-```json
-{
-  "code": 204,
-  "message": "权限删除成功",
-  "data": null
-}
-```
-
-## 2. 角色管理API
-
-### 2.1 获取角色列表
-
-**请求**:
-```
-GET /api/rbac/roles/
++------------------+              +------------------+
+|  User用户        |              |  Member用户      |
++------------------+              +------------------+
+        |                                  |
+        |                                  |
+        v                                  v
++------------------------------------------+
+|             UserRole关联表               |
++------------------------------------------+
+                     |
+                     |
+                     v
++------------------+              +------------------+
+|  租户A角色       |              |  租户B角色       |
++------------------+              +------------------+
 ```
 
-**参数**:
-- `tenant_id`: 租户ID过滤
-- `search`: 搜索关键词
-- `is_system`: 是否系统角色
-- `page`: 页码
-- `page_size`: 每页数量
+## 6. 权限验证API
 
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "count": 50,
-    "next": "http://example.com/api/rbac/roles/?page=2",
-    "previous": null,
-    "results": [
-      {
-        "id": 1,
-        "name": "系统管理员",
-        "code": "system_admin",
-        "description": "系统级管理员角色",
-        "is_system": true,
-        "tenant": null,
-        "created_at": "2023-01-01T00:00:00Z",
-        "updated_at": "2023-01-01T00:00:00Z",
-        "permission_count": 50
-      },
-      // ...更多角色
-    ]
-  }
-}
+### 6.1 API端点设计
+
+| 方法 | 路径 | 描述 |
+|-----|------|------|
+| GET | /api/rbac/permissions/check/ | 检查当前用户权限 |
+| POST | /api/rbac/permissions/batch-check/ | 批量检查权限 |
+| GET | /api/rbac/users/{user_type}/{user_id}/permissions/ | 获取用户所有权限 |
+
+### 6.2 权限检查流程图
+
+```
++------------------+     +------------------+     +------------------+
+|  应用请求        |---->|  权限检查API     |---->|  用户认证       |
++------------------+     +------------------+     +------------------+
+        ^                                                 |
+        |                                                 v
++------------------+     +------------------+     +------------------+
+|  返回检查结果    |<----|  检查结果处理    |<----|  权限缓存查询   |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          | 缓存未命中
+                                                          v
+                                                 +------------------+
+                                                 |  数据库权限查询  |
+                                                 +------------------+
 ```
 
-### 2.2 创建角色
+## 7. 权限缓存刷新API
 
-**请求**:
-```
-POST /api/rbac/roles/
-```
+### 7.1 API端点设计
 
-**请求体**:
-```json
-{
-  "name": "内容编辑",
-  "code": "content_editor",
-  "description": "内容编辑角色",
-  "is_system": false,
-  "tenant_id": 1,
-  "permissions": [1, 2, 3]
-}
-```
+| 方法 | 路径 | 描述 |
+|-----|------|------|
+| POST | /api/rbac/cache/refresh/ | 刷新权限缓存 |
+| POST | /api/rbac/cache/refresh/user/{user_type}/{user_id}/ | 刷新指定用户权限缓存 |
+| POST | /api/rbac/cache/refresh/role/{role_id}/ | 刷新指定角色相关的缓存 |
 
-**响应**:
-```json
-{
-  "code": 201,
-  "message": "角色创建成功",
-  "data": {
-    "id": 2,
-    "name": "内容编辑",
-    "code": "content_editor",
-    "description": "内容编辑角色",
-    "is_system": false,
-    "tenant": {
-      "id": 1,
-      "name": "示例租户"
-    },
-    "created_at": "2023-01-01T00:00:00Z",
-    "updated_at": "2023-01-01T00:00:00Z",
-    "permissions": [
-      {
-        "id": 1,
-        "code": "content:view",
-        "name": "查看内容"
-      },
-      // ...更多权限
-    ]
-  }
-}
+### 7.2 缓存刷新流程图
+
+```
++------------------+     +------------------+     +------------------+
+|  权限变更        |---->|  缓存刷新API     |---->|  标识受影响用户  |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  返回刷新结果    |<----|  确认刷新完成    |<----|  清除相关缓存   |
++------------------+     +------------------+     +------------------+
 ```
 
-### 2.3 获取角色详情
+## 8. 租户权限管理API
 
-**请求**:
-```
-GET /api/rbac/roles/{id}/
-```
+### 8.1 API端点设计
 
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": 1,
-    "name": "系统管理员",
-    "code": "system_admin",
-    "description": "系统级管理员角色",
-    "is_system": true,
-    "tenant": null,
-    "created_at": "2023-01-01T00:00:00Z",
-    "updated_at": "2023-01-01T00:00:00Z",
-    "permissions": [
-      {
-        "id": 1,
-        "code": "user:view",
-        "name": "查看用户"
-      },
-      // ...更多权限
-    ],
-    "user_count": 5
-  }
-}
+| 方法 | 路径 | 描述 |
+|-----|------|------|
+| GET | /api/rbac/tenants/{tenant_id}/roles/ | 获取租户角色列表 |
+| POST | /api/rbac/tenants/{tenant_id}/roles/ | 创建租户角色 |
+| GET | /api/rbac/tenants/{tenant_id}/users/ | 获取租户用户及其角色 |
+
+### 8.2 租户权限隔离图
+
+```
++------------------+     +------------------+     +------------------+
+|  租户A API       |---->|  租户鉴别        |---->|  租户A数据      |
++------------------+     +------------------+     +------------------+
+                                 |
++------------------+             |             +------------------+
+|  租户B API       |-------------+------------>|  租户B数据      |
++------------------+                           +------------------+
 ```
 
-### 2.4 更新角色
+## 9. API版本控制
 
-**请求**:
-```
-PUT /api/rbac/roles/{id}/
-```
+API版本控制通过以下方式实现：
 
-**请求体**:
-```json
-{
-  "name": "高级管理员",
-  "description": "系统高级管理员角色",
-  "permissions": [1, 2, 3, 4, 5]
-}
-```
+1. URI路径版本：`/api/v1/rbac/permissions/`
+2. 请求头版本：`Accept: application/vnd.api.v1+json`
 
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "角色更新成功",
-  "data": {
-    "id": 1,
-    "name": "高级管理员",
-    "code": "system_admin",
-    "description": "系统高级管理员角色",
-    "is_system": true,
-    "tenant": null,
-    "created_at": "2023-01-01T00:00:00Z",
-    "updated_at": "2023-01-01T00:00:00Z"
-  }
-}
-```
+### 9.1 版本管理策略
 
-### 2.5 删除角色
+- 主版本号：不兼容的API变更
+- 次版本号：向后兼容的功能性新增
+- 修订号：向后兼容的问题修正
 
-**请求**:
+## 10. API安全设计
+
+### 10.1 安全架构图
+
 ```
-DELETE /api/rbac/roles/{id}/
++------------------+     +------------------+     +------------------+
+|  API请求         |---->|  认证中间件      |---->|  授权中间件     |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  速率限制        |<----|  请求验证        |<----|  权限检查       |
++------------------+     +------------------+     +------------------+
+        |
+        v
++------------------+     +------------------+
+|  API控制器       |---->|  审计日志        |
++------------------+     +------------------+
 ```
 
-**响应**:
-```json
-{
-  "code": 204,
-  "message": "角色删除成功",
-  "data": null
-}
-```
+### 10.2 安全措施
 
-## 3. 用户角色管理API
+1. **认证**：JWT令牌验证
+2. **授权**：RBAC权限控制
+3. **速率限制**：防止DoS攻击
+4. **输入验证**：防止注入攻击
+5. **审计日志**：记录关键操作
 
-### 3.1 获取用户角色列表
+## 11. API文档
 
-**请求**:
-```
-GET /api/rbac/user-roles/
-```
+API文档将通过Swagger/OpenAPI规范提供，包括：
 
-**参数**:
-- `user_id`: 用户ID过滤
-- `role_id`: 角色ID过滤
-- `is_active`: 是否激活
-- `page`: 页码
-- `page_size`: 每页数量
+- 端点描述
+- 请求参数
+- 响应格式
+- 认证要求
+- 错误处理
 
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "count": 20,
-    "next": "http://example.com/api/rbac/user-roles/?page=2",
-    "previous": null,
-    "results": [
-      {
-        "id": 1,
-        "user": {
-          "id": 1,
-          "username": "admin"
-        },
-        "role": {
-          "id": 1,
-          "name": "系统管理员",
-          "code": "system_admin"
-        },
-        "is_active": true,
-        "start_time": "2023-01-01T00:00:00Z",
-        "end_time": null,
-        "created_at": "2023-01-01T00:00:00Z"
-      },
-      // ...更多用户角色
-    ]
-  }
-}
-```
+### 11.1 API文档访问
 
-### 3.2 分配用户角色
-
-**请求**:
-```
-POST /api/rbac/user-roles/
-```
-
-**请求体**:
-```json
-{
-  "user_id": 2,
-  "role_id": 3,
-  "is_active": true,
-  "start_time": "2023-01-01T00:00:00Z",
-  "end_time": "2023-12-31T23:59:59Z"
-}
-```
-
-**响应**:
-```json
-{
-  "code": 201,
-  "message": "用户角色分配成功",
-  "data": {
-    "id": 2,
-    "user": {
-      "id": 2,
-      "username": "editor"
-    },
-    "role": {
-      "id": 3,
-      "name": "编辑",
-      "code": "editor"
-    },
-    "is_active": true,
-    "start_time": "2023-01-01T00:00:00Z",
-    "end_time": "2023-12-31T23:59:59Z",
-    "created_at": "2023-01-01T00:00:00Z"
-  }
-}
-```
-
-### 3.3 更新用户角色
-
-**请求**:
-```
-PUT /api/rbac/user-roles/{id}/
-```
-
-**请求体**:
-```json
-{
-  "is_active": false,
-  "end_time": "2023-06-30T23:59:59Z"
-}
-```
-
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "用户角色更新成功",
-  "data": {
-    "id": 2,
-    "user": {
-      "id": 2,
-      "username": "editor"
-    },
-    "role": {
-      "id": 3,
-      "name": "编辑",
-      "code": "editor"
-    },
-    "is_active": false,
-    "start_time": "2023-01-01T00:00:00Z",
-    "end_time": "2023-06-30T23:59:59Z",
-    "created_at": "2023-01-01T00:00:00Z"
-  }
-}
-```
-
-### 3.4 删除用户角色
-
-**请求**:
-```
-DELETE /api/rbac/user-roles/{id}/
-```
-
-**响应**:
-```json
-{
-  "code": 204,
-  "message": "用户角色删除成功",
-  "data": null
-}
-```
-
-## 4. 用户权限API
-
-### 4.1 获取当前用户权限
-
-**请求**:
-```
-GET /api/rbac/my-permissions/
-```
-
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "permissions": [
-      {
-        "code": "user:view",
-        "name": "查看用户"
-      },
-      {
-        "code": "user:create",
-        "name": "创建用户"
-      },
-      // ...更多权限
-    ],
-    "roles": [
-      {
-        "id": 1,
-        "name": "系统管理员",
-        "code": "system_admin"
-      }
-    ]
-  }
-}
-```
-
-### 4.2 检查当前用户是否有特定权限
-
-**请求**:
-```
-POST /api/rbac/check-permission/
-```
-
-**请求体**:
-```json
-{
-  "permission_code": "user:create"
-}
-```
-
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "has_permission": true
-  }
-}
-```
-
-### 4.3 获取用户的权限
-
-**请求**:
-```
-GET /api/rbac/users/{user_id}/permissions/
-```
-
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "user": {
-      "id": 1,
-      "username": "admin"
-    },
-    "permissions": [
-      {
-        "code": "user:view",
-        "name": "查看用户"
-      },
-      // ...更多权限
-    ],
-    "roles": [
-      {
-        "id": 1,
-        "name": "系统管理员",
-        "code": "system_admin"
-      }
-    ]
-  }
-}
-```
-
-## 5. 权限分类API
-
-### 5.1 获取权限分类列表
-
-**请求**:
-```
-GET /api/rbac/permission-categories/
-```
-
-**响应**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": [
-    {
-      "category": "用户管理",
-      "count": 10
-    },
-    {
-      "category": "内容管理",
-      "count": 15
-    },
-    // ...更多分类
-  ]
-}
-``` 
+API文档可通过以下URL访问：
+- 开发环境：`/api/docs/`
+- 测试环境：`/api/docs/?env=test`
+- 生产环境：`/api/docs/?env=prod` 
