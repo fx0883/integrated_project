@@ -72,6 +72,8 @@ menus:
   purePermissionButton: 按钮权限
   purePermissionButtonRouter: 路由返回按钮权限
   purePermissionButtonLogin: 登录接口返回按钮权限
+  pureTenantManagement: 租户管理
+  pureTenantList: 租户列表
 status:
   pureLoad: 加载中...
   pureMessage: 消息
@@ -142,3 +144,89 @@ dashboard:
   quarter: 季度
   year: 年
   average: 平均值
+# 租户管理相关国际化
+tenant:
+  management: 租户管理
+  list: 租户列表
+  create: 创建租户
+  edit: 编辑租户
+  detail: 租户详情
+  delete: 删除租户
+  quota: 配额管理
+  users: 租户用户
+  title: 租户管理
+  id: 租户ID
+  name: 租户名称
+  status: 租户状态
+  contactName: 联系人姓名
+  contactEmail: 联系人邮箱
+  contactPhone: 联系人电话
+  createdAt: 创建时间
+  updatedAt: 更新时间
+  userCount: 用户数量
+  adminCount: 管理员数量
+  actions: 操作
+  search: 搜索租户
+  statusActive: 活跃
+  statusSuspended: 已暂停
+  statusDeleted: 已删除
+  statusAll: 全部
+  confirmDelete: 确认删除租户
+  confirmDeleteMessage: 您确定要删除租户"{name}"吗？此操作不可逆，但租户数据将保留在数据库中（软删除）。
+  confirmSuspend: 确认暂停租户
+  confirmSuspendMessage: 您确定要暂停租户"{name}"吗？暂停后，该租户下的所有用户将无法登录系统，但租户数据将被保留。
+  confirmActivate: 确认激活租户
+  confirmActivateMessage: 您确定要激活租户"{name}"吗？激活后，该租户下的用户将可以正常使用系统。
+  deleteSuccess: 删除租户成功
+  deleteFailed: 删除租户失败
+  createSuccess: 创建租户成功
+  createFailed: 创建租户失败
+  updateSuccess: 更新租户成功
+  updateFailed: 更新租户失败
+  suspendSuccess: 暂停租户成功
+  suspendFailed: 暂停租户失败
+  activateSuccess: 激活租户成功
+  activateFailed: 激活租户失败
+  basicInfo: 基本信息
+  quotaInfo: 配额信息
+  userInfo: 用户信息
+  backToList: 返回列表
+  suspend: 暂停租户
+  activate: 激活租户
+  view: 查看
+  editBtn: 编辑
+  save: 保存
+  cancel: 取消
+  nameRequired: 租户名称不能为空
+  emailFormat: 请输入有效的邮箱格式
+  phoneFormat: 请输入有效的电话号码格式
+  createTenant: 创建租户
+  editTenant: 编辑租户
+  quotaManagement: 配额管理
+  tenantUsers: 租户用户
+  viewDetails: 查看详情
+  noData: 暂无数据
+  loading: 加载中...
+  quotaUsage: 配额使用情况
+  maxUsers: 最大用户数
+  maxAdmins: 最大管理员数
+  maxStorageMb: 最大存储空间(MB)
+  maxProducts: 最大产品数
+  currentStorageUsedMb: 当前已使用存储空间(MB)
+  userTotal: 用户总数
+  adminTotal: 管理员数量
+  searchUser: 搜索用户
+  username: 用户名
+  email: 邮箱
+  nickName: 昵称
+  role: 角色
+  roleAdmin: 管理员
+  roleUser: 用户
+  isActive: 状态
+  isActiveTrue: 已激活
+  isActiveFalse: 未激活
+  dateJoined: 加入时间
+  viewUsers: 查看用户
+  quotaUpdateSuccess: 更新租户配额成功
+  quotaUpdateFailed: 更新租户配额失败
+  positiveInteger: 必须为正整数

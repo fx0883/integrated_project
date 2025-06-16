@@ -1,0 +1,136 @@
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取路由成功",
+  "data": [
+    {
+      "meta": {
+        "icon": "ep:data-board",
+        "rank": 1,
+        "roles": [
+          "super_admin"
+        ],
+        "title": "仪表盘",
+        "showLink": true
+      },
+      "name": "Dashboard",
+      "path": "/dashboard/",
+      "children": [
+        {
+          "meta": {
+            "icon": "ep:monitor",
+            "roles": [
+              "super_admin"
+            ],
+            "title": "仪表盘",
+            "showLink": true,
+            "keepAlive": true,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
+          },
+          "name": "DashboardIndex",
+          "path": "/dashboard/index",
+          "component": "/src/views/dashboard/index"
+        }
+      ],
+      "redirect": "/dashboard/index",
+      "component": "Layout1"
+    },
+    {
+      "meta": {
+        "icon": "ep:office-building",
+        "rank": 2,
+        "roles": [
+          "super_admin"
+        ],
+        "title": "menus.pureTenantManagement",
+        "showLink": true
+      },
+      "name": "TenantManagement",
+      "path": "/tenant/",
+      "children": [
+        {
+          "meta": {
+            "icon": "ep:list",
+            "roles": [
+              "super_admin"
+            ],
+            "title": "menus.pureTenantList",
+            "showLink": true,
+            "keepAlive": true,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
+          },
+          "name": "TenantList",
+          "path": "/tenant/index",
+          "component": "/src/views/tenant/index"
+        },
+        {
+          "meta": {
+            "icon": "ep:plus",
+            "roles": [
+              "super_admin"
+            ],
+            "title": "tenant.create",
+            "showLink": false,
+            "keepAlive": false,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
+          },
+          "name": "TenantCreate",
+          "path": "/tenant/create",
+          "component": "/src/views/tenant/create"
+        },
+        {
+          "meta": {
+            "icon": "ep:edit",
+            "roles": [
+              "super_admin"
+            ],
+            "title": "tenant.edit",
+            "showLink": false,
+            "keepAlive": false,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
+          },
+          "name": "TenantEdit",
+          "path": "/tenant/edit/:id",
+          "component": "/src/views/tenant/edit"
+        },
+        {
+          "meta": {
+            "icon": "ep:view",
+            "roles": [
+              "super_admin"
+            ],
+            "title": "tenant.detail",
+            "showLink": false,
+            "keepAlive": false,
+            "transition": {
+              "name": "fade",
+              "enterTransition": "animate__fadeInLeft",
+              "leaveTransition": "animate__fadeOutRight"
+            }
+          },
+          "name": "TenantDetail",
+          "path": "/tenant/detail/:id",
+          "component": "/src/views/tenant/detail"
+        }
+      ],
+      "redirect": "/tenant/index",
+      "component": "Layout1"
+    }
+  ]
+} 

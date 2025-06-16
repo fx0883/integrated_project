@@ -63,15 +63,17 @@ panel:
 menus:
   pureHome: Home
   pureLogin: Login
-  pureAbnormal: Error Page
+  pureAbnormal: Abnormal Page
   pureFourZeroFour: "404"
   pureFourZeroOne: "403"
   pureFive: "500"
-  purePermission: Permission
+  purePermission: Permission Management
   purePermissionPage: Page Permission
   purePermissionButton: Button Permission
-  purePermissionButtonRouter: Router Button Permission
-  purePermissionButtonLogin: Login Button Permission
+  purePermissionButtonRouter: Button Permission by route
+  purePermissionButtonLogin: Button Permission by login interface
+  pureTenantManagement: Tenant Management
+  pureTenantList: Tenant List
 status:
   pureLoad: Loading...
   pureMessage: Message
@@ -142,3 +144,90 @@ dashboard:
   quarter: Quarter
   year: Year
   average: Average
+
+# Tenant Management Internationalization
+tenant:
+  management: Tenant Management
+  list: Tenant List
+  create: Create Tenant
+  edit: Edit Tenant
+  detail: Tenant Details
+  delete: Delete Tenant
+  quota: Quota Management
+  users: Tenant Users
+  title: Tenant Management
+  id: Tenant ID
+  name: Tenant Name
+  status: Status
+  contactName: Contact Name
+  contactEmail: Contact Email
+  contactPhone: Contact Phone
+  createdAt: Created At
+  updatedAt: Updated At
+  userCount: User Count
+  adminCount: Admin Count
+  actions: Actions
+  search: Search Tenant
+  statusActive: Active
+  statusSuspended: Suspended
+  statusDeleted: Deleted
+  statusAll: All
+  confirmDelete: Confirm Delete Tenant
+  confirmDeleteMessage: Are you sure you want to delete tenant "{name}"? This operation is irreversible, but the tenant data will be retained in the database (soft delete).
+  confirmSuspend: Confirm Suspend Tenant
+  confirmSuspendMessage: Are you sure you want to suspend tenant "{name}"? After suspension, all users under this tenant will not be able to log in to the system, but the tenant data will be retained.
+  confirmActivate: Confirm Activate Tenant
+  confirmActivateMessage: Are you sure you want to activate tenant "{name}"? After activation, users under this tenant will be able to use the system normally.
+  deleteSuccess: Tenant deleted successfully
+  deleteFailed: Failed to delete tenant
+  createSuccess: Tenant created successfully
+  createFailed: Failed to create tenant
+  updateSuccess: Tenant updated successfully
+  updateFailed: Failed to update tenant
+  suspendSuccess: Tenant suspended successfully
+  suspendFailed: Failed to suspend tenant
+  activateSuccess: Tenant activated successfully
+  activateFailed: Failed to activate tenant
+  basicInfo: Basic Information
+  quotaInfo: Quota Information
+  userInfo: User Information
+  backToList: Back to List
+  suspend: Suspend Tenant
+  activate: Activate Tenant
+  view: View
+  editBtn: Edit
+  save: Save
+  cancel: Cancel
+  nameRequired: Tenant name cannot be empty
+  emailFormat: Please enter a valid email format
+  phoneFormat: Please enter a valid phone number format
+  createTenant: Create Tenant
+  editTenant: Edit Tenant
+  quotaManagement: Quota Management
+  tenantUsers: Tenant Users
+  viewDetails: View Details
+  noData: No Data
+  loading: Loading...
+  quotaUsage: Quota Usage
+  maxUsers: Max Users
+  maxAdmins: Max Admins
+  maxStorageMb: Max Storage (MB)
+  maxProducts: Max Products
+  currentStorageUsedMb: Current Storage Used (MB)
+  userTotal: Total Users
+  adminTotal: Admin Count
+  searchUser: Search User
+  username: Username
+  email: Email
+  nickName: Nickname
+  role: Role
+  roleAdmin: Admin
+  roleUser: User
+  isActive: Status
+  isActiveTrue: Active
+  isActiveFalse: Inactive
+  dateJoined: Date Joined
+  viewUsers: View Users
+  quotaUpdateSuccess: Tenant quota updated successfully
+  quotaUpdateFailed: Failed to update tenant quota
+  positiveInteger: Must be a positive integer
