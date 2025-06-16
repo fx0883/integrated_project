@@ -83,6 +83,8 @@
     "@iconify/json": "^2.2.331",
     "@iconify/vue": "4.2.0",
     "@intlify/unplugin-vue-i18n": "^6.0.8",
+    "@stagewise-plugins/vue": "^0.4.6",
+    "@stagewise/toolbar-vue": "^0.4.8",
     "@tailwindcss/vite": "^4.1.4",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^20.17.30",

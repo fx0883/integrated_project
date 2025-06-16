@@ -4,8 +4,14 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useTenantStoreHook } from "@/store/modules/tenant";
-import type { Tenant, TenantStatus, TenantListParams } from "@/types/tenant";
+import type {
+  Tenant,
+  TenantStatus,
+  TenantListParams,
+  TenantCreateUpdateParams
+} from "@/types/tenant";
 import ConfirmDialog from "@/components/TenantManagement/ConfirmDialog.vue";
+import TenantForm from "@/components/TenantManagement/TenantForm.vue";
 import { useUserStoreHook } from "@/store/modules/user";
 import logger from "@/utils/logger";
 
@@ -116,6 +122,89 @@ const handleConfirmDialogCancel = () => {
   confirmDialog.visible = false;
 };
 
+// 创建租户对话框相关状态
+const createTenantDialog = reactive({
+  visible: false,
+  loading: false
+});
+
+// 编辑租户对话框相关状态
+const editTenantDialog = reactive({
+  visible: false,
+  loading: false,
+  currentTenant: null as Tenant | null
+});
+
+// 创建租户
+const handleCreateTenant = () => {
+  createTenantDialog.visible = true;
+};
+
+// 提交租户创建表单
+const handleCreateSubmit = async (formData: TenantCreateUpdateParams) => {
+  createTenantDialog.loading = true;
+  try {
+    await tenantStore.createNewTenant(formData);
+    ElMessage.success(t("tenant.createSuccess"));
+    createTenantDialog.visible = false;
+    // 刷新租户列表
+    fetchTenantList();
+  } catch (error) {
+    logger.error("创建租户失败", error);
+    ElMessage.error(t("tenant.createFailed"));
+  } finally {
+    createTenantDialog.loading = false;
+  }
+};
+
+// 取消创建租户
+const handleCreateCancel = () => {
+  createTenantDialog.visible = false;
+};
+
+// 编辑租户
+const handleEditTenant = async (tenant: Tenant) => {
+  editTenantDialog.loading = true;
+  editTenantDialog.visible = true;
+  try {
+    await tenantStore.fetchTenantDetail(tenant.id);
+    editTenantDialog.currentTenant = tenantStore.currentTenant;
+  } catch (error) {
+    logger.error("获取租户详情失败", error);
+    ElMessage.error("获取租户详情失败");
+    editTenantDialog.visible = false;
+  } finally {
+    editTenantDialog.loading = false;
+  }
+};
+
+// 提交租户编辑表单
+const handleEditSubmit = async (formData: TenantCreateUpdateParams) => {
+  editTenantDialog.loading = true;
+  try {
+    if (editTenantDialog.currentTenant) {
+      await tenantStore.updateTenantInfo(
+        editTenantDialog.currentTenant.id,
+        formData
+      );
+      ElMessage.success(t("tenant.updateSuccess"));
+      editTenantDialog.visible = false;
+      // 刷新租户列表
+      fetchTenantList();
+    }
+  } catch (error) {
+    logger.error("更新租户失败", error);
+    ElMessage.error(t("tenant.updateFailed"));
+  } finally {
+    editTenantDialog.loading = false;
+  }
+};
+
+// 取消编辑租户
+const handleEditCancel = () => {
+  editTenantDialog.visible = false;
+};
+
 // 获取租户列表
 const fetchTenantList = async () => {
   const params: TenantListParams = {
@@ -161,11 +250,6 @@ const handlePageSizeChange = (size: number) => {
 // 查看租户详情
 const handleViewTenant = (tenant: Tenant) => {
   router.push(`/tenant/detail/${tenant.id}`);
-};
-
-// 编辑租户
-const handleEditTenant = (tenant: Tenant) => {
-  router.push(`/tenant/edit/${tenant.id}`);
 };
 
 // 删除租户
@@ -225,11 +309,6 @@ const handleActivateTenant = (tenant: Tenant) => {
   );
 };
 
-// 创建租户
-const handleCreateTenant = () => {
-  router.push("/tenant/create");
-};
-
 // 获取租户列表
 onMounted(async () => {
   if (isSuperAdmin.value) {
@@ -264,7 +343,7 @@ onMounted(async () => {
           />
         </el-form-item>
         <el-form-item>
-          <el-select v-model="searchForm.status">
+          <el-select v-model="searchForm.status" style="width: 200px">
             <el-option
               v-for="item in statusOptions"
               :key="item.value"
@@ -326,6 +405,7 @@ onMounted(async () => {
             type="primary"
             size="small"
             plain
+            style="margin-right: 8px"
           >
             {{ t("tenant.view") }}
           </el-button>
@@ -333,6 +413,7 @@ onMounted(async () => {
             @click="handleEditTenant(scope.row)"
             type="primary"
             size="small"
+            style="margin-right: 8px"
           >
             {{ t("tenant.editBtn") }}
           </el-button>
@@ -391,6 +472,39 @@ onMounted(async () => {
       @confirm="handleConfirmDialogConfirm"
       @cancel="handleConfirmDialogCancel"
     />
+
+    <!-- 创建租户对话框 -->
+    <el-dialog
+      v-model="createTenantDialog.visible"
+      :title="t('tenant.createTenant')"
+      width="50%"
+      append-to-body
+      destroy-on-close
+    >
+      <TenantForm
+        mode="create"
+        :loading="createTenantDialog.loading"
+        @submit="handleCreateSubmit"
+        @cancel="handleCreateCancel"
+      />
+    </el-dialog>
+
+    <!-- 编辑租户对话框 -->
+    <el-dialog
+      v-model="editTenantDialog.visible"
+      :title="t('tenant.editTenant')"
+      width="50%"
+      append-to-body
+      destroy-on-close
+    >
+      <TenantForm
+        mode="edit"
+        :loading="editTenantDialog.loading"
+        :tenant="editTenantDialog.currentTenant"
+        @submit="handleEditSubmit"
+        @cancel="handleEditCancel"
+      />
+    </el-dialog>
   </div>
 </template>
 

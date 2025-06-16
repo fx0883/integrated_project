@@ -108,6 +108,12 @@ importers:
       '@intlify/unplugin-vue-i18n':
         specifier: ^6.0.8
         version: 6.0.8(@vue/compiler-dom@3.5.13)(eslint@9.25.1(jiti@2.4.2))(rollup@4.40.0)(typescript@5.8.3)(vue-i18n@11.1.3(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
+      '@stagewise-plugins/vue':
+        specifier: ^0.4.6
+        version: 0.4.6(@stagewise/toolbar@0.4.8)
+      '@stagewise/toolbar-vue':
+        specifier: ^0.4.8
+        version: 0.4.8(vue@3.5.13(typescript@5.8.3))
       '@tailwindcss/vite':
         specifier: ^4.1.4
         version: 4.1.4(vite@6.3.3(@types/node@20.17.30)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.87.0)(yaml@2.7.1))
@@ -1182,6 +1188,19 @@ packages:
   '@sindresorhus/merge-streams@2.3.0':
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
     engines: {node: '>=18'}
+
+  '@stagewise-plugins/vue@0.4.6':
+    resolution: {integrity: sha512-Y/cdDLXDN2cusvpmFYxbQT1DEW1fYzoFjmsnXBth52sSLYNc83XXMTXt2kvYSGWOW+ZxM1Dj+T4eE9bY8b/QSA==}
+    peerDependencies:
+      '@stagewise/toolbar': 0.4.8
+
+  '@stagewise/toolbar-vue@0.4.8':
+    resolution: {integrity: sha512-Zvxz59apepocu2cOD8UqUWIF7fIABGr+DNDSmz6Kp2nf1APNmfiK3QJ52rI2PfVDG9jaSE56EfYUA0t1xFJLYw==}
+    peerDependencies:
+      vue: '>=3.0.0'
+
+  '@stagewise/toolbar@0.4.8':
+    resolution: {integrity: sha512-0ByvC4hYdHHf3rK5M+xSR9mipHYr8naNn2OgDBtv4DE0SoSCr08KfQtZ6VpsBNbOW/Mh1Y4c/AoWcyCTOc2ocA==}
 
   '@sxzz/popperjs-es@2.11.7':
     resolution: {integrity: sha512-Ccy0NlLkzr0Ex2FKvh2X+OyERHXJ88XJ1MXtsI9y9fGexlaXaVTPzBCRBwIxFkORuOb+uBqeu+RqnpgYTEZRUQ==}
@@ -4716,6 +4735,17 @@ snapshots:
 
   '@sindresorhus/merge-streams@2.3.0':
     optional: true
+
+  '@stagewise-plugins/vue@0.4.6(@stagewise/toolbar@0.4.8)':
+    dependencies:
+      '@stagewise/toolbar': 0.4.8
+
+  '@stagewise/toolbar-vue@0.4.8(vue@3.5.13(typescript@5.8.3))':
+    dependencies:
+      '@stagewise/toolbar': 0.4.8
+      vue: 3.5.13(typescript@5.8.3)
+
+  '@stagewise/toolbar@0.4.8': {}
 
   '@sxzz/popperjs-es@2.11.7': {}
 
