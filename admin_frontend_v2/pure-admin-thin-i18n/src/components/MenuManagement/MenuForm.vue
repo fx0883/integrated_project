@@ -1,0 +1,469 @@
+<template>
+  <el-form
+    ref="formRef"
+    :model="formData"
+    :rules="rules"
+    label-width="120px"
+    :disabled="loading"
+  >
+    <el-tabs>
+      <el-tab-pane :label="t('menu.basicInfo')">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.name')" prop="name">
+              <el-input
+                v-model="formData.name"
+                :placeholder="t('menu.nameRequired')"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.code')" prop="code">
+              <el-input
+                v-model="formData.code"
+                :placeholder="t('menu.codeRequired')"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.title')" prop="title">
+              <el-input
+                v-model="formData.title"
+                :placeholder="t('menu.name')"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.rank')" prop="rank">
+              <el-input-number v-model="formData.rank" :min="0" :max="999" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.parentId')" prop="parent_id">
+              <el-select
+                v-model="formData.parent_id"
+                clearable
+                filterable
+                :placeholder="t('menu.parentId')"
+              >
+                <el-option label="顶级菜单" :value="null" />
+                <el-option
+                  v-for="item in menuOptions"
+                  :key="item.id"
+                  :label="item.title || item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.isActive')" prop="is_active">
+              <el-switch v-model="formData.is_active" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+
+      <el-tab-pane :label="t('menu.routeConfig')">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.path')" prop="path">
+              <el-input
+                v-model="formData.path"
+                :placeholder="t('menu.pathRequired')"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.component')" prop="component">
+              <el-input
+                v-model="formData.component"
+                :placeholder="t('menu.componentRequired')"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.redirect')" prop="redirect">
+              <el-input v-model="formData.redirect" clearable />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.activePath')" prop="active_path">
+              <el-input v-model="formData.active_path" clearable />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.frameSrc')" prop="frame_src">
+              <el-input v-model="formData.frame_src" clearable />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.frameLoading')" prop="frame_loading">
+              <el-switch v-model="formData.frame_loading" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+
+      <el-tab-pane :label="t('menu.displaySettings')">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.icon')" prop="icon">
+              <el-input v-model="formData.icon" clearable>
+                <template #append>
+                  <el-button @click="openIconSelector">
+                    {{ t("menu.selectIcon") }}
+                  </el-button>
+                </template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.extraIcon')" prop="extra_icon">
+              <el-input v-model="formData.extra_icon" clearable />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.showLink')" prop="show_link">
+              <el-switch v-model="formData.show_link" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.showParent')" prop="show_parent">
+              <el-switch v-model="formData.show_parent" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.keepAlive')" prop="keep_alive">
+              <el-switch v-model="formData.keep_alive" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item :label="t('menu.hiddenTag')" prop="hidden_tag">
+              <el-switch v-model="formData.hidden_tag" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+
+      <el-tab-pane :label="t('menu.permissionSettings')">
+        <el-row>
+          <el-col :span="24">
+            <el-form-item :label="t('menu.roles')" prop="roles">
+              <el-select
+                v-model="formData.roles"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                :placeholder="t('menu.roles')"
+              >
+                <el-option
+                  v-for="role in roleOptions"
+                  :key="role.value"
+                  :label="role.label"
+                  :value="role.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item :label="t('menu.auths')" prop="auths">
+              <el-select
+                v-model="formData.auths"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                :placeholder="t('menu.auths')"
+              >
+                <el-option
+                  v-for="auth in authOptions"
+                  :key="auth.value"
+                  :label="auth.label"
+                  :value="auth.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+
+      <el-tab-pane :label="t('menu.advancedSettings')">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item :label="t('menu.dynamicLevel')" prop="dynamic_level">
+              <el-input-number
+                v-model="formData.dynamic_level"
+                :min="0"
+                :max="10"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item
+              :label="t('menu.transitionName')"
+              prop="transition_name"
+            >
+              <el-select
+                v-model="formData.transition_name"
+                clearable
+                :placeholder="t('menu.transitionName')"
+              >
+                <el-option
+                  v-for="item in transitionOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item
+              :label="t('menu.enterTransition')"
+              prop="enter_transition"
+            >
+              <el-select
+                v-model="formData.enter_transition"
+                clearable
+                :placeholder="t('menu.enterTransition')"
+              >
+                <el-option
+                  v-for="item in enterTransitionOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item
+              :label="t('menu.leaveTransition')"
+              prop="leave_transition"
+            >
+              <el-select
+                v-model="formData.leave_transition"
+                clearable
+                :placeholder="t('menu.leaveTransition')"
+              >
+                <el-option
+                  v-for="item in leaveTransitionOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item :label="t('menu.remarks')" prop="remarks">
+              <el-input
+                v-model="formData.remarks"
+                type="textarea"
+                rows="3"
+                :placeholder="t('menu.remarks')"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+    </el-tabs>
+
+    <div class="form-actions">
+      <el-button @click="resetForm">{{ t("menu.cancel") }}</el-button>
+      <el-button type="primary" @click="submitForm" :loading="loading">{{
+        t("menu.save")
+      }}</el-button>
+    </div>
+  </el-form>
+</template>
+
+<script lang="ts" setup>
+import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import type { FormInstance, FormRules } from "element-plus";
+import type { Menu, MenuCreateUpdateParams } from "@/types/menu";
+import { useMenuStoreHook } from "@/store/modules/menu";
+import logger from "@/utils/logger";
+
+const { t } = useI18n();
+const menuStore = useMenuStoreHook();
+
+const props = defineProps<{
+  menu?: Menu;
+  loading?: boolean;
+  mode: "create" | "edit";
+}>();
+
+const emit = defineEmits<{
+  (e: "submit", formData: MenuCreateUpdateParams): void;
+  (e: "cancel"): void;
+}>();
+
+const formRef = ref<FormInstance>();
+
+const formData = reactive<MenuCreateUpdateParams>({
+  name: props.menu?.name || "",
+  code: props.menu?.code || "",
+  path: props.menu?.path || "",
+  component: props.menu?.component || "",
+  redirect: props.menu?.redirect || "",
+  title: props.menu?.title || "",
+  icon: props.menu?.icon || "",
+  extra_icon: null,
+  rank: props.menu?.rank || 0,
+  show_link: props.menu?.show_link !== undefined ? props.menu.show_link : true,
+  show_parent:
+    props.menu?.show_parent !== undefined ? props.menu.show_parent : true,
+  roles: props.menu?.roles || [],
+  auths: props.menu?.auths || [],
+  keep_alive:
+    props.menu?.keep_alive !== undefined ? props.menu.keep_alive : false,
+  frame_src: null,
+  frame_loading: false,
+  hidden_tag: false,
+  dynamic_level: null,
+  active_path: null,
+  transition_name: null,
+  enter_transition: null,
+  leave_transition: null,
+  parent_id: props.menu?.parent_id || null,
+  is_active: props.menu?.is_active !== undefined ? props.menu.is_active : true,
+  remarks: null
+});
+
+const menuOptions = computed(() => {
+  if (!props.menu) return menuStore.menuList.data;
+  return menuStore.menuList.data.filter(item => item.id !== props.menu?.id);
+});
+
+const roleOptions = ref([
+  { label: "超级管理员", value: "super_admin" },
+  { label: "管理员", value: "admin" },
+  { label: "普通用户", value: "user" }
+]);
+
+const authOptions = ref([
+  { label: "查看", value: "view" },
+  { label: "添加", value: "add" },
+  { label: "编辑", value: "edit" },
+  { label: "删除", value: "delete" }
+]);
+
+const transitionOptions = ref([
+  { label: "淡入淡出", value: "fade" },
+  { label: "缩放", value: "scale" },
+  { label: "滑动", value: "slide" },
+  { label: "向上滑动", value: "slide-up" },
+  { label: "向下滑动", value: "slide-down" }
+]);
+
+const enterTransitionOptions = ref([
+  { label: "淡入", value: "fade-in" },
+  { label: "缩放进入", value: "scale-in" },
+  { label: "从右滑入", value: "slide-in-right" },
+  { label: "从左滑入", value: "slide-in-left" }
+]);
+
+const leaveTransitionOptions = ref([
+  { label: "淡出", value: "fade-out" },
+  { label: "缩放离开", value: "scale-out" },
+  { label: "向右滑出", value: "slide-out-right" },
+  { label: "向左滑出", value: "slide-out-left" }
+]);
+
+const rules = reactive<FormRules>({
+  name: [
+    { required: true, message: t("menu.nameRequired"), trigger: "blur" },
+    { min: 2, max: 50, message: t("menu.nameRequired"), trigger: "blur" }
+  ],
+  code: [
+    { required: true, message: t("menu.codeRequired"), trigger: "blur" },
+    { min: 2, max: 50, message: t("menu.codeRequired"), trigger: "blur" }
+  ],
+  path: [{ required: true, message: t("menu.pathRequired"), trigger: "blur" }],
+  component: [
+    { required: true, message: t("menu.componentRequired"), trigger: "blur" }
+  ],
+  rank: [
+    { required: true, message: t("menu.rankRequired"), trigger: "blur" },
+    { type: "number", message: t("menu.rankRequired"), trigger: "blur" }
+  ]
+});
+
+const openIconSelector = () => {
+  console.log("打开图标选择器");
+};
+
+const submitForm = async () => {
+  if (!formRef.value) return;
+  await formRef.value.validate((valid, fields) => {
+    if (valid) {
+      emit("submit", formData);
+    } else {
+      logger.error("表单验证失败", fields);
+    }
+  });
+};
+
+const resetForm = () => {
+  if (formRef.value) {
+    formRef.value.resetFields();
+  }
+  emit("cancel");
+};
+
+watch(
+  () => props.menu,
+  newVal => {
+    if (newVal) {
+      formData.name = newVal.name;
+      formData.code = newVal.code;
+      formData.path = newVal.path;
+      formData.component = newVal.component;
+      formData.redirect = newVal.redirect || "";
+      formData.title = newVal.title;
+      formData.icon = newVal.icon || "";
+      formData.rank = newVal.rank;
+      formData.show_link = newVal.show_link;
+      formData.show_parent = newVal.show_parent;
+      formData.roles = newVal.roles;
+      formData.auths = newVal.auths;
+      formData.keep_alive = newVal.keep_alive;
+      formData.is_active = newVal.is_active;
+      formData.parent_id = newVal.parent_id;
+    }
+  }
+);
+
+onMounted(() => {
+  // 初始化表单数据
+});
+</script>
+
+<style scoped>
+.form-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+</style>

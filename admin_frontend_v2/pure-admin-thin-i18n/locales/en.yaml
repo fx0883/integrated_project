@@ -63,17 +63,19 @@ panel:
 menus:
   pureHome: Home
   pureLogin: Login
-  pureAbnormal: Abnormal Page
+  pureAbnormal: Error Pages
   pureFourZeroFour: "404"
   pureFourZeroOne: "403"
   pureFive: "500"
-  purePermission: Permission Management
+  purePermission: Permissions
   purePermissionPage: Page Permission
   purePermissionButton: Button Permission
-  purePermissionButtonRouter: Button Permission by route
-  purePermissionButtonLogin: Button Permission by login interface
+  purePermissionButtonRouter: Route Button Permission
+  purePermissionButtonLogin: Login API Button Permission
   pureTenantManagement: Tenant Management
   pureTenantList: Tenant List
+  pureMenuManagement: Menu Management
+  pureMenuList: Menu List
 status:
   pureLoad: Loading...
   pureMessage: Message
@@ -231,3 +233,105 @@ tenant:
   quotaUpdateSuccess: Tenant quota updated successfully
   quotaUpdateFailed: Failed to update tenant quota
   positiveInteger: Must be a positive integer
+
+# Menu Management Related Translations
+menu:
+  management: Menu Management
+  list: Menu List
+  create: Create Menu
+  edit: Edit Menu
+  detail: Menu Details
+  delete: Delete Menu
+  title: Menu Management
+  id: Menu ID
+  name: Menu Name
+  code: Menu Code
+  path: Route Path
+  component: Component Path
+  redirect: Redirect Path
+  icon: Menu Icon
+  extraIcon: Extra Icon
+  rank: Sort Value
+  showLink: Show Menu
+  showParent: Show Parent Menu
+  roles: Role Permissions
+  auths: Button Permissions
+  keepAlive: Keep Alive
+  frameSrc: External Link
+  frameLoading: Show Loading Animation
+  hiddenTag: Hide Tag
+  dynamicLevel: Dynamic Route Level
+  activePath: Active Path
+  transitionName: Transition Animation
+  enterTransition: Enter Transition
+  leaveTransition: Leave Transition
+  parentId: Parent Menu
+  isActive: Status
+  remarks: Remarks
+  createdAt: Created At
+  updatedAt: Updated At
+  actions: Actions
+  search: Search Menu
+  import: Import Config
+  export: Export Config
+  batch: Batch Operations
+  statusActive: Active
+  statusInactive: Inactive
+  statusAll: All
+  confirmDelete: Confirm Delete Menu
+  confirmDeleteMessage: Are you sure you want to delete menu "{name}"? This action cannot be undone.
+  confirmCascadeDelete: Confirm Cascade Delete
+  confirmCascadeDeleteMessage: This menu has child menus. Do you want to delete them as well? Select "No" to delete only the current menu.
+  confirmStatusChange: Confirm Status Change
+  confirmStatusChangeMessage: Are you sure you want to {action} menu "{name}"?
+  deleteSuccess: Menu deleted successfully
+  deleteFailed: Failed to delete menu
+  createSuccess: Menu created successfully
+  createFailed: Failed to create menu
+  updateSuccess: Menu updated successfully
+  updateFailed: Failed to update menu
+  importSuccess: Menu configuration imported successfully
+  importFailed: Failed to import menu configuration
+  exportSuccess: Menu configuration exported successfully
+  exportFailed: Failed to export menu configuration
+  batchSuccess: Batch operation successful
+  batchFailed: Batch operation failed
+  basicInfo: Basic Information
+  routeConfig: Route Configuration
+  displaySettings: Display Settings
+  advancedSettings: Advanced Settings
+  permissionSettings: Permission Settings
+  view: View
+  editBtn: Edit
+  save: Save
+  cancel: Cancel
+  nameRequired: Menu name is required
+  codeRequired: Menu code is required
+  pathRequired: Route path is required
+  componentRequired: Component path is required
+  invalidPath: Invalid route path
+  invalidComponent: Invalid component path
+  createMenu: Create Menu
+  editMenu: Edit Menu
+  viewDetails: View Details
+  noData: No Data
+  loading: Loading...
+  addChildMenu: Add Child Menu
+  moveUp: Move Up
+  moveDown: Move Down
+  activate: Activate
+  deactivate: Deactivate
+  selectIcon: Select Icon
+  menuTree: Menu Tree
+  dragToSort: Drag to Sort
+  allMenus: All Menus
+  refresh: Refresh
+  collapse: Collapse
+  expand: Expand
+  dragTip: Drag to adjust menu order
+  changeParentTip: Drag to another menu to change parent
+  confirmBatchDelete: Confirm Batch Delete
+  confirmBatchDeleteMessage: Are you sure you want to delete {count} selected menu items? This action cannot be undone.
+  selectAtLeastOne: Please select at least one item
+  batchDelete: Batch Delete
+  batchEdit: Batch Edit

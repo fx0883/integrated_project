@@ -74,6 +74,8 @@ menus:
   purePermissionButtonLogin: 登录接口返回按钮权限
   pureTenantManagement: 租户管理
   pureTenantList: 租户列表
+  pureMenuManagement: 菜单管理
+  pureMenuList: 菜单列表
 status:
   pureLoad: 加载中...
   pureMessage: 消息
@@ -197,9 +199,9 @@ tenant:
   editBtn: 编辑
   save: 保存
   cancel: 取消
-  nameRequired: 租户名称不能为空
-  emailFormat: 请输入有效的邮箱格式
-  phoneFormat: 请输入有效的电话号码格式
+
+# 菜单管理相关国际化
+
   createTenant: 创建租户
   editTenant: 编辑租户
   quotaManagement: 配额管理
@@ -230,3 +232,107 @@ tenant:
   quotaUpdateSuccess: 更新租户配额成功
   quotaUpdateFailed: 更新租户配额失败
   positiveInteger: 必须为正整数
+  nameRequired: 租户名称不能为空
+  emailFormat: 请输入有效的邮箱格式
+  phoneFormat: 请输入有效的电话号码格式
+# 菜单管理相关国际化
+menu:
+  management: 菜单管理
+  list: 菜单列表
+  create: 创建菜单
+  edit: 编辑菜单
+  detail: 菜单详情
+  delete: 删除菜单
+  title: 菜单管理
+  id: 菜单ID
+  name: 菜单名称
+  code: 菜单标识码
+  path: 路由路径
+  component: 组件路径
+  redirect: 重定向路径
+  icon: 菜单图标
+  extraIcon: 额外图标
+  rank: 排序值
+  showLink: 是否显示
+  showParent: 显示父级菜单
+  roles: 角色权限
+  auths: 按钮权限
+  keepAlive: 是否缓存
+  frameSrc: 外链地址
+  frameLoading: 显示加载动画
+  hiddenTag: 隐藏标签
+  dynamicLevel: 动态路由层级
+  activePath: 激活路径
+  transitionName: 转场动画
+  enterTransition: 进场动画
+  leaveTransition: 离场动画
+  parentId: 父级菜单
+  isActive: 状态
+  remarks: 备注
+  createdAt: 创建时间
+  updatedAt: 更新时间
+  actions: 操作
+  search: 搜索菜单
+  import: 导入配置
+  export: 导出配置
+  batch: 批量操作
+  statusActive: 启用
+  statusInactive: 禁用
+  statusAll: 全部
+  confirmDelete: 确认删除菜单
+  confirmDeleteMessage: 您确定要删除菜单"{name}"吗？此操作不可逆。
+  confirmCascadeDelete: 确认级联删除
+  confirmCascadeDeleteMessage: 该菜单下有子菜单，是否级联删除？选择"否"将只删除当前菜单。
+  confirmStatusChange: 确认修改状态
+  confirmStatusChangeMessage: 您确定要{action}菜单"{name}"吗？
+  deleteSuccess: 删除菜单成功
+  deleteFailed: 删除菜单失败
+  createSuccess: 创建菜单成功
+  createFailed: 创建菜单失败
+  updateSuccess: 更新菜单成功
+  updateFailed: 更新菜单失败
+  importSuccess: 导入菜单配置成功
+  importFailed: 导入菜单配置失败
+  exportSuccess: 导出菜单配置成功
+  exportFailed: 导出菜单配置失败
+  batchSuccess: 批量操作成功
+  batchFailed: 批量操作失败
+  basicInfo: 基本信息
+  routeConfig: 路由配置
+  displaySettings: 显示设置
+  advancedSettings: 高级设置
+  permissionSettings: 权限设置
+  view: 查看
+  editBtn: 编辑
+  save: 保存
+  cancel: 取消
+  nameRequired: 菜单名称不能为空
+  codeRequired: 菜单标识码不能为空
+  pathRequired: 路由路径不能为空
+  componentRequired: 组件路径不能为空
+  invalidPath: 无效的路由路径
+  invalidComponent: 无效的组件路径
+  createMenu: 创建菜单
+  editMenu: 编辑菜单
+  viewDetails: 查看详情
+  noData: 暂无数据
+  loading: 加载中...
+  addChildMenu: 添加子菜单
+  moveUp: 上移
+  moveDown: 下移
+  activate: 启用
+  deactivate: 禁用
+  selectIcon: 选择图标
+  menuTree: 菜单树
+  dragToSort: 拖拽排序
+  allMenus: 全部菜单
+  refresh: 刷新
+  collapse: 折叠
+  expand: 展开
+  dragTip: 拖拽调整菜单顺序
+  changeParentTip: 拖拽到其他菜单上可更改父级菜单
+  confirmBatchDelete: 确认批量删除
+  confirmBatchDeleteMessage: 您确定要删除选中的{count}个菜单项吗？此操作不可逆。
+  selectAtLeastOne: 请至少选择一项
+  batchDelete: 批量删除
+  batchEdit: 批量编辑
