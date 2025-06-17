@@ -6,7 +6,7 @@ from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
 
 from common.permissions import IsAdmin, IsSuperAdmin
 from menus.models import Menu, UserMenu
@@ -34,17 +34,127 @@ logger = logging.getLogger(__name__)
     create=extend_schema(
         summary="创建菜单",
         description="创建新的菜单项，仅限超级管理员",
-        tags=["菜单管理"]
+        tags=["菜单管理"],
+        examples=[
+            OpenApiExample(
+                '顶级菜单示例',
+                summary='创建顶级菜单',
+                description='创建一个新的顶级菜单（没有父菜单）',
+                value={
+                    "name": "reports",
+                    "code": "reports_management",
+                    "path": "/reports",
+                    "component": "layout/Reports",
+                    "redirect": None,
+                    "title": "报表管理",
+                    "icon": "chart",
+                    "extra_icon": None,
+                    "rank": 5,
+                    "show_link": True,
+                    "show_parent": True,
+                    "roles": [],
+                    "auths": [],
+                    "keep_alive": False,
+                    "frame_src": None,
+                    "frame_loading": True,
+                    "hidden_tag": False,
+                    "dynamic_level": None,
+                    "active_path": None,
+                    "transition_name": None,
+                    "enter_transition": None,
+                    "leave_transition": None,
+                    "parent_id": None,
+                    "is_active": True,
+                    "remarks": "报表管理模块"
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                '子菜单示例',
+                summary='创建子菜单',
+                description='创建一个子菜单（带有父菜单）',
+                value={
+                    "name": "monthly_report",
+                    "code": "monthly_report",
+                    "path": "/reports/monthly",
+                    "component": "views/reports/MonthlyReport",
+                    "redirect": None,
+                    "title": "月度报表",
+                    "icon": "bar-chart",
+                    "extra_icon": None,
+                    "rank": 1,
+                    "show_link": True,
+                    "show_parent": True,
+                    "roles": [],
+                    "auths": [],
+                    "keep_alive": False,
+                    "frame_src": None,
+                    "frame_loading": True,
+                    "hidden_tag": False,
+                    "dynamic_level": None,
+                    "active_path": None,
+                    "transition_name": None,
+                    "enter_transition": None,
+                    "leave_transition": None,
+                    "parent_id": 4,  # 使用已存在的菜单ID作为父级
+                    "is_active": True,
+                    "remarks": "月度统计报表"
+                },
+                request_only=True,
+            ),
+        ]
     ),
     update=extend_schema(
         summary="更新菜单",
         description="更新指定ID的菜单，仅限超级管理员",
-        tags=["菜单管理"]
+        tags=["菜单管理"],
+        examples=[
+            OpenApiExample(
+                '更新顶级菜单示例',
+                summary='更新顶级菜单',
+                description='更新菜单为顶级菜单（设置parent_id为null，而不是0）',
+                value={
+                    "name": "reports_updated",
+                    "code": "reports_management",
+                    "path": "/reports",
+                    "title": "报表管理更新版",
+                    "icon": "chart-updated",
+                    "rank": 6,
+                    "parent_id": None,  # 对于顶级菜单，parent_id应设为null而不是0
+                    "is_active": True
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                '更新为子菜单示例',
+                summary='更新为子菜单',
+                description='将菜单更新为另一个菜单的子菜单',
+                value={
+                    "name": "reports_child",
+                    "title": "子报表管理",
+                    "parent_id": 5,  # 使用已存在的菜单ID作为父级
+                    "is_active": True
+                },
+                request_only=True,
+            ),
+        ]
     ),
     partial_update=extend_schema(
         summary="部分更新菜单",
         description="部分更新指定ID的菜单，仅限超级管理员",
-        tags=["菜单管理"]
+        tags=["菜单管理"],
+        examples=[
+            OpenApiExample(
+                '部分更新菜单示例',
+                summary='部分更新菜单',
+                description='只更新菜单的部分字段',
+                value={
+                    "title": "更新后的标题",
+                    "is_active": False
+                },
+                request_only=True,
+            ),
+        ]
     ),
     destroy=extend_schema(
         summary="删除菜单",
@@ -95,7 +205,7 @@ class MenuViewSet(viewsets.ModelViewSet):
                 Q(name__icontains=search) | Q(code__icontains=search)
             )
             
-        return queryset.order_by('order', 'id')
+        return queryset.order_by('rank', 'id')
     
     def perform_create(self, serializer):
         """

@@ -16,6 +16,8 @@ class MenuSerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False
     )
+    roles = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, allow_null=True, default=list)
+    auths = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, allow_null=True, default=list)
 
     class Meta:
         model = Menu
