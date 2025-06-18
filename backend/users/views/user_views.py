@@ -1,9 +1,15 @@
 """
 用户相关视图
+
+【警告】该文件仅用于保持向后兼容性，现已被 admin_user_views.py 和 member_views.py 替代。
+请使用新的API端点：
+- 管理员用户API: /api/v1/admin-users/
+- 普通用户API: /api/v1/members/
 """
 import logging
 import os
 import uuid
+import warnings
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
@@ -35,7 +41,18 @@ logger = logging.getLogger(__name__)
 class CurrentUserView(APIView):
     """
     获取和更新当前登录用户信息
+    
+    【弃用警告】此视图已被弃用，请使用以下替代:
+    - 管理员用户: /api/v1/admin-users/me/
+    - 普通用户: /api/v1/members/me/
     """
+    
+    def dispatch(self, request, *args, **kwargs):
+        warnings.warn(
+            "此API端点已被弃用，请使用新的API端点 /api/v1/admin-users/me/ 或 /api/v1/members/me/",
+            DeprecationWarning
+        )
+        return super().dispatch(request, *args, **kwargs)
     permission_classes = [permissions.IsAuthenticated]
     
     @extend_schema(
@@ -85,7 +102,18 @@ class CurrentUserView(APIView):
 class UserListCreateView(generics.ListCreateAPIView):
     """
     用户列表和创建视图
+    
+    【弃用警告】此视图已被弃用，请使用以下替代:
+    - 管理员用户列表: /api/v1/admin-users/
+    - 普通用户列表: /api/v1/members/
     """
+    
+    def dispatch(self, request, *args, **kwargs):
+        warnings.warn(
+            "此API端点已被弃用，请使用新的API端点 /api/v1/admin-users/ 或 /api/v1/members/",
+            DeprecationWarning
+        )
+        return super().dispatch(request, *args, **kwargs)
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
@@ -367,7 +395,18 @@ class UserListCreateView(generics.ListCreateAPIView):
 class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     """
     用户详情、更新和删除视图
+    
+    【弃用警告】此视图已被弃用，请使用以下替代:
+    - 管理员用户详情: /api/v1/admin-users/{id}/
+    - 普通用户详情: /api/v1/members/{id}/
     """
+    
+    def dispatch(self, request, *args, **kwargs):
+        warnings.warn(
+            "此API端点已被弃用，请使用新的API端点 /api/v1/admin-users/{id}/ 或 /api/v1/members/{id}/",
+            DeprecationWarning
+        )
+        return super().dispatch(request, *args, **kwargs)
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -506,7 +545,18 @@ class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 class ChangePasswordView(generics.UpdateAPIView):
     """
     修改密码视图
+    
+    【弃用警告】此视图已被弃用，请使用以下替代:
+    - 管理员用户密码修改: /api/v1/admin-users/me/password/
+    - 普通用户密码修改: /api/v1/members/me/password/
     """
+    
+    def dispatch(self, request, *args, **kwargs):
+        warnings.warn(
+            "此API端点已被弃用，请使用新的API端点 /api/v1/admin-users/me/password/ 或 /api/v1/members/me/password/",
+            DeprecationWarning
+        )
+        return super().dispatch(request, *args, **kwargs)
     serializer_class = ChangePasswordSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -801,7 +851,17 @@ class TenantUserListView(generics.ListAPIView):
 class SubAccountCreateView(generics.CreateAPIView):
     """
     创建子账号视图
+    
+    【弃用警告】此视图已被弃用，请使用以下替代:
+    - 子账号创建: /api/v1/members/sub-accounts/
     """
+    
+    def dispatch(self, request, *args, **kwargs):
+        warnings.warn(
+            "此API端点已被弃用，请使用新的API端点 /api/v1/members/sub-accounts/",
+            DeprecationWarning
+        )
+        return super().dispatch(request, *args, **kwargs)
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SubAccountCreateSerializer
     

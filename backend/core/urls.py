@@ -78,8 +78,8 @@ urlpatterns = [
         # 认证相关路由
         path('auth/', include('users.urls.auth_urls', namespace='auth')),
         
-        # 用户相关路由
-        path('users/', include('users.urls.user_urls', namespace='users')),
+        # 用户相关路由 - 更新为包含所有用户URL
+        path('', include('users.urls')),
         
         # 租户相关路由
         path('tenants/', include('tenants.urls', namespace='tenants')),

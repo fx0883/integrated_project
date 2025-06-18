@@ -5,7 +5,7 @@ import logging
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from users.models import User
+from users.models import User, Member, PasswordResetToken
 from tenants.models import Tenant
 
 # 添加日志器
@@ -627,32 +627,29 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
     """
     子账号创建序列化器
     """
-    password = serializers.CharField(write_only=True, required=False)
-    
     class Meta:
-        model = User
+        model = Member
         fields = [
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
-            'last_name', 'password', 'avatar'
+            'last_name', 'avatar'
         ]
         extra_kwargs = {
-            'password': {'write_only': True},
             'id': {'read_only': True}
         }
     
     def validate_username(self, value):
         """
-        验证用户名唯一性
+        验证用户名是否已存在
         """
-        if User.objects.filter(username=value).exists():
+        if Member.objects.filter(username=value).exists():
             raise serializers.ValidationError("该用户名已被使用")
         return value
     
     def validate_email(self, value):
         """
-        验证邮箱唯一性
+        验证邮箱是否已存在
         """
-        if User.objects.filter(email=value).exists():
+        if Member.objects.filter(email=value).exists():
             raise serializers.ValidationError("该邮箱已被使用")
         return value
     
@@ -661,41 +658,26 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
         创建子账号
         """
         # 获取当前用户作为父账号
-        parent_user = self.context['request'].user
+        parent = self.context['request'].user
         
-        # 使用默认密码"123456"（如果未提供）
-        password = validated_data.get('password', '123456')
-        
-        # 创建用户但不允许登录
-        user = User.objects.create_user(
+        # 创建子账号，不设置密码
+        member = Member(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=password,
-            is_active=False  # 子账号不允许登录
+            parent=parent,
+            tenant=parent.tenant,
+            is_active=False  # 子账号默认不可登录
         )
-        
-        # 设置父账号关系
-        user.parent = parent_user
-        
-        # 子账号继承父账号的租户
-        user.tenant = parent_user.tenant
         
         # 设置其他字段
         for field in ['phone', 'nick_name', 'first_name', 'last_name', 'avatar']:
             if field in validated_data:
-                setattr(user, field, validated_data[field])
+                setattr(member, field, validated_data[field])
         
-        # 子账号权限设置
-        user.is_admin = False
-        user.is_super_admin = False
-        user.is_staff = False
-        user.is_superuser = False
+        # 保存子账号
+        member.save()
         
-        # 保存
-        user.save()
-        
-        logger.info(f"用户 {parent_user.username} 创建了子账号 {user.username}，使用{'默认' if password == '123456' else '自定义'}密码")
-        return user
+        return member
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -761,3 +743,212 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         # 将token对象添加到验证后的数据中
         data['token_obj'] = token_obj
         return data 
+
+
+# 添加Member专用序列化器
+class MemberSerializer(serializers.ModelSerializer):
+    """
+    普通用户序列化器
+    """
+    tenant_name = serializers.SerializerMethodField()
+    is_sub_account = serializers.SerializerMethodField()
+    parent_username = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Member
+        fields = [
+            'id', 'username', 'email', 'phone', 'nick_name', 'first_name', 
+            'last_name', 'is_active', 'avatar', 'tenant', 'tenant_name', 
+            'is_sub_account', 'parent', 'parent_username', 'date_joined',
+            'status'
+        ]
+        read_only_fields = ['id', 'date_joined', 'tenant_name', 'is_sub_account', 'parent_username']
+    
+    def get_tenant_name(self, obj) -> str:
+        """获取租户名称"""
+        if obj.tenant:
+            return obj.tenant.name
+        return None
+    
+    def get_is_sub_account(self, obj) -> bool:
+        """获取是否为子账号"""
+        return obj.is_sub_account
+    
+    def get_parent_username(self, obj) -> str:
+        """获取父账号用户名"""
+        if obj.parent:
+            return obj.parent.username
+        return None
+    
+    def get_avatar(self, obj) -> str:
+        """获取完整的头像URL"""
+        if not obj.avatar:
+            return ""
+            
+        # 如果已经是完整URL，直接返回
+        if obj.avatar.startswith(('http://', 'https://')):
+            return obj.avatar
+            
+        # 获取请求对象
+        request = self.context.get('request')
+        if request is not None:
+            # 从请求中获取域名和协议
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            # 确保路径以/开头
+            path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+            return f"{protocol}://{domain}{path}"
+            
+        # 如果无法获取请求对象，使用配置中的BASE_URL
+        from django.conf import settings
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        # 确保路径以/开头
+        path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+        return f"{base_url}{path}"
+
+
+class MemberCreateSerializer(serializers.ModelSerializer):
+    """
+    普通用户创建序列化器
+    """
+    password_confirm = serializers.CharField(write_only=True)
+    tenant_id = serializers.PrimaryKeyRelatedField(
+        queryset=Tenant.objects.all(),
+        required=False,
+        source='tenant',
+        write_only=True
+    )
+    
+    class Meta:
+        model = Member
+        fields = [
+            'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
+            'last_name', 'password', 'password_confirm', 'tenant_id',
+            'avatar'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'id': {'read_only': True}
+        }
+    
+    def validate(self, data):
+        """
+        验证密码一致性
+        """
+        if data['password'] != data.pop('password_confirm'):
+            raise serializers.ValidationError({"password_confirm": "两次输入的密码不一致"})
+        
+        # 验证密码强度
+        validate_password(data['password'])
+        
+        return data
+    
+    def create(self, validated_data):
+        """
+        创建普通用户
+        """
+        member = Member.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        
+        # 设置其他字段
+        for field in ['phone', 'nick_name', 'first_name', 'last_name', 'tenant', 'avatar']:
+            if field in validated_data:
+                setattr(member, field, validated_data[field])
+        
+        member.save()
+        return member
+
+
+class SubAccountSerializer(serializers.ModelSerializer):
+    """
+    子账号序列化器
+    """
+    parent_username = serializers.SerializerMethodField(read_only=True)
+    tenant_name = serializers.SerializerMethodField(read_only=True)
+    is_sub_account = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Member
+        fields = [
+            'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
+            'last_name', 'avatar', 'parent', 'parent_username', 'tenant',
+            'tenant_name', 'is_sub_account', 'date_joined'
+        ]
+        read_only_fields = ['id', 'parent', 'tenant', 'date_joined', 'parent_username', 'tenant_name', 'is_sub_account']
+    
+    def get_parent_username(self, obj) -> str:
+        """获取父账号用户名"""
+        if obj.parent:
+            return obj.parent.username
+        return None
+    
+    def get_tenant_name(self, obj) -> str:
+        """获取租户名称"""
+        if obj.tenant:
+            return obj.tenant.name
+        return None
+    
+    def get_is_sub_account(self, obj) -> bool:
+        """获取是否为子账号"""
+        return obj.is_sub_account
+
+
+class SubAccountCreateSerializer(serializers.ModelSerializer):
+    """
+    子账号创建序列化器
+    """
+    class Meta:
+        model = Member
+        fields = [
+            'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
+            'last_name', 'avatar'
+        ]
+        extra_kwargs = {
+            'id': {'read_only': True}
+        }
+    
+    def validate_username(self, value):
+        """
+        验证用户名是否已存在
+        """
+        if Member.objects.filter(username=value).exists():
+            raise serializers.ValidationError("该用户名已被使用")
+        return value
+
+    def validate_email(self, value):
+        """
+        验证邮箱是否已存在
+        """
+        if Member.objects.filter(email=value).exists():
+            raise serializers.ValidationError("该邮箱已被使用")
+        return value
+    
+    def create(self, validated_data):
+        """
+        创建子账号
+        """
+        # 获取当前用户作为父账号
+        parent = self.context['request'].user
+        
+        # 创建子账号，不设置密码
+        member = Member(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            parent=parent,
+            tenant=parent.tenant,
+            is_active=False  # 子账号默认不可登录
+        )
+        
+        # 设置其他字段
+        for field in ['phone', 'nick_name', 'first_name', 'last_name', 'avatar']:
+            if field in validated_data:
+                setattr(member, field, validated_data[field])
+        
+        # 保存子账号
+        member.save()
+        
+        return member 
