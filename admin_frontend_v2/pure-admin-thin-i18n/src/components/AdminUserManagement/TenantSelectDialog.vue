@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits, onMounted } from "vue";
+import { ref, computed, defineProps, defineEmits, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import logger from "@/utils/logger";
 import { useTenantStoreHook } from "@/store/modules/tenant";
@@ -18,6 +18,12 @@ const emit = defineEmits<{
 const tenantStore = useTenantStoreHook();
 const loading = ref(false);
 const selectedTenantId = ref<number | null>(null);
+
+// 使用计算属性处理v-model
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: value => emit("update:visible", value)
+});
 
 // 获取租户列表
 const fetchTenants = async () => {
@@ -63,7 +69,7 @@ onMounted(() => {
 
 <template>
   <el-dialog
-    :visible="visible"
+    v-model="dialogVisible"
     :title="title || '选择租户'"
     width="40%"
     :close-on-click-modal="false"

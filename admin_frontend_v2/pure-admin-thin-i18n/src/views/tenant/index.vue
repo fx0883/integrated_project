@@ -3,6 +3,7 @@ import { ref, reactive, computed, onMounted, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { ArrowDown } from "@element-plus/icons-vue";
 import { useTenantStoreHook } from "@/store/modules/tenant";
 import type {
   Tenant,
@@ -421,7 +422,7 @@ onMounted(async () => {
             <el-button type="info" size="small" plain>
               {{ t("tenant.actions") }}
               <el-icon class="el-icon--right">
-                <arrow-down />
+                <ArrowDown />
               </el-icon>
             </el-button>
             <template #dropdown>

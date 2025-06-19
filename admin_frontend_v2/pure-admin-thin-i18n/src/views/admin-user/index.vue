@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useAdminUserStoreHook } from "@/store/modules/adminUser";
 import { useUserStoreHook } from "@/store/modules/user";
+import { ArrowDown } from "@element-plus/icons-vue";
 import ConfirmDialog from "@/components/AdminUserManagement/ConfirmDialog.vue";
 import AdminUserForm from "@/components/AdminUserManagement/AdminUserForm.vue";
 import TenantSelectDialog from "@/components/AdminUserManagement/TenantSelectDialog.vue";
@@ -260,7 +261,7 @@ const handleActivate = (row: AdminUser) => {
   confirmDialog.content = t("adminUser.confirmActivateMessage", {
     username: row.username
   });
-  confirmDialog.type = "info";
+  confirmDialog.type = "warning";
   confirmDialog.confirmAction = async () => {
     try {
       await adminUserStore.activateAdminUserAction(row.id);
@@ -586,7 +587,7 @@ onMounted(() => {
             >
               <el-button size="small">
                 {{ t("buttons.more")
-                }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
