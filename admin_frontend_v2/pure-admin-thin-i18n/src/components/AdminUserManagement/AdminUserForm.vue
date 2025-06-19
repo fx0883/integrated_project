@@ -131,6 +131,8 @@ watch(
   newVal => {
     if (newVal && props.mode === "update") {
       // 更新模式下，使用adminUser数据更新表单
+      // 添加username字段，解决API要求username不能为空的问题
+      (formData as any).username = newVal.username || "";
       formData.email = newVal.email || "";
       formData.phone = newVal.phone || "";
       formData.nick_name = newVal.nick_name || "";
@@ -193,6 +195,11 @@ fetchTenants();
               v-model="formData.username"
               :placeholder="t('adminUser.usernamePlaceholder')"
             />
+          </el-form-item>
+
+          <!-- 隐藏的用户名字段，用于更新时传递给API -->
+          <el-form-item v-if="mode === 'update'" style="display: none">
+            <el-input v-model="(formData as any).username" type="hidden" />
           </el-form-item>
 
           <el-form-item :label="t('adminUser.email')" prop="email">
