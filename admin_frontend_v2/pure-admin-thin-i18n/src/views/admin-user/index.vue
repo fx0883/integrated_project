@@ -111,7 +111,9 @@ const roleOptions = [
 const createDialogVisible = ref(false);
 const createSuperAdminDialogVisible = ref(false);
 const editDialogVisible = ref(false);
+const viewDialogVisible = ref(false);
 const currentEditUser = ref<AdminUser | null>(null);
+const currentViewUser = ref<AdminUser | null>(null);
 
 // 表单加载状态
 const formLoading = computed(() => {
@@ -361,7 +363,8 @@ const handleEdit = (row: AdminUser) => {
 
 // 查看管理员详情
 const handleView = (row: AdminUser) => {
-  router.push(`/admin-user/detail/${row.id}`);
+  currentViewUser.value = { ...row };
+  viewDialogVisible.value = true;
 };
 
 // 创建管理员
@@ -437,6 +440,12 @@ const handleCreateSuperAdminCancel = () => {
 const handleEditCancel = () => {
   editDialogVisible.value = false;
   currentEditUser.value = null;
+};
+
+// 关闭查看对话框
+const handleViewCancel = () => {
+  viewDialogVisible.value = false;
+  currentViewUser.value = null;
 };
 
 // 获取状态标签类型
@@ -747,6 +756,24 @@ onMounted(() => {
       @confirm="handleTenantSelectConfirm"
       @cancel="handleTenantSelectCancel"
     />
+
+    <!-- 查看管理员对话框 -->
+    <el-dialog
+      v-model="viewDialogVisible"
+      :title="t('adminUser.viewAdminUser')"
+      width="70%"
+      :close-on-click-modal="false"
+      :destroy-on-close="true"
+    >
+      <AdminUserForm
+        v-if="currentViewUser"
+        mode="view"
+        :admin-user="currentViewUser"
+        :loading="false"
+        :readonly="true"
+        @cancel="handleViewCancel"
+      />
+    </el-dialog>
   </div>
 </template>
 

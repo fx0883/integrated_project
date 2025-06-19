@@ -14,12 +14,12 @@ const { t } = useI18n();
 const tenantStore = useTenantStoreHook();
 
 const props = defineProps({
-  // 表单模式：create-创建，update-更新，superAdmin-创建超管
+  // 表单模式：create-创建，update-更新，superAdmin-创建超管，view-查看
   mode: {
     type: String,
     default: "create",
     validator: (value: string) =>
-      ["create", "update", "superAdmin"].includes(value)
+      ["create", "update", "superAdmin", "view"].includes(value)
   },
   // 编辑模式下的管理员用户数据
   adminUser: {
@@ -28,6 +28,11 @@ const props = defineProps({
   },
   // 表单加载状态
   loading: {
+    type: Boolean,
+    default: false
+  },
+  // 是否只读模式
+  readonly: {
     type: Boolean,
     default: false
   }
@@ -129,8 +134,8 @@ const handleCancel = () => {
 watch(
   () => props.adminUser,
   newVal => {
-    if (newVal && props.mode === "update") {
-      // 更新模式下，使用adminUser数据更新表单
+    if (newVal && (props.mode === "update" || props.mode === "view")) {
+      // 更新模式或查看模式下，使用adminUser数据更新表单
       // 添加username字段，解决API要求username不能为空的问题
       (formData as any).username = newVal.username || "";
       formData.email = newVal.email || "";
@@ -180,9 +185,9 @@ fetchTenants();
     <el-form
       ref="formRef"
       :model="formData"
-      :rules="rules"
+      :rules="readonly ? {} : rules"
       label-width="120px"
-      :disabled="loading"
+      :disabled="loading || readonly"
     >
       <el-row :gutter="20">
         <el-col :span="12">
@@ -300,8 +305,15 @@ fetchTenants();
       </el-row>
 
       <div class="form-actions">
-        <el-button @click="handleCancel">{{ t("adminUser.cancel") }}</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="loading">
+        <el-button @click="handleCancel">
+          {{ readonly ? t("adminUser.close") : t("adminUser.cancel") }}
+        </el-button>
+        <el-button
+          v-if="!readonly"
+          type="primary"
+          @click="handleSubmit"
+          :loading="loading"
+        >
           {{
             mode === "update" ? t("adminUser.update") : t("adminUser.create")
           }}
