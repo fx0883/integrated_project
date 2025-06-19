@@ -213,6 +213,12 @@ const handleGrantSuperAdmin = (row: AdminUser) => {
 
 // 处理撤销超级管理员权限
 const handleRevokeSuperAdmin = (row: AdminUser) => {
+  if (!row || !row.id) {
+    logger.error("撤销超级管理员权限失败：无效的用户数据", row);
+    ElMessage.error("操作失败：无效的用户数据");
+    return;
+  }
+
   logger.debug("撤销超级管理员权限被点击", {
     userId: row.id,
     username: row.username
@@ -228,41 +234,56 @@ const handleRevokeSuperAdmin = (row: AdminUser) => {
 
 // 处理租户选择确认
 const handleTenantSelectConfirm = async (tenantId: number) => {
-  if (!userToRevoke.value) return;
+  if (!userToRevoke.value) {
+    logger.warn("租户选择确认时，userToRevoke已为null");
+    return;
+  }
+
+  // 立即保存关键用户数据，避免后续引用问题
+  const userId = userToRevoke.value.id;
+  const username = userToRevoke.value.username;
 
   logger.debug("已选择租户，准备撤销超级管理员权限", {
-    userId: userToRevoke.value.id,
-    username: userToRevoke.value.username,
+    userId,
+    username,
     tenantId
   });
 
   confirmDialog.title = t("adminUser.confirmRevokeSuperAdmin");
   confirmDialog.content = t("adminUser.confirmRevokeSuperAdminMessage", {
-    username: userToRevoke.value.username
+    username
   });
   confirmDialog.type = "warning";
+
+  // 使用闭包保存当前的userId和tenantId
   confirmDialog.confirmAction = async () => {
     try {
       logger.debug("确认撤销超级管理员权限", {
-        userId: userToRevoke.value?.id,
+        userId, // 使用闭包中保存的userId
         tenantId
       });
 
-      // 使用工厂函数调用，确保访问的是最新的实例
-      await useAdminUserStoreHook().revokeSuperAdminAction(
-        userToRevoke.value!.id,
-        tenantId
-      );
+      // 使用闭包中保存的userId，避免依赖可能为null的userToRevoke.value
+      await useAdminUserStoreHook().revokeSuperAdminAction(userId, tenantId);
       ElMessage.success(t("adminUser.revokeSuccess"));
       fetchAdminUsers();
-      userToRevoke.value = null;
     } catch (error) {
       logger.error("撤销超级管理员权限失败", error);
       ElMessage.error(t("adminUser.revokeFailed"));
+    } finally {
+      // 在操作完成后清空userToRevoke
+      userToRevoke.value = null;
     }
   };
+
   confirmDialog.visible = true;
   console.log("设置确认对话框显示", confirmDialog.visible, confirmDialog.title);
+};
+
+// 处理租户选择取消
+const handleTenantSelectCancel = () => {
+  logger.debug("租户选择已取消");
+  userToRevoke.value = null;
 };
 
 // 处理激活账号
@@ -312,8 +333,12 @@ const handleDeactivate = (row: AdminUser) => {
 
 // 确认对话框处理
 const handleConfirm = async () => {
-  logger.debug("确认对话框确认按钮被点击");
+  logger.debug("确认对话框确认按钮被点击", {
+    dialogTitle: confirmDialog.title,
+    hasConfirmAction: !!confirmDialog.confirmAction
+  });
   console.log("确认对话框确认按钮被点击", confirmDialog);
+
   if (confirmDialog.confirmAction) {
     logger.debug("执行确认操作");
     try {
@@ -660,6 +685,7 @@ onMounted(() => {
       :title="confirmDialog.title"
       :content="confirmDialog.content"
       :type="confirmDialog.type"
+      destroy-on-close
       @confirm="handleConfirm"
     />
 
@@ -717,8 +743,9 @@ onMounted(() => {
     <TenantSelectDialog
       v-model:visible="tenantSelectDialogVisible"
       :title="t('adminUser.selectTenantTitle')"
+      destroy-on-close
       @confirm="handleTenantSelectConfirm"
-      @cancel="userToRevoke = null"
+      @cancel="handleTenantSelectCancel"
     />
   </div>
 </template>
