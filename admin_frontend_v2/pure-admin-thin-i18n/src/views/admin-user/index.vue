@@ -7,6 +7,7 @@ import { useAdminUserStoreHook } from "@/store/modules/adminUser";
 import { useUserStoreHook } from "@/store/modules/user";
 import ConfirmDialog from "@/components/AdminUserManagement/ConfirmDialog.vue";
 import AdminUserForm from "@/components/AdminUserManagement/AdminUserForm.vue";
+import TenantSelectDialog from "@/components/AdminUserManagement/TenantSelectDialog.vue";
 import type {
   AdminUser,
   AdminUserListParams,
@@ -112,6 +113,10 @@ const formLoading = computed(() => {
   );
 });
 
+// 在script部分中添加租户选择对话框状态
+const tenantSelectDialogVisible = ref(false);
+const userToRevoke = ref<AdminUser | null>(null);
+
 // 获取管理员用户列表
 const fetchAdminUsers = async () => {
   try {
@@ -154,6 +159,10 @@ const handleSizeChange = (size: number) => {
 
 // 处理删除
 const handleDelete = (row: AdminUser) => {
+  logger.debug("删除管理员用户被点击", {
+    userId: row.id,
+    username: row.username
+  });
   confirmDialog.title = t("adminUser.confirmDelete");
   confirmDialog.content = t("adminUser.confirmDeleteMessage", {
     username: row.username
@@ -161,6 +170,7 @@ const handleDelete = (row: AdminUser) => {
   confirmDialog.type = "warning";
   confirmDialog.confirmAction = async () => {
     try {
+      logger.debug("确认删除管理员用户", { userId: row.id });
       await adminUserStore.removeAdminUser(row.id);
       ElMessage.success(t("adminUser.deleteSuccess"));
       fetchAdminUsers();
@@ -194,16 +204,47 @@ const handleGrantSuperAdmin = (row: AdminUser) => {
 
 // 处理撤销超级管理员权限
 const handleRevokeSuperAdmin = (row: AdminUser) => {
+  logger.debug("撤销超级管理员权限被点击", {
+    userId: row.id,
+    username: row.username
+  });
+
+  // 保存要撤销权限的用户
+  userToRevoke.value = row;
+
+  // 显示租户选择对话框
+  tenantSelectDialogVisible.value = true;
+};
+
+// 处理租户选择确认
+const handleTenantSelectConfirm = async (tenantId: number) => {
+  if (!userToRevoke.value) return;
+
+  logger.debug("已选择租户，准备撤销超级管理员权限", {
+    userId: userToRevoke.value.id,
+    username: userToRevoke.value.username,
+    tenantId
+  });
+
   confirmDialog.title = t("adminUser.confirmRevokeSuperAdmin");
   confirmDialog.content = t("adminUser.confirmRevokeSuperAdminMessage", {
-    username: row.username
+    username: userToRevoke.value.username
   });
   confirmDialog.type = "warning";
   confirmDialog.confirmAction = async () => {
     try {
-      await adminUserStore.revokeSuperAdminAction(row.id);
+      logger.debug("确认撤销超级管理员权限", {
+        userId: userToRevoke.value?.id,
+        tenantId
+      });
+
+      await adminUserStore.revokeSuperAdminAction(
+        userToRevoke.value!.id,
+        tenantId
+      );
       ElMessage.success(t("adminUser.revokeSuccess"));
       fetchAdminUsers();
+      userToRevoke.value = null;
     } catch (error) {
       logger.error("撤销超级管理员权限失败", error);
       ElMessage.error(t("adminUser.revokeFailed"));
@@ -234,6 +275,10 @@ const handleActivate = (row: AdminUser) => {
 
 // 处理停用账号
 const handleDeactivate = (row: AdminUser) => {
+  logger.debug("停用管理员账号被点击", {
+    userId: row.id,
+    username: row.username
+  });
   confirmDialog.title = t("adminUser.confirmDeactivate");
   confirmDialog.content = t("adminUser.confirmDeactivateMessage", {
     username: row.username
@@ -241,6 +286,7 @@ const handleDeactivate = (row: AdminUser) => {
   confirmDialog.type = "warning";
   confirmDialog.confirmAction = async () => {
     try {
+      logger.debug("确认停用管理员账号", { userId: row.id });
       await adminUserStore.deactivateAdminUserAction(row.id);
       ElMessage.success(t("adminUser.deactivateSuccess"));
       fetchAdminUsers();
@@ -254,8 +300,12 @@ const handleDeactivate = (row: AdminUser) => {
 
 // 确认对话框处理
 const handleConfirm = async () => {
+  logger.debug("确认对话框确认按钮被点击");
   if (confirmDialog.confirmAction) {
+    logger.debug("执行确认操作");
     await confirmDialog.confirmAction();
+  } else {
+    logger.warn("确认对话框没有关联确认操作");
   }
 };
 
@@ -366,9 +416,12 @@ const formatDateTime = (dateTimeString: string) => {
   return date.toLocaleString();
 };
 
-// 页面加载时获取数据
+// 初始化时输出操作权限信息
 onMounted(() => {
   fetchAdminUsers();
+  logger.debug("当前用户超级管理员权限状态", {
+    isSuperAdmin: isSuperAdmin.value
+  });
 });
 </script>
 
@@ -429,10 +482,10 @@ onMounted(() => {
       </div>
 
       <el-table
+        v-loading="tableLoading"
         :data="adminUsers"
         border
         style="width: 100%"
-        v-loading="tableLoading"
       >
         <el-table-column prop="id" :label="t('adminUser.id')" width="80" />
         <el-table-column
@@ -481,10 +534,10 @@ onMounted(() => {
         </el-table-column>
         <el-table-column :label="t('adminUser.roles')" width="130">
           <template #default="scope">
-            <el-tag type="danger" v-if="scope.row.is_super_admin">
+            <el-tag v-if="scope.row.is_super_admin" type="danger">
               {{ t("adminUser.superAdmin") }}
             </el-tag>
-            <el-tag type="primary" v-else>
+            <el-tag v-else type="primary">
               {{ t("adminUser.tenantAdmin") }}
             </el-tag>
           </template>
@@ -512,7 +565,7 @@ onMounted(() => {
             </el-button>
             <el-dropdown trigger="click">
               <el-button size="small" type="info">
-                {{ t("更多")
+                {{ t("buttons.more")
                 }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
               </el-button>
               <template #dropdown>
@@ -626,6 +679,14 @@ onMounted(() => {
         @cancel="handleEditCancel"
       />
     </el-dialog>
+
+    <!-- 租户选择对话框 -->
+    <TenantSelectDialog
+      v-model:visible="tenantSelectDialogVisible"
+      :title="t('adminUser.selectTenantTitle')"
+      @confirm="handleTenantSelectConfirm"
+      @cancel="userToRevoke = null"
+    />
   </div>
 </template>
 

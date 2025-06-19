@@ -18,6 +18,7 @@ buttons:
   pureBackTop: Back to Top
   pureOpenText: On
   pureCloseText: Off
+  more: More
 search:
   pureTotal: Total
   pureHistory: Search History

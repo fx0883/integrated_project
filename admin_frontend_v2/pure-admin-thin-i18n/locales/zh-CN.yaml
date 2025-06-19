@@ -18,6 +18,7 @@ buttons:
   pureBackTop: 回到顶部
   pureOpenText: 开
   pureCloseText: 关
+  more: 更多
 search:
   pureTotal: 共
   pureHistory: 搜索历史
@@ -443,3 +444,7 @@ menu:
   selectAtLeastOne: 请至少选择一项
   batchDelete: 批量删除
   batchEdit: 批量编辑
+selectTenantTitle: 选择租户
+tenantSelectRequired: 请选择一个租户以继续操作
+revokeSuperAdminSuccess: 成功撤销超级管理员权限并分配到租户
+selectTenant: 选择租户

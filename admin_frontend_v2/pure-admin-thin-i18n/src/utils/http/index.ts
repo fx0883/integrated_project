@@ -287,7 +287,11 @@ class PureHttp {
         // 记录错误日志
         logger.logError({
           ...error,
-          errorResponse
+          errorResponse,
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+          data: error.response?.data
         });
         
         // 显示错误消息

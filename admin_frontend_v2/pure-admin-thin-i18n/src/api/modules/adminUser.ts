@@ -87,12 +87,13 @@ export function grantSuperAdmin(id: number) {
 /**
  * 撤销超级管理员权限
  */
-export function revokeSuperAdmin(id: number) {
-  logger.debug("API请求: 撤销超级管理员权限", { id });
+export function revokeSuperAdmin(id: number, tenantId: number) {
+  logger.debug("API请求: 撤销超级管理员权限", { id, tenantId });
   
   return http.request<ApiResponse<AdminUser>>(
     "post",
-    `/admin-users/${id}/revoke-super-admin/`
+    `/admin-users/${id}/revoke-super-admin/`,
+    { data: { tenant_id: tenantId } }
   );
 }
 

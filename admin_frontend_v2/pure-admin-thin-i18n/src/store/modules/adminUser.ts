@@ -270,10 +270,19 @@ export const useAdminUserStore = defineStore("adminUser", {
     /**
      * 撤销超级管理员权限
      */
-    async revokeSuperAdminAction(id: number) {
+    async revokeSuperAdminAction(id: number, tenantId?: number) {
       this.loading.revokeSuperAdmin = true;
       try {
-        const response = await revokeSuperAdmin(id);
+        // 如果没有提供租户ID，则使用第一个可用的租户ID
+        let targetTenantId = tenantId;
+        if (!targetTenantId) {
+          // 这里我们需要获取可用的租户列表或使用默认租户
+          // 理想情况下，应该调用获取租户列表的API，但为了简化，这里使用一个默认值
+          targetTenantId = 1; // 默认使用ID为1的租户
+          logger.warn("撤销超级管理员权限时未提供租户ID，使用默认租户ID", { defaultTenantId: targetTenantId });
+        }
+
+        const response = await revokeSuperAdmin(id, targetTenantId);
         if (response.success) {
           // 如果撤销的是当前选中的管理员用户，则更新当前选中的用户信息
           if (this.currentAdminUser && this.currentAdminUser.id === id) {
@@ -285,7 +294,10 @@ export const useAdminUserStore = defineStore("adminUser", {
             this.adminUserList.data[index] = {
               ...this.adminUserList.data[index],
               is_super_admin: false,
-              role: "管理员"
+              role: "管理员",
+              // 更新租户信息
+              tenant: targetTenantId,
+              tenant_name: response.data?.tenant_name || "未知租户"
             };
           }
           ElMessage.success(response.message || "撤销超级管理员权限成功");

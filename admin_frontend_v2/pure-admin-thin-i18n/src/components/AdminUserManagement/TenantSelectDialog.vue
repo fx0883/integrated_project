@@ -1,0 +1,120 @@
+<script lang="ts" setup>
+import { ref, defineProps, defineEmits, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import logger from "@/utils/logger";
+import { useTenantStoreHook } from "@/store/modules/tenant";
+
+const props = defineProps<{
+  visible: boolean;
+  title?: string;
+}>();
+
+const emit = defineEmits<{
+  (e: "confirm", tenantId: number): void;
+  (e: "cancel"): void;
+  (e: "update:visible", value: boolean): void;
+}>();
+
+const tenantStore = useTenantStoreHook();
+const loading = ref(false);
+const selectedTenantId = ref<number | null>(null);
+
+// 获取租户列表
+const fetchTenants = async () => {
+  loading.value = true;
+  try {
+    await tenantStore.fetchTenantList({
+      page: 1,
+      page_size: 50, // 获取更多租户以便选择
+      status: "active" // 只获取活跃的租户
+    });
+  } catch (error) {
+    logger.error("获取租户列表失败", error);
+    ElMessage.error("获取租户列表失败");
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 关闭对话框
+const handleClose = () => {
+  emit("update:visible", false);
+  emit("cancel");
+};
+
+// 确认选择
+const handleConfirm = () => {
+  if (!selectedTenantId.value) {
+    ElMessage.warning("请选择一个租户");
+    return;
+  }
+  emit("confirm", selectedTenantId.value);
+  emit("update:visible", false);
+};
+
+// 组件挂载时获取租户列表
+onMounted(() => {
+  fetchTenants();
+});
+</script>
+
+<template>
+  <el-dialog
+    :visible="visible"
+    :title="title || '选择租户'"
+    width="40%"
+    @close="handleClose"
+    :close-on-click-modal="false"
+  >
+    <div class="tenant-select-content" v-loading="loading">
+      <p>请选择一个要将管理员分配到的租户：</p>
+      <el-select
+        v-model="selectedTenantId"
+        placeholder="请选择租户"
+        style="width: 100%"
+      >
+        <el-option
+          v-for="tenant in tenantStore.tenantList.data"
+          :key="tenant.id"
+          :label="tenant.name"
+          :value="tenant.id"
+        >
+          <div class="tenant-option">
+            <span>{{ tenant.name }}</span>
+            <span class="tenant-option-id">ID: {{ tenant.id }}</span>
+          </div>
+        </el-option>
+      </el-select>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="handleClose">取消</el-button>
+        <el-button
+          type="primary"
+          @click="handleConfirm"
+          :disabled="!selectedTenantId"
+        >
+          确认
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
+</template>
+
+<style scoped>
+.tenant-select-content {
+  padding: 10px 0;
+}
+
+.tenant-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.tenant-option-id {
+  color: #999;
+  font-size: 12px;
+}
+</style>

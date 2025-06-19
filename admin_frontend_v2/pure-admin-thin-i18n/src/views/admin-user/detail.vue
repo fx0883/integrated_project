@@ -9,6 +9,7 @@ import ConfirmDialog from "@/components/AdminUserManagement/ConfirmDialog.vue";
 import AvatarUpload from "@/components/AdminUserManagement/AvatarUpload.vue";
 import type { ResetPasswordParams } from "@/types/adminUser";
 import logger from "@/utils/logger";
+import TenantSelectDialog from "@/components/AdminUserManagement/TenantSelectDialog.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -48,6 +49,9 @@ const confirmDialog = reactive({
   type: "warning" as const,
   confirmAction: null as (() => Promise<void>) | null
 });
+
+// 租户选择对话框可见性
+const tenantSelectDialogVisible = ref(false);
 
 // 获取管理员用户详情
 const fetchAdminUserDetail = async () => {
@@ -112,6 +116,20 @@ const handleGrantSuperAdmin = () => {
 
 // 处理撤销超级管理员权限
 const handleRevokeSuperAdmin = () => {
+  logger.debug("详情页撤销超级管理员权限被点击", { userId: adminUserId.value });
+
+  // 显示租户选择对话框
+  tenantSelectDialogVisible.value = true;
+};
+
+// 处理租户选择确认
+const handleTenantSelectConfirm = async (tenantId: number) => {
+  logger.debug("已选择租户，准备撤销超级管理员权限", {
+    userId: adminUserId.value,
+    username: currentAdminUser.value?.username,
+    tenantId
+  });
+
   confirmDialog.title = t("adminUser.confirmRevokeSuperAdmin");
   confirmDialog.content = t("adminUser.confirmRevokeSuperAdminMessage", {
     username: currentAdminUser.value?.username
@@ -119,7 +137,11 @@ const handleRevokeSuperAdmin = () => {
   confirmDialog.type = "warning";
   confirmDialog.confirmAction = async () => {
     try {
-      await adminUserStore.revokeSuperAdminAction(adminUserId.value);
+      logger.debug("详情页确认撤销超级管理员权限", {
+        userId: adminUserId.value,
+        tenantId
+      });
+      await adminUserStore.revokeSuperAdminAction(adminUserId.value, tenantId);
       ElMessage.success(t("adminUser.revokeSuccess"));
       fetchAdminUserDetail();
     } catch (error) {
@@ -456,6 +478,13 @@ onMounted(() => {
       :content="confirmDialog.content"
       :type="confirmDialog.type"
       @confirm="handleConfirm"
+    />
+
+    <!-- 租户选择对话框 -->
+    <TenantSelectDialog
+      v-model:visible="tenantSelectDialogVisible"
+      :title="t('adminUser.selectTenantTitle')"
+      @confirm="handleTenantSelectConfirm"
     />
   </div>
 </template>
