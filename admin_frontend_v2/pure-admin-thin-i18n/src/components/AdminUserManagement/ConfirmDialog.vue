@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits } from "vue";
+import { ref, computed, defineProps, defineEmits, watch } from "vue";
 import {
   WarningFilled,
   InfoFilled,
@@ -22,6 +22,12 @@ const emit = defineEmits<{
   (e: "update:visible", value: boolean): void;
 }>();
 
+// 使用计算属性处理v-model
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: value => emit("update:visible", value)
+});
+
 // 关闭对话框
 const handleClose = () => {
   emit("update:visible", false);
@@ -34,14 +40,24 @@ const handleConfirm = () => {
   emit("confirm");
   emit("update:visible", false);
 };
+
+// 监听visible属性变化
+watch(
+  () => props.visible,
+  newVal => {
+    console.log("ConfirmDialog visible属性变化：", newVal, props.title);
+  }
+);
 </script>
 
 <template>
   <el-dialog
-    :visible="visible"
+    v-model="dialogVisible"
     :title="title"
     width="30%"
+    :destroy-on-close="true"
     @close="handleClose"
+    @open="console.log('ConfirmDialog打开事件被触发')"
     :close-on-click-modal="false"
   >
     <div class="confirm-dialog-content">

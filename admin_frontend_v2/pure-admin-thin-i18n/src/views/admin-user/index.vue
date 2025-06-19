@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -62,6 +62,14 @@ const confirmDialog = reactive({
   type: "warning" as const,
   confirmAction: null as (() => Promise<void>) | null
 });
+
+// 监视confirmDialog.visible的变化
+watch(
+  () => confirmDialog.visible,
+  newVal => {
+    console.log("confirmDialog.visible 变化为:", newVal, confirmDialog.title);
+  }
+);
 
 // 状态选项
 const statusOptions = [
@@ -215,6 +223,7 @@ const handleRevokeSuperAdmin = (row: AdminUser) => {
 
   // 显示租户选择对话框
   tenantSelectDialogVisible.value = true;
+  console.log("设置租户选择对话框显示", tenantSelectDialogVisible.value);
 };
 
 // 处理租户选择确认
@@ -253,6 +262,7 @@ const handleTenantSelectConfirm = async (tenantId: number) => {
     }
   };
   confirmDialog.visible = true;
+  console.log("设置确认对话框显示", confirmDialog.visible, confirmDialog.title);
 };
 
 // 处理激活账号
@@ -303,6 +313,7 @@ const handleDeactivate = (row: AdminUser) => {
 // 确认对话框处理
 const handleConfirm = async () => {
   logger.debug("确认对话框确认按钮被点击");
+  console.log("确认对话框确认按钮被点击", confirmDialog);
   if (confirmDialog.confirmAction) {
     logger.debug("执行确认操作");
     try {
@@ -313,6 +324,7 @@ const handleConfirm = async () => {
     }
   } else {
     logger.warn("确认对话框没有关联确认操作");
+    console.warn("确认对话框没有关联确认操作");
   }
 };
 

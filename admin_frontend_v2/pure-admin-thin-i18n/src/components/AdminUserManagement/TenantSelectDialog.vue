@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, defineProps, defineEmits, onMounted } from "vue";
+import { ref, computed, defineProps, defineEmits, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
 import logger from "@/utils/logger";
 import { useTenantStoreHook } from "@/store/modules/tenant";
@@ -61,10 +61,26 @@ const handleConfirm = () => {
   emit("update:visible", false);
 };
 
-// 组件挂载时获取租户列表
+// 组件挂载时获取租户列表及监听visible变化
 onMounted(() => {
   fetchTenants();
+  console.log("TenantSelectDialog组件挂载完成，visible=", props.visible);
 });
+
+// 监听visible属性变化
+watch(
+  () => props.visible,
+  newVal => {
+    console.log("TenantSelectDialog visible属性变化：", newVal);
+    if (newVal) {
+      // 对话框显示时，重新获取租户列表
+      fetchTenants();
+    } else {
+      // 对话框关闭时，清空选择
+      selectedTenantId.value = null;
+    }
+  }
+);
 </script>
 
 <template>
@@ -73,7 +89,9 @@ onMounted(() => {
     :title="title || '选择租户'"
     width="40%"
     :close-on-click-modal="false"
+    :destroy-on-close="true"
     @close="handleClose"
+    @open="console.log('TenantSelectDialog打开事件被触发')"
   >
     <div v-loading="loading" class="tenant-select-content">
       <p>请选择一个要将管理员分配到的租户：</p>
