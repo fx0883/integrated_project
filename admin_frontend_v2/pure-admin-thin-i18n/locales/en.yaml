@@ -234,6 +234,115 @@ tenant:
   quotaUpdateFailed: Failed to update tenant quota
   positiveInteger: Must be a positive integer
 
+# Admin User Management Related Translations
+adminUser:
+  management: Admin User Management
+  list: Admin User List
+  create: Create Admin
+  edit: Edit Admin
+  detail: Admin Details
+  delete: Delete Admin
+  title: Admin User Management
+  id: User ID
+  username: Username
+  email: Email
+  phone: Phone
+  nickName: Nickname
+  firstName: First Name
+  lastName: Last Name
+  fullName: Full Name
+  avatar: Avatar
+  status: Status
+  roles: Roles
+  tenant: Tenant
+  isSuperAdmin: Super Admin
+  isAdmin: Admin
+  createdAt: Created At
+  lastLogin: Last Login
+  lastLoginIp: Last Login IP
+  actions: Actions
+  search: Search Admin
+  password: Password
+  confirmPassword: Confirm Password
+  searchPlaceholder: Enter username, email, nickname or phone to search
+  statusActive: Active
+  statusSuspended: Suspended
+  statusInactive: Inactive
+  statusAll: All
+  confirmDelete: Confirm Delete Admin
+  confirmDeleteMessage: Are you sure you want to delete admin "{username}"? This operation is irreversible, but the user data will be retained in the database (soft delete).
+  confirmActivate: Confirm Activate Admin
+  confirmActivateMessage: Are you sure you want to activate admin "{username}"? After activation, this admin will be able to use the system normally.
+  confirmDeactivate: Confirm Deactivate Admin
+  confirmDeactivateMessage: Are you sure you want to deactivate admin "{username}"? After deactivation, this admin will not be able to log in to the system, but the data will be retained.
+  confirmGrantSuperAdmin: Confirm Grant Super Admin
+  confirmGrantSuperAdminMessage: Are you sure you want to grant super admin privileges to "{username}"? After granting, this user will have the highest system privileges.
+  confirmRevokeSuperAdmin: Confirm Revoke Super Admin
+  confirmRevokeSuperAdminMessage: Are you sure you want to revoke super admin privileges from "{username}"? After revocation, this user will no longer have the highest system privileges.
+  deleteSuccess: Admin deleted successfully
+  deleteFailed: Failed to delete admin
+  createSuccess: Admin created successfully
+  createFailed: Failed to create admin
+  updateSuccess: Admin updated successfully
+  updateFailed: Failed to update admin
+  activateSuccess: Admin activated successfully
+  activateFailed: Failed to activate admin
+  deactivateSuccess: Admin deactivated successfully
+  deactivateFailed: Failed to deactivate admin
+  grantSuccess: Super admin privileges granted successfully
+  grantFailed: Failed to grant super admin privileges
+  revokeSuccess: Super admin privileges revoked successfully
+  revokeFailed: Failed to revoke super admin privileges
+  resetPasswordSuccess: Password reset successfully
+  resetPasswordFailed: Failed to reset password
+  uploadAvatarSuccess: Avatar uploaded successfully
+  uploadAvatarFailed: Failed to upload avatar
+  basicInfo: Basic Information
+  roleInfo: Role Information
+  accountInfo: Account Information
+  backToList: Back to List
+  activate: Activate Admin
+  deactivate: Deactivate Admin
+  grantSuperAdmin: Grant Super Admin
+  revokeSuperAdmin: Revoke Super Admin
+  resetPassword: Reset Password
+  uploadAvatar: Upload Avatar
+  uploading: Uploading...
+  view: View
+  editBtn: Edit
+  save: Save
+  cancel: Cancel
+  superAdmin: Super Admin
+  tenantAdmin: Tenant Admin
+  nameRequired: Username cannot be empty
+  emailRequired: Email cannot be empty
+  emailFormat: Please enter a valid email format
+  phoneFormat: Please enter a valid phone number format
+  passwordRequired: Password cannot be empty
+  passwordConfirmRequired: Confirm password cannot be empty
+  passwordNotMatch: The two passwords do not match
+  passwordFormat: Password should be 8-18 characters with at least 2 types of digits, letters or symbols
+  createAdminUser: Create Admin
+  createSuperAdmin: Create Super Admin
+  editAdminUser: Edit Admin
+  noData: No Data
+  loading: Loading...
+  usernameRequired: Username is required
+  usernameLength: Username should be 3-30 characters
+  emailInvalid: Invalid email format
+  passwordLength: Password should be at least 8 characters
+  formValidationFailed: Form validation failed
+  isActive: Is Active
+  usernamePlaceholder: Please enter username
+  emailPlaceholder: Please enter email
+  phonePlaceholder: Please enter phone number
+  nickNamePlaceholder: Please enter nickname
+  firstNamePlaceholder: Please enter first name
+  lastNamePlaceholder: Please enter last name
+  passwordPlaceholder: Please enter password
+  confirmPasswordPlaceholder: Please confirm password
+  tenantPlaceholder: Please select tenant
+
 # Menu Management Related Translations
 menu:
   management: Menu Management

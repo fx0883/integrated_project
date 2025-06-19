@@ -199,9 +199,6 @@ tenant:
   editBtn: 编辑
   save: 保存
   cancel: 取消
-
-# 菜单管理相关国际化
-
   createTenant: 创建租户
   editTenant: 编辑租户
   quotaManagement: 配额管理
@@ -235,6 +232,116 @@ tenant:
   nameRequired: 租户名称不能为空
   emailFormat: 请输入有效的邮箱格式
   phoneFormat: 请输入有效的电话号码格式
+
+# 管理员用户管理相关国际化
+adminUser:
+  management: 管理员用户管理
+  list: 管理员用户列表
+  create: 创建管理员
+  edit: 编辑管理员
+  detail: 管理员详情
+  delete: 删除管理员
+  title: 管理员用户管理
+  id: 用户ID
+  username: 用户名
+  email: 邮箱
+  phone: 手机号
+  nickName: 昵称
+  firstName: 名
+  lastName: 姓
+  fullName: 姓名
+  avatar: 头像
+  status: 状态
+  roles: 角色
+  tenant: 所属租户
+  isSuperAdmin: 超级管理员
+  isAdmin: 管理员
+  createdAt: 创建时间
+  lastLogin: 最后登录时间
+  lastLoginIp: 最后登录IP
+  actions: 操作
+  search: 搜索管理员
+  password: 密码
+  confirmPassword: 确认密码
+  searchPlaceholder: 输入用户名、邮箱、昵称或手机号搜索
+  statusActive: 活跃
+  statusSuspended: 已暂停
+  statusInactive: 未激活
+  statusAll: 全部
+  confirmDelete: 确认删除管理员
+  confirmDeleteMessage: 您确定要删除管理员"{username}"吗？此操作不可逆，但用户数据将保留在数据库中（软删除）。
+  confirmActivate: 确认激活管理员
+  confirmActivateMessage: 您确定要激活管理员"{username}"吗？激活后，该管理员将可以正常使用系统。
+  confirmDeactivate: 确认停用管理员
+  confirmDeactivateMessage: 您确定要停用管理员"{username}"吗？停用后，该管理员将无法登录系统，但数据将被保留。
+  confirmGrantSuperAdmin: 确认授予超级管理员权限
+  confirmGrantSuperAdminMessage: 您确定要将超级管理员权限授予"{username}"吗？授权后，该用户将获得系统的最高权限。
+  confirmRevokeSuperAdmin: 确认撤销超级管理员权限
+  confirmRevokeSuperAdminMessage: 您确定要撤销"{username}"的超级管理员权限吗？撤销后，该用户将不再具有系统的最高权限。
+  deleteSuccess: 删除管理员成功
+  deleteFailed: 删除管理员失败
+  createSuccess: 创建管理员成功
+  createFailed: 创建管理员失败
+  updateSuccess: 更新管理员成功
+  updateFailed: 更新管理员失败
+  activateSuccess: 激活管理员成功
+  activateFailed: 激活管理员失败
+  deactivateSuccess: 停用管理员成功
+  deactivateFailed: 停用管理员失败
+  grantSuccess: 授予超级管理员权限成功
+  grantFailed: 授予超级管理员权限失败
+  revokeSuccess: 撤销超级管理员权限成功
+  revokeFailed: 撤销超级管理员权限失败
+  resetPasswordSuccess: 重置密码成功
+  resetPasswordFailed: 重置密码失败
+  uploadAvatarSuccess: 上传头像成功
+  uploadAvatarFailed: 上传头像失败
+  basicInfo: 基本信息
+  roleInfo: 角色信息
+  accountInfo: 账号信息
+  backToList: 返回列表
+  activate: 激活管理员
+  deactivate: 停用管理员
+  grantSuperAdmin: 授予超级管理员权限
+  revokeSuperAdmin: 撤销超级管理员权限
+  resetPassword: 重置密码
+  uploadAvatar: 上传头像
+  uploading: 上传中...
+  view: 查看
+  editBtn: 编辑
+  save: 保存
+  cancel: 取消
+  superAdmin: 超级管理员
+  tenantAdmin: 租户管理员
+  nameRequired: 用户名不能为空
+  emailRequired: 邮箱不能为空
+  emailFormat: 请输入有效的邮箱格式
+  phoneFormat: 请输入有效的手机号格式
+  passwordRequired: 密码不能为空
+  passwordConfirmRequired: 确认密码不能为空
+  passwordNotMatch: 两次输入的密码不一致
+  passwordFormat: 密码格式应为8-18位数字、字母、符号的任意两种组合
+  createAdminUser: 创建管理员
+  createSuperAdmin: 创建超级管理员
+  editAdminUser: 编辑管理员
+  noData: 暂无数据
+  loading: 加载中...
+  usernameRequired: 用户名不能为空
+  usernameLength: 用户名长度应为3-30个字符
+  emailInvalid: 邮箱格式不正确
+  passwordLength: 密码长度至少为8个字符
+  formValidationFailed: 表单验证失败
+  isActive: 是否激活
+  usernamePlaceholder: 请输入用户名
+  emailPlaceholder: 请输入邮箱
+  phonePlaceholder: 请输入手机号
+  nickNamePlaceholder: 请输入昵称
+  firstNamePlaceholder: 请输入名
+  lastNamePlaceholder: 请输入姓
+  passwordPlaceholder: 请输入密码
+  confirmPasswordPlaceholder: 请再次输入密码
+  tenantPlaceholder: 请选择所属租户
+
 # 菜单管理相关国际化
 menu:
   management: 菜单管理

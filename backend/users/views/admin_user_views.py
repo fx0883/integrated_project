@@ -718,4 +718,297 @@ class SuperAdminCreateView(generics.CreateAPIView):
         设置为超级管理员
         """
         logger.info(f"超级管理员 {self.request.user.username} 创建了新的超级管理员账号")
-        serializer.save() 
+        serializer.save()
+
+
+class AdminUserAvatarUploadView(APIView):
+    """
+    管理员用户头像上传视图
+    """
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    @extend_schema(
+        summary="上传当前管理员头像",
+        description="上传并更新当前登录管理员用户的头像图片",
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'avatar': {
+                        'type': 'string',
+                        'format': 'binary',
+                        'description': '要上传的头像文件，支持JPG、PNG、GIF、WEBP或BMP格式',
+                    },
+                },
+                'required': ['avatar']
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description="头像上传成功",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '头像上传成功'},
+                        'avatar': {'type': 'string', 'example': 'https://example.com/media/avatars/user-avatar.jpg'},
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="请求错误",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '未提供头像文件/不支持的文件类型/文件太大'},
+                    }
+                }
+            ),
+            401: OpenApiResponse(description="未认证"),
+            403: OpenApiResponse(description="权限不足"),
+            500: OpenApiResponse(description="服务器内部错误")
+        },
+        tags=["管理员用户"]
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        上传管理员用户头像
+        """
+        user = request.user
+        
+        # 检查用户是否为管理员
+        if not user.is_admin:
+            return Response(
+                {"detail": "该接口仅适用于管理员"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        avatar_file = request.FILES.get('avatar')
+        
+        if not avatar_file:
+            return Response(
+                {"detail": "未提供头像文件"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 验证文件类型
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+        ext = os.path.splitext(avatar_file.name)[1].lower()
+        if ext not in valid_extensions:
+            return Response(
+                {"detail": "不支持的文件类型，请上传JPG、PNG、GIF、WEBP或BMP格式的图片"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 验证文件大小
+        if avatar_file.size > 2 * 1024 * 1024:  # 2MB
+            return Response(
+                {"detail": "文件太大，头像大小不能超过2MB"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # 删除旧头像文件（如果存在）
+            if user.avatar and user.avatar.startswith(settings.MEDIA_URL):
+                # 获取相对路径
+                avatar_path = user.avatar.replace(settings.MEDIA_URL, '', 1)
+                old_avatar_path = os.path.join(settings.MEDIA_ROOT, avatar_path)
+                
+                # 检查文件是否存在，如果存在则删除
+                if os.path.isfile(old_avatar_path):
+                    try:
+                        os.remove(old_avatar_path)
+                        logger.info(f"删除管理员用户 {user.username} 的旧头像 {old_avatar_path}")
+                    except OSError as e:
+                        logger.warning(f"删除旧头像文件失败: {str(e)}")
+            
+            # 生成唯一文件名，避免覆盖已有文件
+            unique_filename = f"{uuid.uuid4()}{ext}"
+            
+            # 确保媒体目录存在
+            avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+            os.makedirs(avatar_dir, exist_ok=True)
+            
+            # 保存文件
+            file_path = os.path.join(avatar_dir, unique_filename)
+            with open(file_path, 'wb+') as destination:
+                for chunk in avatar_file.chunks():
+                    destination.write(chunk)
+            
+            # 生成相对URL路径（保存到数据库）
+            relative_url = f"{settings.MEDIA_URL}avatars/{unique_filename}"
+            
+            # 更新用户头像URL
+            user.avatar = relative_url
+            user.save(update_fields=['avatar'])
+            
+            # 为响应生成完整URL
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            full_url = f"{protocol}://{domain}{relative_url}"
+            
+            logger.info(f"管理员用户 {user.username} 上传了新头像")
+            
+            return Response({
+                "detail": "头像上传成功",
+                "avatar": full_url  # 返回给前端的是完整URL
+            })
+        
+        except Exception as e:
+            logger.error(f"头像上传失败: {str(e)}")
+            return Response(
+                {"detail": f"头像上传失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminUserSpecificAvatarUploadView(APIView):
+    """
+    为特定管理员用户上传头像视图
+    
+    允许超级管理员和租户管理员为其管理权限内的管理员用户上传头像
+    """
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    @extend_schema(
+        summary="为特定管理员上传头像",
+        description="允许超级管理员和租户管理员为特定管理员用户上传头像。租户管理员只能为其所属租户的管理员上传头像，超级管理员可以为任何管理员上传头像。",
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'avatar': {
+                        'type': 'string',
+                        'format': 'binary',
+                        'description': '要上传的头像文件，支持JPG、PNG、GIF、WEBP或BMP格式',
+                    },
+                },
+                'required': ['avatar']
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description="头像上传成功",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '头像上传成功'},
+                        'avatar': {'type': 'string', 'example': 'https://example.com/media/avatars/user-avatar.jpg'},
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="请求错误",
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'detail': {'type': 'string', 'example': '未提供头像文件/不支持的文件类型/文件太大'},
+                    }
+                }
+            ),
+            401: OpenApiResponse(description="未认证"),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="管理员不存在"),
+            500: OpenApiResponse(description="服务器内部错误"),
+        },
+        tags=["管理员用户"]
+    )
+    def post(self, request, pk, *args, **kwargs):
+        """
+        为特定管理员用户上传头像
+        """
+        # 获取目标用户
+        try:
+            target_user = User.objects.get(pk=pk, is_admin=True, is_deleted=False)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "管理员用户不存在"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 权限检查：租户管理员只能为其租户内的管理员上传头像
+        current_user = request.user
+        if not current_user.is_super_admin and (current_user.tenant != target_user.tenant or not current_user.is_admin):
+            return Response(
+                {"detail": "您没有权限为该管理员上传头像"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        avatar_file = request.FILES.get('avatar')
+        
+        if not avatar_file:
+            return Response(
+                {"detail": "未提供头像文件"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 验证文件类型
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+        ext = os.path.splitext(avatar_file.name)[1].lower()
+        if ext not in valid_extensions:
+            return Response(
+                {"detail": "不支持的文件类型，请上传JPG、PNG、GIF、WEBP或BMP格式的图片"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 验证文件大小
+        if avatar_file.size > 2 * 1024 * 1024:  # 2MB
+            return Response(
+                {"detail": "文件太大，头像大小不能超过2MB"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # 删除旧头像文件（如果存在）
+            if target_user.avatar and target_user.avatar.startswith(settings.MEDIA_URL):
+                # 获取相对路径
+                avatar_path = target_user.avatar.replace(settings.MEDIA_URL, '', 1)
+                old_avatar_path = os.path.join(settings.MEDIA_ROOT, avatar_path)
+                
+                # 检查文件是否存在，如果存在则删除
+                if os.path.isfile(old_avatar_path):
+                    try:
+                        os.remove(old_avatar_path)
+                        logger.info(f"删除管理员用户 {target_user.username} 的旧头像 {old_avatar_path}")
+                    except OSError as e:
+                        logger.warning(f"删除旧头像文件失败: {str(e)}")
+            
+            # 生成唯一文件名，避免覆盖已有文件
+            unique_filename = f"{uuid.uuid4()}{ext}"
+            
+            # 确保媒体目录存在
+            avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+            os.makedirs(avatar_dir, exist_ok=True)
+            
+            # 保存文件
+            file_path = os.path.join(avatar_dir, unique_filename)
+            with open(file_path, 'wb+') as destination:
+                for chunk in avatar_file.chunks():
+                    destination.write(chunk)
+            
+            # 生成相对URL路径（保存到数据库）
+            relative_url = f"{settings.MEDIA_URL}avatars/{unique_filename}"
+            
+            # 更新用户头像URL
+            target_user.avatar = relative_url
+            target_user.save(update_fields=['avatar'])
+            
+            # 为响应生成完整URL
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            full_url = f"{protocol}://{domain}{relative_url}"
+            
+            logger.info(f"管理员用户 {current_user.username} 为管理员 {target_user.username} 上传了新头像")
+            
+            return Response({
+                "detail": "头像上传成功",
+                "avatar": full_url  # 返回给前端的是完整URL
+            })
+        
+        except Exception as e:
+            logger.error(f"头像上传失败: {str(e)}")
+            return Response(
+                {"detail": f"头像上传失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ) 

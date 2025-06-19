@@ -163,5 +163,117 @@
     ],
     "redirect": "/menu/index",
     "component": "Layout1"
+  },
+  {
+    "meta": {
+      "icon": "ep:user",
+      "rank": 4,
+      "roles": [
+        "super_admin"
+      ],
+      "title": "adminUser.management",
+      "showLink": true
+    },
+    "name": "AdminUserManagement",
+    "path": "/admin-user/",
+    "children": [
+      {
+        "meta": {
+          "icon": "ep:list",
+          "roles": [
+            "super_admin"
+          ],
+          "title": "adminUser.list",
+          "showLink": true,
+          "keepAlive": true,
+          "transition": {
+            "name": "fade",
+            "enterTransition": "animate__fadeInLeft",
+            "leaveTransition": "animate__fadeOutRight"
+          }
+        },
+        "name": "AdminUserList",
+        "path": "/admin-user/index",
+        "component": "/src/views/admin-user/index"
+      },
+      {
+        "meta": {
+          "icon": "ep:plus",
+          "roles": [
+            "super_admin"
+          ],
+          "title": "adminUser.create",
+          "showLink": false,
+          "keepAlive": false,
+          "transition": {
+            "name": "fade",
+            "enterTransition": "animate__fadeInLeft",
+            "leaveTransition": "animate__fadeOutRight"
+          }
+        },
+        "name": "AdminUserCreate",
+        "path": "/admin-user/create",
+        "component": "/src/views/admin-user/create"
+      },
+      {
+        "meta": {
+          "icon": "ep:plus",
+          "roles": [
+            "super_admin"
+          ],
+          "title": "adminUser.createSuperAdmin",
+          "showLink": false,
+          "keepAlive": false,
+          "transition": {
+            "name": "fade",
+            "enterTransition": "animate__fadeInLeft",
+            "leaveTransition": "animate__fadeOutRight"
+          }
+        },
+        "name": "AdminUserCreateSuperAdmin",
+        "path": "/admin-user/create-super-admin",
+        "component": "/src/views/admin-user/create-super-admin"
+      },
+      {
+        "meta": {
+          "icon": "ep:edit",
+          "roles": [
+            "super_admin"
+          ],
+          "title": "adminUser.edit",
+          "showLink": false,
+          "keepAlive": false,
+          "transition": {
+            "name": "fade",
+            "enterTransition": "animate__fadeInLeft",
+            "leaveTransition": "animate__fadeOutRight"
+          }
+        },
+        "name": "AdminUserEdit",
+        "path": "/admin-user/edit/:id",
+        "component": "/src/views/admin-user/edit"
+      },
+      {
+        "meta": {
+          "icon": "ep:view",
+          "roles": [
+            "super_admin"
+          ],
+          "title": "adminUser.detail",
+          "showLink": false,
+          "keepAlive": false,
+          "transition": {
+            "name": "fade",
+            "enterTransition": "animate__fadeInLeft",
+            "leaveTransition": "animate__fadeOutRight"
+          }
+        },
+        "name": "AdminUserDetail",
+        "path": "/admin-user/detail/:id",
+        "component": "/src/views/admin-user/detail"
+      }
+    ],
+    "redirect": "/admin-user/index",
+    "component": "Layout1"
   }
 ]

@@ -19,4 +19,8 @@ urlpatterns = [
     path('<int:pk>/grant-super-admin/', admin_user_views.GrantSuperAdminView.as_view(), name='grant-super-admin'),
     path('<int:pk>/revoke-super-admin/', admin_user_views.RevokeSuperAdminView.as_view(), name='revoke-super-admin'),
     path('super-admin/create/', admin_user_views.SuperAdminCreateView.as_view(), name='super-admin-create'),
+    
+    # 头像上传
+    path('avatar/upload/', admin_user_views.AdminUserAvatarUploadView.as_view(), name='admin-user-avatar-upload'),
+    path('<int:pk>/avatar/upload/', admin_user_views.AdminUserSpecificAvatarUploadView.as_view(), name='admin-user-specific-avatar-upload'),
 ] 

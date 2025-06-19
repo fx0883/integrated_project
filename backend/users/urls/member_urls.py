@@ -18,4 +18,8 @@ urlpatterns = [
     # 子账号管理
     path('sub-accounts/', member_views.SubAccountListCreateView.as_view(), name='sub-account-list-create'),
     path('sub-accounts/<int:pk>/', member_views.SubAccountDetailView.as_view(), name='sub-account-detail'),
+    
+    # 头像上传
+    path('avatar/upload/', member_views.MemberAvatarUploadView.as_view(), name='member-avatar-upload'),
+    path('<int:pk>/avatar/upload/', member_views.MemberSpecificAvatarUploadView.as_view(), name='member-specific-avatar-upload'),
 ] 
