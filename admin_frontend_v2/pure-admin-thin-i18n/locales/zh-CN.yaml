@@ -1,3 +1,6 @@
+labels:
+  allRole: 所有角色
+
 buttons:
   pureLoginOut: 退出系统
   pureLogin: 登录
@@ -342,7 +345,10 @@ adminUser:
   passwordPlaceholder: 请输入密码
   confirmPasswordPlaceholder: 请再次输入密码
   tenantPlaceholder: 请选择所属租户
-
+  selectTenantTitle: 选择租户
+  tenantSelectRequired: 请选择一个租户以继续操作
+  revokeSuperAdminSuccess: 成功撤销超级管理员权限并分配到租户
+  selectTenant: 选择租户
 # 菜单管理相关国际化
 menu:
   management: 菜单管理
@@ -444,7 +450,3 @@ menu:
   selectAtLeastOne: 请至少选择一项
   batchDelete: 批量删除
   batchEdit: 批量编辑
-selectTenantTitle: 选择租户
-tenantSelectRequired: 请选择一个租户以继续操作
-revokeSuperAdminSuccess: 成功撤销超级管理员权限并分配到租户
-selectTenant: 选择租户

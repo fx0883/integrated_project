@@ -271,6 +271,7 @@ export const useAdminUserStore = defineStore("adminUser", {
      * 撤销超级管理员权限
      */
     async revokeSuperAdminAction(id: number, tenantId?: number) {
+      logger.debug("Store Action: 开始执行撤销超级管理员权限", { id, tenantId });
       this.loading.revokeSuperAdmin = true;
       try {
         // 如果没有提供租户ID，则使用第一个可用的租户ID
@@ -282,7 +283,9 @@ export const useAdminUserStore = defineStore("adminUser", {
           logger.warn("撤销超级管理员权限时未提供租户ID，使用默认租户ID", { defaultTenantId: targetTenantId });
         }
 
+        logger.debug("Store Action: 调用API撤销超级管理员权限", { id, targetTenantId });
         const response = await revokeSuperAdmin(id, targetTenantId);
+        logger.debug("Store Action: API返回结果", response);
         if (response.success) {
           // 如果撤销的是当前选中的管理员用户，则更新当前选中的用户信息
           if (this.currentAdminUser && this.currentAdminUser.id === id) {

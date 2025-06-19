@@ -1,3 +1,5 @@
+labels:
+  allRole: All Role
 buttons:
   pureLoginOut: Logout
   pureLogin: Login
@@ -343,7 +345,10 @@ adminUser:
   passwordPlaceholder: Please enter password
   confirmPasswordPlaceholder: Please confirm password
   tenantPlaceholder: Please select tenant
-
+  selectTenantTitle: 选择租户
+  tenantSelectRequired: 请选择一个租户以继续操作
+  revokeSuperAdminSuccess: 成功撤销超级管理员权限并分配到租户
+  selectTenant: 选择租户
 # Menu Management Related Translations
 menu:
   management: Menu Management
@@ -445,3 +450,4 @@ menu:
   selectAtLeastOne: Please select at least one item
   batchDelete: Batch Delete
   batchEdit: Batch Edit
+

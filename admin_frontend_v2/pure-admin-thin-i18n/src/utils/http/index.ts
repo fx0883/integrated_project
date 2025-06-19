@@ -113,6 +113,16 @@ class PureHttp {
         // 记录请求日志
         logger.logRequest(config);
         
+        // 特别记录撤销超级管理员的请求
+        if (config.url && config.url.includes('revoke-super-admin')) {
+          console.log('发送撤销超级管理员请求:', {
+            url: config.url,
+            method: config.method,
+            data: config.data,
+            headers: config.headers
+          });
+        }
+        
         return config;
       },
       error => {
@@ -136,12 +146,32 @@ class PureHttp {
           $config.beforeResponseCallback(response);
           // 记录响应日志
           logger.logResponse(response);
+          
+          // 特别记录撤销超级管理员的响应
+          if (response.config.url && response.config.url.includes('revoke-super-admin')) {
+            console.log('收到撤销超级管理员响应:', {
+              url: response.config.url,
+              status: response.status,
+              data: response.data
+            });
+          }
+          
           return response.data;
         }
         if (PureHttp.initConfig.beforeResponseCallback) {
           PureHttp.initConfig.beforeResponseCallback(response);
           // 记录响应日志
           logger.logResponse(response);
+          
+          // 特别记录撤销超级管理员的响应
+          if (response.config.url && response.config.url.includes('revoke-super-admin')) {
+            console.log('收到撤销超级管理员响应:', {
+              url: response.config.url,
+              status: response.status,
+              data: response.data
+            });
+          }
+          
           return response.data;
         }
         
@@ -152,6 +182,16 @@ class PureHttp {
         if (res.success !== undefined && res.code !== undefined && res.message !== undefined) {
           // 记录响应日志
           logger.logResponse(response);
+          
+          // 特别记录撤销超级管理员的响应
+          if (response.config.url && response.config.url.includes('revoke-super-admin')) {
+            console.log('收到撤销超级管理员响应:', {
+              url: response.config.url,
+              status: response.status,
+              data: response.data
+            });
+          }
+          
           return res;
         }
         
@@ -173,6 +213,16 @@ class PureHttp {
         $error.isCancelRequest = Axios.isCancel($error);
         // 关闭进度条动画
         NProgress.done();
+        
+        // 特别记录撤销超级管理员的错误
+        if (error.config?.url && error.config.url.includes('revoke-super-admin')) {
+          console.error('撤销超级管理员请求错误:', {
+            url: error.config.url,
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+          });
+        }
         
         // 创建统一的错误响应格式
         let errorResponse = {

@@ -48,6 +48,9 @@ const handleConfirm = () => {
     ElMessage.warning("请选择一个租户");
     return;
   }
+  logger.debug("租户选择对话框: 确认选择租户", {
+    tenantId: selectedTenantId.value
+  });
   emit("confirm", selectedTenantId.value);
   emit("update:visible", false);
 };
@@ -63,10 +66,10 @@ onMounted(() => {
     :visible="visible"
     :title="title || '选择租户'"
     width="40%"
-    @close="handleClose"
     :close-on-click-modal="false"
+    @close="handleClose"
   >
-    <div class="tenant-select-content" v-loading="loading">
+    <div v-loading="loading" class="tenant-select-content">
       <p>请选择一个要将管理员分配到的租户：</p>
       <el-select
         v-model="selectedTenantId"
@@ -91,8 +94,8 @@ onMounted(() => {
         <el-button @click="handleClose">取消</el-button>
         <el-button
           type="primary"
-          @click="handleConfirm"
           :disabled="!selectedTenantId"
+          @click="handleConfirm"
         >
           确认
         </el-button>

@@ -1,5 +1,11 @@
 <script lang="ts" setup>
 import { ref, defineProps, defineEmits } from "vue";
+import {
+  WarningFilled,
+  InfoFilled,
+  SuccessFilled,
+  CircleCloseFilled
+} from "@element-plus/icons-vue";
 
 const props = defineProps<{
   visible: boolean;
@@ -24,6 +30,7 @@ const handleClose = () => {
 
 // 确认操作
 const handleConfirm = () => {
+  console.log("ConfirmDialog: 确认按钮被点击");
   emit("confirm");
   emit("update:visible", false);
 };
@@ -39,10 +46,10 @@ const handleConfirm = () => {
   >
     <div class="confirm-dialog-content">
       <el-icon v-if="type" class="confirm-dialog-icon">
-        <el-icon-warning v-if="type === 'warning'" />
-        <el-icon-info v-else-if="type === 'info'" />
-        <el-icon-success v-else-if="type === 'success'" />
-        <el-icon-error v-else-if="type === 'error'" />
+        <warning-filled v-if="type === 'warning'" />
+        <info-filled v-else-if="type === 'info'" />
+        <success-filled v-else-if="type === 'success'" />
+        <circle-close-filled v-else-if="type === 'error'" />
       </el-icon>
       <p v-html="content"></p>
     </div>
@@ -69,22 +76,21 @@ const handleConfirm = () => {
 .confirm-dialog-icon {
   font-size: 24px;
   margin-right: 10px;
+}
+
+:deep(.warning-filled) {
   color: var(--el-color-warning);
 }
 
-:deep(.el-icon-warning) {
-  color: var(--el-color-warning);
-}
-
-:deep(.el-icon-info) {
+:deep(.info-filled) {
   color: var(--el-color-info);
 }
 
-:deep(.el-icon-success) {
+:deep(.success-filled) {
   color: var(--el-color-success);
 }
 
-:deep(.el-icon-error) {
+:deep(.circle-close-filled) {
   color: var(--el-color-danger);
 }
 </style>

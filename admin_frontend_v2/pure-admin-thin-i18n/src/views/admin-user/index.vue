@@ -86,7 +86,7 @@ const statusOptions = [
 const roleOptions = [
   {
     value: "",
-    label: t("所有角色")
+    label: t("labels.allRole")
   },
   {
     value: "true",
@@ -238,7 +238,8 @@ const handleTenantSelectConfirm = async (tenantId: number) => {
         tenantId
       });
 
-      await adminUserStore.revokeSuperAdminAction(
+      // 使用工厂函数调用，确保访问的是最新的实例
+      await useAdminUserStoreHook().revokeSuperAdminAction(
         userToRevoke.value!.id,
         tenantId
       );
@@ -303,7 +304,12 @@ const handleConfirm = async () => {
   logger.debug("确认对话框确认按钮被点击");
   if (confirmDialog.confirmAction) {
     logger.debug("执行确认操作");
-    await confirmDialog.confirmAction();
+    try {
+      await confirmDialog.confirmAction();
+      logger.debug("确认操作执行成功");
+    } catch (error) {
+      logger.error("确认操作执行失败", error);
+    }
   } else {
     logger.warn("确认对话框没有关联确认操作");
   }
@@ -400,12 +406,21 @@ const getStatusTagType = (status: AdminUserStatus | string) => {
   switch (status) {
     case "active":
       return "success";
-    case "suspended":
-      return "warning";
     case "inactive":
-      return "info";
+      return "warning";
     default:
-      return "";
+      return "info";
+  }
+};
+
+// 处理下拉菜单可见性变化
+const handleDropdownVisibleChange = (visible: boolean, row: AdminUser) => {
+  if (visible) {
+    logger.debug("管理员用户更多操作菜单已打开", {
+      userId: row.id,
+      username: row.username,
+      isSuperAdmin: row.is_super_admin
+    });
   }
 };
 
@@ -563,8 +578,13 @@ onMounted(() => {
             >
               {{ t("adminUser.editBtn") }}
             </el-button>
-            <el-dropdown trigger="click">
-              <el-button size="small" type="info">
+            <el-dropdown
+              trigger="click"
+              @visible-change="
+                visible => handleDropdownVisibleChange(visible, scope.row)
+              "
+            >
+              <el-button size="small">
                 {{ t("buttons.more")
                 }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
               </el-button>
