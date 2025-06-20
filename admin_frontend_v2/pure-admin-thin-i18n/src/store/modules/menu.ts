@@ -10,7 +10,9 @@ import {
   batchMenus,
   importMenus,
   exportMenus,
-  toggleMenuStatus
+  toggleMenuStatus,
+  getUserMenus,
+  assignUserMenus
 } from "@/api/modules/menu";
 import type { 
   Menu,
@@ -30,6 +32,17 @@ interface MenuState {
   menuTree: MenuTree[];
   // 当前选中的菜单
   currentMenu: Menu | null;
+  // 用户菜单数据
+  userMenus: {
+    user_id: number | null;
+    username: string;
+    menus: Array<{
+      id: number;
+      name: string;
+      code: string;
+      is_active: boolean;
+    }>;
+  };
   // 加载状态
   loading: {
     list: boolean;
@@ -42,6 +55,8 @@ interface MenuState {
     import: boolean;
     export: boolean;
     toggleStatus: boolean;
+    userMenus: boolean;
+    assignUserMenus: boolean;
   };
 }
 
@@ -55,6 +70,11 @@ export const useMenuStore = defineStore("menu", {
     },
     menuTree: [],
     currentMenu: null,
+    userMenus: {
+      user_id: null,
+      username: '',
+      menus: []
+    },
     loading: {
       list: false,
       tree: false,
@@ -65,7 +85,9 @@ export const useMenuStore = defineStore("menu", {
       batch: false,
       import: false,
       export: false,
-      toggleStatus: false
+      toggleStatus: false,
+      userMenus: false,
+      assignUserMenus: false
     }
   }),
   
@@ -153,7 +175,7 @@ export const useMenuStore = defineStore("menu", {
     /**
      * 创建菜单
      */
-    async createNewMenu(data: MenuCreateUpdateParams) {
+    async createMenuAction(data: MenuCreateUpdateParams) {
       this.loading.create = true;
       try {
         const response = await createMenu(data);
@@ -176,42 +198,22 @@ export const useMenuStore = defineStore("menu", {
     /**
      * 更新菜单
      */
-    async updateMenuInfo(id: number, data: MenuCreateUpdateParams) {
+    async updateMenuAction(id: number, data: MenuCreateUpdateParams) {
       this.loading.update = true;
       try {
         const response = await updateMenu(id, data);
         if (response.success) {
-          // 如果当前选中的菜单是被更新的菜单，则更新当前选中的菜单信息
+          // 如果更新的是当前选中的菜单，则更新当前选中的菜单信息
           if (this.currentMenu && this.currentMenu.id === id) {
             this.currentMenu = response.data;
           }
-          ElMessage.success(response.message || "更新菜单成功");
-          return response;
-        } else {
-          ElMessage.error(response.message || "更新菜单失败");
-          return Promise.reject(new Error(response.message));
-        }
-      } catch (error) {
-        logger.error("更新菜单失败", error);
-        ElMessage.error(error.message || "更新菜单失败");
-        throw error;
-      } finally {
-        this.loading.update = false;
-      }
-    },
-    
-    /**
-     * 部分更新菜单
-     */
-    async patchMenuInfo(id: number, data: Partial<MenuCreateUpdateParams>) {
-      this.loading.update = true;
-      try {
-        const response = await patchMenu(id, data);
-        if (response.success) {
-          // 如果当前选中的菜单是被更新的菜单，则更新当前选中的菜单信息
-          if (this.currentMenu && this.currentMenu.id === id) {
-            this.currentMenu = response.data;
+          
+          // 更新菜单列表中的菜单信息
+          const index = this.menuList.data.findIndex(menu => menu.id === id);
+          if (index !== -1) {
+            this.menuList.data[index] = response.data;
           }
+          
           ElMessage.success(response.message || "更新菜单成功");
           return response;
         } else {
@@ -261,7 +263,7 @@ export const useMenuStore = defineStore("menu", {
     /**
      * 批量操作菜单
      */
-    async batchOperateMenus(data: {
+    async batchMenusAction(data: {
       create?: MenuCreateUpdateParams[];
       update?: (Partial<MenuCreateUpdateParams> & { id: number })[];
       delete?: number[];
@@ -270,10 +272,10 @@ export const useMenuStore = defineStore("menu", {
       try {
         const response = await batchMenus(data);
         if (response.success) {
-          ElMessage.success(response.message || "批量操作成功");
+          ElMessage.success(response.message || "批量操作菜单成功");
           return response;
         } else {
-          ElMessage.error(response.message || "批量操作失败");
+          ElMessage.error(response.message || "批量操作菜单失败");
           return Promise.reject(new Error(response.message));
         }
       } catch (error) {
@@ -288,12 +290,12 @@ export const useMenuStore = defineStore("menu", {
     /**
      * 导入菜单配置
      */
-    async importMenuConfig(file: File) {
+    async importMenusAction(file: File) {
       this.loading.import = true;
       try {
         const response = await importMenus(file);
         if (response.success) {
-          ElMessage.success(`导入成功，共导入${response.data.imported}个菜单项`);
+          ElMessage.success(response.message || "导入菜单配置成功");
           return response;
         } else {
           ElMessage.error(response.message || "导入菜单配置失败");
@@ -311,26 +313,25 @@ export const useMenuStore = defineStore("menu", {
     /**
      * 导出菜单配置
      */
-    async exportMenuConfig() {
+    async exportMenusAction() {
       this.loading.export = true;
       try {
         const response = await exportMenus();
-        // 处理下载逻辑
-        const blob = new Blob([response], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
+        
+        // 创建Blob链接并下载文件
+        const url = window.URL.createObjectURL(new Blob([response]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `menus_${new Date().getTime()}.json`);
+        link.setAttribute('download', 'menus_config.json');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
         
         ElMessage.success("导出菜单配置成功");
         return response;
       } catch (error) {
         logger.error("导出菜单配置失败", error);
-        ElMessage.error(error.message || "导出菜单配置失败");
+        ElMessage.error("导出菜单配置失败");
         throw error;
       } finally {
         this.loading.export = false;
@@ -372,6 +373,55 @@ export const useMenuStore = defineStore("menu", {
     },
     
     /**
+     * 获取用户菜单配置
+     * @param userId 用户ID
+     */
+    async fetchUserMenus(userId: number) {
+      this.loading.userMenus = true;
+      try {
+        const response = await getUserMenus(userId);
+        if (response.success) {
+          this.userMenus = response.data;
+          return response;
+        } else {
+          ElMessage.error(response.message || "获取用户菜单配置失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("获取用户菜单配置失败", error);
+        ElMessage.error(error.message || "获取用户菜单配置失败");
+        throw error;
+      } finally {
+        this.loading.userMenus = false;
+      }
+    },
+    
+    /**
+     * 为用户分配菜单
+     * @param userId 用户ID
+     * @param data 菜单ID列表数据
+     */
+    async assignUserMenus(userId: number, data: { menu_ids: number[] }) {
+      this.loading.assignUserMenus = true;
+      try {
+        const response = await assignUserMenus(userId, data);
+        if (response.success) {
+          ElMessage.success(response.message || "分配菜单成功");
+          return response;
+        } else {
+          ElMessage.error(response.message || "分配菜单失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("分配菜单失败", error);
+        ElMessage.error(error.message || "分配菜单失败");
+        throw error;
+      } finally {
+        this.loading.assignUserMenus = false;
+      }
+    },
+    
+    /**
      * 重置菜单状态
      */
     resetMenuState() {
@@ -383,6 +433,11 @@ export const useMenuStore = defineStore("menu", {
       };
       this.menuTree = [];
       this.currentMenu = null;
+      this.userMenus = {
+        user_id: null,
+        username: '',
+        menus: []
+      };
     }
   }
 });

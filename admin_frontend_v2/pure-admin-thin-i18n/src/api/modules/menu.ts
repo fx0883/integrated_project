@@ -20,12 +20,13 @@ export function getMenuList(params: MenuListParams = {}) {
 /**
  * 获取菜单树形结构
  */
-export function getMenuTree() {
-  logger.debug("API请求: 获取菜单树形结构");
+export function getMenuTree(params: { is_active?: boolean } = {}) {
+  logger.debug("API请求: 获取菜单树形结构", params);
   
   return http.request<ApiResponse<MenuTree[]>>(
     "get",
-    "/menus/tree/"
+    "/menus/tree/",
+    { params }
   );
 }
 
@@ -75,12 +76,13 @@ export function updateMenu(id: number, data: MenuCreateUpdateParams) {
  * 删除菜单
  * @param id 菜单ID
  */
-export function deleteMenu(id: number) {
-  logger.debug("API请求: 删除菜单", { id });
+export function deleteMenu(id: number, cascade: boolean = false) {
+  logger.debug("API请求: 删除菜单", { id, cascade });
   
   return http.request<ApiResponse<any>>(
     "delete",
-    `/menus/${id}/`
+    `/menus/${id}/`,
+    { params: { cascade } }
   );
 }
 
@@ -138,15 +140,19 @@ export function batchMenus(data: {
 
 /**
  * 导入菜单配置
- * @param file 配置文件
+ * @param file 菜单配置文件
  */
 export function importMenus(file: File) {
-  logger.debug("API请求: 导入菜单配置", { fileName: file.name });
+  logger.debug("API请求: 导入菜单配置");
   
   const formData = new FormData();
   formData.append("file", file);
   
-  return http.request<ApiResponse<{ imported: number }>>(
+  return http.request<ApiResponse<{
+    imported: number;
+    created: number[];
+    updated: number[];
+  }>>(
     "post",
     "/menus/import/",
     { 
@@ -170,5 +176,47 @@ export function exportMenus() {
     { 
       responseType: "blob" 
     }
+  );
+}
+
+/**
+ * 获取用户当前菜单配置
+ * @param userId 用户ID
+ */
+export function getUserMenus(userId: number) {
+  logger.debug("API请求: 获取用户菜单配置", { userId });
+  
+  return http.request<ApiResponse<{
+    user_id: number;
+    username: string;
+    menus: Array<{
+      id: number;
+      name: string;
+      code: string;
+      is_active: boolean;
+    }>
+  }>>(
+    "get",
+    `/menus/admins/${userId}/menus/`
+  );
+}
+
+/**
+ * 为用户分配菜单
+ * @param userId 用户ID
+ * @param data 菜单ID列表
+ */
+export function assignUserMenus(userId: number, data: { menu_ids: number[] }) {
+  logger.debug("API请求: 为用户分配菜单", { userId, data });
+  
+  return http.request<ApiResponse<{
+    assigned_menus: Array<{
+      id: number;
+      name: string;
+    }>
+  }>>(
+    "post",
+    `/menus/admins/${userId}/menus/`,
+    { data }
   );
 } 

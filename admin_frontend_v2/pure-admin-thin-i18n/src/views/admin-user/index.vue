@@ -9,6 +9,8 @@ import { ArrowDown } from "@element-plus/icons-vue";
 import ConfirmDialog from "@/components/AdminUserManagement/ConfirmDialog.vue";
 import AdminUserForm from "@/components/AdminUserManagement/AdminUserForm.vue";
 import TenantSelectDialog from "@/components/AdminUserManagement/TenantSelectDialog.vue";
+import MenuSettingButton from "@/components/AdminUserManagement/MenuSettingButton.vue";
+import MenuSettingDialog from "@/components/AdminUserManagement/MenuSettingDialog.vue";
 import type {
   AdminUser,
   AdminUserListParams,
@@ -127,6 +129,10 @@ const formLoading = computed(() => {
 // 在script部分中添加租户选择对话框状态
 const tenantSelectDialogVisible = ref(false);
 const userToRevoke = ref<AdminUser | null>(null);
+
+// 添加菜单设置相关状态
+const menuSettingDialogVisible = ref(false);
+const userForMenuSetting = ref<AdminUser | null>(null);
 
 // 获取管理员用户列表
 const fetchAdminUsers = async () => {
@@ -478,6 +484,37 @@ const formatDateTime = (dateTimeString: string) => {
   return date.toLocaleString();
 };
 
+// 处理菜单设置点击
+const handleMenuSetting = user => {
+  logger.debug("菜单设置被点击", {
+    userId: user.id,
+    username: user.username
+  });
+  userForMenuSetting.value = user;
+  menuSettingDialogVisible.value = true;
+
+  // 添加调试日志，确认状态已设置
+  console.log("菜单设置对话框状态已设置", {
+    dialogVisible: menuSettingDialogVisible.value,
+    user: userForMenuSetting.value
+  });
+};
+
+// 处理菜单设置完成
+const handleMenuSettingDone = () => {
+  logger.debug("菜单设置完成");
+  menuSettingDialogVisible.value = false;
+  userForMenuSetting.value = null;
+  // 这里不需要刷新列表，因为菜单设置不影响列表显示
+};
+
+// 处理菜单设置取消
+const handleMenuSettingCancel = () => {
+  logger.debug("菜单设置取消");
+  menuSettingDialogVisible.value = false;
+  userForMenuSetting.value = null;
+};
+
 // 初始化时输出操作权限信息
 onMounted(() => {
   fetchAdminUsers();
@@ -612,7 +649,7 @@ onMounted(() => {
         <el-table-column
           :label="t('adminUser.actions')"
           fixed="right"
-          width="280"
+          width="330"
         >
           <template #default="scope">
             <el-button size="small" @click="handleView(scope.row)">
@@ -625,6 +662,10 @@ onMounted(() => {
             >
               {{ t("adminUser.editBtn") }}
             </el-button>
+            <MenuSettingButton
+              :user="scope.row"
+              @click="user => handleMenuSetting(user)"
+            />
             <el-dropdown
               trigger="click"
               @visible-change="
@@ -774,6 +815,15 @@ onMounted(() => {
         @cancel="handleViewCancel"
       />
     </el-dialog>
+
+    <!-- 菜单设置对话框 -->
+    <MenuSettingDialog
+      v-model:visible="menuSettingDialogVisible"
+      :user-id="userForMenuSetting?.id || 0"
+      :username="userForMenuSetting?.username || ''"
+      @confirm="handleMenuSettingDone"
+      @cancel="handleMenuSettingCancel"
+    />
   </div>
 </template>
 
