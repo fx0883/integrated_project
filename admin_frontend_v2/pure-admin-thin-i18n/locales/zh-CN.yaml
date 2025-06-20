@@ -299,8 +299,8 @@ adminUser:
   revokeFailed: 撤销超级管理员权限失败
   resetPasswordSuccess: 重置密码成功
   resetPasswordFailed: 重置密码失败
-  uploadAvatarSuccess: 上传头像成功
-  uploadAvatarFailed: 上传头像失败
+  uploadAvatarSuccess: 头像上传成功
+  uploadAvatarFailed: 头像上传失败
   basicInfo: 基本信息
   roleInfo: 角色信息
   accountInfo: 账号信息
@@ -310,7 +310,7 @@ adminUser:
   grantSuperAdmin: 授予超级管理员权限
   revokeSuperAdmin: 撤销超级管理员权限
   resetPassword: 重置密码
-  uploadAvatar: 上传头像
+  uploadAvatar: 点击上传头像
   uploading: 上传中...
   view: 查看
   editBtn: 编辑

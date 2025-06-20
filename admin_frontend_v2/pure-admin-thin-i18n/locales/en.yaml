@@ -310,7 +310,7 @@ adminUser:
   grantSuperAdmin: Grant Super Admin
   revokeSuperAdmin: Revoke Super Admin
   resetPassword: Reset Password
-  uploadAvatar: Upload Avatar
+  uploadAvatar: Click to Upload Avatar
   uploading: Uploading...
   view: View
   editBtn: Edit

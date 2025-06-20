@@ -13,11 +13,12 @@ import {
   getLogin,
   refreshTokenApi
 } from "@/api/user";
-import { getCurrentAdmin, updateCurrentAdmin } from "@/api/modules/adminUser";
+import { getCurrentAdmin, updateCurrentAdmin, uploadCurrentAdminAvatar } from "@/api/modules/adminUser";
 import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
 import { ElMessage } from "element-plus";
 import logger from "@/utils/logger";
+import { useI18n } from "vue-i18n";
 
 export const useUserStore = defineStore("pure-user", {
   state: (): userType => ({
@@ -291,6 +292,39 @@ export const useUserStore = defineStore("pure-user", {
       } catch (error) {
         logger.error("更新当前管理员信息失败", error);
         ElMessage.error(error.message || "更新当前管理员信息失败");
+        throw error;
+      } finally {
+        this.loading.updateCurrentAdmin = false;
+      }
+    },
+    /** 上传当前用户头像 */
+    async uploadCurrentAdminAvatar(file: File) {
+      this.loading.updateCurrentAdmin = true;
+      try {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        const response = await uploadCurrentAdminAvatar(formData);
+        if (response.success) {
+          // 更新store中的用户头像
+          this.SET_AVATAR(response.data.avatar || "");
+          
+          // 更新localStorage中的用户信息
+          const userInfo = JSON.parse(localStorage.getItem('user_info') || "{}");
+          localStorage.setItem('user_info', JSON.stringify({
+            ...userInfo,
+            avatar: response.data.avatar
+          }));
+          
+          ElMessage.success("头像上传成功");
+          return response;
+        } else {
+          ElMessage.error(response.message || "头像上传失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("上传当前用户头像失败", error);
+        ElMessage.error("上传头像失败");
         throw error;
       } finally {
         this.loading.updateCurrentAdmin = false;

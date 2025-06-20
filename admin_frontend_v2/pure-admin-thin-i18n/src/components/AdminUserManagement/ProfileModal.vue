@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { ElMessage } from "element-plus";
+import { ElMessage, type UploadProps } from "element-plus";
 import { useUserStoreHook } from "@/store/modules/user";
 import type { AdminUserUpdateParams } from "@/types/adminUser";
 import logger from "@/utils/logger";
@@ -33,6 +33,7 @@ const formData = reactive<AdminUserUpdateParams>({
 
 // 加载状态
 const loading = ref(false);
+const uploadLoading = ref(false);
 
 // 获取当前管理员信息
 const fetchCurrentAdmin = async () => {
@@ -64,6 +65,39 @@ const handleSubmit = async () => {
   }
 };
 
+// 头像上传前检查
+const beforeAvatarUpload: UploadProps["beforeUpload"] = file => {
+  // 检查文件类型
+  const isImage = file.type.startsWith("image/");
+  if (!isImage) {
+    ElMessage.error("上传的文件必须是图片格式");
+    return false;
+  }
+
+  // 检查文件大小，限制为2MB
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isLt2M) {
+    ElMessage.error("上传的图片大小不能超过2MB");
+    return false;
+  }
+
+  return true;
+};
+
+// 自定义上传方法
+const handleAvatarUpload: UploadProps["httpRequest"] = async ({ file }) => {
+  if (!(file instanceof File)) return;
+
+  uploadLoading.value = true;
+  try {
+    await userStore.uploadCurrentAdminAvatar(file);
+  } catch (error) {
+    logger.error("上传头像失败", error);
+  } finally {
+    uploadLoading.value = false;
+  }
+};
+
 // 监听对话框的显示状态，当显示时获取最新的用户信息
 watch(
   () => props.visible,
@@ -91,6 +125,34 @@ onMounted(() => {
   >
     <el-skeleton :loading="loading" animated>
       <template #default>
+        <div class="avatar-upload-section">
+          <el-upload
+            class="avatar-uploader"
+            action="#"
+            :http-request="handleAvatarUpload"
+            :before-upload="beforeAvatarUpload"
+            :show-file-list="false"
+            :disabled="uploadLoading"
+            accept="image/*"
+          >
+            <div class="avatar-container">
+              <img
+                v-if="userStore.avatar"
+                :src="userStore.avatar"
+                class="avatar-image"
+              />
+              <el-icon v-else class="avatar-icon"><el-icon-plus /></el-icon>
+            </div>
+            <div class="upload-text">
+              {{
+                uploadLoading
+                  ? t("adminUser.uploading")
+                  : t("adminUser.uploadAvatar")
+              }}
+            </div>
+          </el-upload>
+        </div>
+
         <el-form :model="formData" label-width="100px" label-position="left">
           <el-form-item :label="t('adminUser.username')">
             <el-input v-model="userStore.username" disabled />
@@ -138,5 +200,49 @@ onMounted(() => {
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
+}
+
+.avatar-upload-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.avatar-uploader {
+  text-align: center;
+}
+
+.avatar-container {
+  width: 100px;
+  height: 100px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-container:hover {
+  border-color: #409eff;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-icon {
+  font-size: 28px;
+  color: #8c939d;
+}
+
+.upload-text {
+  font-size: 12px;
+  color: #606266;
+  margin-top: 6px;
 }
 </style>

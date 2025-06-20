@@ -132,6 +132,24 @@ export function uploadAdminUserAvatar(id: number, formData: FormData) {
 }
 
 /**
+ * 上传当前管理员头像
+ */
+export function uploadCurrentAdminAvatar(formData: FormData) {
+  logger.debug("API请求: 上传当前管理员头像");
+  
+  return http.request<ApiResponse<{ avatar: string }>>(
+    "post",
+    "/admin-users/avatar/upload/",
+    { 
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    }
+  );
+}
+
+/**
  * 重置管理员密码
  */
 export function resetAdminUserPassword(id: number, data: ResetPasswordParams) {
