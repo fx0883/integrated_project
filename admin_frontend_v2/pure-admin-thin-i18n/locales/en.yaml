@@ -345,10 +345,12 @@ adminUser:
   passwordPlaceholder: Please enter password
   confirmPasswordPlaceholder: Please confirm password
   tenantPlaceholder: Please select tenant
-  selectTenantTitle: 选择租户
-  tenantSelectRequired: 请选择一个租户以继续操作
-  revokeSuperAdminSuccess: 成功撤销超级管理员权限并分配到租户
-  selectTenant: 选择租户
+  selectTenantTitle: Select Tenant
+  tenantSelectRequired: Please select a tenant to continue
+  revokeSuperAdminSuccess: Successfully revoked super admin privileges and assigned to tenant
+  selectTenant: Select Tenant
+  update: Update
+  close: Close
 # Menu Management Related Translations
 menu:
   management: Menu Management

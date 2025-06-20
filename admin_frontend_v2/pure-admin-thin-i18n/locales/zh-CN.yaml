@@ -349,6 +349,8 @@ adminUser:
   tenantSelectRequired: 请选择一个租户以继续操作
   revokeSuperAdminSuccess: 成功撤销超级管理员权限并分配到租户
   selectTenant: 选择租户
+  update: 更新
+  close: 关闭
 # 菜单管理相关国际化
 menu:
   management: 菜单管理

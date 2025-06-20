@@ -23,4 +23,8 @@ urlpatterns = [
     # 头像上传
     path('avatar/upload/', admin_user_views.AdminUserAvatarUploadView.as_view(), name='admin-user-avatar-upload'),
     path('<int:pk>/avatar/upload/', admin_user_views.AdminUserSpecificAvatarUploadView.as_view(), name='admin-user-specific-avatar-upload'),
+    
+    # 管理员状态控制
+    path('<int:pk>/deactivate/', admin_user_views.DeactivateAdminUserView.as_view(), name='admin-user-deactivate'),
+    path('<int:pk>/activate/', admin_user_views.ActivateAdminUserView.as_view(), name='admin-user-activate'),
 ] 

@@ -1011,4 +1011,149 @@ class AdminUserSpecificAvatarUploadView(APIView):
             return Response(
                 {"detail": f"头像上传失败: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class DeactivateAdminUserView(APIView):
+    """
+    停用管理员用户视图
+    """
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    serializer_class = SimpleResponseSerializer  # 使用简单响应序列化器
+    
+    @extend_schema(
+        summary="停用管理员",
+        description="停用指定管理员用户。权限要求：超级管理员可停用任何管理员（除自己外）；租户管理员只能停用自己租户的其他管理员。",
+        responses={
+            200: OpenApiResponse(
+                description="停用成功",
+                response=SimpleResponseSerializer,
+                examples=[
+                    OpenApiExample(
+                        name="停用成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "操作成功",
+                            "data": {
+                                "detail": "管理员已成功停用"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(description="请求参数错误，例如尝试停用当前登录账号"),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="管理员不存在")
+        },
+        tags=["管理员用户"]
+    )
+    def post(self, request, pk):
+        """
+        停用指定管理员
+        """
+        try:
+            # 获取要停用的用户
+            user = get_object_or_404(User, pk=pk)
+            
+            # 不允许停用自己
+            if user.id == request.user.id:
+                return Response(
+                    {"detail": "不能停用当前登录的账号"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 检查权限：超级管理员可以停用任何管理员，租户管理员只能停用自己租户的管理员
+            if not request.user.is_super_admin and (user.is_super_admin or user.tenant != request.user.tenant):
+                return Response(
+                    {"detail": "没有权限停用此管理员"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # 执行停用操作
+            user.is_active = False
+            user.status = 'inactive'
+            user.save(update_fields=['is_active', 'status'])
+            
+            logger.info(f"管理员 {request.user.username} 停用了管理员 {user.username}")
+            
+            return Response(
+                {"detail": "管理员已成功停用"},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            logger.error(f"停用管理员失败: {str(e)}")
+            return Response(
+                {"detail": f"停用管理员失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ActivateAdminUserView(APIView):
+    """
+    激活管理员用户视图
+    """
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    serializer_class = SimpleResponseSerializer  # 使用简单响应序列化器
+    
+    @extend_schema(
+        summary="激活管理员",
+        description="激活指定管理员用户。权限要求：超级管理员可激活任何管理员；租户管理员只能激活自己租户的管理员。",
+        responses={
+            200: OpenApiResponse(
+                description="激活成功",
+                response=SimpleResponseSerializer,
+                examples=[
+                    OpenApiExample(
+                        name="激活成功示例",
+                        value={
+                            "success": True,
+                            "code": 2000,
+                            "message": "操作成功",
+                            "data": {
+                                "detail": "管理员已成功激活"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(description="请求参数错误"),
+            403: OpenApiResponse(description="权限不足"),
+            404: OpenApiResponse(description="管理员不存在")
+        },
+        tags=["管理员用户"]
+    )
+    def post(self, request, pk):
+        """
+        激活指定管理员
+        """
+        try:
+            # 获取要激活的用户
+            user = get_object_or_404(User, pk=pk)
+            
+            # 检查权限：超级管理员可以激活任何管理员，租户管理员只能激活自己租户的管理员
+            if not request.user.is_super_admin and (user.is_super_admin or user.tenant != request.user.tenant):
+                return Response(
+                    {"detail": "没有权限激活此管理员"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # 执行激活操作
+            user.is_active = True
+            user.status = 'active'
+            user.save(update_fields=['is_active', 'status'])
+            
+            logger.info(f"管理员 {request.user.username} 激活了管理员 {user.username}")
+            
+            return Response(
+                {"detail": "管理员已成功激活"},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            logger.error(f"激活管理员失败: {str(e)}")
+            return Response(
+                {"detail": f"激活管理员失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             ) 
