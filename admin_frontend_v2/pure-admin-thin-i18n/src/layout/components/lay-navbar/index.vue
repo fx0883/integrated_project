@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useNav } from "@/layout/hooks/useNav";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import LaySearch from "../lay-search/index.vue";
 import LayNotice from "../lay-notice/index.vue";
 import LayNavMix from "../lay-sidebar/NavMix.vue";
@@ -7,11 +9,20 @@ import { useTranslationLang } from "@/layout/hooks/useTranslationLang";
 import LaySidebarFullScreen from "../lay-sidebar/components/SidebarFullScreen.vue";
 import LaySidebarBreadCrumb from "../lay-sidebar/components/SidebarBreadCrumb.vue";
 import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.vue";
+import { useUserStoreHook } from "@/store/modules/user";
+import ProfileModal from "@/components/AdminUserManagement/ProfileModal.vue";
 
 import GlobalizationIcon from "@/assets/svg/globalization.svg?component";
 import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
+import User from "~icons/ep/user";
+
+const router = useRouter();
+const userStore = useUserStoreHook();
+
+// 个人信息模态框显示状态
+const profileModalVisible = ref(false);
 
 const {
   layout,
@@ -28,6 +39,20 @@ const {
 } = useNav();
 
 const { t, locale, translationCh, translationEn } = useTranslationLang();
+
+// 显示个人信息模态框
+const showProfileModal = () => {
+  profileModalVisible.value = true;
+};
+
+// 获取当前管理员信息
+onMounted(async () => {
+  try {
+    await userStore.fetchCurrentAdmin();
+  } catch (error) {
+    console.error("获取当前管理员信息失败", error);
+  }
+});
 </script>
 
 <template>
@@ -88,11 +113,17 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       <!-- 退出登录 -->
       <el-dropdown trigger="click">
         <span class="el-dropdown-link navbar-bg-hover select-none">
-          <img :src="userAvatar" :style="avatarsStyle" />
-          <p v-if="username" class="dark:text-white">{{ username }}</p>
+          <img :src="userStore.avatar || userAvatar" :style="avatarsStyle" />
+          <p v-if="userStore.nickname || username" class="dark:text-white">
+            {{ userStore.nickname || username }}
+          </p>
         </span>
         <template #dropdown>
           <el-dropdown-menu class="logout">
+            <el-dropdown-item @click="showProfileModal">
+              <IconifyIconOffline :icon="User" style="margin: 5px" />
+              {{ t("adminUser.profile") }}
+            </el-dropdown-item>
             <el-dropdown-item @click="logout">
               <IconifyIconOffline
                 :icon="LogoutCircleRLine"
@@ -112,6 +143,9 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       </span>
     </div>
   </div>
+
+  <!-- 个人信息模态框 -->
+  <ProfileModal v-model:visible="profileModalVisible" />
 </template>
 
 <style lang="scss" scoped>
