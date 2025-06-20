@@ -166,4 +166,29 @@ export function deactivateAdminUser(id: number) {
     "post",
     `/admin-users/${id}/deactivate/`
   );
+}
+
+/**
+ * 获取当前登录的管理员信息
+ */
+export function getCurrentAdmin() {
+  logger.debug("API请求: 获取当前登录管理员信息");
+  
+  return http.request<ApiResponse<AdminUser>>(
+    "get",
+    "/admin-users/me/"
+  );
+}
+
+/**
+ * 更新当前登录的管理员信息
+ */
+export function updateCurrentAdmin(data: AdminUserUpdateParams) {
+  logger.debug("API请求: 更新当前登录管理员信息", data);
+  
+  return http.request<ApiResponse<AdminUser>>(
+    "put",
+    "/admin-users/me/",
+    { data }
+  );
 } 

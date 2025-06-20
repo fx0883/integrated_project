@@ -66,19 +66,20 @@ panel:
 menus:
   pureHome: Home
   pureLogin: Login
-  pureAbnormal: Error Pages
+  pureAbnormal: Abnormal
   pureFourZeroFour: "404"
   pureFourZeroOne: "403"
   pureFive: "500"
-  purePermission: Permissions
+  purePermission: Permission
   purePermissionPage: Page Permission
   purePermissionButton: Button Permission
-  purePermissionButtonRouter: Route Button Permission
-  purePermissionButtonLogin: Login API Button Permission
+  purePermissionButtonRouter: Router Button Permission
+  purePermissionButtonLogin: Login Button Permission
   pureTenantManagement: Tenant Management
   pureTenantList: Tenant List
   pureMenuManagement: Menu Management
   pureMenuList: Menu List
+  profile: Profile
 status:
   pureLoad: Loading...
   pureMessage: Message
@@ -351,6 +352,11 @@ adminUser:
   selectTenant: Select Tenant
   update: Update
   close: Close
+  profile: Profile
+  updateProfile: Update Profile
+  profileSuccess: Profile updated successfully
+  profileFailed: Failed to update profile
+
 # Menu Management Related Translations
 menu:
   management: Menu Management
@@ -452,4 +458,22 @@ menu:
   selectAtLeastOne: Please select at least one item
   batchDelete: Batch Delete
   batchEdit: Batch Edit
+
+# Common Translations
+common:
+  save: Save
+  cancel: Cancel
+  reset: Reset
+  confirm: Confirm
+  delete: Delete
+  edit: Edit
+  create: Create
+  search: Search
+  loading: Loading...
+  noData: No Data
+  success: Operation Successful
+  failed: Operation Failed
+  yes: Yes
+  no: No
+  back: Back
 

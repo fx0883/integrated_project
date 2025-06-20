@@ -54,4 +54,8 @@ export type userType = {
   permissions?: Array<string>;
   isRemembered?: boolean;
   loginDay?: number;
+  loading?: {
+    getCurrentAdmin: boolean;
+    updateCurrentAdmin: boolean;
+  };
 };

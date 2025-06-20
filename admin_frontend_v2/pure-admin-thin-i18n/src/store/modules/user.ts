@@ -13,8 +13,11 @@ import {
   getLogin,
   refreshTokenApi
 } from "@/api/user";
+import { getCurrentAdmin, updateCurrentAdmin } from "@/api/modules/adminUser";
 import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
+import { ElMessage } from "element-plus";
+import logger from "@/utils/logger";
 
 export const useUserStore = defineStore("pure-user", {
   state: (): userType => ({
@@ -52,7 +55,12 @@ export const useUserStore = defineStore("pure-user", {
     // 是否勾选了登录页的免登录
     isRemembered: false,
     // 登录页的免登录存储几天，默认7天
-    loginDay: 7
+    loginDay: 7,
+    // 加载状态
+    loading: {
+      getCurrentAdmin: false,
+      updateCurrentAdmin: false
+    }
   }),
   actions: {
     /** 存储用户ID */
@@ -214,6 +222,79 @@ export const useUserStore = defineStore("pure-user", {
             reject(error);
           });
       });
+    },
+    
+    /** 获取当前登录管理员信息 */
+    async fetchCurrentAdmin() {
+      this.loading.getCurrentAdmin = true;
+      try {
+        const response = await getCurrentAdmin();
+        if (response.success) {
+          // 更新store中的用户信息
+          const user = response.data;
+          this.SET_ID(user.id);
+          this.SET_USERNAME(user.username);
+          this.SET_NICKNAME(user.nick_name || "");
+          this.SET_EMAIL(user.email);
+          this.SET_PHONE(user.phone || "");
+          this.SET_AVATAR(user.avatar || "");
+          this.SET_IS_ADMIN(user.is_admin);
+          this.SET_IS_SUPER_ADMIN(user.is_super_admin);
+          this.SET_IS_MEMBER(user.is_member || false);
+          this.SET_STATUS(user.status || "active");
+          this.SET_TENANT(user.tenant);
+          
+          // 更新localStorage中的用户信息
+          localStorage.setItem('user_info', JSON.stringify(user));
+          
+          return response;
+        } else {
+          ElMessage.error(response.message || "获取当前管理员信息失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("获取当前管理员信息失败", error);
+        ElMessage.error(error.message || "获取当前管理员信息失败");
+        throw error;
+      } finally {
+        this.loading.getCurrentAdmin = false;
+      }
+    },
+    
+    /** 更新当前登录管理员信息 */
+    async updateCurrentAdminInfo(data) {
+      this.loading.updateCurrentAdmin = true;
+      try {
+        const response = await updateCurrentAdmin(data);
+        if (response.success) {
+          // 更新store中的用户信息
+          const user = response.data;
+          this.SET_NICKNAME(user.nick_name || "");
+          this.SET_PHONE(user.phone || "");
+          this.SET_AVATAR(user.avatar || "");
+          
+          // 更新localStorage中的用户信息
+          const userInfo = JSON.parse(localStorage.getItem('user_info') || "{}");
+          localStorage.setItem('user_info', JSON.stringify({
+            ...userInfo,
+            nick_name: user.nick_name,
+            phone: user.phone,
+            avatar: user.avatar
+          }));
+          
+          ElMessage.success("个人信息更新成功");
+          return response;
+        } else {
+          ElMessage.error(response.message || "更新当前管理员信息失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("更新当前管理员信息失败", error);
+        ElMessage.error(error.message || "更新当前管理员信息失败");
+        throw error;
+      } finally {
+        this.loading.updateCurrentAdmin = false;
+      }
     }
   }
 });
