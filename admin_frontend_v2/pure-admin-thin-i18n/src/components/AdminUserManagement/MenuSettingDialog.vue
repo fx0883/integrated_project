@@ -7,7 +7,8 @@ import {
   ElDialog,
   ElButton,
   ElInput,
-  ElCheckbox
+  ElCheckbox,
+  ElMessageBox
 } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import { useMenuStore } from "@/store/modules/menu";
@@ -40,29 +41,28 @@ const checkedKeys = ref([]);
 const searchKeyword = ref("");
 const menuTreeRef = ref(null);
 
-// 配置tree组件的属性
-const defaultProps = reactive({
-  children: "children",
-  label: "title",
-  disabled: "is_disabled"
-});
+// 内部对话框可见性状态
+const dialogVisible = ref(false);
 
-// 是否显示预览对话框
-const previewVisible = ref(false);
-// 预览菜单数据
-const previewMenus = ref([]);
+// 同步props.visible到内部状态
+watch(
+  () => props.visible,
+  val => {
+    dialogVisible.value = val;
+  }
+);
+
+// 同步内部状态到props.visible
+watch(dialogVisible, val => {
+  if (val !== props.visible) {
+    emit("update:visible", val);
+  }
+});
 
 // 监听对话框可见性变化
 watch(
   () => props.visible,
   async val => {
-    console.log(
-      "MenuSettingDialog visible 属性变化",
-      val,
-      props.userId,
-      props.username
-    );
-
     if (val && props.userId > 0) {
       // 对话框显示，加载数据
       logger.debug("菜单设置对话框打开", {
@@ -73,6 +73,18 @@ watch(
     }
   }
 );
+
+// 配置tree组件的属性
+const defaultProps = reactive({
+  children: "children",
+  label: "name",
+  disabled: "is_disabled"
+});
+
+// 是否显示预览对话框
+const previewVisible = ref(false);
+// 预览菜单数据
+const previewMenus = ref([]);
 
 // 监听用户ID变化
 watch(
@@ -96,6 +108,17 @@ watch(searchKeyword, val => {
     menuTreeRef.value.filter(val);
   }
 });
+
+// 处理节点勾选状态变化
+const handleCheck = (data, { checkedNodes, checkedKeys: newCheckedKeys }) => {
+  // 更新选中的节点
+  checkedKeys.value = newCheckedKeys;
+  logger.debug("菜单节点选择变化", {
+    checkedCount: checkedKeys.value.length,
+    checkedIds: checkedKeys.value,
+    selectedMenu: data ? data.name : null
+  });
+};
 
 // 加载菜单数据
 const loadData = async () => {
@@ -141,7 +164,7 @@ const loadData = async () => {
 // 过滤菜单节点
 const filterNode = (value, data) => {
   if (!value) return true;
-  return data.title.toLowerCase().includes(value.toLowerCase());
+  return data.name.toLowerCase().includes(value.toLowerCase());
 };
 
 // 获取菜单总数量（包括子菜单）
@@ -161,28 +184,41 @@ const getTotalMenuCount = menus => {
 
 // 处理对话框关闭
 const handleClose = () => {
+  dialogVisible.value = false;
   emit("update:visible", false);
   emit("cancel");
 };
 
 // 处理全选/取消全选
 const handleCheckAll = checked => {
-  if (checked) {
-    // 全选，收集所有菜单ID
-    const collectIds = menus => {
-      let ids = [];
-      for (const menu of menus) {
-        ids.push(menu.id);
-        if (menu.children && menu.children.length > 0) {
-          ids = ids.concat(collectIds(menu.children));
-        }
-      }
-      return ids;
-    };
-    checkedKeys.value = collectIds(menuTree.value);
+  if (menuTreeRef.value) {
+    if (checked) {
+      // 全选
+      menuTreeRef.value.setCheckedNodes(menuTree.value);
+    } else {
+      // 取消全选
+      menuTreeRef.value.setCheckedKeys([]);
+    }
+    // 同步选中的键
+    checkedKeys.value = menuTreeRef.value.getCheckedKeys();
   } else {
-    // 取消全选
-    checkedKeys.value = [];
+    if (checked) {
+      // 全选，收集所有菜单ID
+      const collectIds = menus => {
+        let ids = [];
+        for (const menu of menus) {
+          ids.push(menu.id);
+          if (menu.children && menu.children.length > 0) {
+            ids = ids.concat(collectIds(menu.children));
+          }
+        }
+        return ids;
+      };
+      checkedKeys.value = collectIds(menuTree.value);
+    } else {
+      // 取消全选
+      checkedKeys.value = [];
+    }
   }
 
   logger.debug("全选/取消全选菜单", {
@@ -236,22 +272,52 @@ const handleClosePreview = () => {
 const handleSave = async () => {
   loading.value = true;
   try {
+    // 确保从Tree组件获取最新的选中状态
+    if (menuTreeRef.value) {
+      const treeCheckedKeys = menuTreeRef.value.getCheckedKeys();
+      logger.debug("获取树组件最新选中状态", {
+        treeCheckedKeysCount: treeCheckedKeys.length,
+        currentCheckedKeysCount: checkedKeys.value.length
+      });
+      checkedKeys.value = treeCheckedKeys;
+    }
+
     logger.debug("保存用户菜单设置", {
       userId: props.userId,
       username: props.username,
-      menuIds: checkedKeys.value
+      menuIds: checkedKeys.value,
+      menuIdsCount: checkedKeys.value.length
     });
+
+    if (checkedKeys.value.length === 0) {
+      const confirmClear = await ElMessageBox.confirm(
+        "您当前未选择任何菜单，确定要清空该用户的菜单吗？",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      ).catch(() => false);
+
+      if (!confirmClear) {
+        logger.debug("用户取消了清空菜单操作");
+        loading.value = false;
+        return;
+      }
+    }
 
     await menuStore.assignUserMenus(props.userId, {
       menu_ids: checkedKeys.value
     });
 
     ElMessage.success(t("menu.settingSuccess"));
+    dialogVisible.value = false;
     emit("update:visible", false);
     emit("confirm");
   } catch (error) {
     logger.error("保存菜单失败", error);
-    ElMessage.error(t("menu.saveFailed"));
+    ElMessage.error(error.message || t("menu.saveFailed"));
   } finally {
     loading.value = false;
   }
@@ -264,14 +330,22 @@ onMounted(() => {
     userId: props.userId,
     username: props.username
   });
+
+  // 如果对话框打开，加载数据
+  if (props.visible && props.userId > 0) {
+    logger.debug("菜单设置对话框打开", {
+      userId: props.userId,
+      username: props.username
+    });
+    loadData();
+  }
 });
 </script>
 
 <template>
   <el-dialog
     :title="t('menu.userMenuSetting') + ': ' + username"
-    :visible="props.visible"
-    @update:visible="emit('update:visible', $event)"
+    v-model="dialogVisible"
     width="680px"
     :close-on-click-modal="false"
     destroy-on-close
@@ -302,7 +376,8 @@ onMounted(() => {
           :props="defaultProps"
           show-checkbox
           node-key="id"
-          v-model:checked-keys="checkedKeys"
+          :default-checked-keys="checkedKeys"
+          @check="handleCheck"
           default-expand-all
           :filter-node-method="filterNode"
         />
@@ -323,8 +398,7 @@ onMounted(() => {
   <!-- 预览对话框 -->
   <el-dialog
     :title="t('menu.preview')"
-    :visible="previewVisible"
-    @update:visible="previewVisible = $event"
+    v-model="previewVisible"
     width="580px"
     append-to-body
     destroy-on-close
