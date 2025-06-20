@@ -458,6 +458,15 @@ menu:
   selectAtLeastOne: Please select at least one item
   batchDelete: Batch Delete
   batchEdit: Batch Edit
+  setUserMenu: Set Menu
+  preview: Preview
+  return: Return
+  searchMenus: Search Menus
+  loadFailed: Failed to load menus
+  saveSuccess: Menu saved successfully
+  saveFailed: Failed to save menu
+  settingSuccess: Menu settings updated successfully
+  userMenuSetting: User Menu Settings
 
 # Common Translations
 common:

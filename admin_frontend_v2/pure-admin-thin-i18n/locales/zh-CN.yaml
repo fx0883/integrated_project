@@ -447,16 +447,16 @@ menu:
   menuTree: 菜单树
   dragToSort: 拖拽排序
   allMenus: 全部菜单
-  refresh: 刷新
-  collapse: 折叠
-  expand: 展开
-  dragTip: 拖拽调整菜单顺序
-  changeParentTip: 拖拽到其他菜单上可更改父级菜单
-  confirmBatchDelete: 确认批量删除
-  confirmBatchDeleteMessage: 您确定要删除选中的{count}个菜单项吗？此操作不可逆。
-  selectAtLeastOne: 请至少选择一项
-  batchDelete: 批量删除
-  batchEdit: 批量编辑
+  # 新增菜单设置相关
+  setUserMenu: 设置菜单
+  preview: 预览
+  return: 返回
+  searchMenus: 搜索菜单
+  loadFailed: 加载菜单失败
+  saveSuccess: 保存菜单成功
+  saveFailed: 保存菜单失败
+  settingSuccess: 菜单设置成功
+  userMenuSetting: 用户菜单设置
 
 # 通用翻译
 common:
