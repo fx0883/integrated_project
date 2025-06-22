@@ -91,10 +91,10 @@ class Article(models.Model):
         
         # 如果是首次创建文章，自动创建文章统计记录
         if kwargs.get('force_insert', False):
-            try:
-                ArticleStatistics.objects.get(article=self)
-            except ArticleStatistics.DoesNotExist:
-                ArticleStatistics.objects.create(article=self, tenant=self.tenant)
+            ArticleStatistics.objects.get_or_create(
+                article=self,
+                defaults={'tenant': self.tenant}
+            )
 
 
 class Category(models.Model):

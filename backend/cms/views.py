@@ -207,6 +207,48 @@ logger = logging.getLogger(__name__)
             404: OpenApiResponse(description="文章不存在"),
         }
     ),
+    batch_delete=extend_schema(
+        summary="批量删除文章",
+        description="批量删除多篇文章",
+        tags=["CMS-文章管理"],
+        parameters=[
+            OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
+        ],
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'article_ids': {
+                        'type': 'array',
+                        'items': {'type': 'integer'},
+                        'description': '要删除的文章ID列表'
+                    },
+                    'force': {
+                        'type': 'boolean',
+                        'description': '是否强制删除，默认false'
+                    }
+                },
+                'required': ['article_ids']
+            }
+        },
+        responses={
+            200: OpenApiResponse(description="批量删除成功"),
+            400: OpenApiResponse(description="请求参数错误"),
+            403: OpenApiResponse(description="权限不足"),
+        },
+        examples=[
+            OpenApiExample(
+                'Batch Delete Articles Example',
+                summary='批量删除文章示例',
+                description='批量删除多篇文章',
+                value={
+                    'article_ids': [1, 2, 3],
+                    'force': False
+                },
+                request_only=True,
+            )
+        ]
+    ),
 )
 class ArticleViewSet(TenantModelViewSet):
     """
@@ -315,11 +357,67 @@ class ArticleViewSet(TenantModelViewSet):
         # 设置作者为当前用户
         serializer.save(author=self.request.user)
         
-        # 处理分类和标签关系
-        self._process_relations(serializer.instance, serializer.validated_data)
-        
         # 记录操作日志
         self._record_operation_log('create', serializer.instance)
+        
+    def _process_relations(self, article, validated_data):
+        """
+        处理文章与分类、标签的关系
+        
+        Args:
+            article: 文章实例
+            validated_data: 验证后的数据
+        """
+        tenant = article.tenant
+        
+        # 处理分类关联
+        if 'category_ids' in validated_data:
+            # 删除旧关联
+            ArticleCategory.objects.filter(article=article).delete()
+            # 创建新关联
+            for category_id in validated_data['category_ids']:
+                ArticleCategory.objects.create(
+                    article=article,
+                    category_id=category_id,
+                    tenant=tenant
+                )
+        
+        # 处理标签关联
+        if 'tag_ids' in validated_data:
+            # 删除旧关联
+            ArticleTag.objects.filter(article=article).delete()
+            # 创建新关联
+            for tag_id in validated_data['tag_ids']:
+                ArticleTag.objects.create(
+                    article=article,
+                    tag_id=tag_id,
+                    tenant=tenant
+                )
+                
+    def _record_operation_log(self, action, article):
+        """
+        记录文章操作日志
+        
+        Args:
+            action: 操作类型，如'create', 'update', 'delete'
+            article: 文章实例
+        """
+        user = self.request.user
+        tenant = user.tenant
+        
+        try:
+            OperationLog.objects.create(
+                user=user,
+                action=action,
+                entity_type='article',
+                entity_id=article.id,
+                details=f"{action}文章: {article.title}",
+                ip_address=self.request.META.get('REMOTE_ADDR'),
+                user_agent=self.request.META.get('HTTP_USER_AGENT'),
+                tenant=tenant
+            )
+        except Exception as e:
+            logger.error(f"记录文章{action}操作日志失败: {str(e)}")
     
     def perform_update(self, serializer):
         """
@@ -630,8 +728,7 @@ class ArticleViewSet(TenantModelViewSet):
             ip_address=request.META.get('REMOTE_ADDR'),
             user_agent=request.META.get('HTTP_USER_AGENT'),
             referer=referrer,
-            reading_time=reading_time,
-            check_date=timezone.now().date()
+            reading_time=reading_time
         )
         
         # 更新文章统计
@@ -858,9 +955,21 @@ class ArticleViewSet(TenantModelViewSet):
             200: OpenApiResponse(description="批量删除成功"),
             400: OpenApiResponse(description="请求参数错误"),
             403: OpenApiResponse(description="权限不足"),
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'Batch Delete Articles Example',
+                summary='批量删除文章示例',
+                description='批量删除多篇文章',
+                value={
+                    'article_ids': [1, 2, 3],
+                    'force': False
+                },
+                request_only=True,
+            )
+        ]
     )
-    @action(detail=False, methods=['delete'], url_path='batch')
+    @action(detail=False, methods=['post'], url_path='batch-delete')
     def batch_delete(self, request):
         """批量删除文章"""
         user = request.user

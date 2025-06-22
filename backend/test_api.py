@@ -127,6 +127,25 @@ def test_admin_routes():
     else:
         print(f"错误: {response.text}")
 
+def test_article_view_api():
+    url = 'http://localhost:8000/api/v1/cms/articles/14/view/'
+    headers = {
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozNCwidXNlcm5hbWUiOiJhZG1pbl9jbXMiLCJleHAiOjE3NTA2MDEyODgsIm1vZGVsX3R5cGUiOiJ1c2VyIiwiaXNfYWRtaW4iOnRydWUsImlzX3N1cGVyX2FkbWluIjpmYWxzZX0.bShYgGJR1ILcWpoMG98WFxKvJF96imGIFOzyotkIeqc',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'session_id': 'test_session',
+        'reading_time': 10,
+        'referrer': 'test_referrer'
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        print(f'Status code: {response.status_code}')
+        print(f'Response: {response.text}')
+    except Exception as e:
+        print(f'Error: {e}')
+
 if __name__ == "__main__":
     # 登录
     print("\n===== 登录 =====")
@@ -165,7 +184,11 @@ if __name__ == "__main__":
         print("\n===== 测试删除菜单 =====")
         test_delete_menu(menu_id)
     else:
-        print("创建菜单失败，无法继续测试") 
+        print("创建菜单失败，无法继续测试")
+
+    # 测试文章查看API
+    print("\n===== 测试文章查看API =====")
+    test_article_view_api()
 
 # 测试获取菜单列表API
 try:

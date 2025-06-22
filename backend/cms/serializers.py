@@ -395,10 +395,10 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
             tenant=tenant
         )
         
-        # 创建统计记录
-        ArticleStatistics.objects.create(
+        # 创建统计记录（使用get_or_create避免重复创建）
+        ArticleStatistics.objects.get_or_create(
             article=article,
-            tenant=tenant
+            defaults={'tenant': tenant}
         )
         
         return article
