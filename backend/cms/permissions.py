@@ -3,7 +3,7 @@ CMS系统权限控制
 """
 import logging
 from rest_framework import permissions
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -11,24 +11,37 @@ logger = logging.getLogger(__name__)
 class CMSBasePermission(permissions.BasePermission):
     """
     CMS系统基础权限类
-    - 超级管理员可以管理所有资源
-    - 用户必须关联租户才能访问API
-    - 租户管理员可以查看和管理其租户内的所有资源
+    
+    权限控制规则：
+    - GET请求允许匿名访问，但需要租户ID
+    - 非GET请求需要认证，并且用户必须关联租户
+    - 超级管理员可以通过X-Tenant-ID请求头指定租户进行操作
+    - 租户管理员可以管理其租户内的所有资源
     - 普通用户只能操作自己的资源
-    - 所有GET请求允许匿名访问
+    - 只有URL路径中包含"cms"的API才需要进行租户ID验证
     """
     
     def has_permission(self, request, view):
         """
         检查用户是否有权限访问该视图
         
-        所有GET请求允许匿名访问
+        所有GET请求允许匿名访问（但需要租户ID，这在中间件中已验证）
         创建/更新/删除操作需要检查角色和参数
         """
-        # 允许所有GET请求匿名访问
-        if request.method in permissions.SAFE_METHODS:
+        # 检查请求路径是否包含"cms"，如果不包含，则跳过租户验证
+        if "/cms/" not in request.path:
+            logger.debug(f"非CMS路径，跳过租户验证: {request.path}")
             return True
             
+        # 允许所有GET请求访问（租户ID验证已在中间件中完成）
+        if request.method in permissions.SAFE_METHODS:
+            # 确保请求中有租户ID
+            if not hasattr(request, 'tenant_id') or not request.tenant_id:
+                logger.warning(f"GET请求未提供租户ID: {request.path}")
+                raise ValidationError({"detail": "未提供租户ID，无法访问CMS资源"})
+            return True
+            
+        # 非安全方法需要认证
         user = request.user
         
         # 未认证用户无权限执行非安全方法
@@ -36,13 +49,21 @@ class CMSBasePermission(permissions.BasePermission):
             logger.warning(f"未认证用户尝试访问 {request.path}")
             return False
         
-        # 检查用户是否关联租户
+        # 超级管理员特殊处理：允许通过X-Tenant-ID请求头指定租户进行操作
+        if user.is_super_admin:
+            # 确保请求中有租户ID（由中间件设置）
+            if not hasattr(request, 'tenant_id') or not request.tenant_id:
+                logger.warning(f"超级管理员 {user.username} 尝试操作CMS数据但未指定租户ID")
+                raise ValidationError({"detail": "超级管理员需要通过X-Tenant-ID请求头指定租户ID"})
+            return True
+        
+        # 检查普通用户是否关联租户
         if not hasattr(user, 'tenant') or not user.tenant:
             logger.warning(f"用户 {user.username} 未关联租户，拒绝访问 {request.path}")
             raise PermissionDenied("用户未关联租户，无法访问CMS系统")
         
-        # 超级管理员和租户管理员
-        if user.is_super_admin or user.is_admin:
+        # 租户管理员可以操作其租户内的所有资源
+        if user.is_admin:
             return True
         
         # 普通用户只能操作自己的资源
@@ -63,13 +84,33 @@ class CMSBasePermission(permissions.BasePermission):
         """
         检查用户是否有权限操作特定对象
         
-        - 超级管理员可以操作所有资源
         - 租户管理员可以操作其租户内的所有资源
         - 普通用户只能操作自己的资源
         """
+        # 检查请求路径是否包含"cms"，如果不包含，则跳过租户验证
+        if "/cms/" not in request.path:
+            logger.debug(f"非CMS路径，跳过租户验证: {request.path}")
+            return True
+            
         user = request.user
         
-        # 检查用户是否关联租户
+        # GET请求允许匿名访问（但需要租户ID，这在中间件中已验证）
+        if request.method in permissions.SAFE_METHODS:
+            # 验证对象所属租户与请求租户一致
+            if hasattr(obj, 'tenant') and str(obj.tenant.id) != str(request.tenant_id):
+                logger.warning(f"尝试访问不属于当前租户的资源: {obj.__class__.__name__} #{getattr(obj, 'id', 'unknown')}")
+                raise PermissionDenied("不能访问其他租户的资源")
+            return True
+        
+        # 超级管理员特殊处理：允许通过X-Tenant-ID请求头指定租户进行操作
+        if user.is_super_admin:
+            # 验证对象所属租户与请求租户一致
+            if hasattr(obj, 'tenant') and str(obj.tenant.id) != str(request.tenant_id):
+                logger.warning(f"超级管理员 {user.username} 尝试操作不属于指定租户的对象")
+                raise PermissionDenied("不能操作其他租户的资源")
+            return True
+        
+        # 检查普通用户是否关联租户
         if not hasattr(user, 'tenant') or not user.tenant:
             logger.warning(f"用户 {user.username} 未关联租户，拒绝访问对象 {obj.__class__.__name__} #{getattr(obj, 'id', 'unknown')}")
             raise PermissionDenied("用户未关联租户，无法访问CMS系统")
@@ -78,10 +119,6 @@ class CMSBasePermission(permissions.BasePermission):
         if hasattr(obj, 'tenant') and obj.tenant != user.tenant:
             logger.warning(f"用户 {user.username} 尝试操作不属于其租户的对象 {obj.__class__.__name__} #{getattr(obj, 'id', 'unknown')}")
             raise PermissionDenied("不能操作其他租户的资源")
-        
-        # 超级管理员可以操作所有资源
-        if user.is_super_admin:
-            return True
         
         # 租户管理员可以操作其租户内的所有资源
         if user.is_admin and hasattr(obj, 'tenant') and obj.tenant == user.tenant:
@@ -116,10 +153,25 @@ class ArticlePermission(CMSBasePermission):
     """
     
     def has_object_permission(self, request, view, obj):
+        # 检查请求路径是否包含"cms"，如果不包含，则跳过租户验证
+        if "/cms/" not in request.path:
+            logger.debug(f"非CMS路径，跳过租户验证: {request.path}")
+            return True
+            
         # GET请求允许匿名访问已发布且公开的文章
         if request.method in permissions.SAFE_METHODS:
+            # 验证对象所属租户与请求租户一致
+            if hasattr(obj, 'tenant') and str(obj.tenant.id) != str(request.tenant_id):
+                logger.warning(f"尝试访问不属于当前租户的文章: #{getattr(obj, 'id', 'unknown')}")
+                raise PermissionDenied("不能访问其他租户的资源")
+                
             if obj.status == 'published' and obj.visibility == 'public':
                 return True
+            
+            # 非公开文章需要认证
+            if not request.user or not request.user.is_authenticated:
+                logger.warning(f"未认证用户尝试访问非公开文章: #{getattr(obj, 'id', 'unknown')}")
+                return False
                 
         # 首先检查基本权限
         if super().has_object_permission(request, view, obj):
@@ -153,13 +205,18 @@ class CommentPermission(CMSBasePermission):
     """
     
     def has_permission(self, request, view):
+        # 检查请求路径是否包含"cms"，如果不包含，则跳过租户验证
+        if "/cms/" not in request.path:
+            logger.debug(f"非CMS路径，跳过租户验证: {request.path}")
+            return True
+            
         # 添加评论需要检查文章是否允许评论
         if request.method == 'POST':
             article_id = request.data.get('article') or request.data.get('article_id')
             if article_id:
                 from .models import Article
                 try:
-                    article = Article.objects.get(id=article_id, tenant=request.user.tenant)
+                    article = Article.objects.get(id=article_id, tenant_id=request.tenant_id)
                     if not article.allow_comment:
                         return False
                 except Article.DoesNotExist:
@@ -168,6 +225,11 @@ class CommentPermission(CMSBasePermission):
         return super().has_permission(request, view)
     
     def has_object_permission(self, request, view, obj):
+        # 检查请求路径是否包含"cms"，如果不包含，则跳过租户验证
+        if "/cms/" not in request.path:
+            logger.debug(f"非CMS路径，跳过租户验证: {request.path}")
+            return True
+            
         # 首先检查基本权限
         if super().has_object_permission(request, view, obj):
             return True

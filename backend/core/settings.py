@@ -76,6 +76,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 添加API认证中间件在AuthenticationMiddleware之后,TenantMiddleware之前
+    'common.middleware.api_auth_middleware.APIAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 自定义租户中间件
@@ -182,8 +184,8 @@ AUTH_USER_MODEL = 'users.User'
 # REST Framework 设置
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'common.authentication.jwt_auth.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'common.authentication.api_auth.APIJWTAuthentication',
+        'common.authentication.web_auth.WebSessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -255,9 +257,15 @@ SPECTACULAR_SETTINGS = {
     'PREPROCESSING_HOOKS': ['common.schema.spectacular_hooks.add_security_requirement'],
     
     # 扩展类
-    'EXTENSIONS': ['common.schema.spectacular_extensions.JWTAuthenticationScheme'],
+    'EXTENSIONS': [
+        'common.schema.spectacular_extensions.JWTAuthenticationScheme',
+        'common.schema.spectacular_extensions.APIJWTAuthenticationScheme',
+    ],
     # 排除session和basic认证
-    'AUTHENTICATION_WHITELIST': ['common.authentication.jwt_auth.JWTAuthentication'],
+    'AUTHENTICATION_WHITELIST': [
+        'common.authentication.jwt_auth.JWTAuthentication',
+        'common.authentication.api_auth.APIJWTAuthentication',
+    ],
     
     # 解决枚举命名冲突
     'ENUM_NAME_OVERRIDES': {

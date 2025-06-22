@@ -318,20 +318,6 @@ class ArticleViewSet(TenantModelViewSet):
         # 处理分类和标签关系
         self._process_relations(serializer.instance, serializer.validated_data)
         
-        # 创建统计记录
-        tenant_id = getattr(self.request, 'tenant_id', None)
-        if tenant_id:
-            try:
-                tenant_id = int(tenant_id)
-            except (ValueError, TypeError):
-                logger.error(f"无效的租户ID: {tenant_id}")
-                raise ValidationError({"detail": f"无效的租户ID: {tenant_id}"})
-        
-        ArticleStatistics.objects.create(
-            article=serializer.instance,
-            tenant_id=tenant_id
-        )
-        
         # 记录操作日志
         self._record_operation_log('create', serializer.instance)
     

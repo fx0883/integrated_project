@@ -70,7 +70,7 @@ class ArticleMetaSerializer(serializers.ModelSerializer):
             'canonical_url', 'robots', 'custom_meta', 'created_at', 
             'updated_at', 'tenant'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'tenant']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'tenant', 'article']
 
 
 class ArticleStatisticsSerializer(serializers.ModelSerializer):

@@ -689,3 +689,43 @@ cms/
 6. `rbac/views.py`: 视图基础文件（用于后续API开发）
 7. `core/settings.py`: 添加rbac应用到INSTALLED_APPS
 8. `core/urls.py`: 添加rbac应用路由到主URL配置 
+
+## 认证机制说明
+
+系统使用两种不同的认证机制，根据请求路径自动选择合适的认证方式：
+
+### 1. API请求认证 (路径以 `/api/` 开头)
+
+- 使用 JWT (JSON Web Token) 认证
+- 认证类: `common.authentication.api_auth.APIJWTAuthentication`
+- 专用中间件: `common.middleware.api_auth_middleware.APIAuthMiddleware`
+- 所有API请求必须在请求头中包含有效的JWT令牌才能访问受保护资源
+- 认证头格式: `Authorization: Bearer <token>`
+
+### 2. Web界面认证 (其他路径)
+
+- 使用传统的Session认证
+- 认证类: `common.authentication.web_auth.WebSessionAuthentication`
+- 适用于管理后台和其他Web界面
+
+### 认证优先级和冲突处理
+
+系统通过以下机制确保API请求和Web请求的认证不会相互干扰：
+
+1. DRF认证类根据路径选择合适的认证方式
+2. `APIAuthMiddleware`中间件在AuthenticationMiddleware之后执行，确保API请求始终使用JWT令牌中的用户身份
+3. 当一个请求同时具有会话认证和JWT令牌时，API认证中间件会覆盖请求用户，确保使用正确的身份
+
+### 认证与租户权限
+
+CMS相关API请求需要遵循以下规则：
+
+- GET请求需要提供租户ID (可通过请求头 `X-Tenant-ID` 或用户关联的租户)
+- 非GET请求要求用户必须关联租户 (普通管理员) 或通过请求头指定租户 (超级管理员)
+- 超级管理员需要通过 `X-Tenant-ID` 请求头指定要操作的租户ID
+
+### 注意事项
+
+1. 即使在浏览器中通过Session登录了管理界面，API请求仍需要提供有效的JWT令牌
+2. API认证和Web认证是相互独立的，不会相互干扰
+3. 为确保安全，API调用应尽量使用专用的API客户端进行 
