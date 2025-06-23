@@ -152,7 +152,7 @@ class TenantMiddleware(MiddlewareMixin):
                     
                     return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                logger.warning(f"[租户中间件] GET请求未提供租户ID: {request.path}")
+                    logger.warning(f"[租户中间件] GET请求未提供租户ID: {request.path}")
                     
                     # 返回标准JSON错误响应
                     error_response = {
@@ -185,7 +185,7 @@ class TenantMiddleware(MiddlewareMixin):
             # 重新检查用户是否是超级管理员，只信任JWT认证的超级管理员
             is_super_admin = False
             if getattr(request, 'auth_type', None) == 'jwt':
-            is_super_admin = getattr(request.user, 'is_super_admin', False)
+                is_super_admin = getattr(request.user, 'is_super_admin', False)
                 logger.info(f"[租户中间件] 非GET请求JWT用户类型检查 - 用户名: {request.user.username}, 超级管理员: {is_super_admin}")
             else:
                 logger.info(f"[租户中间件] 非GET请求非JWT认证用户 {request.user.username}，不信任超级管理员标识")
@@ -281,7 +281,7 @@ class TenantMiddleware(MiddlewareMixin):
         if header_tenant_id and user_tenant_id and header_tenant_id != user_tenant_id:
             # 只有非超级管理员才需要验证租户匹配
             if not is_super_admin:
-            logger.warning(f"[租户中间件] 用户 {request.user.username} 尝试访问不属于其租户的资源，租户ID不匹配: 用户租户={user_tenant_id}, 请求头租户={header_tenant_id}")
+                logger.warning(f"[租户中间件] 用户 {request.user.username} 尝试访问不属于其租户的资源，租户ID不匹配: 用户租户={user_tenant_id}, 请求头租户={header_tenant_id}")
                 
                 # 返回标准JSON错误响应
                 error_response = {
