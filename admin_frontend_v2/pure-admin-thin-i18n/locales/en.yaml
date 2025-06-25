@@ -80,6 +80,13 @@ menus:
   pureMenuManagement: Menu Management
   pureMenuList: Menu List
   profile: Profile
+  cmsManagement: Content Management
+  articleManagement: Article Management
+  articleCreate: Create Article
+  articleEdit: Edit Article
+  articleDetail: Article Detail
+  commentManagement: Comment Management
+  commentDetail: Comment Detail
 status:
   pureLoad: Loading...
   pureMessage: Message
@@ -485,4 +492,84 @@ common:
   yes: Yes
   no: No
   back: Back
+
+# CMS Content Management System
+cms:
+  comment:
+    commentManagement: Comment Management
+    commentDetail: Comment Detail
+    id: Comment ID
+    content: Comment Content
+    article: Related Article
+    status: Status
+    createTime: Create Time
+    updateTime: Update Time
+    pinned: Pinned
+    keyword: Keyword
+    dateRange: Date Range
+    startDate: Start Date
+    endDate: End Date
+    searchPlaceholder: Search comment content
+    articleIdPlaceholder: Enter article ID
+    guestName: Guest Name
+    guestEmail: Guest Email
+    guestWebsite: Guest Website
+    guestNamePlaceholder: Please enter your name
+    guestEmailPlaceholder: Please enter your email
+    guestWebsitePlaceholder: Please enter your website
+    contentPlaceholder: Please enter comment content
+    contentRequired: Comment content is required
+    contentLength: Comment content should be 2-1000 characters
+    nameRequired: Guest name is required
+    emailRequired: Guest email is required
+    emailInvalid: Invalid email format
+    statusPending: Pending
+    statusApproved: Approved
+    statusSpam: Spam
+    statusTrash: Trash
+    statusAll: All
+    adminOptions: Admin Options
+    editComment: Edit Comment
+    replyComment: Reply Comment
+    reply: Reply
+    addReply: Add Reply
+    replies: Replies
+    noReplies: No replies yet
+    approve: Approve
+    reject: Reject
+    markAsSpam: Mark as Spam
+    confirmApprove: Confirm Approve Comment
+    confirmApproveMessage: Are you sure you want to approve this comment? Once approved, it will be publicly visible.
+    confirmReject: Confirm Reject Comment
+    confirmRejectMessage: Are you sure you want to reject this comment? It will not be publicly visible.
+    confirmMarkAsSpam: Confirm Mark as Spam
+    confirmMarkAsSpamMessage: Are you sure you want to mark this comment as spam?
+    confirmDelete: Confirm Delete Comment
+    confirmDeleteMessage: Are you sure you want to delete this comment? This action cannot be undone.
+    confirmBatchAction: Confirm {action}
+    confirmBatchActionMessage: Are you sure you want to perform this action on {count} selected comments?
+    confirmBatchDelete: Confirm Batch Delete
+    confirmBatchDeleteMessage: Are you sure you want to delete {count} selected comments? This action cannot be undone.
+    batchApprove: Batch Approve
+    batchReject: Batch Reject
+    batchMarkAsSpam: Batch Mark as Spam
+    batchDelete: Batch Delete
+    deleteSuccess: Comment deleted successfully
+    deleteFailed: Failed to delete comment
+    batchActionSuccess: Batch action successful
+    batchActionFailed: Batch action failed
+    batchDeleteSuccess: Batch delete successful
+    batchDeleteFailed: Batch delete failed
+    selectCommentsFirst: Please select comments first
+    selectCommentsToDelete: Please select comments to delete
+    ipAddress: IP Address
+    userAgent: User Agent
+    guest: Guest
+    anonymous: Anonymous
+    byUser: By user {user}
+    byGuest: By guest {name}
+    invalidId: Invalid comment ID
+    notFound: Comment not found
+    fetchListFailed: Failed to fetch comment list
+    fetchDetailFailed: Failed to fetch comment detail
 

@@ -81,6 +81,13 @@ menus:
   pureMenuManagement: 菜单管理
   pureMenuList: 菜单列表
   profile: 个人信息
+  cmsManagement: 内容管理
+  articleManagement: 文章管理
+  articleCreate: 创建文章
+  articleEdit: 编辑文章
+  articleDetail: 文章详情
+  commentManagement: 评论管理
+  commentDetail: 评论详情
 status:
   pureLoad: 加载中...
   pureMessage: 消息
@@ -457,6 +464,88 @@ menu:
   saveFailed: 保存菜单失败
   settingSuccess: 菜单设置成功
   userMenuSetting: 用户菜单设置
+
+# CMS内容管理系统国际化
+
+cms:
+  comment:
+    commentManagement: 评论管理
+    commentDetail: 评论详情
+    id: 评论ID
+    content: 评论内容
+    article: 关联文章
+    status: 状态
+    createTime: 创建时间
+    updateTime: 更新时间
+    pinned: 置顶
+    keyword: 关键词
+    dateRange: 日期范围
+    startDate: 开始日期
+    endDate: 结束日期
+    searchPlaceholder: 输入评论内容搜索
+    articleIdPlaceholder: 输入文章ID
+    guestName: 访客姓名
+    guestEmail: 访客邮箱
+    guestWebsite: 访客网站
+    guestNamePlaceholder: 请输入您的姓名
+    guestEmailPlaceholder: 请输入您的邮箱
+    guestWebsitePlaceholder: 请输入您的网站
+    contentPlaceholder: 请输入评论内容
+    contentRequired: 评论内容不能为空
+    contentLength: 评论内容长度应为2-1000个字符
+    nameRequired: 访客姓名不能为空
+    emailRequired: 访客邮箱不能为空
+    emailInvalid: 邮箱格式不正确
+    statusPending: 待审核
+    statusApproved: 已批准
+    statusSpam: 垃圾评论
+    statusTrash: 已拒绝
+    statusAll: 全部
+    adminOptions: 管理员选项
+    editComment: 编辑评论
+    replyComment: 回复评论
+    reply: 回复
+    addReply: 添加回复
+    replies: 回复列表
+    noReplies: 暂无回复
+    approve: 批准
+    reject: 拒绝
+    markAsSpam: 标记为垃圾
+    confirmApprove: 确认批准评论
+    confirmApproveMessage: 您确定要批准此评论吗？批准后，该评论将公开显示。
+    confirmReject: 确认拒绝评论
+    confirmRejectMessage: 您确定要拒绝此评论吗？拒绝后，该评论将不会公开显示。
+    confirmMarkAsSpam: 确认标记为垃圾评论
+    confirmMarkAsSpamMessage: 您确定要将此评论标记为垃圾评论吗？
+    confirmDelete: 确认删除评论
+    confirmDeleteMessage: 您确定要删除此评论吗？此操作不可逆。
+    confirmBatchAction: 确认{action}
+    confirmBatchActionMessage: 您确定要对所选的{count}条评论执行此操作吗？
+    confirmBatchDelete: 确认批量删除
+    confirmBatchDeleteMessage: 您确定要删除所选的{count}条评论吗？此操作不可逆。
+    batchApprove: 批量批准
+    batchReject: 批量拒绝
+    batchMarkAsSpam: 批量标记为垃圾
+    batchDelete: 批量删除
+    deleteSuccess: 删除评论成功
+    deleteFailed: 删除评论失败
+    batchActionSuccess: 批量操作成功
+    batchActionFailed: 批量操作失败
+    batchDeleteSuccess: 批量删除成功
+    batchDeleteFailed: 批量删除失败
+    selectCommentsFirst: 请先选择评论
+    selectCommentsToDelete: 请先选择要删除的评论
+    ipAddress: IP地址
+    userAgent: 用户代理
+    guest: 访客
+    anonymous: 匿名用户
+    byUser: 来自用户 {user}
+    byGuest: 来自访客 {name}
+    invalidId: 无效的评论ID
+    notFound: 评论不存在
+    fetchListFailed: 获取评论列表失败
+    fetchDetailFailed: 获取评论详情失败
+
 
 # 通用翻译
 common:

@@ -1,0 +1,572 @@
+<script lang="ts" setup>
+import { ref, reactive, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import {
+  Search,
+  Plus,
+  Edit,
+  Delete,
+  View,
+  Upload,
+  Download,
+  Archive
+} from "@element-plus/icons-vue";
+import { useCmsStoreHook } from "@/store/modules/cms";
+import { useUserStoreHook } from "@/store/modules/user";
+import ConfirmDialog from "@/components/Cms/Article/ConfirmDialog.vue";
+import type {
+  Article,
+  ArticleStatus,
+  ArticleVisibility,
+  ArticleListParams
+} from "@/types/cms";
+import logger from "@/utils/logger";
+
+const { t } = useI18n();
+const router = useRouter();
+const cmsStore = useCmsStoreHook();
+const userStore = useUserStoreHook();
+
+// 检查用户权限
+const checkPermission = () => {
+  // 这里可以根据实际需求检查权限
+  return true;
+};
+
+// 表格加载状态
+const tableLoading = computed(() => cmsStore.loading.articleList);
+
+// 表格数据
+const articles = computed(() => cmsStore.articles.data);
+
+// 分页信息
+const pagination = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: computed(() => cmsStore.articles.total)
+});
+
+// 搜索表单
+const searchForm = reactive<ArticleListParams>({
+  search: "",
+  status: undefined,
+  category: undefined,
+  tag: undefined,
+  is_featured: undefined,
+  is_pinned: undefined,
+  date_from: "",
+  date_to: "",
+  page: 1,
+  per_page: 10
+});
+
+// 确认对话框
+const confirmDialog = reactive({
+  visible: false,
+  title: "",
+  content: "",
+  type: "warning" as const,
+  confirmAction: null as (() => Promise<void>) | null
+});
+
+// 状态选项
+const statusOptions = [
+  { value: "", label: t("cms.article.statusAll") },
+  { value: "draft", label: t("cms.article.statusDraft") },
+  { value: "pending", label: t("cms.article.statusPending") },
+  { value: "published", label: t("cms.article.statusPublished") },
+  { value: "archived", label: t("cms.article.statusArchived") }
+];
+
+// 特性选项
+const featuredOptions = [
+  { value: "", label: t("cms.article.featuredAll") },
+  { value: "true", label: t("cms.article.featuredTrue") },
+  { value: "false", label: t("cms.article.featuredFalse") }
+];
+
+// 置顶选项
+const pinnedOptions = [
+  { value: "", label: t("cms.article.pinnedAll") },
+  { value: "true", label: t("cms.article.pinnedTrue") },
+  { value: "false", label: t("cms.article.pinnedFalse") }
+];
+
+// 多选相关
+const multipleSelection = ref<Article[]>([]);
+const handleSelectionChange = (val: Article[]) => {
+  multipleSelection.value = val;
+};
+
+// 获取文章列表
+const fetchArticles = async () => {
+  try {
+    searchForm.page = pagination.currentPage;
+    searchForm.per_page = pagination.pageSize;
+
+    // 处理布尔值转换
+    const params = { ...searchForm };
+    if (params.is_featured === "true") params.is_featured = true;
+    if (params.is_featured === "false") params.is_featured = false;
+    if (params.is_pinned === "true") params.is_pinned = true;
+    if (params.is_pinned === "false") params.is_pinned = false;
+
+    await cmsStore.fetchArticleList(params);
+  } catch (error) {
+    logger.error("获取文章列表失败", error);
+    ElMessage.error(t("cms.article.fetchListFailed"));
+  }
+};
+
+// 搜索
+const handleSearch = () => {
+  pagination.currentPage = 1;
+  fetchArticles();
+};
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.search = "";
+  searchForm.status = undefined;
+  searchForm.category = undefined;
+  searchForm.tag = undefined;
+  searchForm.is_featured = undefined;
+  searchForm.is_pinned = undefined;
+  searchForm.date_from = "";
+  searchForm.date_to = "";
+  pagination.currentPage = 1;
+  fetchArticles();
+};
+
+// 处理分页变化
+const handlePageChange = (page: number) => {
+  pagination.currentPage = page;
+  fetchArticles();
+};
+
+// 处理每页条数变化
+const handleSizeChange = (size: number) => {
+  pagination.pageSize = size;
+  pagination.currentPage = 1;
+  fetchArticles();
+};
+
+// 新建文章
+const handleCreate = () => {
+  router.push("/cms/article/create");
+};
+
+// 编辑文章
+const handleEdit = (row: Article) => {
+  router.push(`/cms/article/edit/${row.id}`);
+};
+
+// 查看文章详情
+const handleDetail = (row: Article) => {
+  router.push(`/cms/article/detail/${row.id}`);
+};
+
+// 删除文章
+const handleDelete = (row: Article) => {
+  confirmDialog.title = t("cms.article.confirmDelete");
+  confirmDialog.content = t("cms.article.confirmDeleteMessage", {
+    title: row.title
+  });
+  confirmDialog.type = "warning";
+  confirmDialog.confirmAction = async () => {
+    try {
+      await cmsStore.deleteArticle(row.id);
+      ElMessage.success(t("cms.article.deleteSuccess"));
+      fetchArticles();
+    } catch (error) {
+      logger.error("删除文章失败", error);
+      ElMessage.error(t("cms.article.deleteFailed"));
+    }
+  };
+  confirmDialog.visible = true;
+};
+
+// 批量删除文章
+const handleBatchDelete = () => {
+  if (multipleSelection.value.length === 0) {
+    ElMessage.warning(t("cms.article.selectArticlesToDelete"));
+    return;
+  }
+
+  const ids = multipleSelection.value.map(item => item.id);
+  confirmDialog.title = t("cms.article.confirmBatchDelete");
+  confirmDialog.content = t("cms.article.confirmBatchDeleteMessage", {
+    count: ids.length
+  });
+  confirmDialog.type = "warning";
+  confirmDialog.confirmAction = async () => {
+    try {
+      await cmsStore.batchDeleteArticles(ids);
+      ElMessage.success(t("cms.article.batchDeleteSuccess"));
+      fetchArticles();
+      multipleSelection.value = [];
+    } catch (error) {
+      logger.error("批量删除文章失败", error);
+      ElMessage.error(t("cms.article.batchDeleteFailed"));
+    }
+  };
+  confirmDialog.visible = true;
+};
+
+// 发布文章
+const handlePublish = (row: Article) => {
+  confirmDialog.title = t("cms.article.confirmPublish");
+  confirmDialog.content = t("cms.article.confirmPublishMessage", {
+    title: row.title
+  });
+  confirmDialog.type = "info";
+  confirmDialog.confirmAction = async () => {
+    try {
+      await cmsStore.publishArticle(row.id);
+      ElMessage.success(t("cms.article.publishSuccess"));
+      fetchArticles();
+    } catch (error) {
+      logger.error("发布文章失败", error);
+      ElMessage.error(t("cms.article.publishFailed"));
+    }
+  };
+  confirmDialog.visible = true;
+};
+
+// 格式化日期
+const formatDate = (date: string) => {
+  if (!date) return "";
+  return new Date(date).toLocaleString();
+};
+
+// 页面加载时获取数据
+onMounted(() => {
+  if (checkPermission()) {
+    fetchArticles();
+  }
+});
+</script>
+
+<template>
+  <div class="article-list-container">
+    <!-- 标题和新建按钮 -->
+    <div class="article-list-header">
+      <h2 class="article-list-title">
+        {{ t("cms.article.articleManagement") }}
+      </h2>
+      <el-button type="primary" :icon="Plus" @click="handleCreate">
+        {{ t("cms.article.createArticle") }}
+      </el-button>
+    </div>
+
+    <!-- 搜索和筛选 -->
+    <el-card class="search-card">
+      <el-form
+        :model="searchForm"
+        label-width="100px"
+        @keyup.enter="handleSearch"
+      >
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item :label="t('cms.article.keyword')">
+              <el-input
+                v-model="searchForm.search"
+                :placeholder="t('cms.article.searchPlaceholder')"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="5">
+            <el-form-item :label="t('cms.article.status')">
+              <el-select v-model="searchForm.status" clearable class="w-full">
+                <el-option
+                  v-for="option in statusOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="5">
+            <el-form-item :label="t('cms.article.featured')">
+              <el-select
+                v-model="searchForm.is_featured"
+                clearable
+                class="w-full"
+              >
+                <el-option
+                  v-for="option in featuredOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item
+              :label="t('cms.article.dateRange')"
+              class="date-range-form-item"
+            >
+              <el-date-picker
+                v-model="searchForm.date_from"
+                type="date"
+                :placeholder="t('cms.article.startDate')"
+                style="width: 45%"
+                value-format="YYYY-MM-DD"
+                clearable
+              />
+              <span class="date-separator">-</span>
+              <el-date-picker
+                v-model="searchForm.date_to"
+                type="date"
+                :placeholder="t('cms.article.endDate')"
+                style="width: 45%"
+                value-format="YYYY-MM-DD"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item class="search-buttons">
+          <el-button type="primary" :icon="Search" @click="handleSearch">
+            {{ t("common.search") }}
+          </el-button>
+          <el-button @click="resetSearch">
+            {{ t("common.reset") }}
+          </el-button>
+          <el-button
+            type="danger"
+            :icon="Delete"
+            :disabled="multipleSelection.length === 0"
+            @click="handleBatchDelete"
+          >
+            {{ t("cms.article.batchDelete") }}
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 文章列表表格 -->
+    <el-card class="table-card">
+      <el-table
+        v-loading="tableLoading"
+        :data="articles"
+        style="width: 100%"
+        border
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
+
+        <el-table-column prop="id" label="ID" width="80" />
+
+        <el-table-column :label="t('cms.article.title')" min-width="220">
+          <template #default="{ row }">
+            <div class="article-title">
+              <el-tooltip
+                v-if="row.is_featured"
+                :content="t('cms.article.featuredTooltip')"
+                placement="top"
+              >
+                <el-tag size="small" type="danger" class="featured-tag">{{
+                  t("cms.article.featured")
+                }}</el-tag>
+              </el-tooltip>
+              <el-tooltip
+                v-if="row.is_pinned"
+                :content="t('cms.article.pinnedTooltip')"
+                placement="top"
+              >
+                <el-tag size="small" type="warning" class="pinned-tag">{{
+                  t("cms.article.pinned")
+                }}</el-tag>
+              </el-tooltip>
+              <span class="title-text">{{ row.title }}</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column :label="t('cms.article.status')" width="120">
+          <template #default="{ row }">
+            <el-tag
+              :type="
+                row.status === 'published'
+                  ? 'success'
+                  : row.status === 'draft'
+                    ? 'info'
+                    : row.status === 'pending'
+                      ? 'warning'
+                      : 'danger'
+              "
+              size="small"
+            >
+              {{
+                row.status === "published"
+                  ? t("cms.article.statusPublished")
+                  : row.status === "draft"
+                    ? t("cms.article.statusDraft")
+                    : row.status === "pending"
+                      ? t("cms.article.statusPending")
+                      : t("cms.article.statusArchived")
+              }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          :label="t('cms.article.author')"
+          prop="author_info.username"
+          width="120"
+        />
+
+        <el-table-column :label="t('cms.article.createTime')" width="180">
+          <template #default="{ row }">
+            {{ formatDate(row.created_at) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column :label="t('cms.article.publishTime')" width="180">
+          <template #default="{ row }">
+            {{ row.published_at ? formatDate(row.published_at) : "-" }}
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          :label="t('common.operation')"
+          fixed="right"
+          width="220"
+        >
+          <template #default="{ row }">
+            <el-button
+              size="small"
+              :icon="View"
+              @click="handleDetail(row)"
+              title="查看"
+              text
+            />
+            <el-button
+              size="small"
+              :icon="Edit"
+              type="primary"
+              @click="handleEdit(row)"
+              title="编辑"
+              text
+            />
+            <el-button
+              v-if="row.status !== 'published'"
+              size="small"
+              :icon="Upload"
+              type="success"
+              @click="handlePublish(row)"
+              title="发布"
+              text
+            />
+            <el-button
+              size="small"
+              :icon="Delete"
+              type="danger"
+              @click="handleDelete(row)"
+              title="删除"
+              text
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:currentPage="pagination.currentPage"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="pagination.total"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 确认对话框 -->
+    <ConfirmDialog
+      v-model:visible="confirmDialog.visible"
+      :title="confirmDialog.title"
+      :content="confirmDialog.content"
+      :type="confirmDialog.type"
+      @confirm="confirmDialog.confirmAction && confirmDialog.confirmAction()"
+    />
+  </div>
+</template>
+
+<style scoped>
+.article-list-container {
+  padding: 20px;
+}
+
+.article-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.article-list-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.search-card {
+  margin-bottom: 20px;
+}
+
+.search-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.table-card {
+  margin-bottom: 20px;
+}
+
+.article-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.featured-tag,
+.pinned-tag {
+  margin-right: 5px;
+}
+
+.title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date-range-form-item :deep(.el-form-item__content) {
+  display: flex;
+  align-items: center;
+}
+
+.date-separator {
+  margin: 0 5px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.w-full {
+  width: 100%;
+}
+</style>
