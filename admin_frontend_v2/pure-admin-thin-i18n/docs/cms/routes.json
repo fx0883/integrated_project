@@ -1,0 +1,153 @@
+[
+  {
+    "path": "/cms",
+    "name": "CMS",
+    "meta": {
+      "title": "menus.cmsManagement",
+      "rank": 5,
+      "showLink": true,
+      "icon": "ri:article-line",
+      "showParent": true,
+      "keepAlive": false,
+      "frameLoading": true,
+      "hiddenTag": false
+    },
+    "redirect": "/cms/article",
+    "children": [
+      {
+        "path": "/cms/article",
+        "name": "ArticleManagement",
+        "meta": {
+          "title": "menus.articleManagement",
+          "rank": 0,
+          "showLink": true,
+          "icon": "ri:file-list-line",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": false,
+          "hiddenTag": false
+        },
+        "children": [
+          {
+            "path": "/cms/article/index",
+            "name": "ArticleList",
+            "meta": {
+              "title": "menus.articleList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": true,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/index.vue"
+          },
+          {
+            "path": "/cms/article/create",
+            "name": "ArticleCreate",
+            "meta": {
+              "title": "menus.articleCreate",
+              "rank": 5,
+              "showLink": false,
+              "showParent": true,
+              "keepAlive": false,
+              "frameLoading": true,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/create"
+          },
+          {
+            "path": "/cms/article/edit/:id",
+            "name": "ArticleEdit",
+            "meta": {
+              "title": "menus.articleEdit",
+              "rank": 6,
+              "showLink": false,
+              "showParent": true,
+              "keepAlive": false,
+              "frameLoading": true,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/edit"
+          },
+          {
+            "path": "/cms/article/detail/:id",
+            "name": "ArticleDetail",
+            "meta": {
+              "title": "menus.articleDetail",
+              "rank": 7,
+              "showLink": false,
+              "showParent": true,
+              "keepAlive": false,
+              "frameLoading": true,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/detail"
+          }
+        ]
+      },
+      {
+        "path": "/cms/comment",
+        "name": "CommentManagement",
+        "meta": {
+          "title": "menus.commentManagement",
+          "rank": 0,
+          "showLink": true,
+          "icon": "ri:chat-1-line",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": true,
+          "hiddenTag": false
+        },
+        "component": "/src/views/cms/comment/index",
+        "children": [
+          {
+            "path": "/cms/comment/detail/:id",
+            "name": "CommentDetail",
+            "meta": {
+              "title": "menus.commentDetail",
+              "rank": 0,
+              "showLink": false,
+              "showParent": true,
+              "keepAlive": false,
+              "frameLoading": true,
+              "hiddenTag": false,
+              "activePath": "/cms/comment"
+            },
+            "component": "/src/views/cms/comment/detail"
+          }
+        ]
+      },
+      {
+        "path": "/cms/category",
+        "name": "CategoryManagement",
+        "meta": {
+          "title": "menus.categoryManagement",
+          "rank": 0,
+          "showLink": true,
+          "icon": "ri:folder-2-line",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": true,
+          "hiddenTag": false
+        },
+        "component": "/src/views/cms/category/index"
+      },
+      {
+        "path": "/cms/tag",
+        "name": "TagManagement",
+        "meta": {
+          "title": "menus.tagManagement",
+          "rank": 0,
+          "showLink": true,
+          "icon": "ri:price-tag-3-line",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": true,
+          "hiddenTag": false
+        },
+        "component": "/src/views/cms/tag/index.vue"
+      }
+    ]
+  }
+]

@@ -16,7 +16,7 @@ import {
   storageLocal,
   isIncludeAllChildren
 } from "@pureadmin/utils";
-import { getConfig } from "@/config";
+// import { getConfig } from "@/config";
 import { buildHierarchyTree } from "@/utils/tree";
 import { userKey, type DataInfo } from "@/utils/auth";
 import { type menuType, routerArrays } from "@/layout/types";
@@ -25,6 +25,14 @@ import { usePermissionStoreHook } from "@/store/modules/permission";
 const IFrame = () => import("@/layout/frame.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
+console.log(
+  "[路由组件] 已导入的模块路由数量:",
+  Object.keys(modulesRoutes).length
+);
+console.log(
+  "[路由组件] 已导入的模块路由关键路径示例:",
+  Object.keys(modulesRoutes).slice(0, 10)
+);
 
 // 动态路由
 import { getAsyncRoutes } from "@/api/routes";
@@ -151,33 +159,42 @@ function addPathMatch() {
 
 /** 处理动态路由（后端返回的路由） */
 function handleAsyncRoutes(routeList) {
+  console.log("[处理动态路由] 开始处理动态路由列表");
   if (routeList.length === 0) {
+    console.log("[处理动态路由] 路由列表为空");
     usePermissionStoreHook().handleWholeMenus(routeList);
   } else {
-    formatFlatteningRoutes(addAsyncRoutes(routeList)).map(
-      (v: RouteRecordRaw) => {
-        // 防止重复添加路由
-        if (
-          router.options.routes[0].children.findIndex(
-            value => value.path === v.path
-          ) !== -1
-        ) {
-          return;
-        } else {
-          // 切记将路由push到routes后还需要使用addRoute，这样路由才能正常跳转
-          router.options.routes[0].children.push(v);
-          // 最终路由进行升序
-          ascending(router.options.routes[0].children);
-          if (!router.hasRoute(v?.name)) router.addRoute(v);
-          const flattenRouters: any = router
-            .getRoutes()
-            .find(n => n.path === "/");
-          // 保持router.options.routes[0].children与path为"/"的children一致，防止数据不一致导致异常
-          flattenRouters.children = router.options.routes[0].children;
-          router.addRoute(flattenRouters);
+    console.log("[处理动态路由] 处理前的路由列表:", JSON.stringify(routeList));
+    const processedRoutes = formatFlatteningRoutes(addAsyncRoutes(routeList));
+    console.log("[处理动态路由] 处理后的扁平化路由:", processedRoutes);
+
+    processedRoutes.map((v: RouteRecordRaw) => {
+      // 防止重复添加路由
+      if (
+        router.options.routes[0].children.findIndex(
+          value => value.path === v.path
+        ) !== -1
+      ) {
+        console.log(`[处理动态路由] 路由已存在，跳过添加: ${v.path}`);
+        return;
+      } else {
+        console.log(`[处理动态路由] 添加新路由: ${v.path}`);
+        // 切记将路由push到routes后还需要使用addRoute，这样路由才能正常跳转
+        router.options.routes[0].children.push(v);
+        // 最终路由进行升序
+        ascending(router.options.routes[0].children);
+        if (!router.hasRoute(v?.name)) {
+          console.log(`[处理动态路由] 向Vue Router添加路由: ${v.name}`);
+          router.addRoute(v);
         }
+        const flattenRouters: any = router
+          .getRoutes()
+          .find(n => n.path === "/");
+        // 保持router.options.routes[0].children与path为"/"的children一致，防止数据不一致导致异常
+        flattenRouters.children = router.options.routes[0].children;
+        router.addRoute(flattenRouters);
       }
-    );
+    });
     usePermissionStoreHook().handleWholeMenus(routeList);
   }
   if (!useMultiTagsStoreHook().getMultiTagsCache) {
@@ -189,6 +206,10 @@ function handleAsyncRoutes(routeList) {
     ]);
   }
   addPathMatch();
+  console.log(
+    "[处理动态路由] 所有路由处理完毕，当前路由列表:",
+    router.getRoutes()
+  );
 }
 
 // /** 初始化路由（`new Promise` 写法防止在异步请求中造成无限循环）*/
@@ -221,17 +242,17 @@ function handleAsyncRoutes(routeList) {
 //   }
 // }
 
-
 /** 初始化路由（`new Promise` 写法防止在异步请求中造成无限循环）*/
 function initRouter() {
-
+  console.log("[路由初始化] 开始初始化路由");
   return new Promise(resolve => {
     getAsyncRoutes().then(({ data }) => {
+      console.log("[路由初始化] 获取到动态路由数据:", data);
       handleAsyncRoutes(cloneDeep(data));
+      console.log("[路由初始化] 路由处理完成");
       resolve(router);
     });
   });
-
 }
 
 /**
@@ -315,27 +336,208 @@ function handleAliveRoute({ name }: ToRouteType, mode?: string) {
 
 /** 过滤后端传来的动态路由 重新生成规范路由 */
 function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
-  if (!arrRoutes || !arrRoutes.length) return;
+  console.log("[处理异步路由] 开始处理异步路由组件");
+  if (!arrRoutes || !arrRoutes.length) {
+    console.log("[处理异步路由] 路由数组为空");
+    return;
+  }
   const modulesRoutesKeys = Object.keys(modulesRoutes);
+  console.log("[处理异步路由] 可用的模块路由列表:", modulesRoutesKeys);
+
   arrRoutes.forEach((v: RouteRecordRaw) => {
+    // 详细输出路由对象信息
+    console.log(`[处理异步路由] 处理路由详情:`, {
+      path: v.path,
+      name: v.name,
+      component: String(v.component),
+      redirect: v.redirect,
+      meta: JSON.stringify(v.meta),
+      children: v.children ? v.children.length : 0
+    });
+
+    // 输出原始的component值类型和内容
+    console.log(`[处理异步路由] component类型: ${typeof v.component}`);
+    console.log(`[处理异步路由] component内容:`, String(v.component));
+
     // 将backstage属性加入meta，标识此路由为后端返回路由
     v.meta.backstage = true;
+
     // 父级的redirect属性取值：如果子级存在且父级的redirect属性不存在，默认取第一个子级的path；如果子级存在且父级的redirect属性存在，取存在的redirect属性，会覆盖默认值
-    if (v?.children && v.children.length && !v.redirect)
+    if (v?.children && v.children.length && !v.redirect) {
       v.redirect = v.children[0].path;
-    // 父级的name属性取值：如果子级存在且父级的name属性不存在，默认取第一个子级的name；如果子级存在且父级的name属性存在，取存在的name属性，会覆盖默认值（注意：测试中发现父级的name不能和子级name重复，如果重复会造成重定向无效（跳转404），所以这里给父级的name起名的时候后面会自动加上`Parent`，避免重复）
-    if (v?.children && v.children.length && !v.name)
+      console.log(`[处理异步路由] 设置重定向: ${v.path} -> ${v.redirect}`);
+    }
+
+    // 父级的name属性取值：如果子级存在且父级的name属性不存在，默认取第一个子级的name
+    if (v?.children && v.children.length && !v.name) {
       v.name = (v.children[0].name as string) + "Parent";
+      console.log(`[处理异步路由] 设置父级名称: ${v.path} -> ${v.name}`);
+    }
+
     if (v.meta?.frameSrc) {
+      console.log(`[处理异步路由] 使用IFrame作为组件: ${v.path}`);
       v.component = IFrame;
     } else {
       // 对后端传component组件路径和不传做兼容（如果后端传component组件路径，那么path可以随便写，如果不传，component组件路径会跟path保持一致）
-      const index = v?.component
-        ? modulesRoutesKeys.findIndex(ev => ev.includes(v.component as any))
-        : modulesRoutesKeys.findIndex(ev => ev.includes(v.path));
-      v.component = modulesRoutes[modulesRoutesKeys[index]];
+      const searchKey = v?.component || v.path;
+      console.log(`[处理异步路由] 查找组件匹配: ${searchKey}`);
+
+      let matchedKey = null;
+
+      if (v?.component) {
+        console.log(`[处理异步路由] 使用component进行查找: ${v.component}`);
+
+        // 优先使用精确匹配
+        const exactMatch = modulesRoutesKeys.find(
+          ev => ev === String(v.component)
+        );
+
+        if (exactMatch) {
+          console.log(`[处理异步路由] 找到精确匹配组件: ${exactMatch}`);
+          matchedKey = exactMatch; // 使用精确匹配的结果
+        } else {
+          // 如果没有精确匹配，尝试更精确的模糊匹配
+          // 首先尝试匹配以组件路径结尾的项
+          const betterMatches = modulesRoutesKeys.filter(
+            ev =>
+              ev.endsWith(String(v.component)) ||
+              ev.endsWith(String(v.component) + ".vue") ||
+              ev.endsWith(String(v.component) + ".tsx")
+          );
+
+          if (betterMatches.length === 1) {
+            matchedKey = betterMatches[0];
+            console.log(
+              `[处理异步路由] 找到更精确的模糊匹配组件: ${matchedKey}`
+            );
+          } else if (betterMatches.length > 1) {
+            console.log(
+              `[处理异步路由] 警告: 存在多个更精确的匹配组件:`,
+              betterMatches
+            );
+            matchedKey = betterMatches[0]; // 使用第一个匹配项
+            console.log(
+              `[处理异步路由] 使用第一个更精确的匹配组件: ${matchedKey}`
+            );
+          } else {
+            // 如果没有更精确的匹配，再尝试一般的模糊匹配
+            const allMatches = modulesRoutesKeys.filter(ev =>
+              ev.includes(String(v.component))
+            );
+
+            console.log(
+              `[处理异步路由] component模糊匹配的所有项:`,
+              allMatches
+            );
+
+            if (allMatches.length === 1) {
+              matchedKey = allMatches[0];
+              console.log(
+                `[处理异步路由] 使用唯一的模糊匹配组件: ${matchedKey}`
+              );
+            } else if (allMatches.length > 1) {
+              console.log(
+                `[处理异步路由] 警告: 存在多个模糊匹配组件:`,
+                allMatches
+              );
+              matchedKey = allMatches[0]; // 使用第一个匹配项
+              console.log(
+                `[处理异步路由] 使用第一个模糊匹配组件: ${matchedKey}`
+              );
+            }
+          }
+        }
+      } else {
+        console.log(`[处理异步路由] 使用path进行查找: ${v.path}`);
+
+        // 对path也使用相同的精确匹配逻辑
+        const exactMatch = modulesRoutesKeys.find(ev => ev === v.path);
+
+        if (exactMatch) {
+          console.log(`[处理异步路由] 找到精确匹配组件: ${exactMatch}`);
+          matchedKey = exactMatch;
+        } else {
+          // 尝试更精确的模糊匹配
+          const betterMatches = modulesRoutesKeys.filter(
+            ev =>
+              ev.endsWith(v.path) ||
+              ev.endsWith(v.path + ".vue") ||
+              ev.endsWith(v.path + ".tsx")
+          );
+
+          if (betterMatches.length === 1) {
+            matchedKey = betterMatches[0];
+            console.log(
+              `[处理异步路由] 找到更精确的模糊匹配组件: ${matchedKey}`
+            );
+          } else if (betterMatches.length > 1) {
+            console.log(
+              `[处理异步路由] 警告: 存在多个更精确的匹配组件:`,
+              betterMatches
+            );
+            matchedKey = betterMatches[0];
+            console.log(
+              `[处理异步路由] 使用第一个更精确的匹配组件: ${matchedKey}`
+            );
+          } else {
+            // 一般模糊匹配
+            const allMatches = modulesRoutesKeys.filter(ev =>
+              ev.includes(v.path)
+            );
+            console.log(`[处理异步路由] path匹配的所有项:`, allMatches);
+
+            if (allMatches.length === 1) {
+              matchedKey = allMatches[0];
+              console.log(
+                `[处理异步路由] 使用唯一的模糊匹配组件: ${matchedKey}`
+              );
+            } else if (allMatches.length > 1) {
+              console.log(
+                `[处理异步路由] 警告: 存在多个模糊匹配组件:`,
+                allMatches
+              );
+              matchedKey = allMatches[0];
+              console.log(
+                `[处理异步路由] 使用第一个模糊匹配组件: ${matchedKey}`
+              );
+            }
+          }
+        }
+      }
+
+      // 使用找到的匹配键设置组件
+      if (matchedKey) {
+        // 关键信息：如果路由是/cms/tag/index，但找到的matchedKey包含了article而非tag，则是错误匹配
+        if (v.path.includes("tag") && matchedKey.includes("article")) {
+          console.log(`[处理异步路由] 错误警告: TAG路由错误匹配到ARTICLE组件!`);
+          console.log(
+            `路由路径: ${v.path}, 组件值: ${String(v.component)}, 匹配到的组件: ${matchedKey}`
+          );
+          console.log(
+            `所有可能匹配的项:`,
+            modulesRoutesKeys.filter(key => key.includes("tag"))
+          );
+        }
+
+        // 显示原组件和匹配组件的详细信息
+        const originalComponent = v.component;
+        v.component = modulesRoutes[matchedKey];
+        console.log(
+          `[处理异步路由] 组件替换前类型: ${typeof originalComponent}`
+        );
+        console.log(`[处理异步路由] 组件替换后类型: ${typeof v.component}`);
+        console.log(
+          `[处理异步路由] 组件替换: ${originalComponent} -> ${matchedKey}`
+        );
+      } else {
+        console.log(`[处理异步路由] 警告: 未找到匹配组件: ${searchKey}`);
+      }
     }
+
     if (v?.children && v.children.length) {
+      console.log(
+        `[处理异步路由] 处理子路由: ${v.path}, 数量: ${v.children.length}`
+      );
       addAsyncRoutes(v.children);
     }
   });

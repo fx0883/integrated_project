@@ -575,7 +575,7 @@ const handleImportMenus = () => {
 // 处理导出菜单
 const handleExportMenus = async () => {
   try {
-    await menuStore.exportMenuConfig();
+    await menuStore.exportMenusAction();
     ElMessage.success(t("menu.exportSuccess"));
   } catch (error) {
     logger.error("导出菜单失败", error);
@@ -628,7 +628,7 @@ const submitImport = async () => {
       try {
         if (e.target?.result) {
           const config = JSON.parse(e.target.result as string);
-          await menuStore.importMenuConfig(config);
+          await menuStore.importMenusAction(importDialog.file as File);
           ElMessage.success(t("menu.importSuccess"));
           importDialog.visible = false;
           fetchMenuList();
@@ -656,11 +656,16 @@ const handleDragEnd = async (
 ) => {
   try {
     // 实现拖动排序逻辑
-    await menuStore.updateMenuOrder(
-      draggingNode.data.id,
-      dropNode?.data?.id,
-      dropType
-    );
+    const data = {
+      drag_id: draggingNode.data.id,
+      drop_id: dropNode?.data?.id,
+      position: dropType
+    };
+    await menuStore.updateMenuAction(draggingNode.data.id, {
+      ...draggingNode.data,
+      parent_id:
+        dropType === "inner" ? dropNode?.data?.id : dropNode?.data?.parent_id
+    });
     ElMessage.success(t("menu.orderUpdateSuccess"));
   } catch (error) {
     logger.error("更新菜单顺序失败", error);
@@ -674,7 +679,7 @@ const handleDragEnd = async (
 const handleCreateSubmit = async (formData: MenuCreateUpdateParams) => {
   createMenuDialog.loading = true;
   try {
-    await menuStore.createNewMenu(formData);
+    await menuStore.createMenuAction(formData);
     ElMessage.success(t("menu.createSuccess"));
     createMenuDialog.visible = false;
     // 刷新菜单列表
@@ -713,7 +718,7 @@ const handleEditSubmit = async (formData: MenuCreateUpdateParams) => {
   editMenuDialog.loading = true;
   try {
     if (editMenuDialog.currentMenu) {
-      await menuStore.updateMenuInfo(editMenuDialog.currentMenu.id, formData);
+      await menuStore.updateMenuAction(editMenuDialog.currentMenu.id, formData);
       ElMessage.success(t("menu.updateSuccess"));
       editMenuDialog.visible = false;
       // 刷新菜单列表

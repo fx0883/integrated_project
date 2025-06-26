@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, ref, watch } from "vue";
 
 const props = defineProps({
   visible: {
@@ -30,20 +30,40 @@ const props = defineProps({
 
 const emit = defineEmits(["update:visible", "confirm", "cancel"]);
 
+// 创建内部响应式变量来跟踪对话框状态
+const localVisible = ref(props.visible);
+
+// 监听props.visible的变化来更新内部状态
+watch(
+  () => props.visible,
+  newValue => {
+    localVisible.value = newValue;
+  }
+);
+
+// 监听内部状态变化，通过emit事件通知父组件
+watch(localVisible, newValue => {
+  if (newValue !== props.visible) {
+    emit("update:visible", newValue);
+  }
+});
+
 const handleClose = () => {
+  localVisible.value = false;
   emit("update:visible", false);
   emit("cancel");
 };
 
 const handleConfirm = () => {
   emit("confirm");
+  localVisible.value = false;
   emit("update:visible", false);
 };
 </script>
 
 <template>
   <el-dialog
-    v-model="visible"
+    v-model="localVisible"
     :title="title"
     width="30%"
     @close="handleClose"

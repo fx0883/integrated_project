@@ -26,12 +26,28 @@ export const usePermissionStore = defineStore("pure-permission", {
   actions: {
     /** 组装整体路由生成的菜单 */
     handleWholeMenus(routes: any[]) {
-      this.wholeMenus = filterNoPermissionTree(
-        filterTree(ascending(this.constantMenus.concat(routes)))
-      );
+    console.log('[菜单生成] 开始处理整体菜单, 动态路由数量:', routes.length);
+    console.log('[菜单生成] 静态菜单数量:', this.constantMenus.length);
+    
+    const combinedRoutes = this.constantMenus.concat(routes);
+    console.log('[菜单生成] 组合后路由数量:', combinedRoutes.length);
+    
+    const sortedRoutes = ascending(combinedRoutes);
+    console.log('[菜单生成] 排序后路由数组:', sortedRoutes);
+    
+    const filteredRoutes = filterTree(sortedRoutes);
+    console.log('[菜单生成] 过滤showLink后路由数组长度:', filteredRoutes.length);
+    
+    const permissionFilteredRoutes = filterNoPermissionTree(filteredRoutes);
+    console.log('[菜单生成] 权限过滤后最终菜单数组长度:', permissionFilteredRoutes.length);
+    
+    this.wholeMenus = permissionFilteredRoutes;
+    
       this.flatteningRoutes = formatFlatteningRoutes(
         this.constantMenus.concat(routes) as any
       );
+    
+    console.log('[菜单生成] 扁平化路由数量:', this.flatteningRoutes.length);
     },
     cacheOperate({ mode, name }: cacheType) {
       const delIndex = this.cachePageList.findIndex(v => v === name);

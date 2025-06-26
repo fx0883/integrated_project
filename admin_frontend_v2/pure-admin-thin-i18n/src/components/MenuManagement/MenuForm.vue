@@ -82,7 +82,7 @@
             <el-form-item :label="t('menu.component')" prop="component">
               <el-input
                 v-model="formData.component"
-                :placeholder="t('menu.componentRequired')"
+                :placeholder="t('menu.component')"
               />
             </el-form-item>
           </el-col>
@@ -402,9 +402,7 @@ const rules = reactive<FormRules>({
     { min: 2, max: 50, message: t("menu.codeRequired"), trigger: "blur" }
   ],
   path: [{ required: true, message: t("menu.pathRequired"), trigger: "blur" }],
-  component: [
-    { required: true, message: t("menu.componentRequired"), trigger: "blur" }
-  ],
+  component: [],
   rank: [
     { required: true, message: t("menu.rankRequired"), trigger: "blur" },
     { type: "number", message: t("menu.rankRequired"), trigger: "blur" }
