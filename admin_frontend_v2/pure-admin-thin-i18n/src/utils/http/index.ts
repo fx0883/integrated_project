@@ -233,7 +233,7 @@ class PureHttp {
         };
         
         if (error.response) {
-          const { status, config } = error.response;
+          const { status, config: errorConfig } = error.response;
           
           // 处理401未授权（Token过期）
           if (status === 401) {
@@ -250,7 +250,7 @@ class PureHttp {
                   PureHttp.pendingRequests = [];
                   
                   // 重试当前请求
-                  return this.retryRequest(config);
+                  return this.retryRequest(errorConfig);
                 } else {
                   // Token刷新失败，跳转到登录页
                   this.logout();
@@ -272,7 +272,7 @@ class PureHttp {
               // 正在刷新token，将请求加入队列
               return new Promise(resolve => {
                 PureHttp.pendingRequests.push(() => {
-                  resolve(this.retryRequest(config));
+                  resolve(this.retryRequest(errorConfig));
                   return Promise.resolve();
                 });
               });

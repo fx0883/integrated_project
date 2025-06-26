@@ -157,14 +157,14 @@ export const logResponse = (response: any): void => {
  * API错误日志记录
  */
 export const logError = (error: any): void => {
-  if (!config.apiLogging) return;
+  if (!config || !config.apiLogging) return;
   
   // 提取请求信息
-  const { config, response } = error;
+  const { config: errorConfig, response } = error;
   let requestInfo = '未知请求';
   
-  if (config) {
-    const { method, url } = config;
+  if (errorConfig) {
+    const { method, url } = errorConfig;
     requestInfo = `[${method?.toUpperCase()}] ${url}`;
   }
   

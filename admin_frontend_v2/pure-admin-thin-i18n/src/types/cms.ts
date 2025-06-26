@@ -155,40 +155,34 @@ export interface CommentUpdateParams {
 // 分类相关类型
 // --------------------------------------------
 
-// 分类模型
+// 分类状态枚举
+export type CategoryStatus = 'active' | 'inactive';
+
+// 分类对象接口
 export interface Category {
   id: number;
   name: string;
   slug: string;
   description?: string;
-  parent?: number;
-  parent_info?: CategorySimple;
-  cover_image?: string;
+  parent_id?: number | null;
+  level: number;
+  path: string;
+  sort_order: number;
+  icon?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  sort_order: number;
-  is_active: boolean;
-  seo_title?: string;
-  seo_description?: string;
-  article_count: number;
+  article_count?: number;
   children?: Category[];
-  tenant: number;
 }
 
-// 简化的分类信息
-export interface CategorySimple {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-// 分类列表参数
+// 分类列表查询参数
 export interface CategoryListParams {
-  page?: number;
-  per_page?: number;
   search?: string;
-  parent?: number;
-  is_active?: boolean;
+  parent_id?: number | null;
+  is_active?: boolean | string;
+  page?: number;
+  page_size?: number;
 }
 
 // 分类创建参数
@@ -196,42 +190,73 @@ export interface CategoryCreateParams {
   name: string;
   slug?: string;
   description?: string;
-  parent?: number;
-  cover_image?: string;
-  sort_order?: number;
+  parent_id?: number | null;
+  icon?: string;
   is_active?: boolean;
-  seo_title?: string;
-  seo_description?: string;
+  sort_order?: number;
 }
 
 // 分类更新参数
-export interface CategoryUpdateParams extends Partial<CategoryCreateParams> {}
+export interface CategoryUpdateParams {
+  name?: string;
+  slug?: string;
+  description?: string;
+  parent_id?: number | null;
+  icon?: string;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+// 分类排序更新参数
+export interface CategoryOrderParams {
+  id: number;
+  sort_order: number;
+  parent_id?: number | null;
+}
 
 // 标签相关类型
 // --------------------------------------------
 
-// 标签模型
+// 标签状态枚举
+export type TagStatus = 'active' | 'inactive';
+
+// 标签对象接口
 export interface Tag {
   id: number;
   name: string;
   slug: string;
   description?: string;
-  group?: number;
-  group_info?: TagGroupSimple;
-  created_at: string;
-  updated_at: string;
   color?: string;
   is_active: boolean;
-  article_count: number;
-  tenant: number;
+  created_at: string;
+  updated_at: string;
+  article_count?: number;
 }
 
-// 简化的标签信息
-export interface TagSimple {
-  id: number;
+// 标签列表查询参数
+export interface TagListParams {
+  search?: string;
+  is_active?: boolean | string;
+  page?: number;
+  page_size?: number;
+}
+
+// 标签创建参数
+export interface TagCreateParams {
   name: string;
-  slug: string;
+  slug?: string;
+  description?: string;
   color?: string;
+  is_active?: boolean;
+}
+
+// 标签更新参数
+export interface TagUpdateParams {
+  name?: string;
+  slug?: string;
+  description?: string;
+  color?: string;
+  is_active?: boolean;
 }
 
 // 标签组模型
@@ -253,28 +278,6 @@ export interface TagGroupSimple {
   name: string;
   slug: string;
 }
-
-// 标签列表参数
-export interface TagListParams {
-  page?: number;
-  per_page?: number;
-  search?: string;
-  group?: number;
-  is_active?: boolean;
-}
-
-// 标签创建参数
-export interface TagCreateParams {
-  name: string;
-  slug?: string;
-  description?: string;
-  group?: number;
-  color?: string;
-  is_active?: boolean;
-}
-
-// 标签更新参数
-export interface TagUpdateParams extends Partial<TagCreateParams> {}
 
 // 标签组列表参数
 export interface TagGroupListParams {

@@ -9,7 +9,8 @@ import {
   Back,
   Upload,
   Download,
-  Archive
+  Archive,
+  Document
 } from "@element-plus/icons-vue";
 import { useCmsStoreHook } from "@/store/modules/cms";
 import { useUserStoreHook } from "@/store/modules/user";
@@ -165,6 +166,11 @@ const formatContentType = (contentType: string) => {
   }
 };
 
+// 查看版本历史
+const viewVersionHistory = () => {
+  router.push(`/cms/article/version/${articleId.value}`);
+};
+
 // 页面加载时获取数据
 onMounted(() => {
   fetchArticleDetail();
@@ -193,6 +199,9 @@ onMounted(() => {
           @click="handlePublish"
         >
           {{ t("cms.article.publish") }}
+        </el-button>
+        <el-button :icon="Document" @click="viewVersionHistory">
+          {{ t("cms.article.versionHistory") }}
         </el-button>
         <el-button type="danger" :icon="Delete" @click="handleDelete">
           {{ t("common.delete") }}

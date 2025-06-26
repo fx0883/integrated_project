@@ -85,8 +85,11 @@ menus:
   articleCreate: Create Article
   articleEdit: Edit Article
   articleDetail: Article Detail
+  articleVersionHistory: Article Version History
   commentManagement: Comment Management
   commentDetail: Comment Detail
+  categoryManagement: Category Management
+  tagManagement: Tag Management
 status:
   pureLoad: Loading...
   pureMessage: Message
@@ -481,6 +484,7 @@ common:
   cancel: Cancel
   reset: Reset
   confirm: Confirm
+  confirmMessage: Are you sure you want to perform this operation?
   delete: Delete
   edit: Edit
   create: Create
@@ -492,6 +496,7 @@ common:
   yes: Yes
   no: No
   back: Back
+  optional: Optional
 
 # CMS Content Management System
 cms:
@@ -572,4 +577,195 @@ cms:
     notFound: Comment not found
     fetchListFailed: Failed to fetch comment list
     fetchDetailFailed: Failed to fetch comment detail
+  article:
+    title: Title
+    slug: Slug
+    content: Content
+    excerpt: Excerpt
+    status: Status
+    visibility: Visibility
+    password: Password
+    categories: Categories
+    tags: Tags
+    author: Author
+    createTime: Create Time
+    updateTime: Update Time
+    publishTime: Publish Time
+    featured: Featured
+    pinned: Pinned
+    allowComment: Allow Comments
+    contentType: Content Type
+    mainContent: Main Content
+    statistics: Statistics
+    viewCount: Views
+    commentCount: Comments
+    likeCount: Likes
+    wordCount: Word Count
+    titlePlaceholder: Enter article title
+    slugPlaceholder: Enter article slug for URL
+    contentPlaceholder: Enter article content
+    excerptPlaceholder: Enter article excerpt
+    passwordPlaceholder: Enter access password
+    categoriesPlaceholder: Select categories
+    tagsPlaceholder: Select tags
+    titleRequired: Title is required
+    contentRequired: Content is required
+    visibilityRequired: Visibility is required
+    passwordRequired: Password is required
+    titleLength: Title should be 2-200 characters
+    settings: Article Settings
+    statusDraft: Draft
+    statusPending: Pending
+    statusPublished: Published
+    statusArchived: Archived
+    visibilityPublic: Public
+    visibilityPrivate: Private
+    visibilityPassword: Password Protected
+    contentTypeMarkdown: Markdown
+    contentTypeHtml: HTML
+    noCategories: No Categories
+    noTags: No Tags
+    noExcerpt: No Excerpt
+    basicInfo: Basic Information
+    publish: Publish
+    confirmPublish: Confirm Publish
+    confirmPublishMessage: Are you sure you want to publish article "{title}"?
+    publishSuccess: Article published successfully
+    publishFailed: Failed to publish article
+    confirmDelete: Confirm Delete
+    confirmDeleteMessage: Are you sure you want to delete article "{title}"? This action cannot be undone.
+    deleteSuccess: Article deleted successfully
+    deleteFailed: Failed to delete article
+    editorTip: Supports Markdown format
+    
+    # Version history translations
+    versionHistory: Version History
+    versionList: Version List
+    versionNumber: Version Number
+    versionCreatedAt: Created At
+    versionCreatedBy: Created By
+    versionDetail: Version Detail
+    compareVersions: Compare Versions
+    restoreVersion: Restore This Version
+    currentVersion: Current Version
+    versionDiff: Version Difference
+    noVersions: No version history
+    confirmRestore: Confirm Restore Version
+    confirmRestoreMessage: Are you sure you want to restore to version {version}? Current unsaved changes will be lost.
+    restoreSuccess: Version restored successfully
+    restoreFailed: Failed to restore version
+    fetchVersionsFailed: Failed to fetch version history
+    fetchVersionDetailFailed: Failed to fetch version detail
+    compareVersionsFailed: Failed to compare versions
+    oldVersion: Old Version
+    latest: Latest Version
+    
+  tag:
+    tagManagement: Tag Management
+    id: Tag ID
+    name: Tag Name
+    slug: Tag Slug
+    description: Description
+    color: Tag Color
+    isActive: Status
+    createdAt: Created At
+    updatedAt: Updated At
+    articleCount: Article Count
+    actions: Actions
+    search: Search Tags
+    searchPlaceholder: Search by tag name
+    statusActive: Active
+    statusInactive: Inactive
+    statusAll: All
+    createTag: Create Tag
+    editTag: Edit Tag
+    deleteTag: Delete Tag
+    confirmDelete: Confirm Delete Tag
+    confirmDeleteMessage: Are you sure you want to delete tag "{name}"? This may affect associated articles.
+    deleteSuccess: Tag deleted successfully
+    deleteFailed: Failed to delete tag
+    createSuccess: Tag created successfully
+    createFailed: Failed to create tag
+    updateSuccess: Tag updated successfully
+    updateFailed: Failed to update tag
+    nameRequired: Tag name is required
+    slugInvalid: Invalid tag slug format
+    selectColor: Select Color
+    defaultColor: Default Color
+    basicInfo: Basic Information
+    advancedSettings: Advanced Settings
+    generateSlug: Generate Slug
+    slugTip: Used for URL identification, recommend using English letters, numbers and hyphens
+    colorTip: Choose tag display color
+    nameLength: Length should be between {min} and {max} characters
+    fetchListFailed: Failed to fetch tag list
+    formDataError: Failed to get form data
+    idNotFound: Tag ID not found
+    slugPlaceholder: Enter tag slug
+
+  # Add category management translations
+  category:
+    categoryManagement: Category Management
+    id: Category ID
+    name: Category Name
+    slug: Category Slug
+    description: Description
+    parent: Parent Category
+    parentId: Parent Category ID
+    level: Level
+    path: Path
+    sortOrder: Sort Order
+    icon: Icon
+    isActive: Status
+    createdAt: Created At
+    updatedAt: Updated At
+    articleCount: Article Count
+    children: Children
+    actions: Actions
+    search: Search Categories
+    searchPlaceholder: Search by category name
+    statusActive: Active
+    statusInactive: Inactive
+    statusAll: All
+    noParent: No Parent
+    rootCategory: Root Category
+    createCategory: Create Category
+    editCategory: Edit Category
+    addSubCategory: Add Subcategory
+    deleteCategory: Delete Category
+    confirmDelete: Confirm Delete Category
+    confirmDeleteMessage: Are you sure you want to delete category "{name}"? This cannot be undone and will also delete all subcategories.
+    deleteSuccess: Category deleted successfully
+    deleteFailed: Failed to delete category
+    createSuccess: Category created successfully
+    createFailed: Failed to create category
+    updateSuccess: Category updated successfully
+    updateFailed: Failed to update category
+    nameRequired: Category name is required
+    slugInvalid: Invalid category slug format
+    dragToSort: Drag to Sort
+    updateOrder: Update Order
+    updateOrderSuccess: Order updated successfully
+    updateOrderFailed: Failed to update order
+    expandAll: Expand All
+    collapseAll: Collapse All
+    categoryTree: Category Tree
+    basicInfo: Basic Information
+    advancedSettings: Advanced Settings
+    nameLength: Length should be between {min} and {max} characters
+    slugTip: Used for URL identification, recommend using English letters, numbers and hyphens
+    generateSlug: Generate Slug
+    fetchListFailed: Failed to fetch category list
+    fetchDetailFailed: Failed to fetch category detail
+    formDataError: Failed to get form data
+    idNotFound: Category ID not found
+    parentSelectPlaceholder: Select parent category (optional)
+    parentSelectTip: Leave empty for root category
+    iconPlaceholder: Enter icon class name
+    sortOrderTip: Lower numbers appear first, defaults to creation time
+    descriptionPlaceholder: Enter category description
+    treeView: Tree View
+    listView: List View
+    onlyActive: Show Active Only
+    articles: articles
 

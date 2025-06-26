@@ -23,7 +23,8 @@ import type {
   TagGroup,
   TagGroupListParams,
   TagGroupCreateParams,
-  TagGroupUpdateParams
+  TagGroupUpdateParams,
+  CategoryOrderParams
 } from "@/types/cms";
 import logger from "@/utils/logger";
 
@@ -36,12 +37,10 @@ import logger from "@/utils/logger";
  */
 export function getArticleList(params: ArticleListParams) {
   logger.debug("API请求: 获取文章列表", params);
-  
-  return http.request<PaginationResponse<Article>>(
-    "get",
-    "/cms/articles/",
-    { params }
-  );
+
+  return http.request<PaginationResponse<Article>>("get", "/cms/articles/", {
+    params
+  });
 }
 
 /**
@@ -50,11 +49,8 @@ export function getArticleList(params: ArticleListParams) {
  */
 export function getArticleDetail(id: number) {
   logger.debug("API请求: 获取文章详情", { id });
-  
-  return http.request<ApiResponse<Article>>(
-    "get",
-    `/cms/articles/${id}/`
-  );
+
+  return http.request<ApiResponse<Article>>("get", `/cms/articles/${id}/`);
 }
 
 /**
@@ -63,12 +59,8 @@ export function getArticleDetail(id: number) {
  */
 export function createArticle(data: ArticleCreateParams) {
   logger.debug("API请求: 创建文章", data);
-  
-  return http.request<ApiResponse<Article>>(
-    "post",
-    "/cms/articles/",
-    { data }
-  );
+
+  return http.request<ApiResponse<Article>>("post", "/cms/articles/", { data });
 }
 
 /**
@@ -78,12 +70,10 @@ export function createArticle(data: ArticleCreateParams) {
  */
 export function updateArticle(id: number, data: ArticleUpdateParams) {
   logger.debug("API请求: 更新文章", { id, data });
-  
-  return http.request<ApiResponse<Article>>(
-    "put",
-    `/cms/articles/${id}/`,
-    { data }
-  );
+
+  return http.request<ApiResponse<Article>>("put", `/cms/articles/${id}/`, {
+    data
+  });
 }
 
 /**
@@ -93,12 +83,10 @@ export function updateArticle(id: number, data: ArticleUpdateParams) {
  */
 export function patchArticle(id: number, data: Partial<ArticleUpdateParams>) {
   logger.debug("API请求: 部分更新文章", { id, data });
-  
-  return http.request<ApiResponse<Article>>(
-    "patch",
-    `/cms/articles/${id}/`,
-    { data }
-  );
+
+  return http.request<ApiResponse<Article>>("patch", `/cms/articles/${id}/`, {
+    data
+  });
 }
 
 /**
@@ -107,11 +95,8 @@ export function patchArticle(id: number, data: Partial<ArticleUpdateParams>) {
  */
 export function deleteArticle(id: number) {
   logger.debug("API请求: 删除文章", { id });
-  
-  return http.request<ApiResponse<null>>(
-    "delete",
-    `/cms/articles/${id}/`
-  );
+
+  return http.request<ApiResponse<null>>("delete", `/cms/articles/${id}/`);
 }
 
 /**
@@ -120,8 +105,8 @@ export function deleteArticle(id: number) {
  */
 export function batchDeleteArticles(ids: number[]) {
   logger.debug("API请求: 批量删除文章", { ids });
-  
-  return http.request<ApiResponse<{deleted: number[]}>>(
+
+  return http.request<ApiResponse<{ deleted: number[] }>>(
     "post",
     "/cms/articles/batch-delete/",
     { data: { ids } }
@@ -134,7 +119,7 @@ export function batchDeleteArticles(ids: number[]) {
  */
 export function publishArticle(id: number) {
   logger.debug("API请求: 发布文章", { id });
-  
+
   return http.request<ApiResponse<Article>>(
     "post",
     `/cms/articles/${id}/publish/`
@@ -147,7 +132,7 @@ export function publishArticle(id: number) {
  */
 export function unpublishArticle(id: number) {
   logger.debug("API请求: 取消发布文章", { id });
-  
+
   return http.request<ApiResponse<Article>>(
     "post",
     `/cms/articles/${id}/unpublish/`
@@ -160,7 +145,7 @@ export function unpublishArticle(id: number) {
  */
 export function archiveArticle(id: number) {
   logger.debug("API请求: 归档文章", { id });
-  
+
   return http.request<ApiResponse<Article>>(
     "post",
     `/cms/articles/${id}/archive/`
@@ -173,7 +158,7 @@ export function archiveArticle(id: number) {
  */
 export function getArticleVersions(id: number) {
   logger.debug("API请求: 获取文章版本历史", { id });
-  
+
   return http.request<ApiResponse<ArticleVersion[]>>(
     "get",
     `/cms/articles/${id}/versions/`
@@ -187,7 +172,7 @@ export function getArticleVersions(id: number) {
  */
 export function getArticleVersionDetail(id: number, versionNumber: number) {
   logger.debug("API请求: 获取特定版本的文章内容", { id, versionNumber });
-  
+
   return http.request<ApiResponse<Article>>(
     "get",
     `/cms/articles/${id}/versions/${versionNumber}/`
@@ -200,7 +185,7 @@ export function getArticleVersionDetail(id: number, versionNumber: number) {
  */
 export function getArticleStatistics(id: number) {
   logger.debug("API请求: 获取文章统计数据", { id });
-  
+
   return http.request<ApiResponse<ArticleStatistics>>(
     "get",
     `/cms/articles/${id}/statistics/`
@@ -213,11 +198,8 @@ export function getArticleStatistics(id: number) {
  */
 export function recordArticleView(id: number) {
   logger.debug("API请求: 记录文章查看", { id });
-  
-  return http.request<ApiResponse<null>>(
-    "post",
-    `/cms/articles/${id}/view/`
-  );
+
+  return http.request<ApiResponse<null>>("post", `/cms/articles/${id}/view/`);
 }
 
 // 评论相关API
@@ -229,12 +211,10 @@ export function recordArticleView(id: number) {
  */
 export function getCommentList(params: CommentListParams) {
   logger.debug("API请求: 获取评论列表", params);
-  
-  return http.request<PaginationResponse<Comment>>(
-    "get",
-    "/cms/comments/",
-    { params }
-  );
+
+  return http.request<PaginationResponse<Comment>>("get", "/cms/comments/", {
+    params
+  });
 }
 
 /**
@@ -243,11 +223,8 @@ export function getCommentList(params: CommentListParams) {
  */
 export function getCommentDetail(id: number) {
   logger.debug("API请求: 获取评论详情", { id });
-  
-  return http.request<ApiResponse<Comment>>(
-    "get",
-    `/cms/comments/${id}/`
-  );
+
+  return http.request<ApiResponse<Comment>>("get", `/cms/comments/${id}/`);
 }
 
 /**
@@ -256,12 +233,8 @@ export function getCommentDetail(id: number) {
  */
 export function createComment(data: CommentCreateParams) {
   logger.debug("API请求: 创建评论", data);
-  
-  return http.request<ApiResponse<Comment>>(
-    "post",
-    "/cms/comments/",
-    { data }
-  );
+
+  return http.request<ApiResponse<Comment>>("post", "/cms/comments/", { data });
 }
 
 /**
@@ -271,12 +244,10 @@ export function createComment(data: CommentCreateParams) {
  */
 export function updateComment(id: number, data: CommentUpdateParams) {
   logger.debug("API请求: 更新评论", { id, data });
-  
-  return http.request<ApiResponse<Comment>>(
-    "patch",
-    `/cms/comments/${id}/`,
-    { data }
-  );
+
+  return http.request<ApiResponse<Comment>>("patch", `/cms/comments/${id}/`, {
+    data
+  });
 }
 
 /**
@@ -285,11 +256,8 @@ export function updateComment(id: number, data: CommentUpdateParams) {
  */
 export function deleteComment(id: number) {
   logger.debug("API请求: 删除评论", { id });
-  
-  return http.request<ApiResponse<null>>(
-    "delete",
-    `/cms/comments/${id}/`
-  );
+
+  return http.request<ApiResponse<null>>("delete", `/cms/comments/${id}/`);
 }
 
 /**
@@ -299,8 +267,8 @@ export function deleteComment(id: number) {
  */
 export function moderateComments(ids: number[], status: CommentStatus) {
   logger.debug("API请求: 批量审核评论", { ids, status });
-  
-  return http.request<ApiResponse<{moderated: number[]}>>(
+
+  return http.request<ApiResponse<{ moderated: number[] }>>(
     "post",
     "/cms/comments/moderate/",
     { data: { ids, status } }
@@ -313,7 +281,7 @@ export function moderateComments(ids: number[], status: CommentStatus) {
  */
 export function getCommentReplies(id: number) {
   logger.debug("API请求: 获取评论回复列表", { id });
-  
+
   return http.request<ApiResponse<Comment[]>>(
     "get",
     `/cms/comments/${id}/replies/`
@@ -328,25 +296,16 @@ export function getCommentReplies(id: number) {
  * @param params 查询参数
  */
 export function getCategoryList(params?: CategoryListParams) {
-  logger.debug("API请求: 获取分类列表", params);
-  
-  return http.request<ApiResponse<Category[]>>(
-    "get",
-    "/cms/categories/",
-    { params }
-  );
+  return http.request<PaginationResponse<Category>>("get", "/cms/categories/", {
+    params
+  });
 }
 
 /**
- * 获取分类树
+ * 获取分类树形结构
  */
 export function getCategoryTree() {
-  logger.debug("API请求: 获取分类树");
-  
-  return http.request<ApiResponse<Category[]>>(
-    "get",
-    "/cms/categories/tree/"
-  );
+  return http.request<ApiResponse<Category[]>>("get", "/cms/categories/tree/");
 }
 
 /**
@@ -354,12 +313,7 @@ export function getCategoryTree() {
  * @param id 分类ID
  */
 export function getCategoryDetail(id: number) {
-  logger.debug("API请求: 获取分类详情", { id });
-  
-  return http.request<ApiResponse<Category>>(
-    "get",
-    `/cms/categories/${id}/`
-  );
+  return http.request<ApiResponse<Category>>("get", `/cms/categories/${id}/`);
 }
 
 /**
@@ -367,23 +321,17 @@ export function getCategoryDetail(id: number) {
  * @param data 分类数据
  */
 export function createCategory(data: CategoryCreateParams) {
-  logger.debug("API请求: 创建分类", data);
-  
-  return http.request<ApiResponse<Category>>(
-    "post",
-    "/cms/categories/",
-    { data }
-  );
+  return http.request<ApiResponse<Category>>("post", "/cms/categories/", {
+    data
+  });
 }
 
 /**
  * 更新分类
  * @param id 分类ID
- * @param data 分类数据
+ * @param data 更新数据
  */
 export function updateCategory(id: number, data: CategoryUpdateParams) {
-  logger.debug("API请求: 更新分类", { id, data });
-  
   return http.request<ApiResponse<Category>>(
     "patch",
     `/cms/categories/${id}/`,
@@ -396,26 +344,17 @@ export function updateCategory(id: number, data: CategoryUpdateParams) {
  * @param id 分类ID
  */
 export function deleteCategory(id: number) {
-  logger.debug("API请求: 删除分类", { id });
-  
-  return http.request<ApiResponse<null>>(
-    "delete",
-    `/cms/categories/${id}/`
-  );
+  return http.request<ApiResponse<null>>("delete", `/cms/categories/${id}/`);
 }
 
 /**
  * 更新分类排序
- * @param categories 分类排序数据 [{id: number, sort_order: number}]
+ * @param data 排序数据
  */
-export function updateCategoryOrder(categories: {id: number, sort_order: number}[]) {
-  logger.debug("API请求: 更新分类排序", categories);
-  
-  return http.request<ApiResponse<{updated: number[]}>>(
-    "post",
-    "/cms/categories/reorder/",
-    { data: { categories } }
-  );
+export function updateCategoryOrder(data: CategoryOrderParams[]) {
+  return http.request<ApiResponse<null>>("post", "/cms/categories/reorder/", {
+    data
+  });
 }
 
 // 标签相关API
@@ -426,13 +365,7 @@ export function updateCategoryOrder(categories: {id: number, sort_order: number}
  * @param params 查询参数
  */
 export function getTagList(params?: TagListParams) {
-  logger.debug("API请求: 获取标签列表", params);
-  
-  return http.request<PaginationResponse<Tag>>(
-    "get",
-    "/cms/tags/",
-    { params }
-  );
+  return http.request<PaginationResponse<Tag>>("get", "/cms/tags/", { params });
 }
 
 /**
@@ -440,12 +373,7 @@ export function getTagList(params?: TagListParams) {
  * @param id 标签ID
  */
 export function getTagDetail(id: number) {
-  logger.debug("API请求: 获取标签详情", { id });
-  
-  return http.request<ApiResponse<Tag>>(
-    "get",
-    `/cms/tags/${id}/`
-  );
+  return http.request<ApiResponse<Tag>>("get", `/cms/tags/${id}/`);
 }
 
 /**
@@ -453,13 +381,7 @@ export function getTagDetail(id: number) {
  * @param data 标签数据
  */
 export function createTag(data: TagCreateParams) {
-  logger.debug("API请求: 创建标签", data);
-  
-  return http.request<ApiResponse<Tag>>(
-    "post",
-    "/cms/tags/",
-    { data }
-  );
+  return http.request<ApiResponse<Tag>>("post", "/cms/tags/", { data });
 }
 
 /**
@@ -468,13 +390,7 @@ export function createTag(data: TagCreateParams) {
  * @param data 标签数据
  */
 export function updateTag(id: number, data: TagUpdateParams) {
-  logger.debug("API请求: 更新标签", { id, data });
-  
-  return http.request<ApiResponse<Tag>>(
-    "patch",
-    `/cms/tags/${id}/`,
-    { data }
-  );
+  return http.request<ApiResponse<Tag>>("patch", `/cms/tags/${id}/`, { data });
 }
 
 /**
@@ -482,12 +398,7 @@ export function updateTag(id: number, data: TagUpdateParams) {
  * @param id 标签ID
  */
 export function deleteTag(id: number) {
-  logger.debug("API请求: 删除标签", { id });
-  
-  return http.request<ApiResponse<null>>(
-    "delete",
-    `/cms/tags/${id}/`
-  );
+  return http.request<ApiResponse<null>>("delete", `/cms/tags/${id}/`);
 }
 
 // 标签组相关API
@@ -499,12 +410,10 @@ export function deleteTag(id: number) {
  */
 export function getTagGroupList(params?: TagGroupListParams) {
   logger.debug("API请求: 获取标签组列表", params);
-  
-  return http.request<PaginationResponse<TagGroup>>(
-    "get",
-    "/cms/tag-groups/",
-    { params }
-  );
+
+  return http.request<PaginationResponse<TagGroup>>("get", "/cms/tag-groups/", {
+    params
+  });
 }
 
 /**
@@ -513,11 +422,8 @@ export function getTagGroupList(params?: TagGroupListParams) {
  */
 export function getTagGroupDetail(id: number) {
   logger.debug("API请求: 获取标签组详情", { id });
-  
-  return http.request<ApiResponse<TagGroup>>(
-    "get",
-    `/cms/tag-groups/${id}/`
-  );
+
+  return http.request<ApiResponse<TagGroup>>("get", `/cms/tag-groups/${id}/`);
 }
 
 /**
@@ -526,12 +432,10 @@ export function getTagGroupDetail(id: number) {
  */
 export function createTagGroup(data: TagGroupCreateParams) {
   logger.debug("API请求: 创建标签组", data);
-  
-  return http.request<ApiResponse<TagGroup>>(
-    "post",
-    "/cms/tag-groups/",
-    { data }
-  );
+
+  return http.request<ApiResponse<TagGroup>>("post", "/cms/tag-groups/", {
+    data
+  });
 }
 
 /**
@@ -541,7 +445,7 @@ export function createTagGroup(data: TagGroupCreateParams) {
  */
 export function updateTagGroup(id: number, data: TagGroupUpdateParams) {
   logger.debug("API请求: 更新标签组", { id, data });
-  
+
   return http.request<ApiResponse<TagGroup>>(
     "patch",
     `/cms/tag-groups/${id}/`,
@@ -555,11 +459,8 @@ export function updateTagGroup(id: number, data: TagGroupUpdateParams) {
  */
 export function deleteTagGroup(id: number) {
   logger.debug("API请求: 删除标签组", { id });
-  
-  return http.request<ApiResponse<null>>(
-    "delete",
-    `/cms/tag-groups/${id}/`
-  );
+
+  return http.request<ApiResponse<null>>("delete", `/cms/tag-groups/${id}/`);
 }
 
 /**
@@ -568,9 +469,6 @@ export function deleteTagGroup(id: number) {
  */
 export function getTagsByGroup(id: number) {
   logger.debug("API请求: 获取标签组下的标签", { id });
-  
-  return http.request<ApiResponse<Tag[]>>(
-    "get",
-    `/cms/tag-groups/${id}/tags/`
-  );
-} 
+
+  return http.request<ApiResponse<Tag[]>>("get", `/cms/tag-groups/${id}/tags/`);
+}
