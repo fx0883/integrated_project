@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import * as cmsApi from "@/api/modules/cms";
-import type { 
-  Article, 
+import type {
+  Article,
   ArticleListParams,
   ArticleCreateParams,
   ArticleUpdateParams,
@@ -69,14 +69,14 @@ interface CmsState {
     articleVersions: boolean;
     articleVersionDetail: boolean;
     articleStatistics: boolean;
-    
+
     commentList: boolean;
     commentDetail: boolean;
     commentCreate: boolean;
     commentUpdate: boolean;
     commentDelete: boolean;
     commentModerate: boolean;
-    
+
     categoryList: boolean;
     categoryTree: boolean;
     categoryDetail: boolean;
@@ -84,13 +84,13 @@ interface CmsState {
     categoryUpdate: boolean;
     categoryDelete: boolean;
     categoryOrder: boolean;
-    
+
     tagList: boolean;
     tagDetail: boolean;
     tagCreate: boolean;
     tagUpdate: boolean;
     tagDelete: boolean;
-    
+
     tagGroupList: boolean;
     tagGroupDetail: boolean;
     tagGroupCreate: boolean;
@@ -98,51 +98,50 @@ interface CmsState {
     tagGroupDelete: boolean;
     tagsByGroup: boolean;
   };
-  
+
   // 文章相关状态
   articles: PaginationData<Article>;
   currentArticle: Article | null;
   articleVersions: ArticleVersion[];
   currentVersionDetail: Article | null;
   articleStatistics: ArticleStatistics | null;
-  
+
   // 评论相关状态
   comments: PaginationData<Comment>;
   currentComment: Comment | null;
-  
+
   // 分类相关状态
   categories: Category[];
   categoryTree: Category[];
   currentCategory: Category | null;
-  
+
   // 标签相关状态
   tags: PaginationData<Tag>;
   currentTag: Tag | null;
-  
+
   // 标签组相关状态
   tagGroups: PaginationData<TagGroup>;
   currentTagGroup: TagGroup | null;
   tagsByGroup: Tag[];
-  
+
   // 文章相关
   articleList: Article[];
   articleTotal: number;
   articleDetail: Article | null;
   articleLoading: boolean;
-  
+
   // 评论相关
   commentList: Comment[];
   commentTotal: number;
   commentDetail: Comment | null;
   commentLoading: boolean;
-  
+
   // 分类相关
   categoryList: Category[];
   categoryTotal: number;
-  categoryTree: Category[];
   categoryDetail: Category | null;
   categoryLoading: boolean;
-  
+
   // 标签相关
   tagList: Tag[];
   tagTotal: number;
@@ -167,14 +166,14 @@ export const useCmsStore = defineStore("cms", {
       articleVersions: false,
       articleVersionDetail: false,
       articleStatistics: false,
-      
+
       commentList: false,
       commentDetail: false,
       commentCreate: false,
       commentUpdate: false,
       commentDelete: false,
       commentModerate: false,
-      
+
       categoryList: false,
       categoryTree: false,
       categoryDetail: false,
@@ -182,13 +181,13 @@ export const useCmsStore = defineStore("cms", {
       categoryUpdate: false,
       categoryDelete: false,
       categoryOrder: false,
-      
+
       tagList: false,
       tagDetail: false,
       tagCreate: false,
       tagUpdate: false,
       tagDelete: false,
-      
+
       tagGroupList: false,
       tagGroupDetail: false,
       tagGroupCreate: false,
@@ -196,7 +195,7 @@ export const useCmsStore = defineStore("cms", {
       tagGroupDelete: false,
       tagsByGroup: false
     },
-    
+
     articles: {
       total: 0,
       page: 1,
@@ -207,7 +206,7 @@ export const useCmsStore = defineStore("cms", {
     articleVersions: [],
     currentVersionDetail: null,
     articleStatistics: null,
-    
+
     comments: {
       total: 0,
       page: 1,
@@ -215,11 +214,11 @@ export const useCmsStore = defineStore("cms", {
       data: []
     },
     currentComment: null,
-    
+
     categories: [],
     categoryTree: [],
     currentCategory: null,
-    
+
     tags: {
       total: 0,
       page: 1,
@@ -227,7 +226,7 @@ export const useCmsStore = defineStore("cms", {
       data: []
     },
     currentTag: null,
-    
+
     tagGroups: {
       total: 0,
       page: 1,
@@ -236,37 +235,36 @@ export const useCmsStore = defineStore("cms", {
     },
     currentTagGroup: null,
     tagsByGroup: [],
-    
+
     // 文章相关
     articleList: [],
     articleTotal: 0,
     articleDetail: null,
     articleLoading: false,
-    
+
     // 评论相关
     commentList: [],
     commentTotal: 0,
     commentDetail: null,
     commentLoading: false,
-    
+
     // 分类相关
     categoryList: [],
     categoryTotal: 0,
-    categoryTree: [],
     categoryDetail: null,
     categoryLoading: false,
-    
+
     // 标签相关
     tagList: [],
     tagTotal: 0,
     tagDetail: null,
     tagLoading: false
   }),
-  
+
   actions: {
     // 文章相关操作
     // --------------------------------------------------
-    
+
     /**
      * 获取文章列表
      */
@@ -276,16 +274,25 @@ export const useCmsStore = defineStore("cms", {
         const response = await cmsApi.getArticleList(params);
         if (response.success) {
           // 处理分页数据结构适配
-          if (response.data && typeof response.data === "object" && "results" in response.data && "count" in response.data) {
+          if (
+            response.data &&
+            typeof response.data === "object" &&
+            "results" in response.data &&
+            "count" in response.data
+          ) {
             this.articles = {
               total: (response.data.count as number) || 0,
               page: params.page || 1,
               limit: params.per_page || 10,
-              data: Array.isArray(response.data.results) ? response.data.results : []
+              data: Array.isArray(response.data.results)
+                ? response.data.results
+                : []
             };
           } else {
             logger.warn("文章列表数据结构不符合预期", response.data);
-            this.articles.data = Array.isArray(response.data) ? response.data : [];
+            this.articles.data = Array.isArray(response.data)
+              ? response.data
+              : [];
           }
           return response;
         } else {
@@ -300,7 +307,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleList = false;
       }
     },
-    
+
     /**
      * 获取文章详情
      */
@@ -343,7 +350,10 @@ export const useCmsStore = defineStore("cms", {
     async fetchArticleVersionDetail(id: number, versionNumber: number) {
       this.loading.articleVersionDetail = true;
       try {
-        const response = await cmsApi.getArticleVersionDetail(id, versionNumber);
+        const response = await cmsApi.getArticleVersionDetail(
+          id,
+          versionNumber
+        );
         this.currentVersionDetail = response.data;
         return response;
       } catch (error) {
@@ -353,7 +363,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleVersionDetail = false;
       }
     },
-    
+
     /**
      * 创建文章
      */
@@ -376,7 +386,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleCreate = false;
       }
     },
-    
+
     /**
      * 更新文章
      */
@@ -403,7 +413,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleUpdate = false;
       }
     },
-    
+
     /**
      * 部分更新文章
      */
@@ -430,7 +440,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleUpdate = false;
       }
     },
-    
+
     /**
      * 删除文章
      */
@@ -444,7 +454,9 @@ export const useCmsStore = defineStore("cms", {
             this.currentArticle = null;
           }
           // 刷新列表
-          this.articles.data = this.articles.data.filter(item => item.id !== id);
+          this.articles.data = this.articles.data.filter(
+            item => item.id !== id
+          );
           ElMessage.success(response.message || "删除文章成功");
           return response;
         } else {
@@ -459,7 +471,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleDelete = false;
       }
     },
-    
+
     /**
      * 批量删除文章
      */
@@ -473,7 +485,9 @@ export const useCmsStore = defineStore("cms", {
             this.currentArticle = null;
           }
           // 刷新列表
-          this.articles.data = this.articles.data.filter(item => !ids.includes(item.id));
+          this.articles.data = this.articles.data.filter(
+            item => !ids.includes(item.id)
+          );
           ElMessage.success(response.message || "批量删除文章成功");
           return response;
         } else {
@@ -488,7 +502,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articleDelete = false;
       }
     },
-    
+
     /**
      * 发布文章
      */
@@ -524,10 +538,10 @@ export const useCmsStore = defineStore("cms", {
         this.loading.articlePublish = false;
       }
     },
-    
+
     // 评论相关操作
     // --------------------------------------------------
-    
+
     /**
      * 获取评论列表
      */
@@ -537,16 +551,25 @@ export const useCmsStore = defineStore("cms", {
         const response = await cmsApi.getCommentList(params);
         if (response.success) {
           // 处理分页数据结构适配
-          if (response.data && typeof response.data === "object" && "results" in response.data && "count" in response.data) {
+          if (
+            response.data &&
+            typeof response.data === "object" &&
+            "results" in response.data &&
+            "count" in response.data
+          ) {
             this.comments = {
               total: (response.data.count as number) || 0,
               page: params.page || 1,
               limit: params.per_page || 10,
-              data: Array.isArray(response.data.results) ? response.data.results : []
+              data: Array.isArray(response.data.results)
+                ? response.data.results
+                : []
             };
           } else {
             logger.warn("评论列表数据结构不符合预期", response.data);
-            this.comments.data = Array.isArray(response.data) ? response.data : [];
+            this.comments.data = Array.isArray(response.data)
+              ? response.data
+              : [];
           }
           return response;
         } else {
@@ -561,7 +584,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentList = false;
       }
     },
-    
+
     /**
      * 获取评论详情
      */
@@ -584,7 +607,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentDetail = false;
       }
     },
-    
+
     /**
      * 创建评论
      */
@@ -607,7 +630,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentCreate = false;
       }
     },
-    
+
     /**
      * 更新评论
      */
@@ -630,7 +653,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentUpdate = false;
       }
     },
-    
+
     /**
      * 删除评论
      */
@@ -653,7 +676,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentDelete = false;
       }
     },
-    
+
     /**
      * 批准评论
      */
@@ -676,7 +699,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentModerate = false;
       }
     },
-    
+
     /**
      * 拒绝评论
      */
@@ -699,7 +722,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentModerate = false;
       }
     },
-    
+
     /**
      * 标记为垃圾评论
      */
@@ -722,7 +745,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentModerate = false;
       }
     },
-    
+
     /**
      * 批量处理评论
      */
@@ -745,7 +768,7 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentModerate = false;
       }
     },
-    
+
     /**
      * 获取评论回复
      */
@@ -767,10 +790,10 @@ export const useCmsStore = defineStore("cms", {
         this.loading.commentList = false;
       }
     },
-    
+
     // 分类相关操作
     // ------------------------
-    
+
     /**
      * 获取分类列表
      */
@@ -788,7 +811,7 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     /**
      * 获取分类树
      */
@@ -805,7 +828,7 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     /**
      * 获取分类详情
      */
@@ -822,7 +845,7 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     /**
      * 创建分类
      */
@@ -839,7 +862,7 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     /**
      * 更新分类
      */
@@ -856,7 +879,7 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     /**
      * 删除分类
      */
@@ -873,7 +896,7 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     /**
      * 更新分类排序
      */
@@ -890,10 +913,10 @@ export const useCmsStore = defineStore("cms", {
         this.categoryLoading = false;
       }
     },
-    
+
     // 标签相关操作
     // --------------------------------------------
-    
+
     /**
      * 获取标签列表
      */
@@ -911,7 +934,7 @@ export const useCmsStore = defineStore("cms", {
         this.tagLoading = false;
       }
     },
-    
+
     /**
      * 获取标签详情
      */
@@ -928,7 +951,7 @@ export const useCmsStore = defineStore("cms", {
         this.tagLoading = false;
       }
     },
-    
+
     /**
      * 创建标签
      */
@@ -945,7 +968,7 @@ export const useCmsStore = defineStore("cms", {
         this.tagLoading = false;
       }
     },
-    
+
     /**
      * 更新标签
      */
@@ -962,7 +985,7 @@ export const useCmsStore = defineStore("cms", {
         this.tagLoading = false;
       }
     },
-    
+
     /**
      * 删除标签
      */
@@ -979,7 +1002,7 @@ export const useCmsStore = defineStore("cms", {
         this.tagLoading = false;
       }
     },
-    
+
     /**
      * 重置CMS状态
      */
@@ -993,7 +1016,7 @@ export const useCmsStore = defineStore("cms", {
       this.currentArticle = null;
       this.articleVersions = [];
       this.articleStatistics = null;
-      
+
       this.comments = {
         total: 0,
         page: 1,
@@ -1001,11 +1024,11 @@ export const useCmsStore = defineStore("cms", {
         data: []
       };
       this.currentComment = null;
-      
+
       this.categories = [];
       this.categoryTree = [];
       this.currentCategory = null;
-      
+
       this.tags = {
         total: 0,
         page: 1,
@@ -1013,7 +1036,7 @@ export const useCmsStore = defineStore("cms", {
         data: []
       };
       this.currentTag = null;
-      
+
       this.tagGroups = {
         total: 0,
         page: 1,
@@ -1031,4 +1054,4 @@ export const useCmsStore = defineStore("cms", {
  */
 export function useCmsStoreHook() {
   return useCmsStore();
-} 
+}
