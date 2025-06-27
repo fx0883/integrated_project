@@ -5,7 +5,7 @@ export default {
   redirect: "/error/403",
   meta: {
     icon: "ri/information-line",
-    // showLink: false,
+    showLink: false,
     title: $t("menus.pureAbnormal"),
     rank: 9
   },
@@ -13,6 +13,7 @@ export default {
     {
       path: "/error/403",
       name: "403",
+      showLink: false,
       component: () => import("@/views/error/403.vue"),
       meta: {
         title: $t("menus.pureFourZeroOne")
@@ -21,6 +22,7 @@ export default {
     {
       path: "/error/404",
       name: "404",
+      showLink: false,
       component: () => import("@/views/error/404.vue"),
       meta: {
         title: $t("menus.pureFourZeroFour")
@@ -29,6 +31,7 @@ export default {
     {
       path: "/error/500",
       name: "500",
+      showLink: false,
       component: () => import("@/views/error/500.vue"),
       meta: {
         title: $t("menus.pureFive")

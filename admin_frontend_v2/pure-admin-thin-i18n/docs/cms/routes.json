@@ -35,9 +35,10 @@
               "title": "menus.articleList",
               "rank": 0,
               "showLink": true,
+              "icon": "ri:user-line",
               "showParent": false,
               "keepAlive": false,
-              "frameLoading": true,
+              "frameLoading": false,
               "hiddenTag": false
             },
             "component": "/src/views/cms/article/index.vue"
@@ -87,19 +88,135 @@
         ]
       },
       {
-        "path": "/cms/comment",
-        "name": "CommentManagement",
+        "path": "/cms/category",
+        "name": "CategoryManagement",
         "meta": {
-          "title": "menus.commentManagement",
+          "title": "menus.categoryManagement",
           "rank": 0,
           "showLink": true,
-          "icon": "ri:chat-1-line",
+          "icon": "ri:folder-2-line",
           "showParent": true,
           "keepAlive": true,
           "frameLoading": true,
           "hiddenTag": false
         },
-        "component": "/src/views/cms/comment/index",
+        "component": "/src/views/cms/category/index",
+        "children": [
+          {
+            "path": "/cms/category",
+            "name": "menus.categoryList",
+            "meta": {
+              "title": "menus.categoryList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/category/index"
+          },
+          {
+            "path": "/cms/category/edit/:id",
+            "name": "menus.categoryEdit",
+            "meta": {
+              "title": "menus.categoryEdit",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/category/edit"
+          },
+          {
+            "path": "/cms/category/:id",
+            "name": "menus.categroyDetail",
+            "meta": {
+              "title": "menus.categroyDetail",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/category/detail"
+          }
+        ]
+      },
+      {
+        "path": "/cms/tag",
+        "name": "TagManagement",
+        "meta": {
+          "title": "menus.tagManagement",
+          "rank": 0,
+          "showLink": true,
+          "icon": "ep:refrigerator",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": false,
+          "hiddenTag": false
+        },
+        "children": [
+          {
+            "path": "/cms/tag/index",
+            "name": "menus.tagList",
+            "meta": {
+              "title": "menus.tagList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/tag/index"
+          },
+          {
+            "path": "/cms/tag/create",
+            "name": "menus.tagCreate",
+            "meta": {
+              "title": "menus.tagCreate",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/tag/create"
+          },
+          {
+            "path": "/cms/tag/edit/:id",
+            "name": "menus.tagEdit",
+            "meta": {
+              "title": "menus.tagEdit",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/tag/edit"
+          }
+        ]
+      },
+      {
+        "path": "/cms/comment",
+        "name": "CommentManagement",
+        "meta": {
+          "title": "menus.commentManagement",
+          "rank": 3,
+          "showLink": true,
+          "icon": "ri:chat-1-line",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": false,
+          "hiddenTag": false
+        },
         "children": [
           {
             "path": "/cms/comment/detail/:id",
@@ -115,38 +232,50 @@
               "activePath": "/cms/comment"
             },
             "component": "/src/views/cms/comment/detail"
+          },
+          {
+            "path": "/cms/comment/index",
+            "name": "menus.commentList",
+            "meta": {
+              "title": "menus.commentList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/index"
+          },
+          {
+            "path": "/cms/comment/create",
+            "name": "menus.commentCreate",
+            "meta": {
+              "title": "menus.commentCreate",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/create"
+          },
+          {
+            "path": "/cms/comment/edit",
+            "name": "menus.commentEdit",
+            "meta": {
+              "title": "menus.commentEdit",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/edit"
           }
         ]
-      },
-      {
-        "path": "/cms/category",
-        "name": "CategoryManagement",
-        "meta": {
-          "title": "menus.categoryManagement",
-          "rank": 0,
-          "showLink": true,
-          "icon": "ri:folder-2-line",
-          "showParent": true,
-          "keepAlive": true,
-          "frameLoading": true,
-          "hiddenTag": false
-        },
-        "component": "/src/views/cms/category/index"
-      },
-      {
-        "path": "/cms/tag",
-        "name": "TagManagement",
-        "meta": {
-          "title": "menus.tagManagement",
-          "rank": 0,
-          "showLink": true,
-          "icon": "ri:price-tag-3-line",
-          "showParent": true,
-          "keepAlive": true,
-          "frameLoading": true,
-          "hiddenTag": false
-        },
-        "component": "/src/views/cms/tag/index.vue"
       }
     ]
   }

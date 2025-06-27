@@ -471,6 +471,40 @@ menu:
 # CMS内容管理系统国际化
 
 cms:
+  tagGroup:
+    tagGroupManagement: 标签组管理
+    id: 标签组ID
+    name: 标签组名称
+    slug: 标签组别名
+    description: 标签组描述
+    isActive: 状态
+    createdAt: 创建时间
+    updatedAt: 更新时间
+    tagCount: 标签数量
+    actions: 操作
+    search: 搜索标签组
+    searchPlaceholder: 输入标签组名称搜索
+    statusActive: 启用
+    statusInactive: 禁用
+    statusAll: 全部
+    createTagGroup: 创建标签组
+    editTagGroup: 编辑标签组
+    deleteTagGroup: 删除标签组
+    confirmDelete: 确认删除标签组
+    confirmDeleteMessage: 您确定要删除标签组"{name}"吗？此操作不会删除组内的标签。
+    deleteSuccess: 删除标签组成功
+    deleteFailed: 删除标签组失败
+    createSuccess: 创建标签组成功
+    createFailed: 创建标签组失败
+    updateSuccess: 更新标签组成功
+    updateFailed: 更新标签组失败
+    nameRequired: 标签组名称不能为空
+    slugInvalid: 标签组别名格式不正确
+    tagsInGroup: 组内标签
+    addTagToGroup: 添加标签到组
+    removeTagFromGroup: 从组中移除标签
+    noTags: 暂无标签
+    
   comment:
     commentManagement: 评论管理
     commentDetail: 评论详情
@@ -570,8 +604,19 @@ cms:
     mainContent: 正文内容
     statistics: 统计数据
     viewCount: 浏览量
+    uniqueViewCount: 唯一访客数
     commentCount: 评论数
-    likeCount: 点赞量
+    likeCount: 点赞数
+    bookmarkCount: 收藏数
+    averageReadingTime: 平均阅读时间
+    bounceRate: 跳出率
+    minutes: 分钟
+    seconds: 秒
+    statisticsTitle: 文章统计
+    viewTrend: 浏览趋势
+    interactionTrend: 互动趋势
+    lastDays: 最近 {days} 天
+    noStatisticsData: 暂无统计数据
     wordCount: 字数
     titlePlaceholder: 请输入文章标题
     slugPlaceholder: 请输入文章别名，用于URL
@@ -761,3 +806,5 @@ common:
   no: 否
   back: 返回
   optional: 可选
+
+

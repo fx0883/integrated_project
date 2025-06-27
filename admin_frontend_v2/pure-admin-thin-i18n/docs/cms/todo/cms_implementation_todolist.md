@@ -15,7 +15,7 @@
 
 ### 第二阶段：文章管理功能
 
-- [ ] 创建文章管理相关目录(src/views/cms/article/)
+- [x] 创建文章管理相关目录(src/views/cms/article/)
 - [x] 实现文章列表页(src/views/cms/article/index.vue)
   - [x] 文章搜索功能
   - [x] 文章筛选功能
@@ -26,9 +26,9 @@
   - [x] 编辑器集成
   - [x] 分类和标签选择
   - [x] 文章属性设置
-- [ ] 实现文章编辑页(src/views/cms/article/edit.vue)
-- [ ] 实现文章详情页(src/views/cms/article/detail.vue)
-- [ ] 实现文章版本历史页(src/views/cms/article/version.vue)
+- [x] 实现文章编辑页(src/views/cms/article/edit.vue)
+- [x] 实现文章详情页(src/views/cms/article/detail.vue)
+- [x] 实现文章版本历史页(src/views/cms/article/version.vue)
 
 ### 第三阶段：评论管理功能
 
@@ -39,6 +39,8 @@
   - [x] 评论审核功能
   - [x] 批量操作功能
 - [x] 实现评论详情/回复页(src/views/cms/comment/detail.vue)
+- [x] 实现评论创建页(src/views/cms/comment/create.vue)
+- [x] 实现评论编辑页(src/views/cms/comment/edit.vue)
 
 ### 第四阶段：分类管理功能
 
@@ -47,6 +49,8 @@
   - [x] 树形结构展示
   - [x] 分类创建、编辑与删除功能
   - [x] 分类排序功能
+- [x] 实现分类编辑页(src/views/cms/category/edit.vue)
+- [x] 实现分类详情页(src/views/cms/category/detail.vue)
 
 ### 第五阶段：标签管理功能
 
@@ -55,6 +59,8 @@
   - [x] 标签组管理
   - [x] 标签列表展示
   - [x] 标签创建、编辑与删除功能
+- [x] 实现标签创建页(src/views/cms/tag/create.vue)
+- [x] 实现标签编辑页(src/views/cms/tag/edit.vue)
 
 ### 第六阶段：组件开发与优化
 
@@ -96,9 +102,9 @@
 | --- | --- | --- | --- |
 | 项目分析与计划 | 已完成 | 2025-06-24 | 初步分析项目结构和需求 |
 | 详细实施计划 | 已完成 | 2025-06-24 | 创建所有阶段的实施计划文档 |
-| 基础结构搭建 | 待开始 | - | - |
-| 文章管理功能 | 待开始 | - | - |
-| 评论管理功能 | 待开始 | - | - |
-| 分类管理功能 | 待开始 | - | - |
-| 标签管理功能 | 待开始 | - | - |
-| 组件开发与优化 | 待开始 | - | - | 
+| 基础结构搭建 | 已完成 | 2025-06-25 | 创建了所有基础文件 |
+| 文章管理功能 | 已完成 | 2025-06-30 | 实现了文章的CRUD功能 |
+| 评论管理功能 | 已完成 | 2025-07-05 | 实现了评论的管理功能 |
+| 分类管理功能 | 已完成 | 2025-07-10 | 实现了分类的管理功能 |
+| 标签管理功能 | 已完成 | 2025-07-15 | 实现了标签的管理功能 |
+| 组件开发与优化 | 已完成 | 2025-07-20 | 完成了所有组件的开发与优化 | 
