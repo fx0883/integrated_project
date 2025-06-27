@@ -214,6 +214,9 @@ export const useMenuStore = defineStore("menu", {
             this.menuList.data[index] = response.data;
           }
           
+          // 更新树形结构中的节点
+          this.updateNodeInTree(id, response.data);
+          
           ElMessage.success(response.message || "更新菜单成功");
           return response;
         } else {
@@ -245,6 +248,9 @@ export const useMenuStore = defineStore("menu", {
           this.menuList.data = this.menuList.data.filter(menu => menu.id !== id);
           this.menuList.total--;
           
+          // 从树形结构中移除被删除的菜单
+          this.removeNodeFromTree(id);
+          
           ElMessage.success(response.message || "删除菜单成功");
           return response;
         } else {
@@ -258,6 +264,61 @@ export const useMenuStore = defineStore("menu", {
       } finally {
         this.loading.delete = false;
       }
+    },
+    
+    /**
+     * 从树形结构中移除节点
+     * @param id 要移除的节点ID
+     */
+    removeNodeFromTree(id: number) {
+      const removeNode = (nodes: MenuTree[]) => {
+        const index = nodes.findIndex(node => node.id === id);
+        if (index !== -1) {
+          nodes.splice(index, 1);
+          return true;
+        }
+        
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].children && nodes[i].children.length > 0) {
+            if (removeNode(nodes[i].children)) {
+              return true;
+            }
+          }
+        }
+        
+        return false;
+      };
+      
+      removeNode(this.menuTree);
+    },
+    
+    /**
+     * 更新树形结构中的节点
+     * @param id 要更新的节点ID
+     * @param data 更新后的数据
+     */
+    updateNodeInTree(id: number, data: Menu) {
+      const updateNode = (nodes: MenuTree[]) => {
+        const index = nodes.findIndex(node => node.id === id);
+        if (index !== -1) {
+          // 保持原有的children
+          const children = nodes[index].children;
+          nodes[index] = { ...data, children } as MenuTree;
+          return true;
+        }
+        
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].children && nodes[i].children.length > 0) {
+            if (updateNode(nodes[i].children)) {
+              return true;
+            }
+          }
+        }
+        
+        return false;
+      };
+      
+      updateNode(this.menuTree);
     },
     
     /**
@@ -438,7 +499,40 @@ export const useMenuStore = defineStore("menu", {
         username: '',
         menus: []
       };
-    }
+    },
+    
+    /**
+     * 批量删除菜单
+     * @param ids 要删除的菜单ID数组
+     */
+    async batchRemoveMenus(ids: number[]) {
+      this.loading.batch = true;
+      try {
+        const response = await batchMenus({ delete: ids });
+        if (response.success) {
+          // 更新列表数据
+          this.menuList.data = this.menuList.data.filter(menu => !ids.includes(menu.id));
+          this.menuList.total -= ids.length;
+          
+          // 更新树形结构
+          ids.forEach(id => {
+            this.removeNodeFromTree(id);
+          });
+          
+          ElMessage.success(response.message || "批量删除菜单成功");
+          return response;
+        } else {
+          ElMessage.error(response.message || "批量删除菜单失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("批量删除菜单失败", error);
+        ElMessage.error(error.message || "批量删除菜单失败");
+        throw error;
+      } finally {
+        this.loading.batch = false;
+      }
+    },
   }
 });
 

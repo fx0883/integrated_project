@@ -313,6 +313,7 @@ const props = defineProps<{
   menu?: Menu;
   loading?: boolean;
   mode: "create" | "edit";
+  parentId?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -354,8 +355,16 @@ const formData = reactive<MenuCreateUpdateParams>({
 
 const menuOptions = computed(() => {
   if (!props.menu) return menuStore.menuList.data;
+  // 过滤掉当前菜单，防止自己选择自己作为父级菜单
   return menuStore.menuList.data.filter(item => item.id !== props.menu?.id);
 });
+
+// 获取父菜单名称，用于显示
+const getParentMenuName = (parentId: number | null) => {
+  if (parentId === null) return "顶级菜单";
+  const parentMenu = menuStore.menuList.data.find(item => item.id === parentId);
+  return parentMenu ? parentMenu.title || parentMenu.name : `${parentId}`;
+};
 
 const roleOptions = ref([
   { label: "超级管理员", value: "super_admin" },
@@ -433,8 +442,11 @@ const resetForm = () => {
 
 watch(
   () => props.menu,
-  newVal => {
+  async newVal => {
     if (newVal) {
+      // 确保有足够的菜单数据用于显示父菜单
+      await menuStore.fetchMenuList({ page_size: 999 });
+
       formData.name = newVal.name;
       formData.code = newVal.code;
       formData.path = newVal.path;
@@ -450,13 +462,52 @@ watch(
       formData.keep_alive = newVal.keep_alive;
       formData.is_active = newVal.is_active;
       formData.parent_id = newVal.parent_id;
+
+      // 如果有父菜单ID，确保它在菜单选项中存在
+      if (formData.parent_id !== null) {
+        const parentExists = menuStore.menuList.data.some(
+          item => item.id === formData.parent_id
+        );
+        if (!parentExists) {
+          // 如果父菜单不在当前列表中，可能是因为分页限制，尝试专门获取这个菜单
+          try {
+            await menuStore.fetchMenuDetail(formData.parent_id);
+            // 确保这个菜单被添加到菜单列表中
+            if (
+              menuStore.currentMenu &&
+              !menuStore.menuList.data.some(
+                item => item.id === menuStore.currentMenu.id
+              )
+            ) {
+              menuStore.menuList.data.push(menuStore.currentMenu);
+            }
+          } catch (error) {
+            logger.error("获取父菜单详情失败", error);
+          }
+        }
+      }
     }
   }
 );
 
-onMounted(() => {
-  // 初始化表单数据
+// 监听父菜单ID变化
+watch(
+  () => props.parentId,
+  newVal => {
+    if (props.mode === "create") {
+      formData.parent_id = newVal ?? null;
+    }
+  },
+  { immediate: true }
+);
+
+// 在组件挂载时加载菜单列表，确保有数据可选择
+onMounted(async () => {
+  // 无论如何都重新获取菜单列表，确保有最新数据
+  await menuStore.fetchMenuList({ page_size: 999 });
 });
+
+// 初始化表单数据已在上方处理
 </script>
 
 <style scoped>

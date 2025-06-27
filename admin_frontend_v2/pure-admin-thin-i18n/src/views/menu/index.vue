@@ -300,6 +300,7 @@
       <menu-form
         :loading="createMenuDialog.loading"
         mode="create"
+        :parent-id="parentMenuId"
         @submit="handleCreateSubmit"
         @cancel="handleCreateCancel"
       />
@@ -416,6 +417,8 @@ const menuOptions = computed(() => menuStore.menuList.data);
 const isTreeMode = ref(false);
 // 选中的菜单项
 const selectedMenus = ref<Menu[]>([]);
+// 树形结构引用
+const treeRef = ref(null);
 
 // 分页信息
 const pagination = reactive({
@@ -479,6 +482,9 @@ const importDialog = reactive({
   loading: false,
   file: null as File | null
 });
+
+// 父菜单ID引用
+const parentMenuId = ref<number | null>(null);
 
 // 处理表格选择变化
 const handleSelectionChange = (selection: Menu[]) => {
@@ -563,6 +569,8 @@ const toggleDisplayMode = () => {
 
 // 创建菜单
 const handleCreateMenu = () => {
+  // 重置表单内容
+  resetCreateForm();
   createMenuDialog.visible = true;
 };
 
@@ -583,20 +591,39 @@ const handleExportMenus = async () => {
   }
 };
 
-// 处理批量删除
+// 批量删除菜单
 const handleBatchDelete = () => {
-  if (selectedMenus.value.length === 0) return;
+  if (selectedMenus.value.length === 0) {
+    ElMessage.warning(t("menu.selectMenusFirst"));
+    return;
+  }
 
+  const ids = selectedMenus.value.map(menu => menu.id);
   openConfirmDialog(
     t("menu.confirmBatchDelete"),
-    t("menu.confirmBatchDeleteMessage", { count: selectedMenus.value.length }),
+    t("menu.confirmBatchDeleteMessage", { count: ids.length }),
     "danger",
     async () => {
       try {
-        const ids = selectedMenus.value.map(menu => menu.id);
         await menuStore.batchRemoveMenus(ids);
         ElMessage.success(t("menu.batchDeleteSuccess"));
-        fetchMenuList();
+
+        // 清空选中项
+        selectedMenus.value = [];
+
+        // 根据当前模式选择性刷新
+        if (isTreeMode.value) {
+          // 树形模式下，store中已经更新了树形结构，无需额外刷新
+          // 由于移除了节点，可能需要重新计算树的展开状态
+          nextTick(() => {
+            if (treeRef.value) {
+              // 可选：更新树的一些状态
+            }
+          });
+        } else {
+          // 列表模式下，只刷新当前页的列表
+          await fetchMenuList();
+        }
       } catch (error) {
         logger.error("批量删除菜单失败", error);
         ElMessage.error(t("menu.batchDeleteFailed"));
@@ -607,8 +634,19 @@ const handleBatchDelete = () => {
 
 // 处理添加子菜单
 const handleAddChildMenu = (parentMenu: Menu) => {
+  // 先重置表单内容
+  resetCreateForm();
+  // 设置父菜单ID
+  parentMenuId.value = parentMenu.id;
+  // 打开创建菜单对话框
   createMenuDialog.visible = true;
-  // 可以在这里设置父菜单ID等信息
+};
+
+// 重置创建表单内容
+const resetCreateForm = () => {
+  // 重置父菜单ID
+  parentMenuId.value = null;
+  // 如果需要，可以在这里添加其他重置逻辑
 };
 
 // 处理文件上传变化
@@ -679,22 +717,40 @@ const handleDragEnd = async (
 const handleCreateSubmit = async (formData: MenuCreateUpdateParams) => {
   createMenuDialog.loading = true;
   try {
+    // 如果是添加子菜单，设置父菜单ID
+    if (parentMenuId.value !== null) {
+      formData.parent_id = parentMenuId.value;
+    }
+
     await menuStore.createMenuAction(formData);
     ElMessage.success(t("menu.createSuccess"));
-    createMenuDialog.visible = false;
-    // 刷新菜单列表
-    fetchMenuList();
+
+    // 重置父菜单ID
+    parentMenuId.value = null;
+
+    // 根据当前模式选择性刷新
+    if (isTreeMode.value) {
+      // 树形模式下，刷新树形结构
+      await menuStore.fetchMenuTree();
+    } else {
+      // 列表模式下，刷新列表
+      await fetchMenuList();
+    }
   } catch (error) {
     logger.error("创建菜单失败", error);
     ElMessage.error(t("menu.createFailed"));
   } finally {
     createMenuDialog.loading = false;
+    // 重置loading状态后再关闭对话框
+    createMenuDialog.visible = false;
   }
 };
 
 // 取消创建菜单
 const handleCreateCancel = () => {
   createMenuDialog.visible = false;
+  // 重置父菜单ID
+  parentMenuId.value = null;
 };
 
 // 编辑菜单
@@ -720,15 +776,23 @@ const handleEditSubmit = async (formData: MenuCreateUpdateParams) => {
     if (editMenuDialog.currentMenu) {
       await menuStore.updateMenuAction(editMenuDialog.currentMenu.id, formData);
       ElMessage.success(t("menu.updateSuccess"));
-      editMenuDialog.visible = false;
-      // 刷新菜单列表
-      fetchMenuList();
+
+      // 根据当前模式选择性刷新
+      if (isTreeMode.value) {
+        // 树形模式下，只刷新树形结构
+        await menuStore.fetchMenuTree();
+      } else {
+        // 列表模式下，只刷新当前页的列表
+        await fetchMenuList();
+      }
     }
   } catch (error) {
     logger.error("更新菜单失败", error);
     ElMessage.error(t("menu.updateFailed"));
   } finally {
     editMenuDialog.loading = false;
+    // 重置loading状态后再关闭对话框
+    editMenuDialog.visible = false;
   }
 };
 
@@ -747,7 +811,20 @@ const handleDeleteMenu = (menu: Menu) => {
       try {
         await menuStore.removeMenu(menu.id);
         ElMessage.success(t("menu.deleteSuccess"));
-        fetchMenuList();
+
+        // 根据当前模式选择性刷新
+        if (isTreeMode.value) {
+          // 树形模式下，store中已经更新了树形结构，无需额外刷新
+          // 由于移除了节点，可能需要重新计算树的展开状态
+          nextTick(() => {
+            if (treeRef.value) {
+              // 可选：更新树的一些状态
+            }
+          });
+        } else {
+          // 列表模式下，只刷新当前页的列表
+          await fetchMenuList();
+        }
       } catch (error) {
         logger.error("删除菜单失败", error);
         ElMessage.error(t("menu.deleteFailed"));

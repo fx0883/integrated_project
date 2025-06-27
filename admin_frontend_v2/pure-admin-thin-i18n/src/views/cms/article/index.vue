@@ -16,11 +16,15 @@ import {
 import { useCmsStoreHook } from "@/store/modules/cms";
 import { useUserStoreHook } from "@/store/modules/user";
 import ConfirmDialog from "@/components/Cms/Article/ConfirmDialog.vue";
+import ArticleForm from "@/components/Cms/Article/ArticleForm.vue";
 import type {
   Article,
   ArticleStatus,
   ArticleVisibility,
-  ArticleListParams
+  ArticleListParams,
+  ArticleCreateParams,
+  Category,
+  Tag
 } from "@/types/cms";
 import logger from "@/utils/logger";
 
@@ -71,6 +75,16 @@ const confirmDialog = reactive({
   confirmAction: null as (() => Promise<void>) | null
 });
 
+// 创建文章模态窗口
+const createArticleDialog = reactive({
+  visible: false,
+  loading: false
+});
+
+// 分类和标签数据
+const categories = ref<Category[]>([]);
+const tags = ref<Tag[]>([]);
+
 // 状态选项
 const statusOptions = [
   { value: "", label: t("cms.article.statusAll") },
@@ -120,6 +134,28 @@ const fetchArticles = async () => {
   }
 };
 
+// 获取分类列表
+const fetchCategories = async () => {
+  try {
+    const response = await cmsStore.fetchCategoryList();
+    categories.value = response?.data || [];
+  } catch (error) {
+    logger.error("获取分类列表失败", error);
+    ElMessage.error(t("cms.category.fetchListFailed"));
+  }
+};
+
+// 获取标签列表
+const fetchTags = async () => {
+  try {
+    const response = await cmsStore.fetchTagList();
+    tags.value = response?.data || [];
+  } catch (error) {
+    logger.error("获取标签列表失败", error);
+    ElMessage.error(t("cms.tag.fetchListFailed"));
+  }
+};
+
 // 搜索
 const handleSearch = () => {
   pagination.currentPage = 1;
@@ -153,9 +189,33 @@ const handleSizeChange = (size: number) => {
   fetchArticles();
 };
 
-// 新建文章
-const handleCreate = () => {
-  router.push("/cms/article/create");
+// 新建文章 - 修改为打开模态窗口
+const handleCreate = async () => {
+  createArticleDialog.visible = true;
+  // 加载分类和标签数据
+  await Promise.all([fetchCategories(), fetchTags()]);
+};
+
+// 处理文章表单提交
+const handleFormSubmit = async (formData: ArticleCreateParams) => {
+  try {
+    createArticleDialog.loading = true;
+    await cmsStore.createArticle(formData);
+    ElMessage.success(t("cms.article.createSuccess"));
+    createArticleDialog.visible = false;
+    // 刷新文章列表
+    fetchArticles();
+  } catch (error) {
+    logger.error("创建文章失败", error);
+    ElMessage.error(t("cms.article.createFailed"));
+  } finally {
+    createArticleDialog.loading = false;
+  }
+};
+
+// 处理文章表单取消
+const handleFormCancel = () => {
+  createArticleDialog.visible = false;
 };
 
 // 编辑文章
@@ -499,6 +559,23 @@ onMounted(() => {
       :type="confirmDialog.type"
       @confirm="confirmDialog.confirmAction && confirmDialog.confirmAction()"
     />
+
+    <!-- 创建文章模态窗口 -->
+    <el-dialog
+      v-model="createArticleDialog.visible"
+      :title="t('cms.article.createArticle')"
+      width="70%"
+      destroy-on-close
+    >
+      <ArticleForm
+        mode="create"
+        :loading="createArticleDialog.loading"
+        :categories="categories"
+        :tags="tags"
+        @submit="handleFormSubmit"
+        @cancel="handleFormCancel"
+      />
+    </el-dialog>
   </div>
 </template>
 

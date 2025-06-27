@@ -202,6 +202,14 @@ watch(
     }
   }
 );
+
+// 监听编辑器内容变化，同步到表单数据的content字段
+watch(
+  () => editorContent.value,
+  newVal => {
+    formData.content = newVal;
+  }
+);
 </script>
 
 <template>

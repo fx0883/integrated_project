@@ -276,23 +276,34 @@ export const useCmsStore = defineStore("cms", {
           // 处理分页数据结构适配
           if (
             response.data &&
-            typeof response.data === "object" &&
-            "results" in response.data &&
-            "count" in response.data
+            typeof response.data === "object"
           ) {
-            this.articles = {
-              total: (response.data.count as number) || 0,
-              page: params.page || 1,
-              limit: params.per_page || 10,
-              data: Array.isArray(response.data.results)
-                ? response.data.results
-                : []
-            };
-          } else {
-            logger.warn("文章列表数据结构不符合预期", response.data);
-            this.articles.data = Array.isArray(response.data)
-              ? response.data
-              : [];
+            // 适配新的API响应结构
+            if ("pagination" in response.data && "results" in response.data) {
+              // 新的API响应结构
+              const { pagination, results } = response.data;
+              this.articles = {
+                total: pagination.count || 0,
+                page: pagination.current_page || params.page || 1,
+                limit: pagination.page_size || params.per_page || 10,
+                data: Array.isArray(results) ? results : []
+              };
+            } else if ("results" in response.data && "count" in response.data) {
+              // 旧的API响应结构
+              this.articles = {
+                total: (response.data.count as number) || 0,
+                page: params.page || 1,
+                limit: params.per_page || 10,
+                data: Array.isArray(response.data.results)
+                  ? response.data.results
+                  : []
+              };
+            } else {
+              logger.warn("文章列表数据结构不符合预期", response.data);
+              this.articles.data = Array.isArray(response.data)
+                ? response.data
+                : [];
+            }
           }
           return response;
         } else {
