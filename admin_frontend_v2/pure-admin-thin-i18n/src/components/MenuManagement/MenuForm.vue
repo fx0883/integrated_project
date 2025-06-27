@@ -296,6 +296,9 @@
       }}</el-button>
     </div>
   </el-form>
+
+  <!-- 图标选择器组件 -->
+  <IconSelector ref="iconSelectorRef" @select="handleIconSelect" />
 </template>
 
 <script lang="ts" setup>
@@ -418,8 +421,16 @@ const rules = reactive<FormRules>({
   ]
 });
 
+import IconSelector from "./IconSelector.vue";
+
+const iconSelectorRef = ref();
+
 const openIconSelector = () => {
-  console.log("打开图标选择器");
+  iconSelectorRef.value?.open();
+};
+
+const handleIconSelect = (icon: string) => {
+  formData.icon = icon;
 };
 
 const submitForm = async () => {
