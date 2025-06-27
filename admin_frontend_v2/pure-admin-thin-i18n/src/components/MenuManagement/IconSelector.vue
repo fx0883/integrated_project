@@ -11,7 +11,10 @@
           <div
             v-for="icon in elementIcons"
             :key="icon"
-            class="icon-item"
+            :class="[
+              'icon-item',
+              selectedIcon === `ep:${icon}` ? 'icon-item-selected' : ''
+            ]"
             @click="selectIcon(`ep:${icon}`)"
           >
             <el-tooltip :content="icon" placement="top">
@@ -28,7 +31,10 @@
           <div
             v-for="icon in remixIcons"
             :key="icon"
-            class="icon-item"
+            :class="[
+              'icon-item',
+              selectedIcon === `ri:${icon}` ? 'icon-item-selected' : ''
+            ]"
             @click="selectIcon(`ri:${icon}`)"
           >
             <el-tooltip :content="icon" placement="top">
@@ -593,12 +599,26 @@ const emit = defineEmits<{
 }>();
 
 const selectIcon = (icon: string) => {
-  selectedIcon.value = icon;
+  // 如果已经选中，则取消选中
+  if (selectedIcon.value === icon) {
+    selectedIcon.value = "";
+  } else {
+    selectedIcon.value = icon;
+  }
+  // 添加控制台输出，便于调试
+  console.log("Selected icon:", selectedIcon.value);
 };
 
 const previewCustomIcon = () => {
   if (customIcon.value) {
-    selectedIcon.value = customIcon.value;
+    // 如果已经选中，则取消选中
+    if (selectedIcon.value === customIcon.value) {
+      selectedIcon.value = "";
+    } else {
+      selectedIcon.value = customIcon.value;
+    }
+    // 添加控制台输出，便于调试
+    console.log("Preview custom icon:", selectedIcon.value);
   }
 };
 
@@ -649,6 +669,25 @@ defineExpose({
 .icon-item:hover {
   border-color: #409eff;
   background-color: #ecf5ff;
+}
+
+.icon-item-selected {
+  border: 2px solid #409eff;
+  background-color: #ecf5ff;
+  position: relative;
+  box-shadow: 0 0 5px rgba(64, 158, 255, 0.5);
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+.icon-item-selected::after {
+  content: "✓";
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  color: #409eff;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .icon-wrapper {
