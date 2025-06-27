@@ -756,14 +756,29 @@ const handleCreateCancel = () => {
 // 编辑菜单
 const handleEditMenu = async (menu: Menu) => {
   editMenuDialog.loading = true;
-  editMenuDialog.visible = true;
   try {
+    // 先获取菜单详情，再打开对话框
     await menuStore.fetchMenuDetail(menu.id);
+
+    // 确保菜单详情中包含code字段
+    if (!menuStore.currentMenu?.code) {
+      logger.warn("菜单详情中缺少code字段，尝试使用原始菜单数据", menu);
+      // 如果API返回的菜单详情中没有code字段，则使用传入的菜单数据
+      if (menu.code && menuStore.currentMenu) {
+        menuStore.currentMenu.code = menu.code;
+      }
+    }
+
+    // 添加日志，查看从API获取的菜单详情数据
+    logger.info("从API获取的菜单详情：", menuStore.currentMenu);
+    logger.info("菜单code字段：", menuStore.currentMenu?.code);
+
+    // 设置当前菜单并打开对话框
     editMenuDialog.currentMenu = menuStore.currentMenu;
+    editMenuDialog.visible = true;
   } catch (error) {
     logger.error("获取菜单详情失败", error);
     ElMessage.error("获取菜单详情失败");
-    editMenuDialog.visible = false;
   } finally {
     editMenuDialog.loading = false;
   }

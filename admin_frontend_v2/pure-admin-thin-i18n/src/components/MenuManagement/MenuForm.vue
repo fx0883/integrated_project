@@ -326,9 +326,18 @@ const emit = defineEmits<{
 
 const formRef = ref<FormInstance>();
 
+// 记录初始化时的菜单数据，用于调试
+if (props.menu) {
+  logger.info("初始化菜单数据：", props.menu);
+}
+
+// 记录菜单的code字段，用于调试
+const menuCode = props.menu?.code;
+logger.info("初始化时的菜单code字段：", menuCode);
+
 const formData = reactive<MenuCreateUpdateParams>({
   name: props.menu?.name || "",
-  code: props.menu?.code || "",
+  code: menuCode || "", // 确保code字段被正确初始化
   path: props.menu?.path || "",
   component: props.menu?.component || "",
   redirect: props.menu?.redirect || "",
@@ -351,7 +360,7 @@ const formData = reactive<MenuCreateUpdateParams>({
   transition_name: null,
   enter_transition: null,
   leave_transition: null,
-  parent_id: props.menu?.parent_id || null,
+  parent_id: props.menu?.parent_id || props.parentId || null,
   is_active: props.menu?.is_active !== undefined ? props.menu.is_active : true,
   remarks: null
 });
@@ -458,20 +467,36 @@ watch(
       // 确保有足够的菜单数据用于显示父菜单
       await menuStore.fetchMenuList({ page_size: 999 });
 
-      formData.name = newVal.name;
-      formData.code = newVal.code;
-      formData.path = newVal.path;
-      formData.component = newVal.component;
+      // 添加日志，查看菜单详情数据
+      logger.info("编辑菜单数据：", newVal);
+      logger.info("菜单code字段：", newVal.code);
+
+      // 直接从props.menu中获取code字段，确保它被正确赋值
+      const menuCode = props.menu?.code;
+      logger.info("直接从props.menu获取的code字段：", menuCode);
+
+      // 确保所有字段都被正确赋值，特别是code字段
+      formData.name = newVal.name || "";
+
+      // 优先使用props.menu?.code，确保code字段被正确赋值
+      formData.code = menuCode || newVal.code || "";
+
+      formData.path = newVal.path || "";
+      formData.component = newVal.component || "";
       formData.redirect = newVal.redirect || "";
-      formData.title = newVal.title;
+      formData.title = newVal.title || "";
       formData.icon = newVal.icon || "";
-      formData.rank = newVal.rank;
-      formData.show_link = newVal.show_link;
-      formData.show_parent = newVal.show_parent;
-      formData.roles = newVal.roles;
-      formData.auths = newVal.auths;
-      formData.keep_alive = newVal.keep_alive;
-      formData.is_active = newVal.is_active;
+      formData.rank = newVal.rank || 0;
+      formData.show_link =
+        newVal.show_link !== undefined ? newVal.show_link : true;
+      formData.show_parent =
+        newVal.show_parent !== undefined ? newVal.show_parent : true;
+      formData.roles = newVal.roles || [];
+      formData.auths = newVal.auths || [];
+      formData.keep_alive =
+        newVal.keep_alive !== undefined ? newVal.keep_alive : false;
+      formData.is_active =
+        newVal.is_active !== undefined ? newVal.is_active : true;
       formData.parent_id = newVal.parent_id;
 
       // 如果有父菜单ID，确保它在菜单选项中存在
@@ -546,6 +571,18 @@ watch(
 onMounted(async () => {
   // 无论如何都重新获取菜单列表，确保有最新数据
   await menuStore.fetchMenuList({ page_size: 999 });
+
+  // 如果是编辑模式，确保code字段被正确设置
+  if (props.mode === "edit" && props.menu) {
+    logger.info("组件挂载时的菜单数据：", props.menu);
+    logger.info("组件挂载时的菜单code字段：", props.menu.code);
+
+    // 确保code字段被正确设置
+    if (props.menu.code && !formData.code) {
+      formData.code = props.menu.code;
+      logger.info("在组件挂载时设置code字段：", formData.code);
+    }
+  }
 });
 
 // 初始化表单数据已在上方处理
