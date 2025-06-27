@@ -490,12 +490,42 @@ watch(
   }
 );
 
+// 重置表单数据，但保留父级菜单ID
+const resetFormDataExceptParentId = (parentId: number | null) => {
+  formData.name = "";
+  formData.code = "";
+  formData.path = "";
+  formData.component = "";
+  formData.redirect = "";
+  formData.title = "";
+  formData.icon = "";
+  formData.extra_icon = null;
+  formData.rank = 0;
+  formData.show_link = true;
+  formData.show_parent = true;
+  formData.roles = [];
+  formData.auths = [];
+  formData.keep_alive = false;
+  formData.frame_src = null;
+  formData.frame_loading = false;
+  formData.hidden_tag = false;
+  formData.dynamic_level = null;
+  formData.active_path = null;
+  formData.transition_name = null;
+  formData.enter_transition = null;
+  formData.leave_transition = null;
+  formData.parent_id = parentId;
+  formData.is_active = true;
+  formData.remarks = null;
+};
+
 // 监听父菜单ID变化
 watch(
   () => props.parentId,
   newVal => {
     if (props.mode === "create") {
-      formData.parent_id = newVal ?? null;
+      // 当父菜单ID变化时，重置表单数据，但保留父级菜单ID
+      resetFormDataExceptParentId(newVal ?? null);
     }
   },
   { immediate: true }
