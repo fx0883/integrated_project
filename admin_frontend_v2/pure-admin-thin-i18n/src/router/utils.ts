@@ -382,155 +382,82 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
       const searchKey = v?.component || v.path;
       console.log(`[处理异步路由] 查找组件匹配: ${searchKey}`);
 
-      let matchedKey = null;
+      let exactMatch = null;
 
       if (v?.component) {
         console.log(`[处理异步路由] 使用component进行查找: ${v.component}`);
 
-        // 优先使用精确匹配
-        const exactMatch = modulesRoutesKeys.find(
-          ev => ev === String(v.component)
-        );
+        // 只使用精确匹配
+        exactMatch = modulesRoutesKeys.find(ev => ev === String(v.component));
 
         if (exactMatch) {
           console.log(`[处理异步路由] 找到精确匹配组件: ${exactMatch}`);
-          matchedKey = exactMatch; // 使用精确匹配的结果
         } else {
-          // 如果没有精确匹配，尝试更精确的模糊匹配
-          // 首先尝试匹配以组件路径结尾的项
-          const betterMatches = modulesRoutesKeys.filter(
-            ev =>
-              ev.endsWith(String(v.component)) ||
-              ev.endsWith(String(v.component) + ".vue") ||
-              ev.endsWith(String(v.component) + ".tsx")
+          console.log(
+            `[处理异步路由] 警告: 未找到组件的精确匹配: ${v.component}`
           );
 
-          if (betterMatches.length === 1) {
-            matchedKey = betterMatches[0];
+          // 尝试添加扩展名进行匹配
+          const withVueExt = String(v.component) + ".vue";
+          const withTsxExt = String(v.component) + ".tsx";
+
+          exactMatch = modulesRoutesKeys.find(
+            ev => ev === withVueExt || ev === withTsxExt
+          );
+
+          if (exactMatch) {
             console.log(
-              `[处理异步路由] 找到更精确的模糊匹配组件: ${matchedKey}`
-            );
-          } else if (betterMatches.length > 1) {
-            console.log(
-              `[处理异步路由] 警告: 存在多个更精确的匹配组件:`,
-              betterMatches
-            );
-            matchedKey = betterMatches[0]; // 使用第一个匹配项
-            console.log(
-              `[处理异步路由] 使用第一个更精确的匹配组件: ${matchedKey}`
+              `[处理异步路由] 找到带扩展名的精确匹配组件: ${exactMatch}`
             );
           } else {
-            // 如果没有更精确的匹配，再尝试一般的模糊匹配
-            const allMatches = modulesRoutesKeys.filter(ev =>
-              ev.includes(String(v.component))
-            );
-
-            console.log(
-              `[处理异步路由] component模糊匹配的所有项:`,
-              allMatches
-            );
-
-            if (allMatches.length === 1) {
-              matchedKey = allMatches[0];
-              console.log(
-                `[处理异步路由] 使用唯一的模糊匹配组件: ${matchedKey}`
-              );
-            } else if (allMatches.length > 1) {
-              console.log(
-                `[处理异步路由] 警告: 存在多个模糊匹配组件:`,
-                allMatches
-              );
-              matchedKey = allMatches[0]; // 使用第一个匹配项
-              console.log(
-                `[处理异步路由] 使用第一个模糊匹配组件: ${matchedKey}`
-              );
-            }
+            console.log(`[处理异步路由] 警告: 即使添加扩展名也未找到精确匹配`);
           }
         }
       } else {
         console.log(`[处理异步路由] 使用path进行查找: ${v.path}`);
 
-        // 对path也使用相同的精确匹配逻辑
-        const exactMatch = modulesRoutesKeys.find(ev => ev === v.path);
+        // 对path也只使用精确匹配
+        exactMatch = modulesRoutesKeys.find(ev => ev === v.path);
 
         if (exactMatch) {
           console.log(`[处理异步路由] 找到精确匹配组件: ${exactMatch}`);
-          matchedKey = exactMatch;
         } else {
-          // 尝试更精确的模糊匹配
-          const betterMatches = modulesRoutesKeys.filter(
-            ev =>
-              ev.endsWith(v.path) ||
-              ev.endsWith(v.path + ".vue") ||
-              ev.endsWith(v.path + ".tsx")
+          console.log(`[处理异步路由] 警告: 未找到路径的精确匹配: ${v.path}`);
+
+          // 尝试添加扩展名进行匹配
+          const withVueExt = v.path + ".vue";
+          const withTsxExt = v.path + ".tsx";
+
+          exactMatch = modulesRoutesKeys.find(
+            ev => ev === withVueExt || ev === withTsxExt
           );
 
-          if (betterMatches.length === 1) {
-            matchedKey = betterMatches[0];
+          if (exactMatch) {
             console.log(
-              `[处理异步路由] 找到更精确的模糊匹配组件: ${matchedKey}`
-            );
-          } else if (betterMatches.length > 1) {
-            console.log(
-              `[处理异步路由] 警告: 存在多个更精确的匹配组件:`,
-              betterMatches
-            );
-            matchedKey = betterMatches[0];
-            console.log(
-              `[处理异步路由] 使用第一个更精确的匹配组件: ${matchedKey}`
+              `[处理异步路由] 找到带扩展名的精确匹配组件: ${exactMatch}`
             );
           } else {
-            // 一般模糊匹配
-            const allMatches = modulesRoutesKeys.filter(ev =>
-              ev.includes(v.path)
-            );
-            console.log(`[处理异步路由] path匹配的所有项:`, allMatches);
-
-            if (allMatches.length === 1) {
-              matchedKey = allMatches[0];
-              console.log(
-                `[处理异步路由] 使用唯一的模糊匹配组件: ${matchedKey}`
-              );
-            } else if (allMatches.length > 1) {
-              console.log(
-                `[处理异步路由] 警告: 存在多个模糊匹配组件:`,
-                allMatches
-              );
-              matchedKey = allMatches[0];
-              console.log(
-                `[处理异步路由] 使用第一个模糊匹配组件: ${matchedKey}`
-              );
-            }
+            console.log(`[处理异步路由] 警告: 即使添加扩展名也未找到精确匹配`);
           }
         }
       }
 
-      // 使用找到的匹配键设置组件
-      if (matchedKey) {
-        // 关键信息：如果路由是/cms/tag/index，但找到的matchedKey包含了article而非tag，则是错误匹配
-        if (v.path.includes("tag") && matchedKey.includes("article")) {
-          console.log(`[处理异步路由] 错误警告: TAG路由错误匹配到ARTICLE组件!`);
-          console.log(
-            `路由路径: ${v.path}, 组件值: ${String(v.component)}, 匹配到的组件: ${matchedKey}`
-          );
-          console.log(
-            `所有可能匹配的项:`,
-            modulesRoutesKeys.filter(key => key.includes("tag"))
-          );
-        }
-
-        // 显示原组件和匹配组件的详细信息
+      // 使用找到的精确匹配设置组件，如果没有找到则设置为null
+      if (exactMatch) {
         const originalComponent = v.component;
-        v.component = modulesRoutes[matchedKey];
+        v.component = modulesRoutes[exactMatch];
         console.log(
           `[处理异步路由] 组件替换前类型: ${typeof originalComponent}`
         );
         console.log(`[处理异步路由] 组件替换后类型: ${typeof v.component}`);
         console.log(
-          `[处理异步路由] 组件替换: ${originalComponent} -> ${matchedKey}`
+          `[处理异步路由] 组件替换: ${originalComponent} -> ${exactMatch}`
         );
       } else {
-        console.log(`[处理异步路由] 警告: 未找到匹配组件: ${searchKey}`);
+        console.log(
+          `[处理异步路由] 警告: 未找到匹配组件: ${searchKey}，设置为null`
+        );
+        v.component = null;
       }
     }
 
