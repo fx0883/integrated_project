@@ -11,12 +11,14 @@ import LaySidebarBreadCrumb from "../lay-sidebar/components/SidebarBreadCrumb.vu
 import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.vue";
 import { useUserStoreHook } from "@/store/modules/user";
 import ProfileModal from "@/components/AdminUserManagement/ProfileModal.vue";
+import { IconifyIconOffline } from "@/components/ReIcon";
 
 import GlobalizationIcon from "@/assets/svg/globalization.svg?component";
 import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
 import User from "~icons/ep/user";
+import logger from "@/utils/logger";
 
 const router = useRouter();
 const userStore = useUserStoreHook();
@@ -50,7 +52,7 @@ onMounted(async () => {
   try {
     await userStore.fetchCurrentAdmin();
   } catch (error) {
-    console.error("获取当前管理员信息失败", error);
+    logger.error("获取当前管理员信息失败", error);
   }
 });
 </script>

@@ -37,6 +37,7 @@ import {
   removeToken,
   multipleTabsKey
 } from "@/utils/auth";
+import logger from "@/utils/logger";
 
 /** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
  * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
@@ -50,7 +51,7 @@ const modules: Record<string, any> = import.meta.glob(
 );
 
 // 输出模块路由信息
-console.log('[路由配置] 导入的静态路由模块:', Object.keys(modules));
+logger.debug("[路由配置] 导入的静态路由模块:", Object.keys(modules));
 
 /** 原始静态路由（未做任何处理） */
 const routes = [];
@@ -115,14 +116,14 @@ const whiteList = ["/login"];
 const { VITE_HIDE_HOME } = import.meta.env;
 
 router.beforeEach((to: ToRouteType, _from, next) => {
-  console.log('[路由导航] 路由导航开始:', {
+  logger.debug("[路由导航] 路由导航开始:", {
     from: _from.path,
     to: to.path,
     toName: to.name,
     params: to.params,
     query: to.query
   });
-  
+
   if (to.meta?.keepAlive) {
     handleAliveRoute(to, "add");
     // 页面整体刷新和点击标签页刷新
@@ -133,18 +134,18 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
   NProgress.start();
   const externalLink = isUrl(to?.name as string);
-  
-  console.log('[路由导航] 匹配的路由数量:', to.matched.length);
-  
+
+  logger.debug("[路由导航] 匹配的路由数量:", to.matched.length);
+
   if (!externalLink) {
     to.matched.some(item => {
-      console.log('[路由导航] 匹配的路由项:', {
-        path: item.path, 
+      logger.debug("[路由导航] 匹配的路由项:", {
+        path: item.path,
         name: item.name,
         redirect: item.redirect,
         meta: item.meta
       });
-      
+
       if (!item.meta.title) return "";
       const Title = getConfig().Title;
       if (Title)
@@ -228,7 +229,7 @@ router.beforeEach((to: ToRouteType, _from, next) => {
 });
 
 router.afterEach((to, from) => {
-  console.log('[路由导航] 路由导航完成:', {
+  logger.debug("[路由导航] 路由导航完成:", {
     from: from.path,
     to: to.path,
     toName: to.name

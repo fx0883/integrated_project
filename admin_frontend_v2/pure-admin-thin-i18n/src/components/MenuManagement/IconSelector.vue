@@ -81,6 +81,7 @@
 <script lang="ts" setup>
 import { ref, defineEmits, defineExpose } from "vue";
 import { IconifyIconOnline } from "@/components/ReIcon";
+import logger from "@/utils/logger";
 
 const dialogVisible = ref(false);
 const activeTab = ref("element");
@@ -606,7 +607,7 @@ const selectIcon = (icon: string) => {
     selectedIcon.value = icon;
   }
   // 添加控制台输出，便于调试
-  console.log("Selected icon:", selectedIcon.value);
+  logger.debug("Selected icon:", selectedIcon.value);
 };
 
 const previewCustomIcon = () => {
@@ -618,7 +619,7 @@ const previewCustomIcon = () => {
       selectedIcon.value = customIcon.value;
     }
     // 添加控制台输出，便于调试
-    console.log("Preview custom icon:", selectedIcon.value);
+    logger.debug("Preview custom icon:", selectedIcon.value);
   }
 };
 

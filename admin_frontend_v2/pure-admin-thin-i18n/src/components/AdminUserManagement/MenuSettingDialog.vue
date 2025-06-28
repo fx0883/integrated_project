@@ -90,7 +90,7 @@ const previewMenus = ref([]);
 watch(
   () => props.userId,
   async (newVal, oldVal) => {
-    console.log("MenuSettingDialog userId 属性变化", newVal, oldVal);
+    logger.debug("MenuSettingDialog userId 属性变化", newVal, oldVal);
 
     if (props.visible && newVal > 0 && newVal !== oldVal) {
       logger.debug("用户ID变化，重新加载菜单数据", {
@@ -128,33 +128,33 @@ const loadData = async () => {
   }
 
   loading.value = true;
-  console.log("开始加载菜单数据", { userId: props.userId });
+  logger.debug("开始加载菜单数据", { userId: props.userId });
 
   try {
     // 获取菜单树
     const menuTreeResponse = await menuStore.fetchMenuTree({ is_active: true });
-    console.log("菜单树加载结果", menuTreeResponse);
+    logger.debug("菜单树加载结果", menuTreeResponse);
 
     // 处理菜单树数据
     menuTree.value = menuTreeResponse?.data || [];
-    console.log("菜单树数据已设置", menuTree.value);
+    logger.debug("菜单树数据已设置", menuTree.value);
   } catch (error) {
-    console.error("加载菜单树失败", error);
+    logger.error("加载菜单树失败", error);
     ElMessage.error(t("menu.loadTreeFailed") || "加载菜单树失败");
   }
 
   try {
     // 获取用户当前菜单配置
     const userMenusResponse = await menuStore.fetchUserMenus(props.userId);
-    console.log("用户菜单加载结果", userMenusResponse);
+    logger.debug("用户菜单加载结果", userMenusResponse);
 
     // 处理用户菜单数据，设置选中状态
     checkedKeys.value = (userMenusResponse?.data?.menus || [])
       .filter(menu => menu.is_active)
       .map(menu => menu.id);
-    console.log("已选中菜单ID", checkedKeys.value);
+    logger.debug("已选中菜单ID", checkedKeys.value);
   } catch (error) {
-    console.error("加载用户菜单失败", error);
+    logger.error("加载用户菜单失败", error);
     ElMessage.error(t("menu.loadUserMenusFailed") || "加载用户菜单失败");
   } finally {
     loading.value = false;
@@ -325,7 +325,7 @@ const handleSave = async () => {
 
 // 组件挂载时检查状态
 onMounted(() => {
-  console.log("MenuSettingDialog 组件挂载", {
+  logger.debug("MenuSettingDialog 组件挂载", {
     visible: props.visible,
     userId: props.userId,
     username: props.username

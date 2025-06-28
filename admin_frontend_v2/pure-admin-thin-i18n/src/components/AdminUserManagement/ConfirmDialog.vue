@@ -6,6 +6,7 @@ import {
   SuccessFilled,
   CircleCloseFilled
 } from "@element-plus/icons-vue";
+import logger from "@/utils/logger";
 
 const props = defineProps<{
   visible: boolean;
@@ -36,7 +37,7 @@ const handleClose = () => {
 
 // 确认操作
 const handleConfirm = () => {
-  console.log("ConfirmDialog: 确认按钮被点击");
+  logger.debug("ConfirmDialog: 确认按钮被点击");
   emit("confirm");
   emit("update:visible", false);
 };
@@ -45,7 +46,7 @@ const handleConfirm = () => {
 watch(
   () => props.visible,
   newVal => {
-    console.log("ConfirmDialog visible属性变化：", newVal, props.title);
+    logger.debug("ConfirmDialog visible属性变化：", newVal, props.title);
   }
 );
 </script>
@@ -57,7 +58,7 @@ watch(
     width="30%"
     :destroy-on-close="true"
     @close="handleClose"
-    @open="console.log('ConfirmDialog打开事件被触发')"
+    @open="logger.debug('ConfirmDialog打开事件被触发')"
     :close-on-click-modal="false"
   >
     <div class="confirm-dialog-content">

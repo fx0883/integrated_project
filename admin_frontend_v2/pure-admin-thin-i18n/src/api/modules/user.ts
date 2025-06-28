@@ -16,7 +16,7 @@ import logger from "@/utils/logger";
 export function formatChartData(data: any): any {
   // 检查数据是否存在
   if (!data) {
-    console.log("图表数据为空，返回空数据结构");
+    logger.debug("图表数据为空，返回空数据结构");
     return { hasData: false, labels: [], datasets: [] };
   }
 
@@ -34,7 +34,7 @@ export function formatChartData(data: any): any {
     summary: chartData.summary || {}
   };
 
-  console.log("图表数据格式化结果:", JSON.parse(JSON.stringify(formattedData)));
+  logger.debug("图表数据格式化结果:", JSON.parse(JSON.stringify(formattedData)));
 
   return formattedData;
 }
@@ -55,7 +55,7 @@ export async function fetchUserGrowthTrend(
   if (endDate) url += `&end_date=${endDate}`;
 
   logger.debug("请求用户增长趋势数据", { period, startDate, endDate });
-  console.log("【API调用】fetchUserGrowthTrend", {
+  logger.debug("【API调用】fetchUserGrowthTrend", {
     period,
     startDate,
     endDate,
@@ -67,7 +67,7 @@ export async function fetchUserGrowthTrend(
       "get",
       url
     );
-    console.log("【API响应】fetchUserGrowthTrend 成功", {
+    logger.debug("【API响应】fetchUserGrowthTrend 成功", {
       success: response.success,
       code: response.code,
       dataSize: JSON.stringify(response).length
@@ -89,7 +89,7 @@ export async function fetchUserGrowthTrend(
     }
   } catch (error) {
     logger.error("获取用户增长趋势数据失败", error);
-    console.log("【API错误】fetchUserGrowthTrend", error);
+    logger.error("【API错误】fetchUserGrowthTrend", error);
     throw error;
   }
 }
@@ -99,7 +99,7 @@ export async function fetchUserGrowthTrend(
  */
 export async function fetchUserRoleDistribution() {
   logger.debug("请求用户角色分布数据");
-  console.log("【API调用】fetchUserRoleDistribution");
+  logger.debug("【API调用】fetchUserRoleDistribution");
 
   try {
     const response = await http.request<ApiResponse<UserRoleData>>(
@@ -107,7 +107,7 @@ export async function fetchUserRoleDistribution() {
       "/admin/charts/user-role-distribution/"
     );
 
-    console.log("【API响应】fetchUserRoleDistribution 成功", {
+    logger.debug("【API响应】fetchUserRoleDistribution 成功", {
       success: response.success,
       code: response.code
     });
@@ -127,7 +127,7 @@ export async function fetchUserRoleDistribution() {
     }
   } catch (error) {
     logger.error("获取用户角色分布数据失败", error);
-    console.log("【API错误】fetchUserRoleDistribution", error);
+    logger.error("【API错误】fetchUserRoleDistribution", error);
     throw error;
   }
 }
@@ -148,7 +148,7 @@ export async function fetchActiveUsers(
   if (endDate) url += `&end_date=${endDate}`;
 
   logger.debug("请求活跃用户统计数据", { period, startDate, endDate });
-  console.log("【API调用】fetchActiveUsers", {
+  logger.debug("【API调用】fetchActiveUsers", {
     period,
     startDate,
     endDate,
@@ -161,7 +161,7 @@ export async function fetchActiveUsers(
       url
     );
 
-    console.log("【API响应】fetchActiveUsers 成功", {
+    logger.debug("【API响应】fetchActiveUsers 成功", {
       success: response.success,
       code: response.code
     });
@@ -182,7 +182,7 @@ export async function fetchActiveUsers(
     }
   } catch (error) {
     logger.error("获取活跃用户统计数据失败", error);
-    console.log("【API错误】fetchActiveUsers", error);
+    logger.error("【API错误】fetchActiveUsers", error);
     throw error;
   }
 }
@@ -198,7 +198,7 @@ export async function fetchLoginHeatmap(startDate?: string, endDate?: string) {
   if (endDate) url += `${startDate ? "&" : "?"}end_date=${endDate}`;
 
   logger.debug("请求用户登录热力图数据", { startDate, endDate });
-  console.log("【API调用】fetchLoginHeatmap", { startDate, endDate, url });
+  logger.debug("【API调用】fetchLoginHeatmap", { startDate, endDate, url });
 
   try {
     const response = await http.request<ApiResponse<LoginHeatmapData>>(
@@ -206,7 +206,7 @@ export async function fetchLoginHeatmap(startDate?: string, endDate?: string) {
       url
     );
 
-    console.log("【API响应】fetchLoginHeatmap 成功", {
+    logger.debug("【API响应】fetchLoginHeatmap 成功", {
       success: response.success,
       code: response.code
     });
@@ -227,7 +227,7 @@ export async function fetchLoginHeatmap(startDate?: string, endDate?: string) {
     }
   } catch (error) {
     logger.error("获取用户登录热力图数据失败", error);
-    console.log("【API错误】fetchLoginHeatmap", error);
+    logger.error("【API错误】fetchLoginHeatmap", error);
     throw error;
   }
 }

@@ -64,14 +64,14 @@ const handleConfirm = () => {
 // 组件挂载时获取租户列表及监听visible变化
 onMounted(() => {
   fetchTenants();
-  console.log("TenantSelectDialog组件挂载完成，visible=", props.visible);
+  logger.debug("TenantSelectDialog组件挂载完成，visible=", props.visible);
 });
 
 // 监听visible属性变化
 watch(
   () => props.visible,
   newVal => {
-    console.log("TenantSelectDialog visible属性变化：", newVal);
+    logger.debug("TenantSelectDialog visible属性变化：", newVal);
     if (newVal) {
       // 对话框显示时，重新获取租户列表
       fetchTenants();
@@ -91,7 +91,7 @@ watch(
     :close-on-click-modal="false"
     :destroy-on-close="true"
     @close="handleClose"
-    @open="console.log('TenantSelectDialog打开事件被触发')"
+    @open="logger.debug('TenantSelectDialog打开事件被触发')"
   >
     <div v-loading="loading" class="tenant-select-content">
       <p>请选择一个要将管理员分配到的租户：</p>

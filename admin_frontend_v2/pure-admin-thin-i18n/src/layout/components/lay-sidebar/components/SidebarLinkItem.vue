@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { isUrl } from "@pureadmin/utils";
 import { menuType } from "@/layout/types";
+import logger from "@/utils/logger";
 
 const props = defineProps<{
   to: menuType;
@@ -9,16 +10,16 @@ const props = defineProps<{
 
 const isExternalLink = computed(() => isUrl(props.to.name));
 const getLinkProps = (item: menuType) => {
-  console.log("[菜单导航] 菜单项导航属性:", item);
+  logger.debug("[菜单导航] 菜单项导航属性:", item);
   if (isExternalLink.value) {
-    console.log("[菜单导航] 外部链接:", item.name);
+    logger.debug("[菜单导航] 外部链接:", item.name);
     return {
       href: item.name,
       target: "_blank",
       rel: "noopener"
     };
   }
-  console.log("[菜单导航] 内部路由导航:", item.path);
+  logger.debug("[菜单导航] 内部路由导航:", item.path);
   return {
     to: item
   };
@@ -29,7 +30,7 @@ const getLinkProps = (item: menuType) => {
   <component
     :is="isExternalLink ? 'a' : 'router-link'"
     v-bind="getLinkProps(to)"
-    @click="() => console.log('[菜单导航] 点击菜单项:', to.path)"
+    @click="() => logger.debug('[菜单导航] 点击菜单项:', to.path)"
   >
     <slot />
   </component>

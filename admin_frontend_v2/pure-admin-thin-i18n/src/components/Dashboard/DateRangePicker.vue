@@ -2,6 +2,7 @@
 import { ref, watch, defineProps, defineEmits } from "vue";
 import { useI18n } from "vue-i18n";
 import dayjs from "dayjs";
+import logger from "@/utils/logger";
 
 const props = defineProps({
   startDate: {
@@ -30,7 +31,7 @@ watch(
   ([newStartDate, newEndDate]) => {
     if (newStartDate && newEndDate) {
       dateRange.value = [newStartDate, newEndDate];
-      console.log("日期范围已初始化", dateRange.value);
+      logger.debug("日期范围已初始化", dateRange.value);
     }
   },
   { immediate: true }
@@ -40,12 +41,12 @@ watch(
  * 日期变更处理
  */
 const handleDateChange = (val: string[]) => {
-  console.log("日期选择变更", val);
+  logger.debug("日期选择变更", val);
   if (val && val.length === 2) {
-    console.log("发送日期范围更新", { startDate: val[0], endDate: val[1] });
+    logger.debug("发送日期范围更新", { startDate: val[0], endDate: val[1] });
     emit("update:range", { startDate: val[0], endDate: val[1] });
   } else {
-    console.log("清除日期范围");
+    logger.debug("清除日期范围");
     emit("update:range", { startDate: "", endDate: "" });
   }
 };

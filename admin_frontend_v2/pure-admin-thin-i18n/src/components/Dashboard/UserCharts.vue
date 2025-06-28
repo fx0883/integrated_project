@@ -133,7 +133,7 @@ async function fetchGrowthDataFn() {
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchGrowthData", {
+  logger.debug("【API请求开始】fetchGrowthData", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -152,7 +152,7 @@ async function fetchGrowthDataFn() {
     );
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchGrowthData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -167,7 +167,7 @@ async function fetchGrowthDataFn() {
       });
 
       const formattedData = formatChartData(response.data);
-      console.log(
+      logger.debug(
         "【用户增长趋势】数据处理结果:",
         JSON.stringify(formattedData)
       );
@@ -208,7 +208,7 @@ async function fetchGrowthDataFn() {
 async function fetchRoleDataFn() {
   logger.debug("开始获取用户角色分布数据");
 
-  console.log("【API请求开始】fetchRoleData", {
+  logger.debug("【API请求开始】fetchRoleData", {
     timestamp: new Date().toISOString()
   });
 
@@ -220,7 +220,7 @@ async function fetchRoleDataFn() {
     const response = await fetchUserRoleDistribution();
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchRoleData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -269,7 +269,7 @@ async function fetchActiveDataFn(periodParam = null) {
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchActiveData", {
+  logger.debug("【API请求开始】fetchActiveData", {
     period: currentPeriod,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -288,7 +288,7 @@ async function fetchActiveDataFn(periodParam = null) {
     );
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchActiveData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -343,7 +343,7 @@ async function fetchHeatmapDataFn() {
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchHeatmapData", {
+  logger.debug("【API请求开始】fetchHeatmapData", {
     startDate: startDate.value,
     endDate: endDate.value,
     timestamp: new Date().toISOString()
@@ -357,7 +357,7 @@ async function fetchHeatmapDataFn() {
     const response = await fetchLoginHeatmap(startDate.value, endDate.value);
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchHeatmapData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -423,7 +423,7 @@ function handleDataLoaded(chartType, data) {
  */
 async function fetchAllData() {
   logger.debug("开始获取所有图表数据");
-  console.log("开始获取所有图表数据", {
+  logger.debug("开始获取所有图表数据", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -532,7 +532,7 @@ function handleDateRangeChange(range: { startDate: string; endDate: string }) {
     to: range
   });
 
-  console.log("日期范围变更", {
+  logger.debug("日期范围变更", {
     from: { startDate: startDate.value, endDate: endDate.value },
     to: range
   });
@@ -555,7 +555,7 @@ function handleDateRangeChange(range: { startDate: string; endDate: string }) {
   chartRenderingAttempts.value = 0;
 
   // 显式调用数据获取函数
-  console.log("日期变更后立即调用fetchAllData");
+  logger.debug("日期变更后立即调用fetchAllData");
   fetchAllData();
 
   // 延迟关闭加载状态，确保DOM有足够时间更新
@@ -574,7 +574,7 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
     to: newPeriod
   });
 
-  console.log("周期变更", {
+  logger.debug("周期变更", {
     from: period.value,
     to: newPeriod
   });
@@ -595,7 +595,7 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
   chartRenderingAttempts.value = 0;
 
   // 显式调用数据获取函数
-  console.log("周期变更后立即调用fetchAllData");
+  logger.debug("周期变更后立即调用fetchAllData");
   fetchAllData();
 
   // 延迟关闭加载状态
@@ -609,10 +609,10 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
 const debouncedFetchData = debounce(() => {
   // 避免在日期变更过程中触发数据获取
   if (!isDateChanging.value) {
-    console.log("通过watch触发的数据获取");
+    logger.debug("通过watch触发的数据获取");
     fetchAllData();
   } else {
-    console.log("日期变更中，跳过watch触发的数据获取");
+    logger.debug("日期变更中，跳过watch触发的数据获取");
   }
 }, 500);
 
@@ -628,10 +628,10 @@ watch(
 
     // 仅在非日期变更过程中触发
     if (!isDateChanging.value) {
-      console.log("检测到筛选条件变更，准备调用debouncedFetchData");
+      logger.debug("检测到筛选条件变更，准备调用debouncedFetchData");
       debouncedFetchData();
     } else {
-      console.log("日期变更中，跳过watch触发的数据获取");
+      logger.debug("日期变更中，跳过watch触发的数据获取");
     }
   },
   { deep: true }
@@ -640,7 +640,7 @@ watch(
 // 组件挂载时加载数据
 onMounted(() => {
   logger.debug("UserCharts组件挂载，开始加载初始数据");
-  console.log("UserCharts组件挂载，开始加载初始数据");
+  logger.debug("UserCharts组件挂载，开始加载初始数据");
 
   // 延迟加载数据，确保DOM已完全渲染
   setTimeout(() => {

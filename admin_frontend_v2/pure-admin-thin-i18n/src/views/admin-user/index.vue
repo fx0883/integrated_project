@@ -57,7 +57,7 @@ const searchForm = reactive<AdminUserListParams>({
 });
 
 // 确认对话框
-const confirmDialog = reactive({
+const confirmDialog = ref({
   visible: false,
   title: "",
   content: "",
@@ -89,7 +89,7 @@ watch(
 watch(
   () => confirmDialog.visible,
   newVal => {
-    console.log("confirmDialog.visible 变化为:", newVal, confirmDialog.title);
+    logger.debug("confirmDialog.visible 变化为:", newVal, confirmDialog.title);
   }
 );
 
@@ -257,7 +257,7 @@ const handleRevokeSuperAdmin = (row: AdminUser) => {
 
   // 显示租户选择对话框
   tenantSelectDialogVisible.value = true;
-  console.log("设置租户选择对话框显示", tenantSelectDialogVisible.value);
+  logger.debug("设置租户选择对话框显示", tenantSelectDialogVisible.value);
 };
 
 // 处理租户选择确认
@@ -305,7 +305,11 @@ const handleTenantSelectConfirm = async (tenantId: number) => {
   };
 
   confirmDialog.visible = true;
-  console.log("设置确认对话框显示", confirmDialog.visible, confirmDialog.title);
+  logger.debug(
+    "设置确认对话框显示",
+    confirmDialog.visible,
+    confirmDialog.title
+  );
 };
 
 // 处理租户选择取消
@@ -365,7 +369,7 @@ const handleConfirm = async () => {
     dialogTitle: confirmDialog.title,
     hasConfirmAction: !!confirmDialog.confirmAction
   });
-  console.log("确认对话框确认按钮被点击", confirmDialog);
+  logger.debug("确认对话框确认按钮被点击", confirmDialog);
 
   if (confirmDialog.confirmAction) {
     logger.debug("执行确认操作");
@@ -377,7 +381,6 @@ const handleConfirm = async () => {
     }
   } else {
     logger.warn("确认对话框没有关联确认操作");
-    console.warn("确认对话框没有关联确认操作");
   }
 };
 
@@ -505,18 +508,17 @@ const formatDateTime = (dateTimeString: string) => {
 };
 
 // 处理菜单设置点击
-const handleMenuSetting = user => {
+const handleMenuSetting = (row: AdminUser) => {
   logger.debug("菜单设置被点击", {
-    userId: user.id,
-    username: user.username
+    userId: row.id,
+    username: row.username
   });
-  userForMenuSetting.value = user;
+  userForMenuSetting.value = row;
   menuSettingDialogVisible.value = true;
-
-  // 添加调试日志，确认状态已设置
-  console.log("菜单设置对话框状态已设置", {
-    dialogVisible: menuSettingDialogVisible.value,
-    user: userForMenuSetting.value
+  logger.debug("菜单设置对话框状态已设置", {
+    visible: menuSettingDialogVisible.value,
+    userId: row.id,
+    username: row.username
   });
 };
 

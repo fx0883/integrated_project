@@ -13,15 +13,24 @@ import logger from "@/utils/logger"; // 导入日志工具
 import Table from "@pureadmin/table";
 // import PureDescriptions from "@pureadmin/descriptions";
 
-import { registerGlobalComponents } from '@/components';
+import { registerGlobalComponents } from "@/components";
 
 // 初始化日志配置
 logger.configure({
-  enabled: true, 
+  enabled: true,
   level: logger.LogLevel.DEBUG,
   apiLogging: true,
-  apiLogFullResponse: false
+  apiLogFullResponse: false,
+  useColors: true,
+  consoleOutput: false // 设置为false可以禁止输出到控制台
 });
+
+// 测试日志输出
+console.log("原生console.log测试");
+logger.debug("测试日志输出 - DEBUG");
+logger.info("测试日志输出 - INFO");
+logger.warn("测试日志输出 - WARN");
+logger.error("测试日志输出 - ERROR");
 
 // 引入重置样式
 import "./style/reset.scss";
@@ -72,8 +81,19 @@ getPlatformConfig(app).then(async config => {
   app.use(router);
   await router.isReady();
   injectResponsiveStorage(app, config);
-  app.use(MotionPlugin).use(useI18n).use(useElementPlus).use(Table)
-  // .use(PureDescriptions)
-  .use(useEcharts);
+  app
+    .use(MotionPlugin)
+    .use(useI18n)
+    .use(useElementPlus)
+    .use(Table)
+    // .use(PureDescriptions)
+    .use(useEcharts);
   app.mount("#app");
+
+  // 应用挂载后再次测试日志
+  console.log("应用挂载后 - 原生console.log测试");
+  logger.debug("应用挂载后 - 测试日志输出 - DEBUG");
+  logger.info("应用挂载后 - 测试日志输出 - INFO");
+  logger.warn("应用挂载后 - 测试日志输出 - WARN");
+  logger.error("应用挂载后 - 测试日志输出 - ERROR");
 });

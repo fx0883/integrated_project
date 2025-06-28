@@ -68,19 +68,19 @@ const getPeriodName = (period: ChartPeriod): string => {
 <template>
   <div class="period-selector">
     <el-radio-group v-model="currentPeriod" @change="handlePeriodChange">
-      <el-radio-button v-if="hasOption('daily')" label="daily">
+      <el-radio-button v-if="hasOption('daily')" value="daily">
         {{ getPeriodName("daily") }}
       </el-radio-button>
-      <el-radio-button v-if="hasOption('weekly')" label="weekly">
+      <el-radio-button v-if="hasOption('weekly')" value="weekly">
         {{ getPeriodName("weekly") }}
       </el-radio-button>
-      <el-radio-button v-if="hasOption('monthly')" label="monthly">
+      <el-radio-button v-if="hasOption('monthly')" value="monthly">
         {{ getPeriodName("monthly") }}
       </el-radio-button>
-      <el-radio-button v-if="hasOption('quarterly')" label="quarterly">
+      <el-radio-button v-if="hasOption('quarterly')" value="quarterly">
         {{ getPeriodName("quarterly") }}
       </el-radio-button>
-      <el-radio-button v-if="hasOption('yearly')" label="yearly">
+      <el-radio-button v-if="hasOption('yearly')" value="yearly">
         {{ getPeriodName("yearly") }}
       </el-radio-button>
     </el-radio-group>

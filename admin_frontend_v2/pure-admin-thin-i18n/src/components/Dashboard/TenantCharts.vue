@@ -124,7 +124,7 @@ async function fetchTrendDataFn() {
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchTrendData", {
+  logger.debug("【API请求开始】fetchTrendData", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -143,7 +143,7 @@ async function fetchTrendDataFn() {
     );
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchTrendData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -159,7 +159,7 @@ async function fetchTrendDataFn() {
 
       // 使用格式化函数处理数据，确保数据结构一致且避免引用问题
       const formattedData = formatChartData(response.data);
-      console.log("【租户趋势】数据处理结果:", JSON.stringify(formattedData));
+      logger.debug("【租户趋势】数据处理结果:", JSON.stringify(formattedData));
 
       // 计算汇总数据
       if (formattedData) {
@@ -173,7 +173,7 @@ async function fetchTrendDataFn() {
         code: response.code,
         message: response.message
       });
-      console.log("【API请求失败】fetchTrendData", {
+      logger.debug("【API请求失败】fetchTrendData", {
         code: response.code,
         message: response.message,
         timestamp: new Date().toISOString()
@@ -185,7 +185,7 @@ async function fetchTrendDataFn() {
       message: err.message,
       error: err
     });
-    console.log("【API请求异常】fetchTrendData", {
+    logger.debug("【API请求异常】fetchTrendData", {
       message: err.message,
       timestamp: new Date().toISOString()
     });
@@ -194,7 +194,7 @@ async function fetchTrendDataFn() {
     throw err;
   } finally {
     loading.trend = false;
-    console.log("【API请求结束】fetchTrendData", {
+    logger.debug("【API请求结束】fetchTrendData", {
       timestamp: new Date().toISOString()
     });
   }
@@ -206,7 +206,7 @@ async function fetchTrendDataFn() {
 async function fetchStatusDataFn() {
   logger.debug("开始获取租户状态分布数据");
 
-  console.log("【API请求开始】fetchStatusData", {
+  logger.debug("【API请求开始】fetchStatusData", {
     timestamp: new Date().toISOString()
   });
 
@@ -218,7 +218,7 @@ async function fetchStatusDataFn() {
     const response = await fetchTenantStatusDistribution();
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchStatusData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -233,7 +233,7 @@ async function fetchStatusDataFn() {
       });
 
       const formattedData = formatChartData(response.data);
-      console.log(
+      logger.debug(
         "【租户状态分布】数据处理结果:",
         JSON.stringify(formattedData)
       );
@@ -244,7 +244,7 @@ async function fetchStatusDataFn() {
         code: response.code,
         message: response.message
       });
-      console.log("【API请求失败】fetchStatusData", {
+      logger.debug("【API请求失败】fetchStatusData", {
         code: response.code,
         message: response.message,
         timestamp: new Date().toISOString()
@@ -256,7 +256,7 @@ async function fetchStatusDataFn() {
       message: err.message,
       error: err
     });
-    console.log("【API请求异常】fetchStatusData", {
+    logger.debug("【API请求异常】fetchStatusData", {
       message: err.message,
       timestamp: new Date().toISOString()
     });
@@ -265,7 +265,7 @@ async function fetchStatusDataFn() {
     throw err;
   } finally {
     loading.status = false;
-    console.log("【API请求结束】fetchStatusData", {
+    logger.debug("【API请求结束】fetchStatusData", {
       timestamp: new Date().toISOString()
     });
   }
@@ -281,7 +281,7 @@ async function fetchCreationDataFn() {
     endDate: endDate.value
   });
 
-  console.log("【API请求开始】fetchCreationData", {
+  logger.debug("【API请求开始】fetchCreationData", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -300,7 +300,7 @@ async function fetchCreationDataFn() {
     );
     const endTime = Date.now();
 
-    console.log(
+    logger.debug(
       `【API请求完成】fetchCreationData，耗时: ${endTime - startTime}ms`,
       {
         success: response.success,
@@ -315,7 +315,7 @@ async function fetchCreationDataFn() {
       });
 
       const formattedData = formatChartData(response.data);
-      console.log(
+      logger.debug(
         "【租户创建速率】数据处理结果:",
         JSON.stringify(formattedData)
       );
@@ -326,7 +326,7 @@ async function fetchCreationDataFn() {
         code: response.code,
         message: response.message
       });
-      console.log("【API请求失败】fetchCreationData", {
+      logger.debug("【API请求失败】fetchCreationData", {
         code: response.code,
         message: response.message,
         timestamp: new Date().toISOString()
@@ -338,7 +338,7 @@ async function fetchCreationDataFn() {
       message: err.message,
       error: err
     });
-    console.log("【API请求异常】fetchCreationData", {
+    logger.debug("【API请求异常】fetchCreationData", {
       message: err.message,
       timestamp: new Date().toISOString()
     });
@@ -347,7 +347,7 @@ async function fetchCreationDataFn() {
     throw err;
   } finally {
     loading.creation = false;
-    console.log("【API请求结束】fetchCreationData", {
+    logger.debug("【API请求结束】fetchCreationData", {
       timestamp: new Date().toISOString()
     });
   }
@@ -378,7 +378,7 @@ function handleDataLoaded(chartType, data) {
  */
 async function fetchAllData() {
   logger.debug("开始获取所有图表数据");
-  console.log("开始获取所有图表数据", {
+  logger.debug("开始获取所有图表数据", {
     period: period.value,
     startDate: startDate.value,
     endDate: endDate.value,
@@ -462,7 +462,7 @@ function handleDateRangeChange(range: { startDate: string; endDate: string }) {
     to: range
   });
 
-  console.log("日期范围变更", {
+  logger.debug("日期范围变更", {
     from: { startDate: startDate.value, endDate: endDate.value },
     to: range
   });
@@ -485,7 +485,7 @@ function handleDateRangeChange(range: { startDate: string; endDate: string }) {
   chartRenderingAttempts.value = 0;
 
   // 显式调用数据获取函数
-  console.log("日期变更后立即调用fetchAllData");
+  logger.debug("日期变更后立即调用fetchAllData");
   fetchAllData();
 
   // 延迟关闭加载状态，确保DOM有足够时间更新
@@ -504,7 +504,7 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
     to: newPeriod
   });
 
-  console.log("周期变更", {
+  logger.debug("周期变更", {
     from: period.value,
     to: newPeriod
   });
@@ -525,7 +525,7 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
   chartRenderingAttempts.value = 0;
 
   // 显式调用数据获取函数
-  console.log("周期变更后立即调用fetchAllData");
+  logger.debug("周期变更后立即调用fetchAllData");
   fetchAllData();
 
   // 延迟关闭加载状态
@@ -539,10 +539,10 @@ function handlePeriodChange(newPeriod: ChartPeriod) {
 const debouncedFetchData = debounce(() => {
   // 避免在日期变更过程中触发数据获取
   if (!isDateChanging.value) {
-    console.log("通过watch触发的数据获取");
+    logger.debug("通过watch触发的数据获取");
     fetchAllData();
   } else {
-    console.log("日期变更中，跳过watch触发的数据获取");
+    logger.debug("日期变更中，跳过watch触发的数据获取");
   }
 }, 500); // 增加防抖时间
 
@@ -558,10 +558,10 @@ watch(
 
     // 仅在非日期变更过程中触发
     if (!isDateChanging.value) {
-      console.log("检测到筛选条件变更，准备调用debouncedFetchData");
+      logger.debug("检测到筛选条件变更，准备调用debouncedFetchData");
       debouncedFetchData(); // 使用防抖函数
     } else {
-      console.log("日期变更中，跳过watch触发的数据获取");
+      logger.debug("日期变更中，跳过watch触发的数据获取");
     }
   },
   { deep: true }
@@ -571,7 +571,7 @@ watch(
 onMounted(() => {
   logger.debug("TenantCharts组件挂载，开始加载初始数据");
   // 直接在控制台输出信息
-  console.log("TenantCharts组件挂载，开始加载初始数据");
+  logger.debug("TenantCharts组件挂载，开始加载初始数据");
   fetchAllData();
 
   // 监听浏览器窗口大小变化，在窗口大小变化时强制重新初始化图表

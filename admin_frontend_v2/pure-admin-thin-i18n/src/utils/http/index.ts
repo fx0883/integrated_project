@@ -33,14 +33,6 @@ const defaultConfig: AxiosRequestConfig = {
   }
 };
 
-// 初始化日志配置
-logger.configure({
-  enabled: true,
-  level: logger.LogLevel.DEBUG,
-  apiLogging: true,
-  apiLogFullResponse: true
-});
-
 class PureHttp {
   constructor() {
     this.httpInterceptorsRequest();
@@ -115,7 +107,7 @@ class PureHttp {
         
         // 特别记录撤销超级管理员的请求
         if (config.url && config.url.includes('revoke-super-admin')) {
-          console.log('发送撤销超级管理员请求:', {
+          logger.info('发送撤销超级管理员请求:', {
             url: config.url,
             method: config.method,
             data: config.data,
@@ -149,7 +141,7 @@ class PureHttp {
           
           // 特别记录撤销超级管理员的响应
           if (response.config.url && response.config.url.includes('revoke-super-admin')) {
-            console.log('收到撤销超级管理员响应:', {
+            logger.info('收到撤销超级管理员响应:', {
               url: response.config.url,
               status: response.status,
               data: response.data
@@ -165,7 +157,7 @@ class PureHttp {
           
           // 特别记录撤销超级管理员的响应
           if (response.config.url && response.config.url.includes('revoke-super-admin')) {
-            console.log('收到撤销超级管理员响应:', {
+            logger.info('收到撤销超级管理员响应:', {
               url: response.config.url,
               status: response.status,
               data: response.data
@@ -185,7 +177,7 @@ class PureHttp {
           
           // 特别记录撤销超级管理员的响应
           if (response.config.url && response.config.url.includes('revoke-super-admin')) {
-            console.log('收到撤销超级管理员响应:', {
+            logger.info('收到撤销超级管理员响应:', {
               url: response.config.url,
               status: response.status,
               data: response.data
@@ -216,7 +208,7 @@ class PureHttp {
         
         // 特别记录撤销超级管理员的错误
         if (error.config?.url && error.config.url.includes('revoke-super-admin')) {
-          console.error('撤销超级管理员请求错误:', {
+          logger.error('撤销超级管理员请求错误:', {
             url: error.config.url,
             status: error.response?.status,
             data: error.response?.data,
@@ -248,28 +240,34 @@ class PureHttp {
                   // Token刷新成功，执行队列中的请求
                   PureHttp.pendingRequests.forEach(callback => callback());
                   PureHttp.pendingRequests = [];
-                  
-                  // 重试当前请求
                   return this.retryRequest(errorConfig);
                 } else {
-                  // Token刷新失败，跳转到登录页
+                  // Token刷新失败，执行登出
                   this.logout();
-                  errorResponse.code = 4001;
-                  errorResponse.message = '认证失败，请重新登录';
+                  
+                  errorResponse = {
+                    success: false,
+                    code: 4001,
+                    message: '登录已过期，请重新登录',
+                    data: null
+                  };
                 }
               } catch (refreshError) {
-                // 记录Token刷新错误
-                logger.error('Token刷新错误', refreshError);
-                
-                // 刷新Token出错，跳转到登录页
+                // 刷新Token出错，执行登出
+                logger.error('刷新Token失败', refreshError);
                 this.logout();
-                errorResponse.code = 4001;
-                errorResponse.message = '认证失败，请重新登录';
+                
+                errorResponse = {
+                  success: false,
+                  code: 4001,
+                  message: '登录已过期，请重新登录',
+                  data: null
+                };
               } finally {
                 PureHttp.isRefreshing = false;
               }
             } else {
-              // 正在刷新token，将请求加入队列
+              // 已经在刷新Token，将请求加入队列
               return new Promise(resolve => {
                 PureHttp.pendingRequests.push(() => {
                   resolve(this.retryRequest(errorConfig));
@@ -277,97 +275,93 @@ class PureHttp {
                 });
               });
             }
-          } else {
-            // 处理其他错误状态码
-            switch (status) {
-              case 400:
-                errorResponse.code = 4000;
-                errorResponse.message = '请求参数错误';
-                break;
-              case 403:
-                errorResponse.code = 4003;
-                errorResponse.message = '您没有权限执行此操作';
-                break;
-              case 404:
-                errorResponse.code = 4004;
-                errorResponse.message = '请求的资源不存在';
-                break;
-              case 500:
-                errorResponse.code = 5000;
-                errorResponse.message = '服务器内部错误';
-                break;
-              default:
-                errorResponse.code = 5000;
-                errorResponse.message = '请求失败';
-            }
+          } else if (status === 403) {
+            errorResponse = {
+              success: false,
+              code: 4003,
+              message: '没有权限执行此操作',
+              data: error.response.data
+            };
+          } else if (status === 404) {
+            errorResponse = {
+              success: false,
+              code: 4004,
+              message: '请求的资源不存在',
+              data: null
+            };
+          } else if (status === 400) {
+            // 处理表单验证错误
+            const data = error.response.data;
+            let message = '请求参数错误';
             
-            // 尝试从响应中获取更详细的错误信息
-            if (error.response.data) {
-              // 保存原始错误数据
-              errorResponse.data = error.response.data;
-              
-              // 如果响应已经符合标准格式，直接使用
-              if (error.response.data && 
-                  typeof error.response.data === 'object' && 
-                  'success' in error.response.data && 
-                  'code' in error.response.data && 
-                  'message' in error.response.data &&
-                  error.response.data.success === false) {
-                errorResponse = error.response.data as typeof errorResponse;
+            if (data && typeof data === 'object') {
+              if (data.message) {
+                message = data.message;
+              } else if (data.detail) {
+                message = data.detail;
               } else {
-                // 提取错误消息
-                if (error.response.data && 
-                    typeof error.response.data === 'object' && 
-                    'message' in error.response.data) {
-                  errorResponse.message = String(error.response.data.message);
-                } else if (error.response.data && 
-                          typeof error.response.data === 'object' && 
-                          'detail' in error.response.data) {
-                  errorResponse.message = String(error.response.data.detail);
+                // 尝试提取第一个字段错误
+                const firstField = Object.keys(data)[0];
+                if (firstField && Array.isArray(data[firstField])) {
+                  message = `${firstField}: ${data[firstField][0]}`;
                 }
               }
             }
+            
+            errorResponse = {
+              success: false,
+              code: 4000,
+              message,
+              data: data
+            };
+          } else if (status >= 500) {
+            errorResponse = {
+              success: false,
+              code: 5000,
+              message: '服务器内部错误',
+              data: error.response.data
+            };
           }
-        } else {
-          // 网络错误
-          errorResponse.code = 5000;
-          errorResponse.message = '网络连接失败，请检查您的网络';
+        } else if (error.message && error.message.includes('timeout')) {
+          errorResponse = {
+            success: false,
+            code: 5001,
+            message: '请求超时，请稍后重试',
+            data: null
+          };
+        } else if (error.message && error.message.includes('Network Error')) {
+          errorResponse = {
+            success: false,
+            code: 5002,
+            message: '网络连接错误，请检查网络设置',
+            data: null
+          };
         }
         
         // 记录错误日志
-        logger.logError({
-          ...error,
-          errorResponse,
-          url: error.config?.url,
-          method: error.config?.method,
-          status: error.response?.status,
-          data: error.response?.data
-        });
+        logger.logError(error);
         
         // 显示错误消息
-        message(errorResponse.message, { type: 'error' });
+        message.error(errorResponse.message);
         
         return Promise.reject(errorResponse);
       }
     );
   }
 
-  /** 刷新Token方法 */
+  /**
+   * 刷新Token
+   */
   private async refreshToken(): Promise<boolean> {
     try {
-      // 获取刷新Token
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
-        logger.warn('刷新Token失败：refreshToken不存在');
         return false;
       }
       
-      // 调用刷新Token接口
-      logger.info('尝试刷新Token', { refreshToken: '******' });
-      
       const response = await Axios.post(
-        `${defaultConfig.baseURL}/auth/refresh/`,
-        { refresh_token: refreshToken },
+        `${defaultConfig.baseURL}/auth/token/refresh/`,
+        { refresh: refreshToken },
         {
           headers: {
             'Content-Type': 'application/json'
@@ -375,52 +369,38 @@ class PureHttp {
         }
       );
       
-      // 处理响应
-      if (response.data && (response.data.success || response.data.data)) {
-        // 获取新token
-        const data = response.data.data || response.data;
-        const newToken = data.token;
-        const newRefreshToken = data.refresh_token;
-        
-        if (newToken) {
-          // 更新localStorage中的token
-          localStorage.setItem('access_token', newToken);
-          if (newRefreshToken) {
-            localStorage.setItem('refresh_token', newRefreshToken);
-          }
-          
-          logger.info('Token刷新成功');
-          return true;
-        }
+      if (response.status === 200 && response.data.access) {
+        // 更新存储的token
+        localStorage.setItem('access_token', response.data.access);
+        return true;
       }
       
-      logger.warn('刷新Token失败：响应格式错误', response.data);
       return false;
     } catch (error) {
-      logger.error('刷新Token失败', error);
+      logger.error('刷新Token请求失败', error);
       return false;
     }
   }
 
-  /** 重试请求方法 */
+  /**
+   * 重试请求
+   */
   private async retryRequest(config: AxiosRequestConfig): Promise<any> {
     try {
-      // 获取新token
+      // 获取新的token
       const token = localStorage.getItem('access_token');
+      
+      // 创建新的请求配置
+      const newConfig = { ...config };
       if (token) {
-        // 更新请求头中的token
-        config.headers = config.headers || {};
-        config.headers['Authorization'] = `Bearer ${token}`;
+        newConfig.headers = {
+          ...newConfig.headers,
+          Authorization: `Bearer ${token}`
+        };
       }
       
-      logger.info('重试请求', { url: config.url, method: config.method });
-      
-      // 重新发起请求
-      const response = await Axios(config);
-      
-      // 记录响应
-      logger.logResponse(response);
-      
+      // 发起重试请求
+      const response = await Axios(newConfig);
       return response.data;
     } catch (error) {
       logger.error('重试请求失败', error);
@@ -428,22 +408,28 @@ class PureHttp {
     }
   }
 
-  /** 登出方法 */
+  /**
+   * 登出操作
+   */
   private logout(): void {
-    logger.info('用户登出，清除凭证');
-    
-    // 清除localStorage中的token和用户信息
+    // 清除token
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user_info');
+    
+    // 使用store的登出方法
+    useUserStoreHook().logOut();
     
     // 跳转到登录页
-    setTimeout(() => {
-      window.location.href = '/login';
-    }, 1000);
+    window.location.href = '/login';
   }
 
-  /** 通用请求工具函数 */
+  /**
+   * 通用请求工具函数
+   * @param method - 请求方法
+   * @param url - 请求地址
+   * @param param - 请求参数
+   * @param axiosConfig - axios配置
+   */
   public request<T>(
     method: RequestMethods,
     url: string,
@@ -462,7 +448,7 @@ class PureHttp {
       PureHttp.axiosInstance
         .request(config)
         .then((response: undefined) => {
-          resolve(response);
+          resolve(response as unknown as Promise<T>);
         })
         .catch(error => {
           reject(error);
@@ -470,7 +456,12 @@ class PureHttp {
     });
   }
 
-  /** 单独抽离的`post`工具函数 */
+  /**
+   * POST请求
+   * @param url - 请求地址
+   * @param params - 请求参数
+   * @param config - axios配置
+   */
   public post<T, P>(
     url: string,
     params?: AxiosRequestConfig<P>,
@@ -479,13 +470,60 @@ class PureHttp {
     return this.request<T>("post", url, params, config);
   }
 
-  /** 单独抽离的`get`工具函数 */
+  /**
+   * GET请求
+   * @param url - 请求地址
+   * @param params - 请求参数
+   * @param config - axios配置
+   */
   public get<T, P>(
     url: string,
     params?: AxiosRequestConfig<P>,
     config?: PureHttpRequestConfig
   ): Promise<T> {
     return this.request<T>("get", url, params, config);
+  }
+
+  /**
+   * PUT请求
+   * @param url - 请求地址
+   * @param params - 请求参数
+   * @param config - axios配置
+   */
+  public put<T, P>(
+    url: string,
+    params?: AxiosRequestConfig<P>,
+    config?: PureHttpRequestConfig
+  ): Promise<T> {
+    return this.request<T>("put", url, params, config);
+  }
+
+  /**
+   * PATCH请求
+   * @param url - 请求地址
+   * @param params - 请求参数
+   * @param config - axios配置
+   */
+  public patch<T, P>(
+    url: string,
+    params?: AxiosRequestConfig<P>,
+    config?: PureHttpRequestConfig
+  ): Promise<T> {
+    return this.request<T>("patch", url, params, config);
+  }
+
+  /**
+   * DELETE请求
+   * @param url - 请求地址
+   * @param params - 请求参数
+   * @param config - axios配置
+   */
+  public delete<T, P>(
+    url: string,
+    params?: AxiosRequestConfig<P>,
+    config?: PureHttpRequestConfig
+  ): Promise<T> {
+    return this.request<T>("delete", url, params, config);
   }
 }
 

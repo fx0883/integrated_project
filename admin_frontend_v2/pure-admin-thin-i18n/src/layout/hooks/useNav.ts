@@ -16,6 +16,7 @@ import { useEpThemeStoreHook } from "@/store/modules/epTheme";
 import { usePermissionStoreHook } from "@/store/modules/permission";
 import ExitFullscreen from "~icons/ri/fullscreen-exit-fill";
 import Fullscreen from "~icons/ri/fullscreen-fill";
+import logger from "@/utils/logger";
 
 const errorInfo =
   "The current routing configuration is incorrect, please check the configuration";
@@ -118,7 +119,10 @@ export function useNav() {
   }
 
   function resolvePath(route) {
-    if (!route.children) return console.error(errorInfo);
+    if (!route.children) {
+      logger.error(errorInfo);
+      return;
+    }
     const httpReg = /^http(s?):\/\//;
     const routeChildPath = route.children[0]?.path;
     if (httpReg.test(routeChildPath)) {

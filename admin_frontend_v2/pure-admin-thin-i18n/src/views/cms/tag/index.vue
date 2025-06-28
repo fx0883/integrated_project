@@ -174,13 +174,14 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Refresh, Search } from "@element-plus/icons-vue";
 import { useCmsStore } from "@/store/modules/cms";
 import { Tag, TagListParams } from "@/types/cms";
 import TagForm from "@/components/Cms/Tag/TagForm.vue";
 import ConfirmDialog from "@/components/Cms/Tag/ConfirmDialog.vue";
 import { useI18n } from "vue-i18n";
+import logger from "@/utils/logger";
 
 // 组件引用
 const tagFormRef = ref();
@@ -213,7 +214,8 @@ const fetchData = async () => {
   try {
     await cmsStore.fetchTagList(queryParams);
   } catch (error) {
-    console.error(t("cms.tag.fetchListFailed"), error);
+    logger.error(t("cms.tag.fetchListFailed"), error);
+    ElMessage.error(t("cms.tag.fetchListFailed"));
   }
 };
 
@@ -279,7 +281,7 @@ const confirmDelete = async () => {
     fetchData();
     confirmDialogRef.value?.close();
   } catch (error) {
-    console.error(t("cms.tag.deleteFailed"), error);
+    logger.error(t("cms.tag.deleteFailed"), error);
     ElMessage.error(t("cms.tag.deleteFailed"));
   } finally {
     deleteLoading.value = false;
@@ -313,7 +315,7 @@ const handleFormSubmit = async () => {
     tagFormVisible.value = false;
     fetchData();
   } catch (error) {
-    console.error(
+    logger.error(
       formMode.value === "create"
         ? t("cms.tag.createFailed")
         : t("cms.tag.updateFailed"),

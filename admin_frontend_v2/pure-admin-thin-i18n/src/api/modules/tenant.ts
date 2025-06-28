@@ -14,7 +14,7 @@ import logger from "@/utils/logger"; // 导入日志工具
 export function formatChartData(data: any): TenantChartData {
   // 检查数据是否存在
   if (!data) {
-    console.log("图表数据为空，返回空数据结构");
+    logger.debug("图表数据为空，返回空数据结构");
     return { hasData: false, labels: [], datasets: [] };
   }
   
@@ -28,7 +28,7 @@ export function formatChartData(data: any): TenantChartData {
     summary: chartData.summary || {}
   };
   
-  console.log("图表数据格式化结果:", JSON.parse(JSON.stringify(formattedData)));
+  logger.debug("图表数据格式化结果:", JSON.parse(JSON.stringify(formattedData)));
   
   return formattedData;
 }
@@ -50,14 +50,14 @@ export async function fetchTenantTrendData(
   
   logger.debug("请求租户数量趋势数据", { period, startDate, endDate });
   // 直接打印到控制台，确保可见
-  console.log("API请求：租户数量趋势数据", { period, startDate, endDate, url });
-  console.log("【API调用】fetchTenantTrendData", { period, startDate, endDate, url });
+  logger.info("API请求：租户数量趋势数据", { period, startDate, endDate, url });
+  logger.debug("【API调用】fetchTenantTrendData", { period, startDate, endDate, url });
   
   try {
     const response = await http.request<ApiResponse<any>>("get", url);
     // 打印完整的API响应结构，便于调试
-    console.log("API租户趋势数据完整响应:", JSON.stringify(response));
-    console.log("【API响应】fetchTenantTrendData 成功", { 
+    logger.debug("API租户趋势数据完整响应:", JSON.stringify(response));
+    logger.debug("【API响应】fetchTenantTrendData 成功", { 
       success: response.success,
       code: response.code,
       dataSize: JSON.stringify(response).length
@@ -67,7 +67,7 @@ export async function fetchTenantTrendData(
     if (response.success) {
       // 处理嵌套数据结构
       if (response.data && response.data.data) {
-        console.log("检测到嵌套数据结构，正在提取内层数据");
+        logger.debug("检测到嵌套数据结构，正在提取内层数据");
         // 深拷贝数据，避免引用问题
         const extractedData = JSON.parse(JSON.stringify(response.data.data));
         response.data = extractedData;
@@ -79,8 +79,8 @@ export async function fetchTenantTrendData(
         period
       });
       
-            // 直接打印到控制台，确保可见
-      console.log("API响应（已处理）：租户数量趋势数据成功", { 
+      // 直接打印到控制台，确保可见
+      logger.info("API响应（已处理）：租户数量趋势数据成功", { 
         success: response.success,
         code: response.code,
         labels: response.data?.labels?.length,
@@ -93,7 +93,7 @@ export async function fetchTenantTrendData(
         code: response.code, 
         message: response.message 
       });
-      console.log("【API响应】fetchTenantTrendData 失败", { 
+      logger.debug("【API响应】fetchTenantTrendData 失败", { 
         code: response.code, 
         message: response.message 
       });
@@ -102,8 +102,8 @@ export async function fetchTenantTrendData(
   } catch (error) {
     logger.error("获取租户数量趋势数据失败", error);
     // 直接打印到控制台，确保可见
-    console.error("API错误：租户数量趋势数据请求失败", error);
-    console.log("【API错误】fetchTenantTrendData", error);
+    logger.error("API错误：租户数量趋势数据请求失败", error);
+    logger.debug("【API错误】fetchTenantTrendData", error);
     throw error;
   }
 }
@@ -113,7 +113,7 @@ export async function fetchTenantTrendData(
  */
 export async function fetchTenantStatusDistribution() {
   logger.debug("请求租户状态分布数据");
-  console.log("【API调用】fetchTenantStatusDistribution");
+  logger.debug("【API调用】fetchTenantStatusDistribution");
   
   try {
     const response = await http.request<ApiResponse<any>>(
@@ -122,8 +122,8 @@ export async function fetchTenantStatusDistribution() {
     );
     
     // 打印完整的API响应结构，便于调试
-    console.log("API租户状态分布完整响应:", JSON.stringify(response));
-    console.log("【API响应】fetchTenantStatusDistribution 成功", { 
+    logger.debug("API租户状态分布完整响应:", JSON.stringify(response));
+    logger.debug("【API响应】fetchTenantStatusDistribution 成功", { 
       success: response.success,
       code: response.code,
       dataSize: JSON.stringify(response).length
@@ -132,7 +132,7 @@ export async function fetchTenantStatusDistribution() {
     if (response.success) {
       // 处理嵌套数据结构
       if (response.data && response.data.data) {
-        console.log("检测到嵌套数据结构，正在提取内层数据");
+        logger.debug("检测到嵌套数据结构，正在提取内层数据");
         // 深拷贝数据，避免引用问题
         const extractedData = JSON.parse(JSON.stringify(response.data.data));
         response.data = extractedData;
@@ -143,8 +143,8 @@ export async function fetchTenantStatusDistribution() {
         data: response.data?.datasets?.[0]?.data
       });
       
-            // 直接打印到控制台，确保可见
-      console.log("API响应（已处理）：租户状态分布数据成功", {
+      // 直接打印到控制台，确保可见
+      logger.info("API响应（已处理）：租户状态分布数据成功", {
         success: response.success,
         code: response.code,
         labels: response.data?.labels?.length,
@@ -157,7 +157,7 @@ export async function fetchTenantStatusDistribution() {
         code: response.code, 
         message: response.message 
       });
-      console.log("【API响应】fetchTenantStatusDistribution 失败", { 
+      logger.debug("【API响应】fetchTenantStatusDistribution 失败", { 
         code: response.code, 
         message: response.message 
       });
@@ -165,7 +165,7 @@ export async function fetchTenantStatusDistribution() {
     }
   } catch (error) {
     logger.error("获取租户状态分布数据失败", error);
-    console.log("【API错误】fetchTenantStatusDistribution", error);
+    logger.debug("【API错误】fetchTenantStatusDistribution", error);
     throw error;
   }
 }
@@ -186,14 +186,14 @@ export async function fetchTenantCreationRate(
   if (endDate) url += `&end_date=${endDate}`;
   
   logger.debug("请求租户创建速率数据", { period, startDate, endDate });
-  console.log("【API调用】fetchTenantCreationRate", { period, startDate, endDate, url });
+  logger.debug("【API调用】fetchTenantCreationRate", { period, startDate, endDate, url });
   
   try {
     const response = await http.request<ApiResponse<any>>("get", url);
     
     // 打印完整的API响应结构，便于调试
-    console.log("API租户创建速率完整响应:", JSON.stringify(response));
-    console.log("【API响应】fetchTenantCreationRate 成功", { 
+    logger.debug("API租户创建速率完整响应:", JSON.stringify(response));
+    logger.debug("【API响应】fetchTenantCreationRate 成功", { 
       success: response.success,
       code: response.code,
       dataSize: JSON.stringify(response).length
@@ -202,7 +202,7 @@ export async function fetchTenantCreationRate(
     if (response.success) {
       // 处理嵌套数据结构
       if (response.data && response.data.data) {
-        console.log("检测到嵌套数据结构，正在提取内层数据");
+        logger.debug("检测到嵌套数据结构，正在提取内层数据");
         // 深拷贝数据，避免引用问题
         const extractedData = JSON.parse(JSON.stringify(response.data.data));
         response.data = extractedData;
@@ -214,8 +214,8 @@ export async function fetchTenantCreationRate(
         period
       });
       
-            // 直接打印到控制台，确保可见
-      console.log("API响应（已处理）：租户创建速率数据成功", {
+      // 直接打印到控制台，确保可见
+      logger.info("API响应（已处理）：租户创建速率数据成功", {
         success: response.success,
         code: response.code,
         labels: response.data?.labels?.length,
@@ -228,7 +228,7 @@ export async function fetchTenantCreationRate(
         code: response.code, 
         message: response.message 
       });
-      console.log("【API响应】fetchTenantCreationRate 失败", { 
+      logger.debug("【API响应】fetchTenantCreationRate 失败", { 
         code: response.code, 
         message: response.message 
       });
@@ -236,7 +236,7 @@ export async function fetchTenantCreationRate(
     }
   } catch (error) {
     logger.error("获取租户创建速率数据失败", error);
-    console.log("【API错误】fetchTenantCreationRate", error);
+    logger.debug("【API错误】fetchTenantCreationRate", error);
     throw error;
   }
 }
@@ -249,7 +249,7 @@ export async function fetchTenantCreationRate(
 export function calculateTenantSummary(trendData: TenantChartData) {
   logger.debug("计算租户汇总数据", { trendData });
   // 直接打印到控制台，确保可见
-  console.log("计算租户汇总数据", { 
+  logger.info("计算租户汇总数据", { 
     hasData: !!trendData && !!trendData.datasets && !!trendData.datasets[0],
     labels: trendData?.labels,
     datasets: trendData?.datasets
@@ -257,7 +257,7 @@ export function calculateTenantSummary(trendData: TenantChartData) {
   
   if (!trendData || !trendData.datasets || !trendData.datasets[0] || !trendData.datasets[0].data.length) {
     logger.warn("租户趋势数据为空或格式不正确");
-    console.warn("警告：租户趋势数据为空或格式不正确", trendData);
+    logger.info("警告：租户趋势数据为空或格式不正确", trendData);
     return {
       total: 0,
       growthRate: 0,
@@ -291,7 +291,7 @@ export function calculateTenantSummary(trendData: TenantChartData) {
   
   logger.debug("租户汇总数据计算结果", result);
   // 直接打印到控制台，确保可见
-  console.log("租户汇总数据计算结果", result);
+  logger.info("租户汇总数据计算结果", result);
   
   return result;
 } 

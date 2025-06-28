@@ -1,3 +1,5 @@
+import logger from "@/utils/logger"; // 导入logger
+
 interface PrintFunction {
   extendOptions: Function;
   getStyle: Function;
@@ -188,7 +190,7 @@ Print.prototype = {
         frameWindow.close();
       }, 10);
     } catch (err) {
-      console.error(err);
+      logger.error("打印过程中出现错误", err);
     }
   },
   isDOM:

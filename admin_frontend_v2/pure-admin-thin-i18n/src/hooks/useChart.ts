@@ -145,8 +145,7 @@ export function useChart(
       }
     } catch (error) {
       logger.error(`【图表钩子】图表初始化异常 ID:${chartId}`, error);
-      console.error(`图表初始化异常:`, error);
-
+      
       // 在初始化失败时尝试重试
       if (initRetries < MAX_RETRIES) {
         initRetries++;
@@ -189,8 +188,8 @@ export function useChart(
     try {
       // 检查配置是否有效
       if (options.value && Object.keys(options.value).length > 0) {
-        console.log(`更新图表 ${chartId} 配置:`, options.value);
-        console.log(`图表 ${chartId} 更新前状态:`, {
+        logger.debug(`更新图表 ${chartId} 配置:`, options.value);
+        logger.debug(`图表 ${chartId} 更新前状态:`, {
           hasChartInstance: !!chartInstance,
           domExists: !!chartRef.value,
           domSize: chartRef.value
@@ -224,8 +223,7 @@ export function useChart(
       }
     } catch (error) {
       logger.error(`【图表钩子】图表配置更新异常 ID:${chartId}`, error);
-      console.error(`图表配置更新异常:`, error);
-
+      
       // 尝试重新创建图表实例
       if (chartInstance) {
         try {
@@ -269,7 +267,6 @@ export function useChart(
       }
     } catch (error) {
       logger.error(`【图表钩子】设置加载状态异常 ID:${chartId}`, error);
-      console.error(`图表设置加载状态异常:`, error);
     }
   }
 
