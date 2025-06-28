@@ -45,7 +45,7 @@
           },
           {
             "path": "/cms/article/version/:id",
-            "name": "menus.articleVersion",
+            "name": "ArticleVersion",
             "meta": {
               "title": "menus.articleVersion",
               "rank": 0,
@@ -146,9 +146,9 @@
           },
           {
             "path": "/cms/category/:id",
-            "name": "CategroyDetail",
+            "name": "CategoryDetail",
             "meta": {
-              "title": "menus.categroyDetail",
+              "title": "menus.categoryDetail",
               "rank": 0,
               "showLink": false,
               "showParent": false,

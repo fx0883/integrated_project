@@ -1,103 +1,19 @@
-labels:
-  allRole: All Role
-buttons:
-  pureLoginOut: Logout
-  pureLogin: Login
-  pureOpenSystemSet: Open System Settings
-  pureReload: Reload
-  pureCloseCurrentTab: Close Current Tab
-  pureCloseLeftTabs: Close Left Tabs
-  pureCloseRightTabs: Close Right Tabs
-  pureCloseOtherTabs: Close Other Tabs
-  pureCloseAllTabs: Close All Tabs
-  pureContentFullScreen: Content Full Screen
-  pureContentExitFullScreen: Content Exit Full Screen
-  pureClickCollapse: Click Collapse
-  pureClickExpand: Click Expand
-  pureConfirm: Confirm
-  pureSwitch: Switch
-  pureClose: Close
-  pureBackTop: Back to Top
-  pureOpenText: On
-  pureCloseText: Off
-  more: More
-search:
-  pureTotal: Total
-  pureHistory: Search History
-  pureCollect: Favorites
-  pureDragSort: (Drag to sort)
-  pureEmpty: No search results
-  purePlaceholder: Search menu (supports pinyin)
-panel:
-  pureSystemSet: System Settings
-  pureCloseSystemSet: Close Settings
-  pureClearCacheAndToLogin: Clear cache and return to login page
-  pureClearCache: Clear Cache
-  pureOverallStyle: Overall Style
-  pureOverallStyleLight: Light
-  pureOverallStyleLightTip: Fresh start, light and comfortable interface
-  pureOverallStyleDark: Dark
-  pureOverallStyleDarkTip: Moonlight sonata, immersed in the night's elegant tranquility
-  pureOverallStyleSystem: Auto
-  pureOverallStyleSystemTip: Sync with time, interface naturally responds to dawn and dusk
-  pureThemeColor: Theme Color
-  pureLayoutModel: Navigation Mode
-  pureVerticalTip: Left menu, familiar and friendly
-  pureHorizontalTip: Top menu, concise overview
-  pureMixTip: Mixed menu, flexible and versatile
-  pureStretch: Page Width
-  pureStretchFixed: Fixed
-  pureStretchFixedTip: Compact page, easily find the information you need
-  pureStretchCustom: Custom
-  pureStretchCustomTip: Min 1280, Max 1600
-  pureTagsStyle: Tab Style
-  pureTagsStyleSmart: Smart
-  pureTagsStyleSmartTip: Smart tabs, adding fun and brilliance
-  pureTagsStyleCard: Card
-  pureTagsStyleCardTip: Card tabs, efficient browsing
-  pureTagsStyleChrome: Chrome
-  pureTagsStyleChromeTip: Chrome style, classic and beautiful
-  pureInterfaceDisplay: Interface Display
-  pureGreyModel: Grey Mode
-  pureWeakModel: Weak Mode
-  pureHiddenTags: Hide Tags
-  pureHiddenFooter: Hide Footer
-  pureMultiTagsCache: Tags Persistence
-menus:
-  pureHome: Home
-  pureLogin: Login
-  pureAbnormal: Abnormal
-  pureFourZeroFour: "404"
-  pureFourZeroOne: "403"
-  pureFive: "500"
-  purePermission: Permission
-  purePermissionPage: Page Permission
-  purePermissionButton: Button Permission
-  purePermissionButtonRouter: Router Button Permission
-  purePermissionButtonLogin: Login Button Permission
-  pureTenantManagement: Tenant Management
-  pureTenantList: Tenant List
-  pureMenuManagement: Menu Management
-  pureMenuList: Menu List
-  profile: Profile
-  cmsManagement: Content Management
-  articleManagement: Article Management
-  articleCreate: Create Article
-  articleEdit: Edit Article
-  articleDetail: Article Detail
-  articleVersionHistory: Article Version History
-  commentManagement: Comment Management
-  commentDetail: Comment Detail
-  categoryManagement: Category Management
-  tagManagement: Tag Management
-status:
-  pureLoad: Loading...
-  pureMessage: Message
-  pureNotify: Notify
-  pureTodo: Todo
-  pureNoMessage: No messages
-  pureNoNotify: No notifications
-  pureNoTodo: No todos
+common:
+  back: Back
+  cancel: Cancel
+  confirm: Confirm
+  delete: Delete
+  edit: Edit
+  save: Save
+  generate: Generate
+  view: View
+  reset: Reset
+  noData: No Data
+  search: Search
+  actions: Actions
+  anonymous: Anonymous
+  operation: Operations
+
 login:
   pureUsername: Username
   purePassword: Password
@@ -106,666 +22,303 @@ login:
   pureLoginFail: Login failed
   pureUsernameReg: Please enter username
   purePassWordReg: Please enter password
-  purePassWordRuleReg: Password should be 8-18 characters with at least 2 types of digits, letters or symbols
-dashboard:
-  title: Management Console
-  tenantChartsTitle: Tenant Statistics
-  userChartsTitle: User Statistics
-  tenantTrend: Tenant Count Trend
-  tenantStatus: Tenant Status Distribution
-  tenantCreationRate: Tenant Creation Rate
-  tenantCount: Tenant Count
-  newTenants: New Tenants
-  tenantTotal: Total Tenants
-  userGrowthTrend: User Growth Trend
-  userRoleDistribution: User Role Distribution
-  activeUsers: Active Users
-  loginHeatmap: Login Heatmap
-  userCount: User Count
-  newUsers: New Users
-  userTotal: Total Users
-  activeRate: Active Rate
-  superAdmin: Super Admin
-  tenantAdmin: Tenant Admin
-  regularUser: Regular User
-  activeUserCount: Active Users
-  peakHour: Peak Hour
-  lowestHour: Lowest Hour
-  totalLogins: Total Logins
-  growthRate: Growth Rate
-  avgGrowth: Average Growth
-  loading: Loading...
-  noData: No Data
-  fetchDataFailed: Failed to fetch data
-  updatingCharts: Updating Charts...
-  fetchAllDataFailed: Failed to fetch all data
-  maxRetryExceeded: Maximum retry attempts exceeded, please check network or API status
-  today: Today
-  thisWeek: This Week
-  thisMonth: This Month
-  last30Days: Last 30 Days
-  last3Months: Last 3 Months
-  thisYear: This Year
-  to: to
-  startDate: Start Date
-  endDate: End Date
-  daily: Daily
-  weekly: Weekly
-  monthly: Monthly
-  quarterly: Quarterly
-  yearly: Yearly
-  day: Day
-  week: Week
-  month: Month
-  quarter: Quarter
-  year: Year
-  average: Average
+  purePassWordRuleReg: Password should be 8-18 characters with at least two types of characters (letters, numbers, symbols)
 
-# Tenant Management Internationalization
 tenant:
   management: Tenant Management
-  list: Tenant List
-  create: Create Tenant
-  edit: Edit Tenant
+  createTenant: Create Tenant
+  editTenant: Edit Tenant
   detail: Tenant Details
-  delete: Delete Tenant
-  quota: Quota Management
-  users: Tenant Users
-  title: Tenant Management
-  id: Tenant ID
-  name: Tenant Name
+  create: Create
+  editBtn: Edit
+  view: View
+  delete: Delete
+  suspend: Suspend
+  activate: Activate
+  search: Search
+  cancel: Cancel
+  backToList: Back to List
+  name: Name
   status: Status
+  statusAll: All Status
+  statusActive: Active
+  statusSuspended: Suspended
+  statusDeleted: Deleted
+  statusInactive: Inactive
   contactName: Contact Name
   contactEmail: Contact Email
   contactPhone: Contact Phone
   createdAt: Created At
   updatedAt: Updated At
+  actions: Actions
+  id: ID
   userCount: User Count
   adminCount: Admin Count
-  actions: Actions
-  search: Search Tenant
-  statusActive: Active
-  statusSuspended: Suspended
-  statusDeleted: Deleted
-  statusAll: All
-  confirmDelete: Confirm Delete Tenant
-  confirmDeleteMessage: Are you sure you want to delete tenant "{name}"? This operation is irreversible, but the tenant data will be retained in the database (soft delete).
-  confirmSuspend: Confirm Suspend Tenant
-  confirmSuspendMessage: Are you sure you want to suspend tenant "{name}"? After suspension, all users under this tenant will not be able to log in to the system, but the tenant data will be retained.
-  confirmActivate: Confirm Activate Tenant
-  confirmActivateMessage: Are you sure you want to activate tenant "{name}"? After activation, users under this tenant will be able to use the system normally.
-  deleteSuccess: Tenant deleted successfully
-  deleteFailed: Failed to delete tenant
-  createSuccess: Tenant created successfully
-  createFailed: Failed to create tenant
-  updateSuccess: Tenant updated successfully
-  updateFailed: Failed to update tenant
-  suspendSuccess: Tenant suspended successfully
-  suspendFailed: Failed to suspend tenant
-  activateSuccess: Tenant activated successfully
-  activateFailed: Failed to activate tenant
   basicInfo: Basic Information
   quotaInfo: Quota Information
   userInfo: User Information
-  backToList: Back to List
-  suspend: Suspend Tenant
-  activate: Activate Tenant
-  view: View
-  editBtn: Edit
-  save: Save
-  cancel: Cancel
-  nameRequired: Tenant name cannot be empty
-  emailFormat: Please enter a valid email format
-  phoneFormat: Please enter a valid phone number format
-  createTenant: Create Tenant
-  editTenant: Edit Tenant
-  quotaManagement: Quota Management
-  tenantUsers: Tenant Users
-  viewDetails: View Details
-  noData: No Data
-  loading: Loading...
   quotaUsage: Quota Usage
   maxUsers: Max Users
   maxAdmins: Max Admins
   maxStorageMb: Max Storage (MB)
-  maxProducts: Max Products
-  currentStorageUsedMb: Current Storage Used (MB)
-  userTotal: Total Users
-  adminTotal: Admin Count
-  searchUser: Search User
+  tenantUsers: Tenant Users
   username: Username
   email: Email
   nickName: Nickname
   role: Role
   roleAdmin: Admin
   roleUser: User
-  isActive: Status
-  isActiveTrue: Active
-  isActiveFalse: Inactive
+  isActive: Active
+  isActiveTrue: Yes
+  isActiveFalse: No
   dateJoined: Date Joined
-  viewUsers: View Users
-  quotaUpdateSuccess: Tenant quota updated successfully
-  quotaUpdateFailed: Failed to update tenant quota
-  positiveInteger: Must be a positive integer
-
-# Admin User Management Related Translations
-adminUser:
-  management: Admin User Management
-  list: Admin User List
-  create: Create Admin
-  edit: Edit Admin
-  detail: Admin Details
-  delete: Delete Admin
-  title: Admin User Management
-  id: User ID
-  username: Username
-  email: Email
-  phone: Phone
-  nickName: Nickname
-  firstName: First Name
-  lastName: Last Name
-  fullName: Full Name
-  avatar: Avatar
-  status: Status
-  roles: Roles
-  tenant: Tenant
-  isSuperAdmin: Super Admin
-  isAdmin: Admin
-  createdAt: Created At
-  lastLogin: Last Login
-  lastLoginIp: Last Login IP
-  actions: Actions
-  search: Search Admin
-  password: Password
-  confirmPassword: Confirm Password
-  searchPlaceholder: Enter username, email, nickname or phone to search
-  statusActive: Active
-  statusSuspended: Suspended
-  statusInactive: Inactive
-  statusAll: All
-  confirmDelete: Confirm Delete Admin
-  confirmDeleteMessage: Are you sure you want to delete admin "{username}"? This operation is irreversible, but the user data will be retained in the database (soft delete).
-  confirmActivate: Confirm Activate Admin
-  confirmActivateMessage: Are you sure you want to activate admin "{username}"? After activation, this admin will be able to use the system normally.
-  confirmDeactivate: Confirm Deactivate Admin
-  confirmDeactivateMessage: Are you sure you want to deactivate admin "{username}"? After deactivation, this admin will not be able to log in to the system, but the data will be retained.
-  confirmGrantSuperAdmin: Confirm Grant Super Admin
-  confirmGrantSuperAdminMessage: Are you sure you want to grant super admin privileges to "{username}"? After granting, this user will have the highest system privileges.
-  confirmRevokeSuperAdmin: Confirm Revoke Super Admin
-  confirmRevokeSuperAdminMessage: Are you sure you want to revoke super admin privileges from "{username}"? After revocation, this user will no longer have the highest system privileges.
-  deleteSuccess: Admin deleted successfully
-  deleteFailed: Failed to delete admin
-  createSuccess: Admin created successfully
-  createFailed: Failed to create admin
-  updateSuccess: Admin updated successfully
-  updateFailed: Failed to update admin
-  activateSuccess: Admin activated successfully
-  activateFailed: Failed to activate admin
-  deactivateSuccess: Admin deactivated successfully
-  deactivateFailed: Failed to deactivate admin
-  grantSuccess: Super admin privileges granted successfully
-  grantFailed: Failed to grant super admin privileges
-  revokeSuccess: Super admin privileges revoked successfully
-  revokeFailed: Failed to revoke super admin privileges
-  resetPasswordSuccess: Password reset successfully
-  resetPasswordFailed: Failed to reset password
-  uploadAvatarSuccess: Avatar uploaded successfully
-  uploadAvatarFailed: Failed to upload avatar
-  basicInfo: Basic Information
-  roleInfo: Role Information
-  accountInfo: Account Information
-  backToList: Back to List
-  activate: Activate Admin
-  deactivate: Deactivate Admin
-  grantSuperAdmin: Grant Super Admin
-  revokeSuperAdmin: Revoke Super Admin
-  resetPassword: Reset Password
-  uploadAvatar: Click to Upload Avatar
-  uploading: Uploading...
-  view: View
-  editBtn: Edit
-  save: Save
-  cancel: Cancel
-  superAdmin: Super Admin
-  tenantAdmin: Tenant Admin
-  nameRequired: Username cannot be empty
-  emailRequired: Email cannot be empty
-  emailFormat: Please enter a valid email format
-  phoneFormat: Please enter a valid phone number format
-  passwordRequired: Password cannot be empty
-  passwordConfirmRequired: Confirm password cannot be empty
-  passwordNotMatch: The two passwords do not match
-  passwordFormat: Password should be 8-18 characters with at least 2 types of digits, letters or symbols
-  createAdminUser: Create Admin
-  createSuperAdmin: Create Super Admin
-  editAdminUser: Edit Admin
   noData: No Data
-  loading: Loading...
-  usernameRequired: Username is required
-  usernameLength: Username should be 3-30 characters
-  emailInvalid: Invalid email format
-  passwordLength: Password should be at least 8 characters
-  formValidationFailed: Form validation failed
-  isActive: Is Active
-  usernamePlaceholder: Please enter username
-  emailPlaceholder: Please enter email
-  phonePlaceholder: Please enter phone number
-  nickNamePlaceholder: Please enter nickname
-  firstNamePlaceholder: Please enter first name
-  lastNamePlaceholder: Please enter last name
-  passwordPlaceholder: Please enter password
-  confirmPasswordPlaceholder: Please confirm password
-  tenantPlaceholder: Please select tenant
-  selectTenantTitle: Select Tenant
-  tenantSelectRequired: Please select a tenant to continue
-  revokeSuperAdminSuccess: Successfully revoked super admin privileges and assigned to tenant
-  selectTenant: Select Tenant
-  update: Update
-  close: Close
-  profile: Profile
-  updateProfile: Update Profile
-  profileSuccess: Profile updated successfully
-  profileFailed: Failed to update profile
+  quotaManagement: Quota Management
+  createSuccess: Tenant created successfully
+  createFailed: Failed to create tenant
+  updateSuccess: Tenant updated successfully
+  updateFailed: Failed to update tenant
+  deleteSuccess: Tenant deleted successfully
+  deleteFailed: Failed to delete tenant
+  suspendSuccess: Tenant suspended successfully
+  suspendFailed: Failed to suspend tenant
+  activateSuccess: Tenant activated successfully
+  activateFailed: Failed to activate tenant
+  quotaUpdateSuccess: Quota updated successfully
+  quotaUpdateFailed: Failed to update quota
+  confirmDelete: Confirm Delete
+  confirmDeleteMessage: Are you sure you want to delete tenant {name}?
+  confirmSuspend: Confirm Suspend
+  confirmSuspendMessage: Are you sure you want to suspend tenant {name}?
+  confirmActivate: Confirm Activate
+  confirmActivateMessage: Are you sure you want to activate tenant {name}?
+  edit: Edit Tenant
 
-# Menu Management Related Translations
 menu:
+  title: Menu Management
+  create: Create
+  import: Import
+  export: Export
+  batchDelete: Batch Delete
+  search: Search
+  isActive: Status
+  parentId: Parent ID
+  id: ID
+  name: Name
+  path: Path
+  component: Component
+  code: Code
+  rank: Rank
+  statusActive: Active
+  statusInactive: Inactive
   management: Menu Management
   list: Menu List
-  create: Create Menu
-  edit: Edit Menu
-  detail: Menu Details
-  delete: Delete Menu
-  title: Menu Management
-  id: Menu ID
-  name: Menu Name
-  code: Menu Code
-  path: Route Path
-  component: Component Path
-  redirect: Redirect Path
-  icon: Menu Icon
-  extraIcon: Extra Icon
-  rank: Sort Value
-  showLink: Show Menu
-  showParent: Show Parent Menu
-  roles: Role Permissions
-  auths: Button Permissions
-  keepAlive: Keep Alive
-  frameSrc: External Link
-  frameLoading: Show Loading Animation
-  hiddenTag: Hide Tag
-  dynamicLevel: Dynamic Route Level
-  activePath: Active Path
-  transitionName: Transition Animation
-  enterTransition: Enter Transition
-  leaveTransition: Leave Transition
-  parentId: Parent Menu
-  isActive: Status
-  remarks: Remarks
-  createdAt: Created At
-  updatedAt: Updated At
-  actions: Actions
-  search: Search Menu
-  import: Import Config
-  export: Export Config
-  batch: Batch Operations
-  statusActive: Active
-  statusInactive: Inactive
-  statusAll: All
-  confirmDelete: Confirm Delete Menu
-  confirmDeleteMessage: Are you sure you want to delete menu "{name}"? This action cannot be undone.
-  confirmCascadeDelete: Confirm Cascade Delete
-  confirmCascadeDeleteMessage: This menu has child menus. Do you want to delete them as well? Select "No" to delete only the current menu.
-  confirmStatusChange: Confirm Status Change
-  confirmStatusChangeMessage: Are you sure you want to {action} menu "{name}"?
-  deleteSuccess: Menu deleted successfully
-  deleteFailed: Failed to delete menu
-  createSuccess: Menu created successfully
-  createFailed: Failed to create menu
-  updateSuccess: Menu updated successfully
-  updateFailed: Failed to update menu
-  importSuccess: Menu configuration imported successfully
-  importFailed: Failed to import menu configuration
-  exportSuccess: Menu configuration exported successfully
-  exportFailed: Failed to export menu configuration
-  batchSuccess: Batch operation successful
-  batchFailed: Batch operation failed
-  basicInfo: Basic Information
-  routeConfig: Route Configuration
-  displaySettings: Display Settings
-  advancedSettings: Advanced Settings
-  permissionSettings: Permission Settings
-  view: View
-  editBtn: Edit
-  save: Save
-  cancel: Cancel
-  nameRequired: Menu name is required
-  codeRequired: Menu code is required
-  pathRequired: Route path is required
-  componentRequired: Component path is required
-  invalidPath: Invalid route path
-  invalidComponent: Invalid component path
-  createMenu: Create Menu
-  editMenu: Edit Menu
-  viewDetails: View Details
-  noData: No Data
-  loading: Loading...
-  addChildMenu: Add Child Menu
-  moveUp: Move Up
-  moveDown: Move Down
-  activate: Activate
-  deactivate: Deactivate
-  selectIcon: Select Icon
-  menuTree: Menu Tree
-  dragToSort: Drag to Sort
-  allMenus: All Menus
-  refresh: Refresh
-  collapse: Collapse
-  expand: Expand
-  dragTip: Drag to adjust menu order
-  changeParentTip: Drag to another menu to change parent
-  confirmBatchDelete: Confirm Batch Delete
-  confirmBatchDeleteMessage: Are you sure you want to delete {count} selected menu items? This action cannot be undone.
-  selectAtLeastOne: Please select at least one item
-  batchDelete: Batch Delete
-  batchEdit: Batch Edit
-  setUserMenu: Set Menu
-  preview: Preview
-  return: Return
-  searchMenus: Search Menus
-  loadFailed: Failed to load menus
-  saveSuccess: Menu saved successfully
-  saveFailed: Failed to save menu
-  settingSuccess: Menu settings updated successfully
-  userMenuSetting: User Menu Settings
 
-# Common Translations
-common:
-  save: Save
-  cancel: Cancel
-  reset: Reset
-  confirm: Confirm
-  confirmMessage: Are you sure you want to perform this operation?
-  delete: Delete
-  edit: Edit
-  create: Create
-  search: Search
-  loading: Loading...
-  noData: No Data
-  success: Operation Successful
-  failed: Operation Failed
-  yes: Yes
-  no: No
-  back: Back
-  optional: Optional
-
-# CMS Content Management System
 cms:
+  tag:
+    createTag: Create Tag
+    editTag: Edit Tag
+    tagManagement: Tag Management
+    searchPlaceholder: Search tags by name or description
+    isActive: Status
+    statusAll: All Status
+    statusActive: Active
+    statusInactive: Inactive
+    id: ID
+    name: Name
+    slug: Slug
+    description: Description
+    articleCount: Articles
+    createdAt: Created At
+    actions: Actions
+    basicInfo: Basic Info
+    advancedSettings: Advanced Settings
+    color: Color
+    confirmDelete: Confirm Delete
+    confirmDeleteMessage: Are you sure you want to delete tag {name}?
+  
   comment:
-    commentManagement: Comment Management
-    commentDetail: Comment Detail
-    id: Comment ID
-    content: Comment Content
-    article: Related Article
-    status: Status
-    createTime: Create Time
-    updateTime: Update Time
-    pinned: Pinned
-    keyword: Keyword
-    dateRange: Date Range
-    startDate: Start Date
-    endDate: End Date
-    searchPlaceholder: Search comment content
-    articleIdPlaceholder: Enter article ID
+    createComment: Create Comment
+    editComment: Edit Comment
+    article: Article
+    parent: Parent Comment
+    content: Content
+    contentPlaceholder: Enter comment content
+    selectArticle: Select an article
+    selectParentComment: Select a parent comment
+    guestInfo: Guest Information
     guestName: Guest Name
     guestEmail: Guest Email
     guestWebsite: Guest Website
-    guestNamePlaceholder: Please enter your name
-    guestEmailPlaceholder: Please enter your email
-    guestWebsitePlaceholder: Please enter your website
-    contentPlaceholder: Please enter comment content
-    contentRequired: Comment content is required
-    contentLength: Comment content should be 2-1000 characters
-    nameRequired: Guest name is required
-    emailRequired: Guest email is required
-    emailInvalid: Invalid email format
-    statusPending: Pending
-    statusApproved: Approved
-    statusSpam: Spam
-    statusTrash: Trash
-    statusAll: All
-    adminOptions: Admin Options
-    editComment: Edit Comment
-    replyComment: Reply Comment
-    reply: Reply
-    addReply: Add Reply
-    replies: Replies
-    noReplies: No replies yet
-    approve: Approve
-    reject: Reject
-    markAsSpam: Mark as Spam
-    confirmApprove: Confirm Approve Comment
-    confirmApproveMessage: Are you sure you want to approve this comment? Once approved, it will be publicly visible.
-    confirmReject: Confirm Reject Comment
-    confirmRejectMessage: Are you sure you want to reject this comment? It will not be publicly visible.
-    confirmMarkAsSpam: Confirm Mark as Spam
-    confirmMarkAsSpamMessage: Are you sure you want to mark this comment as spam?
-    confirmDelete: Confirm Delete Comment
-    confirmDeleteMessage: Are you sure you want to delete this comment? This action cannot be undone.
-    confirmBatchAction: Confirm {action}
-    confirmBatchActionMessage: Are you sure you want to perform this action on {count} selected comments?
-    confirmBatchDelete: Confirm Batch Delete
-    confirmBatchDeleteMessage: Are you sure you want to delete {count} selected comments? This action cannot be undone.
-    batchApprove: Batch Approve
-    batchReject: Batch Reject
-    batchMarkAsSpam: Batch Mark as Spam
-    batchDelete: Batch Delete
-    deleteSuccess: Comment deleted successfully
-    deleteFailed: Failed to delete comment
-    batchActionSuccess: Batch action successful
-    batchActionFailed: Batch action failed
-    batchDeleteSuccess: Batch delete successful
-    batchDeleteFailed: Batch delete failed
-    selectCommentsFirst: Please select comments first
-    selectCommentsToDelete: Please select comments to delete
-    ipAddress: IP Address
-    userAgent: User Agent
-    guest: Guest
-    anonymous: Anonymous
-    byUser: By user {user}
-    byGuest: By guest {name}
-    invalidId: Invalid comment ID
-    notFound: Comment not found
-    fetchListFailed: Failed to fetch comment list
-    fetchDetailFailed: Failed to fetch comment detail
-  article:
-    title: Title
-    slug: Slug
-    content: Content
-    excerpt: Excerpt
     status: Status
-    visibility: Visibility
-    password: Password
-    categories: Categories
-    tags: Tags
-    author: Author
-    createTime: Create Time
-    updateTime: Update Time
-    publishTime: Publish Time
-    featured: Featured
-    pinned: Pinned
-    allowComment: Allow Comments
-    contentType: Content Type
-    mainContent: Main Content
-    statistics: Statistics
-    viewCount: Views
-    commentCount: Comments
-    likeCount: Likes
-    wordCount: Word Count
-    titlePlaceholder: Enter article title
-    slugPlaceholder: Enter article slug for URL
-    contentPlaceholder: Enter article content
-    excerptPlaceholder: Enter article excerpt
-    passwordPlaceholder: Enter access password
-    categoriesPlaceholder: Select categories
-    tagsPlaceholder: Select tags
-    titleRequired: Title is required
-    contentRequired: Content is required
-    visibilityRequired: Visibility is required
-    passwordRequired: Password is required
-    titleLength: Title should be 2-200 characters
-    settings: Article Settings
-    statusDraft: Draft
-    statusPending: Pending
-    statusPublished: Published
-    statusArchived: Archived
-    visibilityPublic: Public
-    visibilityPrivate: Private
-    visibilityPassword: Password Protected
-    contentTypeMarkdown: Markdown
-    contentTypeHtml: HTML
-    noCategories: No Categories
-    noTags: No Tags
-    noExcerpt: No Excerpt
-    basicInfo: Basic Information
-    publish: Publish
-    confirmPublish: Confirm Publish
-    confirmPublishMessage: Are you sure you want to publish article "{title}"?
-    publishSuccess: Article published successfully
-    publishFailed: Failed to publish article
-    confirmDelete: Confirm Delete
-    confirmDeleteMessage: Are you sure you want to delete article "{title}"? This action cannot be undone.
-    deleteSuccess: Article deleted successfully
-    deleteFailed: Failed to delete article
-    editorTip: Supports Markdown format
-    
-    # Version history translations
+    isPinned: Is Pinned
+    guest: Guest
+  
+  article:
     versionHistory: Version History
     versionList: Version List
     versionNumber: Version Number
     versionCreatedAt: Created At
     versionCreatedBy: Created By
-    versionDetail: Version Detail
     compareVersions: Compare Versions
-    restoreVersion: Restore This Version
-    currentVersion: Current Version
-    versionDiff: Version Difference
-    noVersions: No version history
-    confirmRestore: Confirm Restore Version
-    confirmRestoreMessage: Are you sure you want to restore to version {version}? Current unsaved changes will be lost.
-    restoreSuccess: Version restored successfully
-    restoreFailed: Failed to restore version
-    fetchVersionsFailed: Failed to fetch version history
-    fetchVersionDetailFailed: Failed to fetch version detail
-    compareVersionsFailed: Failed to compare versions
+    restoreVersion: Restore Version
+    noVersions: No Versions
+    versionDetail: Version Detail
+    status: Status
+    createdAt: Created At
+    versionDiff: Version Comparison
     oldVersion: Old Version
-    latest: Latest Version
-    
-  tag:
-    tagManagement: Tag Management
-    id: Tag ID
-    name: Tag Name
-    slug: Tag Slug
-    description: Description
-    color: Tag Color
-    isActive: Status
-    createdAt: Created At
-    updatedAt: Updated At
-    articleCount: Article Count
-    actions: Actions
-    search: Search Tags
-    searchPlaceholder: Search by tag name
-    statusActive: Active
-    statusInactive: Inactive
-    statusAll: All
-    createTag: Create Tag
-    editTag: Edit Tag
-    deleteTag: Delete Tag
-    confirmDelete: Confirm Delete Tag
-    confirmDeleteMessage: Are you sure you want to delete tag "{name}"? This may affect associated articles.
-    deleteSuccess: Tag deleted successfully
-    deleteFailed: Failed to delete tag
-    createSuccess: Tag created successfully
-    createFailed: Failed to create tag
-    updateSuccess: Tag updated successfully
-    updateFailed: Failed to update tag
-    nameRequired: Tag name is required
-    slugInvalid: Invalid tag slug format
-    selectColor: Select Color
-    defaultColor: Default Color
-    basicInfo: Basic Information
-    advancedSettings: Advanced Settings
-    generateSlug: Generate Slug
-    slugTip: Used for URL identification, recommend using English letters, numbers and hyphens
-    colorTip: Choose tag display color
-    nameLength: Length should be between {min} and {max} characters
-    fetchListFailed: Failed to fetch tag list
-    formDataError: Failed to get form data
-    idNotFound: Tag ID not found
-    slugPlaceholder: Enter tag slug
-
-  # Add category management translations
+    currentVersion: Current Version
+    latest: Latest
+    title: Title
+    featuredTooltip: Featured article
+    featured: Featured
+    pinnedTooltip: Pinned article
+    pinned: Pinned
+    statusPublished: Published
+    statusDraft: Draft
+    statusPending: Pending
+    statusArchived: Archived
+    tags: Tags
+    noTags: No Tags
+    content: Content
+    excerpt: Excerpt
+    noExcerpt: No excerpt available
+    mainContent: Main Content
+    statistics: Statistics
+    keyword: Keyword
+    searchPlaceholder: Search by title, content or author
+    dateRange: Date Range
+    startDate: Start Date
+    endDate: End Date
+    author: Author
+    createTime: Create Time
+    publishTime: Publish Time
+    batchDelete: Batch Delete
+    statusAll: All Status
+    featuredAll: All Featured Status
+    featuredTrue: Featured
+    featuredFalse: Not Featured
+    pinnedAll: All Pinned Status
+    pinnedTrue: Pinned
+    pinnedFalse: Not Pinned
+    articleManagement: Article Management
+    createArticle: Create Article
+  
   category:
-    categoryManagement: Category Management
-    id: Category ID
-    name: Category Name
-    slug: Category Slug
-    description: Description
-    parent: Parent Category
-    parentId: Parent Category ID
-    level: Level
-    path: Path
-    sortOrder: Sort Order
-    icon: Icon
-    isActive: Status
-    createdAt: Created At
-    updatedAt: Updated At
-    articleCount: Article Count
-    children: Children
-    actions: Actions
-    search: Search Categories
-    searchPlaceholder: Search by category name
-    statusActive: Active
-    statusInactive: Inactive
-    statusAll: All
-    noParent: No Parent
-    rootCategory: Root Category
-    createCategory: Create Category
     editCategory: Edit Category
-    addSubCategory: Add Subcategory
-    deleteCategory: Delete Category
-    confirmDelete: Confirm Delete Category
-    confirmDeleteMessage: Are you sure you want to delete category "{name}"? This cannot be undone and will also delete all subcategories.
-    deleteSuccess: Category deleted successfully
-    deleteFailed: Failed to delete category
-    createSuccess: Category created successfully
-    createFailed: Failed to create category
+    basicInfo: Basic Information
+    name: Name
+    slug: Slug
+    parent: Parent Category
+    noParent: No Parent
+    description: Description
+    advancedSettings: Advanced Settings
+    icon: Icon
+    sortOrder: Sort Order
+    isActive: Active
+    nameRequired: Name is required
+    slugInvalid: Slug is invalid
     updateSuccess: Category updated successfully
     updateFailed: Failed to update category
-    nameRequired: Category name is required
-    slugInvalid: Invalid category slug format
-    dragToSort: Drag to Sort
-    updateOrder: Update Order
-    updateOrderSuccess: Order updated successfully
-    updateOrderFailed: Failed to update order
-    expandAll: Expand All
-    collapseAll: Collapse All
-    categoryTree: Category Tree
-    basicInfo: Basic Information
-    advancedSettings: Advanced Settings
-    nameLength: Length should be between {min} and {max} characters
-    slugTip: Used for URL identification, recommend using English letters, numbers and hyphens
-    generateSlug: Generate Slug
+    categoryDetail: Category Detail
+    id: ID
+    level: Level
+    path: Path
+    statusActive: Active
+    statusInactive: Inactive
+    articleCount: Articles
+    createdAt: Created At
+    updatedAt: Updated At
+    children: Child Categories
+    actions: Actions
     fetchListFailed: Failed to fetch category list
-    fetchDetailFailed: Failed to fetch category detail
-    formDataError: Failed to get form data
-    idNotFound: Category ID not found
-    parentSelectPlaceholder: Select parent category (optional)
-    parentSelectTip: Leave empty for root category
-    iconPlaceholder: Enter icon class name
-    sortOrderTip: Lower numbers appear first, defaults to creation time
-    descriptionPlaceholder: Enter category description
-    treeView: Tree View
-    listView: List View
-    onlyActive: Show Active Only
-    articles: articles
+  
+  menu:
+    cmsManagement: CMS Management
+    articleManagement: Article Management
+    articleList: Article List
+    articleCreate: Create Article
+    articleEdit: Edit Article
+    articleDetail: Article Details
+    articleVersion: Article Version
+    categoryManagement: Category Management
+    categoryList: Category List
+    categoryEdit: Edit Category
+    categoryDetail: Category Details
+    tagManagement: Tag Management
+    tagList: Tag List
+    tagCreate: Create Tag
+    tagEdit: Edit Tag
+    commentManagement: Comment Management
+    commentList: Comment List
+    commentCreate: Create Comment
+    commentEdit: Edit Comment
+    commentDetail: Comment Details
 
+menus:
+  pureHome: Home
+  pureTenantManagement: Tenant Management
+  pureTenantList: Tenant List
+  articleVersion: Article Version
+  CategroyDetail: Category Details
+
+adminUser:
+  management: Admin User Management
+  list: Admin User List
+  create: Create Admin User
+  createSuperAdmin: Create Super Admin
+  edit: Edit Admin User
+  profile: Profile
+
+buttons:
+  pureClickCollapse: Click to Collapse
+  pureOpenSystemSet: Open System Settings
+  pureLoginOut: Logout
+  pureReload: Reload
+  pureCloseCurrentTab: Close Current Tab
+  pureCloseLeftTabs: Close Left Tabs
+  pureCloseRightTabs: Close Right Tabs
+  pureCloseOtherTabs: Close Other Tabs
+  pureCloseAllTabs: Close All Tabs
+  pureContentFullScreen: Content Fullscreen
+  pureBackTop: Back to Top
+  pureOpenText: Enable
+  pureCloseText: Disable
+
+panel:
+  pureSystemSet: System Settings
+  pureCloseSystemSet: Close System Settings
+  pureClearCacheAndToLogin: Clear Cache and Login Again
+  pureOverallStyle: Overall Style
+  pureOverallStyleLight: Light Mode
+  pureOverallStyleLightTip: Light background color scheme
+  pureOverallStyleDark: Dark Mode
+  pureOverallStyleDarkTip: Dark background color scheme
+  pureOverallStyleSystem: Follow System
+  pureOverallStyleSystemTip: Follow system appearance settings
+  pureThemeColor: Theme Color
+  pureLayoutModel: Layout Mode
+  pureVerticalTip: Vertical menu layout
+  pureHorizontalTip: Horizontal menu layout
+  pureMixTip: Mixed menu layout
+  pureTagsStyle: Tabs Style
+  pureTagsStyleSmart: Smart Mode
+  pureTagsStyleSmartTip: Dynamic tabs mode
+  pureTagsStyleCard: Card Mode
+  pureTagsStyleCardTip: Card tabs mode
+  pureTagsStyleChrome: Browser Mode
+  pureTagsStyleChromeTip: Browser tabs mode
+  pureInterfaceDisplay: Interface Display
+  pureGreyModel: Grey Mode
+  pureWeakModel: Color Weak Mode
+  pureHiddenTags: Hide Tabs
+  pureHiddenFooter: Hide Footer
+  pureMultiTagsCache: Persistent Tabs
+  pureClearCache: Clear Cache
+
+status:
+  pureNotify: Notifications
+  pureMessage: Messages
+  pureTodo: To-Do
+  pureNoNotify: No notifications

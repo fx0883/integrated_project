@@ -50,7 +50,7 @@ function getObjectKeys(obj) {
       if (obj[k] && isObject(obj[k])) {
         stack.push({ obj: obj[k], key: newKey });
       } else {
-        keys.add(key);
+        keys.add(newKey);
       }
     }
   }
@@ -86,6 +86,18 @@ export function transformI18n(message: any = "") {
     return message[locale?.value];
   }
 
+  // 尝试直接使用i18n.global.t翻译消息
+  try {
+    const translated = i18n.global.t(message);
+    // 如果翻译结果与原始消息不同，说明翻译成功
+    if (translated !== message) {
+      return translated;
+    }
+  } catch (error) {
+    // 忽略翻译错误
+  }
+
+  // 如果直接翻译失败，尝试使用原来的逻辑
   const key = message.match(/(\S*)\./)?.input;
 
   if (key && flatI18n("zh-CN").has(key)) {

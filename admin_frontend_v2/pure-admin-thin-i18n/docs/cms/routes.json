@@ -3,7 +3,7 @@
     "path": "/cms",
     "name": "CMS",
     "meta": {
-      "title": "menus.cmsManagement",
+      "title": "cms.menu.cmsManagement",
       "rank": 5,
       "showLink": true,
       "icon": "ri:article-line",
@@ -18,7 +18,7 @@
         "path": "/cms/article",
         "name": "ArticleManagement",
         "meta": {
-          "title": "menus.articleManagement",
+          "title": "cms.menu.articleManagement",
           "rank": 0,
           "showLink": true,
           "icon": "ri:file-list-line",
@@ -32,7 +32,7 @@
             "path": "/cms/article/index",
             "name": "ArticleList",
             "meta": {
-              "title": "menus.articleList",
+              "title": "cms.menu.articleList",
               "rank": 0,
               "showLink": true,
               "icon": "ri:user-line",
@@ -44,10 +44,25 @@
             "component": "/src/views/cms/article/index.vue"
           },
           {
+            "path": "/cms/article/version/:id",
+            "name": "menus.articleVersion",
+            "meta": {
+              "title": "cms.menu.articleVersion",
+              "rank": 0,
+              "showLink": false,
+              "icon": "ep:cellphone",
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/version"
+          },
+          {
             "path": "/cms/article/create",
             "name": "ArticleCreate",
             "meta": {
-              "title": "menus.articleCreate",
+              "title": "cms.menu.articleCreate",
               "rank": 5,
               "showLink": false,
               "showParent": true,
@@ -55,13 +70,13 @@
               "frameLoading": true,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/article/create"
+            "component": "/src/views/cms/article/create.vue"
           },
           {
             "path": "/cms/article/edit/:id",
             "name": "ArticleEdit",
             "meta": {
-              "title": "menus.articleEdit",
+              "title": "cms.menu.articleEdit",
               "rank": 6,
               "showLink": false,
               "showParent": true,
@@ -69,13 +84,13 @@
               "frameLoading": true,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/article/edit"
+            "component": "/src/views/cms/article/edit.vue"
           },
           {
             "path": "/cms/article/detail/:id",
             "name": "ArticleDetail",
             "meta": {
-              "title": "menus.articleDetail",
+              "title": "cms.menu.articleDetail",
               "rank": 7,
               "showLink": false,
               "showParent": true,
@@ -83,7 +98,7 @@
               "frameLoading": true,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/article/detail"
+            "component": "/src/views/cms/article/detail.vue"
           }
         ]
       },
@@ -91,7 +106,7 @@
         "path": "/cms/category",
         "name": "CategoryManagement",
         "meta": {
-          "title": "menus.categoryManagement",
+          "title": "cms.menu.categoryManagement",
           "rank": 0,
           "showLink": true,
           "icon": "ri:folder-2-line",
@@ -100,13 +115,12 @@
           "frameLoading": true,
           "hiddenTag": false
         },
-        "component": "/src/views/cms/category/index",
         "children": [
           {
-            "path": "/cms/category",
-            "name": "menus.categoryList",
+            "path": "/cms/category/index",
+            "name": "CategoryList",
             "meta": {
-              "title": "menus.categoryList",
+              "title": "cms.menu.categoryList",
               "rank": 0,
               "showLink": true,
               "showParent": false,
@@ -114,13 +128,13 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/category/index"
+            "component": "/src/views/cms/category/index.vue"
           },
           {
             "path": "/cms/category/edit/:id",
-            "name": "menus.categoryEdit",
+            "name": "CategoryEdit",
             "meta": {
-              "title": "menus.categoryEdit",
+              "title": "cms.menu.categoryEdit",
               "rank": 0,
               "showLink": false,
               "showParent": false,
@@ -128,13 +142,13 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/category/edit"
+            "component": "/src/views/cms/category/edit.vue"
           },
           {
             "path": "/cms/category/:id",
-            "name": "menus.categroyDetail",
+            "name": "CategoryDetail",
             "meta": {
-              "title": "menus.categroyDetail",
+              "title": "cms.menu.categoryDetail",
               "rank": 0,
               "showLink": false,
               "showParent": false,
@@ -142,7 +156,7 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/category/detail"
+            "component": "/src/views/cms/category/detail.vue"
           }
         ]
       },
@@ -150,7 +164,7 @@
         "path": "/cms/tag",
         "name": "TagManagement",
         "meta": {
-          "title": "menus.tagManagement",
+          "title": "cms.menu.tagManagement",
           "rank": 0,
           "showLink": true,
           "icon": "ep:refrigerator",
@@ -162,9 +176,9 @@
         "children": [
           {
             "path": "/cms/tag/index",
-            "name": "menus.tagList",
+            "name": "TagList",
             "meta": {
-              "title": "menus.tagList",
+              "title": "cms.menu.tagList",
               "rank": 0,
               "showLink": true,
               "showParent": false,
@@ -172,13 +186,13 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/tag/index"
+            "component": "/src/views/cms/tag/index.vue"
           },
           {
             "path": "/cms/tag/create",
-            "name": "menus.tagCreate",
+            "name": "TagCreate",
             "meta": {
-              "title": "menus.tagCreate",
+              "title": "cms.menu.tagCreate",
               "rank": 0,
               "showLink": false,
               "showParent": false,
@@ -186,13 +200,13 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/tag/create"
+            "component": "/src/views/cms/tag/create.vue"
           },
           {
             "path": "/cms/tag/edit/:id",
-            "name": "menus.tagEdit",
+            "name": "TagEdit",
             "meta": {
-              "title": "menus.tagEdit",
+              "title": "cms.menu.tagEdit",
               "rank": 0,
               "showLink": false,
               "showParent": false,
@@ -200,7 +214,7 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/tag/edit"
+            "component": "/src/views/cms/tag/edit.vue"
           }
         ]
       },
@@ -208,7 +222,7 @@
         "path": "/cms/comment",
         "name": "CommentManagement",
         "meta": {
-          "title": "menus.commentManagement",
+          "title": "cms.menu.commentManagement",
           "rank": 3,
           "showLink": true,
           "icon": "ri:chat-1-line",
@@ -222,22 +236,21 @@
             "path": "/cms/comment/detail/:id",
             "name": "CommentDetail",
             "meta": {
-              "title": "menus.commentDetail",
+              "title": "cms.menu.commentDetail",
               "rank": 0,
               "showLink": false,
-              "showParent": true,
+              "showParent": false,
               "keepAlive": false,
-              "frameLoading": true,
-              "hiddenTag": false,
-              "activePath": "/cms/comment"
+              "frameLoading": false,
+              "hiddenTag": false
             },
-            "component": "/src/views/cms/comment/detail"
+            "component": "/src/views/cms/comment/detail.vue"
           },
           {
             "path": "/cms/comment/index",
-            "name": "menus.commentList",
+            "name": "CommentList",
             "meta": {
-              "title": "menus.commentList",
+              "title": "cms.menu.commentList",
               "rank": 0,
               "showLink": true,
               "showParent": false,
@@ -245,13 +258,13 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/comment/index"
+            "component": "/src/views/cms/comment/index.vue"
           },
           {
             "path": "/cms/comment/create",
-            "name": "menus.commentCreate",
+            "name": "CommentCreate",
             "meta": {
-              "title": "menus.commentCreate",
+              "title": "cms.menu.commentCreate",
               "rank": 0,
               "showLink": false,
               "showParent": false,
@@ -259,13 +272,13 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/comment/create"
+            "component": "/src/views/cms/comment/create.vue"
           },
           {
-            "path": "/cms/comment/edit",
-            "name": "menus.commentEdit",
+            "path": "/cms/comment/edit/:id",
+            "name": "CommentEdit",
             "meta": {
-              "title": "menus.commentEdit",
+              "title": "cms.menu.commentEdit",
               "rank": 0,
               "showLink": false,
               "showParent": false,
@@ -273,7 +286,7 @@
               "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/views/cms/comment/edit"
+            "component": "/src/views/cms/comment/edit.vue"
           }
         ]
       }
