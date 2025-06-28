@@ -13,24 +13,85 @@ common:
   actions: 操作
   anonymous: 匿名
   operation: 操作
+  form:
+    submit: 提交
+    reset: 重置
+    save: 保存
+    cancel: 取消
+    search: 搜索
+    filter: 筛选
+    clear: 清空
+    required: 必填项
+    optional: 选填项
+    selectPlaceholder: 请选择
+    inputPlaceholder: 请输入
+    datePlaceholder: 请选择日期
+    dateRangePlaceholder: 请选择日期范围
+    success: 操作成功
+    error: 操作失败
+    confirmDelete: 确认删除？
+    confirmAction: 确认操作？
+    yes: 是
+    no: 否
+  button:
+    add: 添加
+    edit: 编辑
+    delete: 删除
+    view: 查看
+    search: 搜索
+    filter: 筛选
+    reset: 重置
+    submit: 提交
+    save: 保存
+    cancel: 取消
+    confirm: 确认
+    back: 返回
+    next: 下一步
+    previous: 上一步
+    more: 更多
+    refresh: 刷新
+    export: 导出
+    import: 导入
+    upload: 上传
+    download: 下载
+  table:
+    noData: 暂无数据
+    loading: 加载中...
+    total: "共 {total} 条"
+    action: 操作
+    filter: 筛选
+    search: 搜索
+    reset: 重置
+    page: "第 {page} 页"
+    pageSize: "每页 {size} 条"
 
 login:
+  title: 登录
+  username: 用户名
+  password: 密码
+  remember: 记住我
+  login: 登录
+  logout: 退出登录
+  logoutSuccess: 退出登录成功
+  logoutFailed: 退出登录失败
+  loginSuccess: 登录成功
+  loginFailed: 登录失败
+  usernameRequired: 请输入用户名
+  passwordRequired: 请输入密码
+  invalidCredentials: 用户名或密码错误
   pureUsername: 用户名
   purePassword: 密码
   pureLogin: 登录
+  pureUsernameReg: 请输入用户名
   pureLoginSuccess: 登录成功
   pureLoginFail: 登录失败
-  pureUsernameReg: 请输入用户名
-  purePassWordReg: 请输入密码
-  purePassWordRuleReg: 密码应为8-18位数字、字母、符号的任意两种组合
 
 tenant:
   management: 租户管理
-  createTenant: 创建租户
-  editTenant: 编辑租户
+  list: 租户列表
+  create: 创建租户
+  edit: 编辑租户
   detail: 租户详情
-  create: 创建
-  editBtn: 编辑
   view: 查看
   delete: 删除
   suspend: 暂停
@@ -92,29 +153,73 @@ tenant:
   confirmSuspendMessage: 确定要暂停租户 {name} 吗？
   confirmActivate: 确认激活
   confirmActivateMessage: 确定要激活租户 {name} 吗？
-  edit: 编辑租户
+  editBtn: 编辑
+  createTenant: 创建租户
+  editTenant: 编辑租户
 
 menu:
+  management: 菜单管理
+  list: 菜单列表
+  create: 创建菜单
+  edit: 编辑菜单
+  delete: 删除
+  view: 查看
   title: 菜单管理
-  create: 创建
+  search: 搜索
+  refresh: 刷新
   import: 导入
   export: 导出
   batchDelete: 批量删除
-  search: 搜索
-  isActive: 状态
-  parentId: 父级ID
+  menuTree: 菜单树
+  allMenus: 所有菜单
   id: ID
   name: 名称
   path: 路径
   component: 组件
   code: 代码
   rank: 排序
+  isActive: 状态
+  actions: 操作
+  statusAll: 所有状态
   statusActive: 激活
   statusInactive: 未激活
-  management: 菜单管理
-  list: 菜单列表
+  parentId: 父菜单
+  editBtn: 编辑
+  deactivate: 停用
+  activate: 激活
+  enable: 启用
+  disable: 禁用
+  addChildMenu: 添加子菜单
+  redirect: 重定向
+  createMenu: 创建菜单
+  editMenu: 编辑菜单
+  cancel: 取消
+  confirmDelete: 确认删除
+  confirmDeleteMessage: 确定要删除菜单 {name} 吗？
+  confirmBatchDelete: 确认批量删除
+  confirmBatchDeleteMessage: 确定要删除选中的 {count} 个菜单吗？
+  confirmStatusChange: 确认{action}
+  confirmStatusChangeMessage: 确定要{action}菜单 {name} 吗？
+  createSuccess: 创建菜单成功
+  createFailed: 创建菜单失败
+  updateSuccess: 更新菜单成功
+  updateFailed: 更新菜单失败
+  deleteSuccess: 删除菜单成功
+  deleteFailed: 删除菜单失败
+  batchDeleteSuccess: 批量删除菜单成功
+  batchDeleteFailed: 批量删除菜单失败
+  statusChangeSuccess: 菜单状态更改成功
+  statusChangeFailed: 菜单状态更改失败
+  userMenuSetting: 用户菜单设置
+  setUserMenu: 设置菜单
+  preview: 预览
 
 cms:
+  management: CMS管理
+  articleManagement: 文章管理
+  categoryManagement: 分类管理
+  tagManagement: 标签管理
+  commentManagement: 评论管理
   tag:
     createTag: 创建标签
     editTag: 编辑标签
@@ -136,6 +241,7 @@ cms:
     color: 颜色
     confirmDelete: 确认删除
     confirmDeleteMessage: 确定要删除标签 {name} 吗？
+    fetchListFailed: 获取标签列表失败
   
   comment:
     createComment: 创建评论
@@ -153,8 +259,71 @@ cms:
     status: 状态
     isPinned: 是否置顶
     guest: 访客
+    statusAll: 所有状态
+    statusPending: 待审核
+    statusApproved: 已批准
+    statusSpam: 垃圾评论
+    statusTrash: 已删除
+    commentManagement: 评论管理
+    replyComment: 回复评论
+    keyword: 关键词
+    searchPlaceholder: 请输入评论内容或作者
+    articleIdPlaceholder: 请输入文章ID
+    dateRange: 日期范围
+    startDate: 开始日期
+    endDate: 结束日期
+    batchApprove: 批量批准
+    batchMarkAsSpam: 批量标记为垃圾
+    batchReject: 批量拒绝
+    batchDelete: 批量删除
+    createTime: 创建时间
+    anonymous: 匿名
+    byUser: 由用户 {user} 发表
+    byGuest: 由访客 {name} 发表
+    confirmApprove: 确认批准
+    confirmApproveMessage: 确定要批准此评论吗？
+    confirmReject: 确认拒绝
+    confirmRejectMessage: 确定要拒绝此评论吗？
+    confirmMarkAsSpam: 确认标记为垃圾
+    confirmMarkAsSpamMessage: 确定要将此评论标记为垃圾吗？
+    confirmDelete: 确认删除
+    confirmDeleteMessage: 确定要删除此评论吗？
+    deleteSuccess: 删除评论成功
+    deleteFailed: 删除评论失败
+    selectCommentsFirst: 请先选择评论
+    confirmBatchAction: 确认{action}
+    confirmBatchActionMessage: 确定要对 {count} 条评论执行此操作吗？
+    batchActionSuccess: 批量操作成功
+    batchActionFailed: 批量操作失败
+    selectCommentsToDelete: 请选择要删除的评论
+    confirmBatchDelete: 确认批量删除
+    confirmBatchDeleteMessage: 确定要删除选中的 {count} 条评论吗？
+    batchDeleteSuccess: 批量删除成功
+    batchDeleteFailed: 批量删除失败
+    fetchListFailed: 获取评论列表失败
   
   article:
+    title: 标题
+    content: 内容
+    summary: 摘要
+    author: 作者
+    category: 分类
+    tags: 标签
+    status: 状态
+    publishTime: 发布时间
+    createTime: 创建时间
+    updateTime: 更新时间
+    viewCount: 浏览次数
+    commentCount: 评论数
+    likeCount: 点赞数
+    coverImage: 封面图片
+    isTop: 是否置顶
+    isRecommend: 是否推荐
+    isOriginal: 是否原创
+    source: 来源
+    sourceUrl: 来源链接
+    keyword: 关键词
+    description: 描述
     versionHistory: 版本历史
     versionList: 版本列表
     versionNumber: 版本号
@@ -162,38 +331,29 @@ cms:
     versionCreatedBy: 创建人
     compareVersions: 比较版本
     restoreVersion: 恢复版本
-    noVersions: 无版本记录
+    noVersions: 无版本
     versionDetail: 版本详情
-    status: 状态
-    createdAt: 创建时间
     versionDiff: 版本比较
     oldVersion: 旧版本
     currentVersion: 当前版本
     latest: 最新
-    title: 标题
-    featuredTooltip: 特色文章
-    featured: 特色
-    pinnedTooltip: 置顶文章
-    pinned: 置顶
     statusPublished: 已发布
     statusDraft: 草稿
     statusPending: 待审核
     statusArchived: 已归档
-    tags: 标签
+    featured: 精选
+    featuredTooltip: 精选文章
+    pinned: 置顶
+    pinnedTooltip: 置顶文章
     noTags: 无标签
-    content: 内容
     excerpt: 摘要
     noExcerpt: 无摘要
     mainContent: 主要内容
     statistics: 统计信息
-    keyword: 关键词
     searchPlaceholder: 按标题、内容或作者搜索
     dateRange: 日期范围
     startDate: 开始日期
     endDate: 结束日期
-    author: 作者
-    createTime: 创建时间
-    publishTime: 发布时间
     batchDelete: 批量删除
     statusAll: 所有状态
     featuredAll: 所有特色状态
@@ -204,14 +364,80 @@ cms:
     pinnedFalse: 未置顶
     articleManagement: 文章管理
     createArticle: 创建文章
+    editArticle: 编辑文章
+    deleteArticle: 删除文章
+    publishArticle: 发布文章
+    unpublishArticle: 取消发布
+    archiveArticle: 归档文章
+    restoreArticle: 恢复文章
+    previewArticle: 预览文章
+    saveAsDraft: 保存为草稿
+    publish: 发布
+    unpublish: 取消发布
+    archive: 归档
+    restore: 恢复
+    preview: 预览
+    selectCategory: 选择分类
+    selectTags: 选择标签
+    uploadCoverImage: 上传封面图片
+    removeCoverImage: 移除封面图片
+    articleList: 文章列表
+    articleDetail: 文章详情
+    articleEdit: 编辑文章
+    articleCreate: 创建文章
+    categoryPlaceholder: 请选择分类
+    tagPlaceholder: 请选择标签
+    statusPlaceholder: 请选择状态
+    batchPublish: 批量发布
+    batchUnpublish: 批量取消发布
+    batchArchive: 批量归档
+    batchRestore: 批量恢复
+    confirmDelete: 确认删除
+    confirmPublish: 确认发布
+    confirmUnpublish: 确认取消发布
+    confirmArchive: 确认归档
+    confirmRestore: 确认恢复
+    deleteSuccess: 删除成功
+    publishSuccess: 发布成功
+    unpublishSuccess: 取消发布成功
+    archiveSuccess: 归档成功
+    restoreSuccess: 恢复成功
+    saveSuccess: 保存成功
+    saveFail: 保存失败
+    uploadSuccess: 上传成功
+    uploadFail: 上传失败
+    pleaseEnterTitle: 请输入标题
+    pleaseEnterContent: 请输入内容
+    pleaseEnterSummary: 请输入摘要
+    pleaseSelectCategory: 请选择分类
+    pleaseSelectTags: 请选择标签
+    pleaseUploadCoverImage: 请上传封面图片
+    titleRequired: 标题不能为空
+    contentRequired: 内容不能为空
+    summaryRequired: 摘要不能为空
+    categoryRequired: 分类不能为空
+    tagsRequired: 标签不能为空
+    coverImageRequired: 封面图片不能为空
+    fetchListFailed: 获取文章列表失败
+    selectArticlesToDelete: 请选择要删除的文章
+    confirmBatchDelete: 确认批量删除
+    confirmBatchDeleteMessage: 确定要删除选中的 {count} 篇文章吗？
+    batchDeleteSuccess: 批量删除成功
+    batchDeleteFailed: 批量删除失败
+    confirmPublishMessage: 确定要发布文章 "{title}" 吗？
+    publishFailed: 发布失败
+    confirmDeleteMessage: 确定要删除文章 "{title}" 吗？
+    deleteFailed: 删除失败
+    createSuccess: 创建文章成功
+    createFailed: 创建文章失败
   
   category:
     editCategory: 编辑分类
     basicInfo: 基本信息
     name: 名称
     slug: 别名
-    parent: 父级分类
-    noParent: 无父级
+    parent: 父分类
+    noParent: 无父分类
     description: 描述
     advancedSettings: 高级设置
     icon: 图标
@@ -225,7 +451,7 @@ cms:
     id: ID
     level: 层级
     path: 路径
-    statusActive: 激活
+    statusActive: 已激活
     statusInactive: 未激活
     articleCount: 文章数
     createdAt: 创建时间
@@ -233,6 +459,7 @@ cms:
     children: 子分类
     actions: 操作
     fetchListFailed: 获取分类列表失败
+    categoryTree: 分类树
   
   menu:
     cmsManagement: CMS管理
@@ -262,14 +489,88 @@ menus:
   pureTenantList: 租户列表
   articleVersion: 文章版本
   CategroyDetail: 分类详情
+  pureAbnormal: 异常页面
+  pureFourZeroFour: 404
+  pureFourZeroThree: 403
+  pureFiveZeroZero: 500
+  pureDashboard: 仪表盘
+  pureCms: CMS管理
+  pureCmsArticle: 文章管理
+  pureCmsCategory: 分类管理
+  pureCmsTag: 标签管理
+  pureCmsComment: 评论管理
+  pureMenuManagement: 菜单管理
+  pureMenuList: 菜单列表
+  pureAdminUserManagement: 管理员用户管理
+  pureAdminUserList: 管理员用户列表
+  pureLogin: 登录
 
 adminUser:
   management: 管理员用户管理
   list: 管理员用户列表
-  create: 创建管理员用户
+  create: 创建管理员
   createSuperAdmin: 创建超级管理员
-  edit: 编辑管理员用户
+  edit: 编辑管理员
+  editBtn: 编辑
+  detail: 管理员详情
+  view: 查看
+  delete: 删除
+  suspend: 暂停
+  activate: 激活
+  deactivate: 停用
+  search: 搜索
+  searchPlaceholder: 搜索用户名或邮箱
+  cancel: 取消
+  backToList: 返回列表
+  username: 用户名
+  email: 邮箱
+  nickName: 昵称
+  tenant: 租户
+  status: 状态
+  statusAll: 所有状态
+  statusActive: 活跃
+  statusSuspended: 已暂停
+  statusDeleted: 已删除
+  statusInactive: 未激活
+  roles: 角色
+  role: 角色
+  superAdmin: 超级管理员
+  tenantAdmin: 租户管理员
+  createdAt: 创建时间
+  updatedAt: 更新时间
+  actions: 操作
+  id: ID
+  grantSuperAdmin: 授予超级管理员权限
+  revokeSuperAdmin: 撤销超级管理员权限
+  confirmDelete: 确认删除
+  confirmDeleteMessage: 确定要删除管理员 {name} 吗？
+  confirmActivate: 确认激活
+  confirmActivateMessage: 确定要激活管理员 {name} 吗？
+  confirmDeactivate: 确认停用
+  confirmDeactivateMessage: 确定要停用管理员 {name} 吗？
+  confirmGrantSuperAdmin: 确认授权
+  confirmGrantSuperAdminMessage: 确定要授予 {name} 超级管理员权限吗？
+  confirmRevokeSuperAdmin: 确认撤销
+  confirmRevokeSuperAdminMessage: 确定要撤销 {name} 的超级管理员权限吗？
+  createSuccess: 创建管理员成功
+  createFailed: 创建管理员失败
+  updateSuccess: 更新管理员成功
+  updateFailed: 更新管理员失败
+  deleteSuccess: 删除管理员成功
+  deleteFailed: 删除管理员失败
+  activateSuccess: 激活管理员成功
+  activateFailed: 激活管理员失败
+  deactivateSuccess: 停用管理员成功
+  deactivateFailed: 停用管理员失败
+  grantSuperAdminSuccess: 授予超级管理员权限成功
+  grantSuperAdminFailed: 授予超级管理员权限失败
+  revokeSuperAdminSuccess: 撤销超级管理员权限成功
+  revokeSuperAdminFailed: 撤销超级管理员权限失败
   profile: 个人资料
+  createAdminUser: 创建管理员用户
+  editAdminUser: 编辑管理员用户
+  viewAdminUser: 查看管理员用户
+  selectTenantTitle: 选择租户
 
 buttons:
   pureClickCollapse: 点击折叠
@@ -285,6 +586,17 @@ buttons:
   pureBackTop: 返回顶部
   pureOpenText: 开启
   pureCloseText: 关闭
+  more: 更多
+  pureClickExpand: 点击展开
+  pureConfirm: 确认
+  edit: 编辑
+  delete: 删除
+  search: 搜索
+  reset: 重置
+  confirm: 确认
+  cancel: 取消
+  submit: 提交
+  back: 返回
 
 panel:
   pureSystemSet: 系统设置
@@ -322,3 +634,217 @@ status:
   pureMessage: 消息
   pureTodo: 待办
   pureNoNotify: 暂无通知
+
+dashboard:
+  title: 仪表盘
+  tenantChartsTitle: 租户统计
+  userChartsTitle: 用户统计
+  to: 至
+  startDate: 开始日期
+  endDate: 结束日期
+  daily: 每日
+  weekly: 每周
+  monthly: 每月
+  quarterly: 每季度
+  yearly: 每年
+  tenantTrend: 租户数量趋势
+  noData: 暂无数据
+  tenantStatusDistribution: 租户状态分布
+  tenantCreationRate: 租户创建速率
+  loading: 加载中...
+  tenantTotal: 租户总数
+  growthRate: 增长率
+  avgGrowth: 平均增长
+  month: 月
+  tenantCount: 租户数量
+  newTenants: 新增租户
+  average: 平均值
+  updatingCharts: 更新图表数据中...
+  userRoleDistribution: 用户角色分布
+  activeUsersChart: 活跃用户统计
+  userTotal: 用户总数
+  activeUsers: 活跃用户
+  inactiveUsers: 非活跃用户
+  adminCount: 管理员数量
+  normalUserCount: 普通用户数量
+  userCreationRate: 用户创建速率
+  newUsers: 新增用户
+  fetchDataFailed: 获取数据失败
+  refresh: 刷新
+  periodSelector: 时间周期
+  dateRangeSelector: 日期范围
+  statusActive: 活跃
+  statusSuspended: 暂停
+  statusDeleted: 已删除
+  statusInactive: 未激活
+
+仪表盘: 仪表盘
+
+error:
+  404: 页面不存在
+  403: 没有权限
+  500: 服务器错误
+  backHome: 返回首页
+  notFound: 页面不存在
+  notFoundMessage: 抱歉，您访问的页面不存在
+  forbidden: 没有权限
+  forbiddenMessage: 抱歉，您没有权限访问此页面
+  serverError: 服务器错误
+  serverErrorMessage: 抱歉，服务器出现了错误
+
+components:
+  svg-icon:
+    loading: 加载中
+    noData: 暂无数据
+    failed: 加载失败
+
+user:
+  management: 用户管理
+  list: 用户列表
+  create: 创建用户
+  edit: 编辑用户
+  detail: 用户详情
+  profile: 个人资料
+  username: 用户名
+  email: 邮箱
+  nickName: 昵称
+  role: 角色
+  roleAdmin: 管理员
+  roleUser: 普通用户
+  isActive: 是否激活
+  isActiveTrue: 是
+  isActiveFalse: 否
+  dateJoined: 加入日期
+  lastLogin: 最后登录
+  actions: 操作
+  view: 查看
+  delete: 删除
+  suspend: 暂停
+  activate: 激活
+  search: 搜索
+  cancel: 取消
+  backToList: 返回列表
+  createSuccess: 创建用户成功
+  updateSuccess: 更新用户成功
+  deleteSuccess: 删除用户成功
+  suspendSuccess: 暂停用户成功
+  activateSuccess: 激活用户成功
+
+el:
+  colorpicker:
+    confirm: 确定
+    clear: 清空
+  datepicker:
+    now: 此刻
+    today: 今天
+    cancel: 取消
+    clear: 清空
+    confirm: 确定
+    selectDate: 选择日期
+    selectTime: 选择时间
+    startDate: 开始日期
+    startTime: 开始时间
+    endDate: 结束日期
+    endTime: 结束时间
+    prevYear: 前一年
+    nextYear: 后一年
+    prevMonth: 上个月
+    nextMonth: 下个月
+    year: 年
+    month1: 1 月
+    month2: 2 月
+    month3: 3 月
+    month4: 4 月
+    month5: 5 月
+    month6: 6 月
+    month7: 7 月
+    month8: 8 月
+    month9: 9 月
+    month10: 10 月
+    month11: 11 月
+    month12: 12 月
+    weeks:
+      sun: 日
+      mon: 一
+      tue: 二
+      wed: 三
+      thu: 四
+      fri: 五
+      sat: 六
+    months:
+      jan: 一月
+      feb: 二月
+      mar: 三月
+      apr: 四月
+      may: 五月
+      jun: 六月
+      jul: 七月
+      aug: 八月
+      sep: 九月
+      oct: 十月
+      nov: 十一月
+      dec: 十二月
+  pagination:
+    goto: 前往
+    pagesize: 条/页
+    total: 共 {total} 条
+    pageClassifier: 页
+    deprecationWarning: 废弃的用法，请使用 v-model 绑定分页属性
+  cascader:
+    noMatch: 无匹配数据
+    loading: 加载中
+    placeholder: 请选择
+    noData: 暂无数据
+  table:
+    emptyText: 暂无数据
+    confirmFilter: 筛选
+    resetFilter: 重置
+    clearFilter: 全部
+    sumText: 合计
+  select:
+    loading: 加载中
+    noMatch: 无匹配数据
+    noData: 暂无数据
+    placeholder: 请选择
+  messagebox:
+    title: 提示
+    confirm: 确定
+    cancel: 取消
+    error: 输入的数据不合法!
+  upload:
+    deleteTip: 按 delete 键可删除
+    delete: 删除
+    preview: 查看图片
+    continue: 继续上传
+  dialog:
+    close: 关闭
+  drawer:
+    close: 关闭
+  radio:
+    value: 值
+    label: 标签
+
+layout:
+  header:
+    profile: 个人资料
+    logout: 退出登录
+    settings: 设置
+    darkMode: 暗黑模式
+    lightMode: 明亮模式
+    fullScreen: 全屏
+    exitFullScreen: 退出全屏
+    language: 语言
+    search: 搜索
+    notifications: 通知
+    noNotifications: 暂无通知
+    viewAll: 查看全部
+    welcome: 欢迎回来
+  sidebar:
+    collapse: 收起菜单
+    expand: 展开菜单
+  footer:
+    copyright: 版权所有
+    version: 版本
+
+labels:
+  allRole: 所有角色

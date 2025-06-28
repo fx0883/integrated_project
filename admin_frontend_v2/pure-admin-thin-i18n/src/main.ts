@@ -13,6 +13,8 @@ import logger from "@/utils/logger"; // 导入日志工具
 import Table from "@pureadmin/table";
 // import PureDescriptions from "@pureadmin/descriptions";
 
+import { registerGlobalComponents } from '@/components';
+
 // 初始化日志配置
 logger.configure({
   enabled: true, 
@@ -61,6 +63,9 @@ import "tippy.js/dist/tippy.css";
 import "tippy.js/themes/light.css";
 import VueTippy from "vue-tippy";
 app.use(VueTippy);
+
+// 注册全局组件
+registerGlobalComponents(app);
 
 getPlatformConfig(app).then(async config => {
   setupStore(app);

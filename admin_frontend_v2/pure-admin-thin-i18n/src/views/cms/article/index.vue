@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -176,18 +176,25 @@ const resetSearch = () => {
   fetchArticles();
 };
 
-// 处理分页变化
-const handlePageChange = (page: number) => {
-  pagination.currentPage = page;
-  fetchArticles();
-};
+// 监视分页参数变化
+watch(
+  () => pagination.currentPage,
+  newPage => {
+    if (newPage) {
+      fetchArticles();
+    }
+  }
+);
 
-// 处理每页条数变化
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size;
-  pagination.currentPage = 1;
-  fetchArticles();
-};
+watch(
+  () => pagination.pageSize,
+  newSize => {
+    if (newSize) {
+      pagination.currentPage = 1; // 当每页条数变化时，重置为第一页
+      fetchArticles();
+    }
+  }
+);
 
 // 新建文章 - 修改为打开模态窗口
 const handleCreate = async () => {
@@ -545,8 +552,6 @@ onMounted(() => {
           background
           layout="total, sizes, prev, pager, next, jumper"
           :total="pagination.total"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
         />
       </div>
     </el-card>

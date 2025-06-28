@@ -65,6 +65,26 @@ const confirmDialog = reactive({
   confirmAction: null as (() => Promise<void>) | null
 });
 
+// 监视分页参数变化
+watch(
+  () => pagination.currentPage,
+  newPage => {
+    if (newPage) {
+      fetchAdminUsers();
+    }
+  }
+);
+
+watch(
+  () => pagination.pageSize,
+  newSize => {
+    if (newSize) {
+      pagination.currentPage = 1; // 当每页条数变化时，重置为第一页
+      fetchAdminUsers();
+    }
+  }
+);
+
 // 监视confirmDialog.visible的变化
 watch(
   () => confirmDialog.visible,
@@ -724,8 +744,6 @@ onMounted(() => {
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="pagination.total"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
         />
       </div>
     </el-card>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -132,18 +132,25 @@ const resetSearch = () => {
   fetchComments();
 };
 
-// 处理分页变化
-const handlePageChange = (page: number) => {
-  pagination.currentPage = page;
-  fetchComments();
-};
+// 监视分页参数变化
+watch(
+  () => pagination.currentPage,
+  newPage => {
+    if (newPage) {
+      fetchComments();
+    }
+  }
+);
 
-// 处理每页条数变化
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size;
-  pagination.currentPage = 1;
-  fetchComments();
-};
+watch(
+  () => pagination.pageSize,
+  newSize => {
+    if (newSize) {
+      pagination.currentPage = 1; // 当每页条数变化时，重置为第一页
+      fetchComments();
+    }
+  }
+);
 
 // 查看评论详情
 const handleDetail = (row: Comment) => {
@@ -611,8 +618,6 @@ onMounted(() => {
           background
           layout="total, sizes, prev, pager, next, jumper"
           :total="pagination.total"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
         />
       </div>
     </el-card>

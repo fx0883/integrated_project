@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted, reactive } from "vue";
+import { ref, computed, onMounted, reactive, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage, ElMessageBox, ElTabs, ElTabPane } from "element-plus";
@@ -291,6 +291,26 @@ const handleTabChange = tab => {
   }
 };
 
+// 监视用户分页参数变化
+watch(
+  () => userPagination.currentPage,
+  newPage => {
+    if (newPage && tenantId.value) {
+      fetchTenantUsers(tenantId.value);
+    }
+  }
+);
+
+watch(
+  () => userPagination.pageSize,
+  newSize => {
+    if (newSize && tenantId.value) {
+      userPagination.currentPage = 1; // 当每页条数变化时，重置为第一页
+      fetchTenantUsers(tenantId.value);
+    }
+  }
+);
+
 // 在组件加载时获取租户详情
 onMounted(async () => {
   if (isSuperAdmin.value) {
@@ -532,8 +552,6 @@ onMounted(async () => {
                   :page-sizes="[10, 20, 50, 100]"
                   layout="total, sizes, prev, pager, next, jumper"
                   :total="userPagination.total"
-                  @size-change="handleUserPageSizeChange"
-                  @current-change="handleUserCurrentPageChange"
                 />
               </div>
 

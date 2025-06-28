@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, nextTick } from "vue";
+import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -310,6 +310,26 @@ const handleActivateTenant = (tenant: Tenant) => {
   );
 };
 
+// 监视分页参数变化
+watch(
+  () => pagination.currentPage,
+  newPage => {
+    if (newPage) {
+      fetchTenantList();
+    }
+  }
+);
+
+watch(
+  () => pagination.pageSize,
+  newSize => {
+    if (newSize) {
+      pagination.currentPage = 1; // 当每页条数变化时，重置为第一页
+      fetchTenantList();
+    }
+  }
+);
+
 // 获取租户列表
 onMounted(async () => {
   if (isSuperAdmin.value) {
@@ -459,8 +479,6 @@ onMounted(async () => {
         :page-sizes="[10, 20, 50, 100]"
         layout="total, sizes, prev, pager, next, jumper"
         :total="pagination.total"
-        @size-change="handlePageSizeChange"
-        @current-change="handleCurrentPageChange"
       />
     </div>
 
