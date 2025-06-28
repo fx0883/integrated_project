@@ -362,9 +362,14 @@ function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
     // 将backstage属性加入meta，标识此路由为后端返回路由
     v.meta.backstage = true;
 
-    // 父级的redirect属性取值：如果子级存在且父级的redirect属性不存在，默认取第一个子级的path；如果子级存在且父级的redirect属性存在，取存在的redirect属性，会覆盖默认值
+    // 父级的redirect属性取值：优先选择showLink为true的第一个子路由作为重定向目标
     if (v?.children && v.children.length && !v.redirect) {
-      v.redirect = v.children[0].path;
+      // 查找showLink为true的第一个子路由
+      const visibleChild = v.children.find(
+        child => child.meta?.showLink === true
+      );
+      // 如果存在可见子路由，则重定向到它；否则保持原来的逻辑，使用第一个子路由
+      v.redirect = visibleChild ? visibleChild.path : v.children[0].path;
       console.log(`[处理异步路由] 设置重定向: ${v.path} -> ${v.redirect}`);
     }
 

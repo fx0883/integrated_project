@@ -29,95 +29,76 @@
         },
         "children": [
           {
+            "path": "/cms/article/index",
+            "name": "ArticleList",
+            "meta": {
+              "title": "menus.articleList",
+              "rank": 0,
+              "showLink": true,
+              "icon": "ri:user-line",
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/index.vue"
+          },
+          {
+            "path": "/cms/article/version/:id",
+            "name": "menus.articleVersion",
+            "meta": {
+              "title": "menus.articleVersion",
+              "rank": 0,
+              "showLink": false,
+              "icon": "ep:cellphone",
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/article/version"
+          },
+          {
             "path": "/cms/article/create",
             "name": "ArticleCreate",
             "meta": {
               "title": "menus.articleCreate",
-              "rank": 0,
+              "rank": 5,
               "showLink": false,
               "showParent": true,
               "keepAlive": false,
               "frameLoading": true,
-              "hiddenTag": false,
-              "activePath": "/cms/article"
+              "hiddenTag": false
             },
-            "component": "cms/article/create"
+            "component": "/src/views/cms/article/create.vue"
           },
           {
             "path": "/cms/article/edit/:id",
             "name": "ArticleEdit",
             "meta": {
               "title": "menus.articleEdit",
-              "rank": 0,
+              "rank": 6,
               "showLink": false,
               "showParent": true,
               "keepAlive": false,
               "frameLoading": true,
-              "hiddenTag": false,
-              "activePath": "/cms/article"
+              "hiddenTag": false
             },
-            "component": "cms/article/edit"
+            "component": "/src/views/cms/article/edit.vue"
           },
           {
             "path": "/cms/article/detail/:id",
             "name": "ArticleDetail",
             "meta": {
               "title": "menus.articleDetail",
-              "rank": 0,
+              "rank": 7,
               "showLink": false,
               "showParent": true,
               "keepAlive": false,
               "frameLoading": true,
-              "hiddenTag": false,
-              "activePath": "/cms/article"
-            },
-            "component": "cms/article/detail"
-          },
-          {
-            "path": "/cms/article",
-            "name": "ArticleList",
-            "meta": {
-              "title": "menus.articleList",
-              "rank": 0,
-              "showLink": true,
-              "showParent": true,
-              "keepAlive": false,
-              "frameLoading": false,
               "hiddenTag": false
             },
-            "component": "/src/cms/article/index"
-          }
-        ]
-      },
-      {
-        "path": "/cms/comment",
-        "name": "CommentManagement",
-        "meta": {
-          "title": "menus.commentManagement",
-          "rank": 0,
-          "showLink": true,
-          "icon": "ri:chat-1-line",
-          "showParent": true,
-          "keepAlive": true,
-          "frameLoading": true,
-          "hiddenTag": false
-        },
-        "component": "cms/comment/index",
-        "children": [
-          {
-            "path": "/cms/comment/detail/:id",
-            "name": "CommentDetail",
-            "meta": {
-              "title": "menus.commentDetail",
-              "rank": 0,
-              "showLink": false,
-              "showParent": true,
-              "keepAlive": false,
-              "frameLoading": true,
-              "hiddenTag": false,
-              "activePath": "/cms/comment"
-            },
-            "component": "cms/comment/detail"
+            "component": "/src/views/cms/article/detail.vue"
           }
         ]
       },
@@ -134,7 +115,50 @@
           "frameLoading": true,
           "hiddenTag": false
         },
-        "component": "cms/category/index"
+        "children": [
+          {
+            "path": "/cms/category/index",
+            "name": "CategoryList",
+            "meta": {
+              "title": "menus.categoryList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/category/index.vue"
+          },
+          {
+            "path": "/cms/category/edit/:id",
+            "name": "CategoryEdit",
+            "meta": {
+              "title": "menus.categoryEdit",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/category/edit.vue"
+          },
+          {
+            "path": "/cms/category/:id",
+            "name": "CategroyDetail",
+            "meta": {
+              "title": "menus.categroyDetail",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/category/detail.vue"
+          }
+        ]
       },
       {
         "path": "/cms/tag",
@@ -143,13 +167,128 @@
           "title": "menus.tagManagement",
           "rank": 0,
           "showLink": true,
-          "icon": "ri:price-tag-3-line",
+          "icon": "ep:refrigerator",
           "showParent": true,
           "keepAlive": true,
-          "frameLoading": true,
+          "frameLoading": false,
           "hiddenTag": false
         },
-        "component": "cms/tag/index"
+        "children": [
+          {
+            "path": "/cms/tag/index",
+            "name": "TagList",
+            "meta": {
+              "title": "menus.tagList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/tag/index.vue"
+          },
+          {
+            "path": "/cms/tag/create",
+            "name": "TagCreate",
+            "meta": {
+              "title": "menus.tagCreate",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/tag/create.vue"
+          },
+          {
+            "path": "/cms/tag/edit/:id",
+            "name": "TagEdit",
+            "meta": {
+              "title": "menus.tagEdit",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/tag/edit.vue"
+          }
+        ]
+      },
+      {
+        "path": "/cms/comment",
+        "name": "CommentManagement",
+        "meta": {
+          "title": "menus.commentManagement",
+          "rank": 3,
+          "showLink": true,
+          "icon": "ri:chat-1-line",
+          "showParent": true,
+          "keepAlive": true,
+          "frameLoading": false,
+          "hiddenTag": false
+        },
+        "children": [
+          {
+            "path": "/cms/comment/detail/:id",
+            "name": "CommentDetail",
+            "meta": {
+              "title": "menus.commentDetail",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/detail.vue"
+          },
+          {
+            "path": "/cms/comment/index",
+            "name": "CommentList",
+            "meta": {
+              "title": "menus.commentList",
+              "rank": 0,
+              "showLink": true,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/index.vue"
+          },
+          {
+            "path": "/cms/comment/create",
+            "name": "CommentCreate",
+            "meta": {
+              "title": "menus.commentCreate",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/create.vue"
+          },
+          {
+            "path": "/cms/comment/edit/:id",
+            "name": "CommentEdit",
+            "meta": {
+              "title": "menus.commentEdit",
+              "rank": 0,
+              "showLink": false,
+              "showParent": false,
+              "keepAlive": false,
+              "frameLoading": false,
+              "hiddenTag": false
+            },
+            "component": "/src/views/cms/comment/edit.vue"
+          }
+        ]
       }
     ]
   }
