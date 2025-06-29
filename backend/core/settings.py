@@ -35,6 +35,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-w7&3bzjc1s*bty@)%c3w&#fro!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
+# 从环境变量读取日志输出方式，默认跟随DEBUG设置
+LOG_TO_CONSOLE = os.getenv('LOG_TO_CONSOLE', str(DEBUG)).lower() == 'true'
+
 # 从环境变量读取ALLOWED_HOSTS，并添加espressox.online
 allowed_hosts_from_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 ALLOWED_HOSTS = allowed_hosts_from_env + ['espressox.online']
@@ -314,12 +317,14 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file', 'error_file'],
+            # 根据LOG_TO_CONSOLE环境变量决定日志输出方式
+            'handlers': ['console'] if LOG_TO_CONSOLE else ['file', 'error_file'],
             'level': 'INFO',
             'propagate': True,
         },
         'drf_spectacular': {
-            'handlers': ['console', 'file'],
+            # 根据LOG_TO_CONSOLE环境变量决定日志输出方式
+            'handlers': ['console'] if LOG_TO_CONSOLE else ['file'],
             'level': 'DEBUG',
             'propagate': True,
         },
