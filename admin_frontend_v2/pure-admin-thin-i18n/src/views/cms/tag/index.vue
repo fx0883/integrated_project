@@ -1,51 +1,57 @@
 <template>
-  <div class="main-container">
-    <div class="top-container mb-4">
-      <div class="left">
-        <el-button type="primary" @click="handleAddTag">
-          <el-icon><Plus /></el-icon> {{ $t("cms.tag.createTag") }}
-        </el-button>
-        <el-button @click="refreshData">
-          <el-icon><Refresh /></el-icon> {{ $t("common.reset") }}
-        </el-button>
-      </div>
-      <div class="right">
-        <el-input
-          v-model="searchKeyword"
-          :placeholder="$t('cms.tag.searchPlaceholder')"
-          prefix-icon="Search"
-          clearable
-          @keyup.enter="handleSearch"
-          @clear="handleSearch"
-        >
-          <template #append>
-            <el-button @click="handleSearch">
-              <el-icon><Search /></el-icon>
-            </el-button>
-          </template>
-        </el-input>
-      </div>
+  <div class="tag-list-container">
+    <!-- 标题和新建按钮 -->
+    <div class="tag-list-header">
+      <h2 class="tag-list-title">{{ $t("cms.tag.tagManagement") }}</h2>
+      <el-button type="primary" :icon="Plus" @click="handleAddTag">
+        {{ $t("cms.tag.createTag") }}
+      </el-button>
     </div>
 
-    <el-card shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span>{{ $t("cms.tag.tagManagement") }}</span>
-          <div class="filter-container">
-            <el-select
-              v-model="queryParams.is_active"
-              :placeholder="$t('cms.tag.isActive')"
-              clearable
-              @change="handleSearch"
-            >
-              <el-option :label="$t('cms.tag.statusAll')" value="" />
-              <el-option :label="$t('cms.tag.statusActive')" :value="true" />
-              <el-option :label="$t('cms.tag.statusInactive')" :value="false" />
-            </el-select>
-          </div>
-        </div>
-      </template>
+    <!-- 搜索和筛选 -->
+    <el-card class="search-card">
+      <el-form @keyup.enter="handleSearch">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item :label="$t('cms.tag.keyword')">
+              <el-input
+                v-model="searchKeyword"
+                :placeholder="$t('cms.tag.searchPlaceholder')"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item :label="$t('cms.tag.isActive')">
+              <el-select
+                v-model="queryParams.is_active"
+                :placeholder="$t('cms.tag.isActive')"
+                clearable
+                style="width: 100%"
+              >
+                <el-option :label="$t('cms.tag.statusAll')" value="" />
+                <el-option :label="$t('cms.tag.statusActive')" :value="true" />
+                <el-option
+                  :label="$t('cms.tag.statusInactive')"
+                  :value="false"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item class="search-buttons">
+          <el-button type="primary" :icon="Search" @click="handleSearch">
+            {{ $t("common.search") }}
+          </el-button>
+          <el-button :icon="Refresh" @click="refreshData">
+            {{ $t("common.reset") }}
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
+    <!-- 标签列表表格 -->
+    <el-card class="table-card">
       <el-table
         v-loading="cmsStore.tagLoading"
         :data="cmsStore.tagList"
@@ -117,6 +123,7 @@
         </el-table-column>
       </el-table>
 
+      <!-- 分页 -->
       <div class="pagination-container">
         <el-pagination
           v-model:current-page="queryParams.page"
@@ -338,40 +345,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.main-container {
+.tag-list-container {
   padding: 20px;
 }
 
-.top-container {
+.tag-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
 
-.left {
+.tag-list-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.search-card {
+  margin-bottom: 20px;
+}
+
+.search-buttons {
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  margin-bottom: 0;
 }
 
-.right {
-  width: 300px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.filter-container {
-  display: flex;
-  gap: 10px;
+.table-card {
+  margin-bottom: 20px;
 }
 
 .pagination-container {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .tag-name-container {
