@@ -76,7 +76,7 @@
         <template v-if="showTree">
           <div
             class="tree-container"
-            v-if="categoryTree && categoryTree.length > 0"
+            v-if="filteredCategoryTree && filteredCategoryTree.length > 0"
           >
             <el-tree
               ref="treeRef"
@@ -251,7 +251,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   Plus,
@@ -355,13 +355,30 @@ const debugData = async () => {
       );
       const treeData = await treeResponse.json();
 
+      // 检查树形数据结构
+      const treeDataStructure =
+        treeData && treeData.data
+          ? {
+              isArray: Array.isArray(treeData.data),
+              length: Array.isArray(treeData.data)
+                ? treeData.data.length
+                : "不是数组",
+              firstItem:
+                Array.isArray(treeData.data) && treeData.data.length > 0
+                  ? treeData.data[0]
+                  : "无数据"
+            }
+          : "无效的树形数据";
+
       debugInfo.value = JSON.stringify(
         {
           apiResponse: data,
           apiTreeResponse: treeData,
+          treeDataStructure: treeDataStructure,
           storeData: {
             categoryTree: cmsStore.categoryTree,
-            categoryList: cmsStore.categoryList
+            categoryList: cmsStore.categoryList,
+            filteredCategoryTree: filteredCategoryTree.value
           }
         },
         null,
@@ -381,9 +398,24 @@ const refreshData = () => {
 // 计算属性：过滤后的分类树
 const filteredCategoryTree = computed(() => {
   // 确保 categoryTree 存在
-  if (!cmsStore.categoryTree || !Array.isArray(cmsStore.categoryTree)) {
+  if (!cmsStore.categoryTree) {
+    console.warn("filteredCategoryTree - categoryTree 为 undefined");
     return [];
   }
+
+  if (!Array.isArray(cmsStore.categoryTree)) {
+    console.warn(
+      "filteredCategoryTree - categoryTree 不是数组:",
+      cmsStore.categoryTree
+    );
+    return [];
+  }
+
+  // 记录过滤前的树形结构
+  console.log(
+    "filteredCategoryTree - 过滤前的分类树长度:",
+    cmsStore.categoryTree.length
+  );
 
   if (!searchKeyword.value && !onlyActive.value) {
     return cmsStore.categoryTree;
@@ -418,7 +450,9 @@ const filteredCategoryTree = computed(() => {
       });
   };
 
-  return filterTree(cmsStore.categoryTree);
+  const result = filterTree(cmsStore.categoryTree);
+  console.log("filteredCategoryTree - 过滤后的分类树长度:", result.length);
+  return result;
 });
 
 // 计算属性：过滤后的分类列表
@@ -577,7 +611,39 @@ const handleDragEnd = async (
 
 // 组件挂载后获取数据
 onMounted(() => {
-  fetchCategoryData();
+  fetchCategoryData().then(() => {
+    // 添加详细日志记录
+    console.log("组件挂载后 - 分类树数据:", cmsStore.categoryTree);
+    console.log(
+      "组件挂载后 - 分类树长度:",
+      Array.isArray(cmsStore.categoryTree)
+        ? cmsStore.categoryTree.length
+        : "不是数组"
+    );
+    console.log("组件挂载后 - 分类列表数据:", cmsStore.categoryList);
+    console.log(
+      "组件挂载后 - 分类列表长度:",
+      Array.isArray(cmsStore.categoryList)
+        ? cmsStore.categoryList.length
+        : "不是数组"
+    );
+
+    // 检查过滤后的树形数据
+    console.log("组件挂载后 - 过滤后的分类树:", filteredCategoryTree.value);
+    console.log(
+      "组件挂载后 - 过滤后的分类树长度:",
+      Array.isArray(filteredCategoryTree.value)
+        ? filteredCategoryTree.value.length
+        : "不是数组"
+    );
+  });
+});
+
+// 监听显示模式变化
+watch(showTree, newVal => {
+  console.log("显示模式变更:", newVal ? "树形结构" : "列表");
+  console.log("filteredCategoryTree 数据:", filteredCategoryTree.value);
+  console.log("filteredCategoryTree 长度:", filteredCategoryTree.value.length);
 });
 </script>
 

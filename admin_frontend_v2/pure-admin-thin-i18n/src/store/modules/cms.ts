@@ -843,17 +843,28 @@ export const useCmsStore = defineStore("cms", {
         const response = await getCategoryTree();
         console.log("分类树API响应:", response);
         
-        // 确保response.data存在
+        // 更详细的日志记录
         if (response && response.data) {
+          console.log("分类树数据:", JSON.stringify(response.data));
+          console.log("分类树数据长度:", Array.isArray(response.data) ? response.data.length : "不是数组");
+          
+          // 检查数据是否为空数组
+          if (Array.isArray(response.data) && response.data.length === 0) {
+            console.warn("分类树API返回空数组");
+          }
+          
           this.categoryTree = response.data;
         } else {
           console.error("分类树API响应格式异常:", response);
+          // 确保即使响应格式异常也设置为空数组而不是undefined
           this.categoryTree = [];
         }
         
         return response.data;
       } catch (error) {
         console.error("获取分类树失败", error);
+        // 确保错误时也设置为空数组
+        this.categoryTree = [];
         ElMessage.error("获取分类树失败");
         throw error;
       } finally {
