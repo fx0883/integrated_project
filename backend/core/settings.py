@@ -15,6 +15,7 @@ import os
 from dotenv import load_dotenv
 import datetime
 import pymysql
+import logging.handlers  # 导入logging.handlers模块
 
 # 使用pymysql代替mysqlclient
 pymysql.install_as_MySQLdb()
@@ -286,6 +287,9 @@ LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(LOGS_DIR):
     os.makedirs(LOGS_DIR)
 
+# 日志保留天数
+LOG_RETENTION_DAYS = 15
+
 # 日志配置
 LOGGING = {
     'version': 1,
@@ -304,15 +308,23 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',  # 使用普通的FileHandler代替TimedRotatingFileHandler
+            'class': 'logging.handlers.TimedRotatingFileHandler',  # 使用TimedRotatingFileHandler
             'filename': os.path.join(LOGS_DIR, 'debug.log'),
+            'when': 'midnight',  # 每天午夜轮转
+            'interval': 1,  # 每1天轮转一次
+            'backupCount': LOG_RETENTION_DAYS,  # 保留最近15天的日志
             'formatter': 'verbose',
+            'encoding': 'utf-8',
         },
         'error_file': {
             'level': 'ERROR',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',  # 使用TimedRotatingFileHandler
             'filename': os.path.join(LOGS_DIR, 'error.log'),
+            'when': 'midnight',  # 每天午夜轮转
+            'interval': 1,  # 每1天轮转一次
+            'backupCount': LOG_RETENTION_DAYS,  # 保留最近15天的日志
             'formatter': 'verbose',
+            'encoding': 'utf-8',
         },
     },
     'loggers': {

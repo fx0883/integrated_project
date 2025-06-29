@@ -1,64 +1,77 @@
 <template>
-  <div class="main-container">
-    <div class="top-container mb-4">
-      <div class="left">
-        <el-button type="primary" @click="handleAddCategory">
-          <el-icon><Plus /></el-icon> 新增分类
-        </el-button>
-        <el-button @click="refreshData">
-          <el-icon><Refresh /></el-icon> 刷新
-        </el-button>
-        <el-button @click="debugData">
-          <el-icon><Warning /></el-icon> 调试
-        </el-button>
-      </div>
-      <div class="right">
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索分类名称"
-          prefix-icon="Search"
-          clearable
-          @keyup.enter="handleSearch"
-          @clear="handleSearch"
-        >
-          <template #append>
-            <el-button @click="handleSearch">
-              <el-icon><Search /></el-icon>
-            </el-button>
-          </template>
-        </el-input>
-      </div>
+  <div class="category-list-container">
+    <!-- 标题和新建按钮 -->
+    <div class="category-list-header">
+      <h2 class="category-list-title">分类管理</h2>
+      <el-button type="primary" :icon="Plus" @click="handleAddCategory">
+        新增分类
+      </el-button>
     </div>
 
-    <el-card shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span>分类管理</span>
-          <div class="right">
-            <el-switch
-              v-model="showTree"
-              active-text="树形结构"
-              inactive-text="列表"
-              class="mr-4"
-            />
-            <el-tooltip content="只显示启用的分类">
-              <el-switch
-                v-model="onlyActive"
-                active-text="只看启用"
-                @change="handleFilterChange"
+    <!-- 搜索和筛选 -->
+    <el-card class="search-card">
+      <el-form @keyup.enter="handleSearch">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="关键词">
+              <el-input
+                v-model="searchKeyword"
+                placeholder="搜索分类名称"
+                clearable
               />
-            </el-tooltip>
-          </div>
-        </div>
-      </template>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="显示方式">
+              <el-switch
+                v-model="showTree"
+                active-text="树形结构"
+                inactive-text="列表"
+                class="mr-4"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="状态">
+              <el-tooltip content="只显示启用的分类">
+                <el-switch
+                  v-model="onlyActive"
+                  active-text="只看启用"
+                  @change="handleFilterChange"
+                />
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item class="search-buttons">
+          <el-button type="primary" :icon="Search" @click="handleSearch">
+            搜索
+          </el-button>
+          <el-button :icon="Refresh" @click="refreshData"> 刷新 </el-button>
+          <el-button
+            v-if="debugMode"
+            :icon="Warning"
+            @click="debugData"
+            type="warning"
+          >
+            关闭调试
+          </el-button>
+          <el-button v-else :icon="Warning" @click="debugData">
+            调试
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
+    <!-- 调试信息 -->
+    <div v-if="debugMode" class="debug-info mb-4">
+      <h3>调试信息</h3>
+      <pre>{{ debugInfo }}</pre>
+    </div>
+
+    <!-- 分类数据 -->
+    <el-card class="table-card">
       <div v-loading="loading">
-        <!-- 调试信息 -->
-        <div v-if="debugMode" class="debug-info mb-4">
-          <h3>调试信息</h3>
-          <pre>{{ debugInfo }}</pre>
-        </div>
-
         <!-- 树形结构 -->
         <template v-if="showTree">
           <div
@@ -569,21 +582,35 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.main-container {
-  padding: 16px;
+.category-list-container {
+  padding: 20px;
 }
 
-.top-container {
+.category-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.card-header {
+.category-list-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.search-card {
+  margin-bottom: 20px;
+}
+
+.search-buttons {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.table-card {
+  margin-bottom: 20px;
 }
 
 .custom-tree-node {
@@ -611,16 +638,6 @@ onMounted(() => {
 
 .tree-container {
   min-height: 300px;
-}
-
-.left {
-  display: flex;
-  gap: 10px;
-}
-
-.right {
-  display: flex;
-  align-items: center;
 }
 
 /* 调试信息样式 */

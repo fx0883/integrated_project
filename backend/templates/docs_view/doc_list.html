@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 加载文档树
     function loadDocsTree() {
-        fetch('/api/docs/')
+        fetch('/docs/api/docs/')
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.data && data.data.tree) {
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        fetch(`/api/doc/${path}/`)
+        fetch(`/docs/api/doc/${path}/`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP错误 ${response.status}`);
