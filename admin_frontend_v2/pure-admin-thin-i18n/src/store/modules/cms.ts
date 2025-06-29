@@ -811,11 +811,22 @@ export const useCmsStore = defineStore("cms", {
     async fetchCategoryList(params?: CategoryListParams) {
       this.categoryLoading = true;
       try {
-        const { data } = await getCategoryList(params);
-        this.categoryList = data.results;
-        this.categoryTotal = data.count;
-        return data;
+        const response = await getCategoryList(params);
+        console.log("分类列表API响应:", response);
+        
+        // 确保response.data存在且包含results属性
+        if (response && response.data && response.data.results) {
+          this.categoryList = response.data.results;
+          this.categoryTotal = response.data.pagination ? response.data.pagination.count : response.data.results.length;
+        } else {
+          console.error("分类列表API响应格式异常:", response);
+          this.categoryList = [];
+          this.categoryTotal = 0;
+        }
+        
+        return response.data;
       } catch (error) {
+        console.error("获取分类列表失败", error);
         ElMessage.error("获取分类列表失败");
         throw error;
       } finally {
@@ -829,10 +840,20 @@ export const useCmsStore = defineStore("cms", {
     async fetchCategoryTree() {
       this.categoryLoading = true;
       try {
-        const { data } = await getCategoryTree();
-        this.categoryTree = data;
-        return data;
+        const response = await getCategoryTree();
+        console.log("分类树API响应:", response);
+        
+        // 确保response.data存在
+        if (response && response.data) {
+          this.categoryTree = response.data;
+        } else {
+          console.error("分类树API响应格式异常:", response);
+          this.categoryTree = [];
+        }
+        
+        return response.data;
       } catch (error) {
+        console.error("获取分类树失败", error);
         ElMessage.error("获取分类树失败");
         throw error;
       } finally {

@@ -8,6 +8,9 @@
         <el-button @click="refreshData">
           <el-icon><Refresh /></el-icon> 刷新
         </el-button>
+        <el-button @click="debugData">
+          <el-icon><Warning /></el-icon> 调试
+        </el-button>
       </div>
       <div class="right">
         <el-input
@@ -50,6 +53,12 @@
       </template>
 
       <div v-loading="loading">
+        <!-- 调试信息 -->
+        <div v-if="debugMode" class="debug-info mb-4">
+          <h3>调试信息</h3>
+          <pre>{{ debugInfo }}</pre>
+        </div>
+
         <!-- 树形结构 -->
         <template v-if="showTree">
           <div
@@ -237,7 +246,8 @@ import {
   Delete,
   Search,
   Refresh,
-  Folder
+  Folder,
+  Warning
 } from "@element-plus/icons-vue";
 import { useCmsStore } from "@/store/modules/cms";
 import type { Category, CategoryOrderParams } from "@/types/cms";
@@ -255,6 +265,10 @@ const showTree = ref(true);
 const searchKeyword = ref("");
 // 仅显示启用的分类
 const onlyActive = ref(false);
+
+// 调试相关
+const debugMode = ref(false);
+const debugInfo = ref("");
 
 // 表单对话框状态
 const formDialog = reactive({
@@ -282,10 +296,67 @@ const fetchCategoryData = async () => {
   try {
     await cmsStore.fetchCategoryTree();
     await cmsStore.fetchCategoryList();
+
+    // 调试信息
+    if (debugMode.value) {
+      debugInfo.value = JSON.stringify(
+        {
+          categoryTree: cmsStore.categoryTree,
+          categoryList: cmsStore.categoryList
+        },
+        null,
+        2
+      );
+    }
   } catch (error) {
     console.error("获取分类数据失败", error);
   } finally {
     loading.value = false;
+  }
+};
+
+// 调试数据
+const debugData = async () => {
+  debugMode.value = !debugMode.value;
+  if (debugMode.value) {
+    try {
+      // 直接调用API获取数据进行比较
+      const response = await fetch(
+        "http://localhost:8000/api/v1/cms/categories/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          }
+        }
+      );
+      const data = await response.json();
+
+      // 获取分类树数据
+      const treeResponse = await fetch(
+        "http://localhost:8000/api/v1/cms/categories/tree/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          }
+        }
+      );
+      const treeData = await treeResponse.json();
+
+      debugInfo.value = JSON.stringify(
+        {
+          apiResponse: data,
+          apiTreeResponse: treeData,
+          storeData: {
+            categoryTree: cmsStore.categoryTree,
+            categoryList: cmsStore.categoryList
+          }
+        },
+        null,
+        2
+      );
+    } catch (error) {
+      debugInfo.value = `调试错误: ${error.message}`;
+    }
   }
 };
 
@@ -550,6 +621,24 @@ onMounted(() => {
 .right {
   display: flex;
   align-items: center;
+}
+
+/* 调试信息样式 */
+.debug-info {
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 16px;
+  overflow: auto;
+  max-height: 400px;
+}
+
+.debug-info pre {
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 /* Tailwind-like utility classes */

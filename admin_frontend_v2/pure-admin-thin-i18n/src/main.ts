@@ -22,7 +22,7 @@ logger.configure({
   apiLogging: true,
   apiLogFullResponse: false,
   useColors: true,
-  consoleOutput: false // 设置为false可以禁止输出到控制台
+  consoleOutput: true // 设置为false可以禁止输出到控制台
 });
 
 // 测试日志输出
