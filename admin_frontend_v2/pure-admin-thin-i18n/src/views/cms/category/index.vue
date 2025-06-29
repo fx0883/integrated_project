@@ -90,7 +90,11 @@
               <template #default="{ node, data }">
                 <div class="custom-tree-node">
                   <div class="node-label">
-                    <el-icon v-if="data.icon" :class="data.icon" class="mr-1" />
+                    <IconifyIconOnline
+                      v-if="data.icon"
+                      :icon="data.icon"
+                      class="mr-1"
+                    />
                     <el-icon v-else><Folder /></el-icon>
                     <span class="ml-1">{{ node.label }}</span>
                     <el-tag
@@ -154,7 +158,11 @@
             <el-table-column prop="name" label="名称" min-width="180">
               <template #default="{ row }">
                 <div class="flex items-center">
-                  <el-icon v-if="row.icon" :class="row.icon" class="mr-1" />
+                  <IconifyIconOnline
+                    v-if="row.icon"
+                    :icon="row.icon"
+                    class="mr-1"
+                  />
                   <el-icon v-else><Folder /></el-icon>
                   <span class="ml-1">{{ row.name }}</span>
                   <el-tag
@@ -169,13 +177,9 @@
               </template>
             </el-table-column>
             <el-table-column prop="slug" label="别名" min-width="150" />
-            <el-table-column prop="parent_id" label="父级分类" min-width="100">
+            <el-table-column prop="parent" label="父级分类" min-width="100">
               <template #default="{ row }">
-                {{
-                  row.parent_id
-                    ? getCategoryNameById(row.parent_id)
-                    : "顶级分类"
-                }}
+                {{ row.parent ? getCategoryNameById(row.parent) : "顶级分类" }}
               </template>
             </el-table-column>
             <el-table-column prop="article_count" label="文章数" width="100" />
@@ -226,15 +230,27 @@
       :title="formDialog.title"
       width="50%"
       destroy-on-close
+      :append-to-body="true"
+      @closed="handleDialogClosed"
     >
-      <category-form
-        :form-mode="formDialog.mode"
-        :edit-id="formDialog.editId"
-        :category-data="formDialog.categoryData"
-        :loading="formDialog.loading"
-        @submit="handleFormSubmit"
-        @cancel="formDialog.visible = false"
-      />
+      <template v-if="formDialog.visible">
+        <category-form
+          :key="
+            formDialog.mode +
+            '-' +
+            (formDialog.editId || 'new') +
+            '-' +
+            (formDialog.defaultParentId || 'none')
+          "
+          :form-mode="formDialog.mode"
+          :edit-id="formDialog.editId"
+          :category-data="formDialog.categoryData"
+          :loading="formDialog.loading"
+          :default-parent-id="formDialog.defaultParentId"
+          @submit="handleFormSubmit"
+          @cancel="formDialog.visible = false"
+        />
+      </template>
     </el-dialog>
 
     <!-- 确认对话框 -->
@@ -251,7 +267,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, watch } from "vue";
+import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   Plus,
@@ -266,6 +282,7 @@ import { useCmsStore } from "@/store/modules/cms";
 import type { Category, CategoryOrderParams } from "@/types/cms";
 import CategoryForm from "@/components/Cms/Category/CategoryForm.vue";
 import ConfirmDialog from "@/components/Cms/Category/ConfirmDialog.vue";
+import { IconifyIconOnline } from "@/components/ReIcon";
 
 const cmsStore = useCmsStore();
 const treeRef = ref();
@@ -290,7 +307,8 @@ const formDialog = reactive({
   mode: "create" as "create" | "edit",
   editId: undefined as number | undefined,
   categoryData: null as Category | null,
-  loading: false
+  loading: false,
+  defaultParentId: undefined as number | undefined
 });
 
 // 确认对话框状态
@@ -515,14 +533,48 @@ const handleAddCategory = () => {
 
 // 新增子分类
 const handleAddSubCategory = (parent: Category) => {
-  formDialog.visible = true;
-  formDialog.title = `新增 "${parent.name}" 的子分类`;
-  formDialog.mode = "create";
-  formDialog.editId = undefined;
-  formDialog.categoryData = {
-    ...formDialog.categoryData,
-    parent_id: parent.id
-  } as Category;
+  console.log("[CategoryIndex] 添加子分类 - 父级分类:", parent);
+
+  // 重置对话框状态
+  formDialog.visible = false; // 先关闭对话框，确保组件会重新创建
+
+  // 使用 nextTick 确保在 DOM 更新后再打开对话框
+  nextTick(() => {
+    // 设置对话框状态
+    formDialog.mode = "create";
+    formDialog.editId = undefined;
+    formDialog.loading = false;
+    formDialog.defaultParentId = parent.id;
+
+    // 创建一个新的分类数据对象，包含父级ID
+    formDialog.categoryData = {
+      parent: parent.id,
+      name: "",
+      slug: "",
+      description: "",
+      is_active: true,
+      sort_order: 0
+    } as Category;
+
+    // 设置对话框标题
+    formDialog.title = `新增 "${parent.name}" 的子分类`;
+
+    // 显示对话框
+    formDialog.visible = true;
+
+    console.log("[CategoryIndex] 添加子分类 - 设置的数据:", {
+      parent,
+      formDialog: {
+        mode: formDialog.mode,
+        editId: formDialog.editId,
+        loading: formDialog.loading,
+        defaultParentId: formDialog.defaultParentId,
+        categoryData: formDialog.categoryData,
+        title: formDialog.title,
+        visible: formDialog.visible
+      }
+    });
+  });
 };
 
 // 编辑分类
@@ -592,11 +644,11 @@ const handleDragEnd = async (
     if (dropType === "inner") {
       // 放置为子节点
       const dropNodeData = dropNode.data as Category;
-      orderData.parent_id = dropNodeData.id;
+      orderData.parent = dropNodeData.id;
     } else if (dropType === "before" || dropType === "after") {
       // 放置为同级节点
       const dropNodeData = dropNode.data as Category;
-      orderData.parent_id = dropNodeData.parent_id;
+      orderData.parent = dropNodeData.parent;
     }
 
     await cmsStore.updateCategoryOrder([orderData]);
@@ -645,6 +697,18 @@ watch(showTree, newVal => {
   console.log("filteredCategoryTree 数据:", filteredCategoryTree.value);
   console.log("filteredCategoryTree 长度:", filteredCategoryTree.value.length);
 });
+
+// 处理对话框关闭
+const handleDialogClosed = () => {
+  console.log("[CategoryIndex] 对话框关闭");
+  // 重置对话框状态
+  formDialog.categoryData = null;
+  formDialog.defaultParentId = undefined;
+  console.log("[CategoryIndex] 对话框关闭后重置状态:", {
+    categoryData: formDialog.categoryData,
+    defaultParentId: formDialog.defaultParentId
+  });
+};
 </script>
 
 <style scoped>

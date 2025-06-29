@@ -296,8 +296,15 @@ export function getCommentReplies(id: number) {
  * @param params 查询参数
  */
 export function getCategoryList(params?: CategoryListParams) {
+  console.log("[CmsApi] getCategoryList - 开始请求分类列表, 参数:", params);
   return http.request<PaginationResponse<Category>>("get", "/cms/categories/", {
     params
+  }).then(response => {
+    console.log("[CmsApi] getCategoryList - 请求成功, 响应:", response);
+    return response;
+  }).catch(error => {
+    console.error("[CmsApi] getCategoryList - 请求失败:", error);
+    throw error;
   });
 }
 
@@ -321,6 +328,7 @@ export function getCategoryDetail(id: number) {
  * @param data 分类数据
  */
 export function createCategory(data: CategoryCreateParams) {
+  console.log("API createCategory - 发送创建分类请求:", data);
   return http.request<ApiResponse<Category>>("post", "/cms/categories/", {
     data
   });

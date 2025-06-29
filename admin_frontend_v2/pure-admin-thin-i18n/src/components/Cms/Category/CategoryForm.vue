@@ -25,31 +25,44 @@
       </div>
     </el-form-item>
 
-    <el-form-item label="父级分类" prop="parent_id">
-      <el-tree-select
-        v-model="form.parent_id"
+    <el-form-item label="父级分类" prop="parent">
+      <el-select
+        v-model="form.parent"
+        :model-value="form.parent"
         placeholder="请选择父级分类（可选）"
-        :data="categoryTree"
-        :props="{
-          label: 'name',
-          value: 'id',
-          children: 'children',
-          disabled: formMode === 'edit' ? data => data.id === editId : false
-        }"
         clearable
-        node-key="id"
-        check-strictly
-        default-expand-all
-      />
+        filterable
+        :loading="categoriesLoading"
+      >
+        <el-option
+          v-for="item in categoryList"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+          :disabled="formMode === 'edit' && item.id === editId"
+        />
+      </el-select>
       <div class="text-gray-400 text-xs mt-1">不选择则为顶级分类</div>
+      <!-- 调试信息 -->
+      <div v-if="false" class="text-xs text-gray-400 mt-1">
+        当前选中的父级ID: {{ form.parent }}
+      </div>
     </el-form-item>
 
     <el-form-item label="图标" prop="icon">
-      <el-input v-model="form.icon" placeholder="请输入图标类名">
-        <template #prepend>
-          <i :class="form.icon || 'el-icon-folder'" />
+      <el-input v-model="form.icon" placeholder="请输入图标名称">
+        <template #prepend v-if="form.icon">
+          <div class="icon-preview">
+            <IconifyIconOnline :icon="form.icon" />
+          </div>
+        </template>
+        <template #append>
+          <el-button @click="openIconSelector"> 选择图标 </el-button>
         </template>
       </el-input>
+      <div class="text-gray-400 text-xs mt-1">
+        支持 Element Plus 和 Remix 图标库
+      </div>
     </el-form-item>
 
     <el-form-item label="排序" prop="sort_order">
@@ -90,10 +103,13 @@
       <el-button @click="handleCancel">取消</el-button>
     </el-form-item>
   </el-form>
+
+  <!-- 图标选择器组件 -->
+  <IconSelector ref="iconSelectorRef" @select="handleIconSelect" />
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, watch, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
 import { ElMessage } from "element-plus";
 import { RefreshRight } from "@element-plus/icons-vue";
 import { useCmsStore } from "@/store/modules/cms";
@@ -102,19 +118,23 @@ import type {
   CategoryCreateParams,
   CategoryUpdateParams
 } from "@/types/cms";
+import IconSelector from "@/components/Cms/Category/IconSelector.vue";
+import { IconifyIconOnline } from "@/components/ReIcon";
 
 interface Props {
   formMode: "create" | "edit";
   editId?: number;
   categoryData?: Category | null;
   loading?: boolean;
+  defaultParentId?: number | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   formMode: "create",
   editId: undefined,
   categoryData: null,
-  loading: false
+  loading: false,
+  defaultParentId: null
 });
 
 const emit = defineEmits(["submit", "cancel"]);
@@ -122,6 +142,10 @@ const emit = defineEmits(["submit", "cancel"]);
 const cmsStore = useCmsStore();
 const formRef = ref();
 const loading = ref(props.loading);
+const categoriesLoading = ref(false);
+
+// 图标选择器引用
+const iconSelectorRef = ref();
 
 const submitButtonText = computed(() => {
   return props.formMode === "create" ? "创建" : "更新";
@@ -130,12 +154,15 @@ const submitButtonText = computed(() => {
 // 分类树数据
 const categoryTree = ref<Category[]>([]);
 
+// 分类列表数据
+const categoryList = ref<Category[]>([]);
+
 // 表单数据
 const form = reactive<CategoryCreateParams>({
   name: "",
   slug: "",
   description: "",
-  parent_id: null,
+  parent: props.defaultParentId || props.categoryData?.parent || null,
   icon: "",
   is_active: true,
   sort_order: 0
@@ -159,16 +186,47 @@ const rules = {
 
 // 初始化数据
 const initFormData = () => {
+  console.log("[CategoryForm] initFormData - props:", {
+    formMode: props.formMode,
+    categoryData: props.categoryData,
+    editId: props.editId,
+    defaultParentId: props.defaultParentId
+  });
+
   if (props.formMode === "edit" && props.categoryData) {
+    console.log("[CategoryForm] 编辑模式 - 设置表单数据:", props.categoryData);
     Object.assign(form, {
       name: props.categoryData.name,
       slug: props.categoryData.slug,
       description: props.categoryData.description || "",
-      parent_id: props.categoryData.parent_id,
+      parent: props.categoryData.parent,
       icon: props.categoryData.icon || "",
       is_active: props.categoryData.is_active,
       sort_order: props.categoryData.sort_order
     });
+    console.log("[CategoryForm] 编辑模式 - 设置后的表单数据:", form);
+  } else if (
+    props.formMode === "create" &&
+    props.categoryData &&
+    props.categoryData.parent
+  ) {
+    // 添加子分类时，设置父级ID
+    console.log(
+      "[CategoryForm] 创建子分类模式 - 设置父级ID:",
+      props.categoryData.parent
+    );
+    form.parent = props.categoryData.parent;
+    console.log("[CategoryForm] 创建子分类模式 - 设置后的表单数据:", form);
+  } else if (props.formMode === "create" && props.defaultParentId) {
+    // 使用默认父级ID
+    console.log(
+      "[CategoryForm] 创建模式 - 使用默认父级ID:",
+      props.defaultParentId
+    );
+    form.parent = props.defaultParentId;
+    console.log("[CategoryForm] 创建模式 - 设置后的表单数据:", form);
+  } else {
+    console.log("[CategoryForm] 其他模式 - 当前表单数据:", form);
   }
 };
 
@@ -176,19 +234,80 @@ const initFormData = () => {
 watch(
   () => props.categoryData,
   newVal => {
-    if (newVal) {
-      initFormData();
+    console.log("[CategoryForm] watch categoryData - 新值:", newVal);
+    if (newVal && newVal.parent) {
+      console.log("[CategoryForm] 从 categoryData 设置父级ID:", newVal.parent);
+      form.parent = newVal.parent;
     }
   },
   { immediate: true }
 );
 
+// 监听默认父级ID变化
+watch(
+  () => props.defaultParentId,
+  newVal => {
+    console.log("[CategoryForm] watch defaultParentId - 新值:", newVal);
+    if (newVal) {
+      console.log("[CategoryForm] 从 defaultParentId 设置父级ID:", newVal);
+      form.parent = newVal;
+    }
+  },
+  { immediate: true }
+);
+
+// 获取分类列表
+const fetchCategoryList = async () => {
+  try {
+    console.log("[CategoryForm] 开始获取分类列表");
+    categoriesLoading.value = true; // 设置加载状态
+    const result = await cmsStore.fetchCategoryList();
+    console.log("[CategoryForm] 获取到的分类列表:", result);
+    if (result && result.results) {
+      categoryList.value = result.results;
+      console.log(
+        "[CategoryForm] 分类列表设置成功, 长度:",
+        categoryList.value.length
+      );
+
+      // 在分类列表加载完成后，确保父级ID正确设置
+      nextTick(() => {
+        if (props.defaultParentId) {
+          console.log(
+            "[CategoryForm] 分类列表加载完成后设置默认父级ID:",
+            props.defaultParentId
+          );
+          form.parent = props.defaultParentId;
+        } else if (props.categoryData && props.categoryData.parent) {
+          console.log(
+            "[CategoryForm] 分类列表加载完成后设置父级ID:",
+            props.categoryData.parent
+          );
+          form.parent = props.categoryData.parent;
+        }
+      });
+    } else {
+      console.warn("[CategoryForm] 获取的分类列表格式不正确:", result);
+      categoryList.value = []; // 确保是空数组而不是 undefined
+    }
+  } catch (error) {
+    console.error("[CategoryForm] 获取分类列表失败:", error);
+    categoryList.value = []; // 确保是空数组而不是 undefined
+  } finally {
+    categoriesLoading.value = false; // 重置加载状态
+  }
+};
+
 // 获取分类树
 const fetchCategoryTree = async () => {
   try {
+    console.log("[CategoryForm] 开始获取分类树");
     const result = await cmsStore.fetchCategoryTree();
+    console.log("[CategoryForm] 获取到的分类树:", result);
     categoryTree.value = result;
+    console.log("[CategoryForm] 设置后的分类树:", categoryTree.value);
   } catch (error) {
+    console.error("[CategoryForm] 获取分类树失败:", error);
     // 已在store中处理错误
   }
 };
@@ -209,19 +328,34 @@ const generateSlug = () => {
   form.slug = slug || form.name.toLowerCase().replace(/\s+/g, "-");
 };
 
+// 打开图标选择器
+const openIconSelector = () => {
+  iconSelectorRef.value?.open();
+};
+
+// 处理图标选择
+const handleIconSelect = (icon: string) => {
+  console.log("[CategoryForm] 选择了图标:", icon);
+  form.icon = icon;
+};
+
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return;
 
   try {
+    console.log("[CategoryForm] 提交前的表单数据:", form);
     await formRef.value.validate();
 
     loading.value = true;
     const formData = { ...form };
+    console.log("[CategoryForm] 提交的表单数据:", formData);
 
     if (props.formMode === "create") {
+      console.log("[CategoryForm] 创建分类:", formData);
       await cmsStore.createCategory(formData);
     } else if (props.formMode === "edit" && props.editId) {
+      console.log("[CategoryForm] 更新分类:", props.editId, formData);
       await cmsStore.updateCategory(
         props.editId,
         formData as CategoryUpdateParams
@@ -230,7 +364,7 @@ const handleSubmit = async () => {
 
     emit("submit");
   } catch (error) {
-    console.error("表单验证失败", error);
+    console.error("[CategoryForm] 表单验证或提交失败", error);
   } finally {
     loading.value = false;
   }
@@ -241,12 +375,33 @@ const handleCancel = () => {
   emit("cancel");
 };
 
-// 组件挂载后获取分类树
+// 组件挂载后获取分类数据
 onMounted(() => {
+  console.log("[CategoryForm] 组件挂载, props:", {
+    formMode: props.formMode,
+    categoryData: props.categoryData,
+    editId: props.editId,
+    defaultParentId: props.defaultParentId
+  });
+
+  console.log("[CategoryForm] 初始表单数据:", JSON.stringify(form));
+
+  // 初始化表单数据
+  initFormData();
+
+  // 获取分类数据
   fetchCategoryTree();
+  fetchCategoryList();
 });
 </script>
 
 <style scoped>
-/* 可以根据需要添加样式 */
+.icon-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+}
 </style>

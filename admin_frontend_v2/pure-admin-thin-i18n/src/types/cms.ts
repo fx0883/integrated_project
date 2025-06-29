@@ -164,7 +164,7 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
-  parent_id?: number | null;
+  parent?: number | null;
   level: number;
   path: string;
   sort_order: number;
@@ -179,7 +179,7 @@ export interface Category {
 // 分类列表查询参数
 export interface CategoryListParams {
   search?: string;
-  parent_id?: number | null;
+  parent?: number | null;
   is_active?: boolean | string;
   page?: number;
   page_size?: number;
@@ -190,7 +190,7 @@ export interface CategoryCreateParams {
   name: string;
   slug?: string;
   description?: string;
-  parent_id?: number | null;
+  parent?: number | null;
   icon?: string;
   is_active?: boolean;
   sort_order?: number;
@@ -201,7 +201,7 @@ export interface CategoryUpdateParams {
   name?: string;
   slug?: string;
   description?: string;
-  parent_id?: number | null;
+  parent?: number | null;
   icon?: string;
   is_active?: boolean;
   sort_order?: number;
@@ -211,7 +211,7 @@ export interface CategoryUpdateParams {
 export interface CategoryOrderParams {
   id: number;
   sort_order: number;
-  parent_id?: number | null;
+  parent?: number | null;
 }
 
 // 标签相关类型

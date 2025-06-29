@@ -809,24 +809,26 @@ export const useCmsStore = defineStore("cms", {
      * 获取分类列表
      */
     async fetchCategoryList(params?: CategoryListParams) {
+      console.log("[CmsStore] fetchCategoryList - 开始获取分类列表, 参数:", params);
       this.categoryLoading = true;
       try {
         const response = await getCategoryList(params);
-        console.log("分类列表API响应:", response);
+        console.log("[CmsStore] fetchCategoryList - 分类列表API响应:", response);
         
         // 确保response.data存在且包含results属性
         if (response && response.data && response.data.results) {
+          console.log("[CmsStore] fetchCategoryList - 分类列表数据有效, 长度:", response.data.results.length);
           this.categoryList = response.data.results;
           this.categoryTotal = response.data.pagination ? response.data.pagination.count : response.data.results.length;
         } else {
-          console.error("分类列表API响应格式异常:", response);
+          console.error("[CmsStore] fetchCategoryList - 分类列表API响应格式异常:", response);
           this.categoryList = [];
           this.categoryTotal = 0;
         }
         
         return response.data;
       } catch (error) {
-        console.error("获取分类列表失败", error);
+        console.error("[CmsStore] fetchCategoryList - 获取分类列表失败", error);
         ElMessage.error("获取分类列表失败");
         throw error;
       } finally {
@@ -893,12 +895,15 @@ export const useCmsStore = defineStore("cms", {
      * 创建分类
      */
     async createCategory(params: CategoryCreateParams) {
+      console.log("Store createCategory - 开始创建分类:", params);
       this.categoryLoading = true;
       try {
         const { data } = await createCategory(params);
+        console.log("Store createCategory - 创建分类成功:", data);
         ElMessage.success("创建分类成功");
         return data;
       } catch (error) {
+        console.error("Store createCategory - 创建分类失败:", error);
         ElMessage.error("创建分类失败");
         throw error;
       } finally {
