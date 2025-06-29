@@ -220,6 +220,27 @@ cms:
   categoryManagement: Category Management
   tagManagement: Tag Management
   commentManagement: Comment Management
+  menu:
+    cmsManagement: CMS Management
+    articleManagement: Article Management
+    articleList: Article List
+    articleCreate: Create Article
+    articleEdit: Edit Article
+    articleDetail: Article Detail
+    articleVersion: Article Version
+    categoryManagement: Category Management
+    categoryList: Category List
+    categoryEdit: Edit Category
+    categoryDetail: Category Detail
+    tagManagement: Tag Management
+    tagList: Tag List
+    tagCreate: Create Tag
+    tagEdit: Edit Tag
+    commentManagement: Comment Management
+    commentList: Comment List
+    commentCreate: Create Comment
+    commentEdit: Edit Comment
+    commentDetail: Comment Detail
   tag:
     createTag: Create Tag
     editTag: Edit Tag
@@ -460,19 +481,6 @@ cms:
     actions: Actions
     fetchListFailed: Failed to fetch category list
     categoryTree: Category Tree
-  
-  menu:
-    cmsManagement: CMS Management
-    articleManagement: Article Management
-    articleList: Article List
-    articleCreate: Create Article
-    articleEdit: Edit Article
-    articleDetail: Article Details
-    articleVersion: Article Version
-    categoryManagement: Category Management
-    categoryList: Category List
-    categoryEdit: Edit Category
-    categoryDetail: Category Details
 
 menus:
   pureHome: Home

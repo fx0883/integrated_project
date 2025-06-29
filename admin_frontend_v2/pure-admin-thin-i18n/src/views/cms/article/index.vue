@@ -81,6 +81,14 @@ const createArticleDialog = reactive({
   loading: false
 });
 
+// 编辑文章模态窗口
+const editArticleDialog = reactive({
+  visible: false,
+  loading: false,
+  articleId: null as number | null,
+  articleData: null as Article | null
+});
+
 // 分类和标签数据
 const categories = ref<Category[]>([]);
 const tags = ref<Tag[]>([]);
@@ -226,8 +234,24 @@ const handleFormCancel = () => {
 };
 
 // 编辑文章
-const handleEdit = (row: Article) => {
-  router.push(`/cms/article/edit/${row.id}`);
+const handleEdit = async (row: Article) => {
+  editArticleDialog.articleId = row.id;
+  editArticleDialog.loading = true;
+
+  try {
+    // 加载分类和标签数据
+    await Promise.all([fetchCategories(), fetchTags()]);
+
+    // 获取文章详情
+    const articleData = await cmsStore.fetchArticleDetail(row.id);
+    editArticleDialog.articleData = articleData;
+    editArticleDialog.visible = true;
+  } catch (error) {
+    logger.error("获取文章详情失败", error);
+    ElMessage.error(t("cms.article.fetchDetailFailed"));
+  } finally {
+    editArticleDialog.loading = false;
+  }
 };
 
 // 查看文章详情
@@ -306,6 +330,33 @@ const handlePublish = (row: Article) => {
 const formatDate = (date: string) => {
   if (!date) return "";
   return new Date(date).toLocaleString();
+};
+
+// 处理编辑文章表单提交
+const handleEditFormSubmit = async (formData: ArticleCreateParams) => {
+  try {
+    editArticleDialog.loading = true;
+    if (!editArticleDialog.articleId) {
+      throw new Error("文章ID不存在");
+    }
+
+    await cmsStore.updateArticle(editArticleDialog.articleId, formData);
+    ElMessage.success(t("cms.article.updateSuccess"));
+    editArticleDialog.visible = false;
+
+    // 刷新文章列表
+    fetchArticles();
+  } catch (error) {
+    logger.error("更新文章失败", error);
+    ElMessage.error(t("cms.article.updateFailed"));
+  } finally {
+    editArticleDialog.loading = false;
+  }
+};
+
+// 处理编辑文章表单取消
+const handleEditFormCancel = () => {
+  editArticleDialog.visible = false;
 };
 
 // 页面加载时获取数据
@@ -579,6 +630,24 @@ onMounted(() => {
         :tags="tags"
         @submit="handleFormSubmit"
         @cancel="handleFormCancel"
+      />
+    </el-dialog>
+
+    <!-- 编辑文章模态窗口 -->
+    <el-dialog
+      v-model="editArticleDialog.visible"
+      :title="t('cms.article.editArticle')"
+      width="70%"
+      destroy-on-close
+    >
+      <ArticleForm
+        mode="edit"
+        :loading="editArticleDialog.loading"
+        :categories="categories"
+        :tags="tags"
+        :article="editArticleDialog.articleData"
+        @submit="handleEditFormSubmit"
+        @cancel="handleEditFormCancel"
       />
     </el-dialog>
   </div>

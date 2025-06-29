@@ -220,14 +220,35 @@ cms:
   categoryManagement: 分类管理
   tagManagement: 标签管理
   commentManagement: 评论管理
+  menu:
+    cmsManagement: CMS管理
+    articleManagement: 文章管理
+    articleList: 文章列表
+    articleCreate: 创建文章
+    articleEdit: 编辑文章
+    articleDetail: 文章详情
+    articleVersion: 文章版本
+    categoryManagement: 分类管理
+    categoryList: 分类列表
+    categoryEdit: 编辑分类
+    categoryDetail: 分类详情
+    tagManagement: 标签管理
+    tagList: 标签列表
+    tagCreate: 创建标签
+    tagEdit: 编辑标签
+    commentManagement: 评论管理
+    commentList: 评论列表
+    commentCreate: 创建评论
+    commentEdit: 编辑评论
+    commentDetail: 评论详情
   tag:
     createTag: 创建标签
     editTag: 编辑标签
     tagManagement: 标签管理
-    searchPlaceholder: 按名称或描述搜索标签
+    searchPlaceholder: 搜索标签名称或描述
     isActive: 状态
     statusAll: 所有状态
-    statusActive: 激活
+    statusActive: 已激活
     statusInactive: 未激活
     id: ID
     name: 名称
@@ -249,7 +270,7 @@ cms:
     article: 文章
     parent: 父评论
     content: 内容
-    contentPlaceholder: 请输入评论内容
+    contentPlaceholder: 输入评论内容
     selectArticle: 选择文章
     selectParentComment: 选择父评论
     guestInfo: 访客信息
@@ -267,19 +288,19 @@ cms:
     commentManagement: 评论管理
     replyComment: 回复评论
     keyword: 关键词
-    searchPlaceholder: 请输入评论内容或作者
-    articleIdPlaceholder: 请输入文章ID
+    searchPlaceholder: 输入评论内容或作者
+    articleIdPlaceholder: 输入文章ID
     dateRange: 日期范围
     startDate: 开始日期
     endDate: 结束日期
     batchApprove: 批量批准
-    batchMarkAsSpam: 批量标记为垃圾
+    batchMarkAsSpam: 标记为垃圾
     batchReject: 批量拒绝
     batchDelete: 批量删除
     createTime: 创建时间
     anonymous: 匿名
-    byUser: 由用户 {user} 发表
-    byGuest: 由访客 {name} 发表
+    byUser: 用户 {user}
+    byGuest: 访客 {name}
     confirmApprove: 确认批准
     confirmApproveMessage: 确定要批准此评论吗？
     confirmReject: 确认拒绝
@@ -430,7 +451,30 @@ cms:
     deleteFailed: 删除失败
     createSuccess: 创建文章成功
     createFailed: 创建文章失败
-  
+    updateSuccess: 更新文章成功
+    updateFailed: 更新文章失败
+    fetchDetailFailed: 获取文章详情失败
+    titleLength: 标题长度应在1-100个字符之间
+    visibilityRequired: 可见性为必填项
+    visibilityPublic: 公开
+    visibilityPrivate: 私有
+    visibilityPassword: 密码保护
+    contentTypeMarkdown: Markdown
+    contentTypeHtml: HTML
+    slug: 别名
+    categories: 分类
+    titlePlaceholder: 请输入文章标题
+    slugPlaceholder: 请输入文章别名
+    excerptPlaceholder: 请输入文章摘要
+    contentPlaceholder: 请输入文章内容
+    editorTip: 支持Markdown和HTML格式
+    settings: 设置
+    contentType: 内容类型
+    visibility: 可见性
+    allowComment: 允许评论
+    categoriesPlaceholder: 请选择分类
+    tagsPlaceholder: 请选择标签
+
   category:
     editCategory: 编辑分类
     basicInfo: 基本信息
@@ -460,28 +504,16 @@ cms:
     actions: 操作
     fetchListFailed: 获取分类列表失败
     categoryTree: 分类树
-  
-  menu:
-    cmsManagement: CMS管理
-    articleManagement: 文章管理
-    articleList: 文章列表
-    articleCreate: 创建文章
-    articleEdit: 编辑文章
-    articleDetail: 文章详情
-    articleVersion: 文章版本
+    createCategory: 创建分类
     categoryManagement: 分类管理
-    categoryList: 分类列表
-    categoryEdit: 编辑分类
-    categoryDetail: 分类详情
-    tagManagement: 标签管理
-    tagList: 标签列表
-    tagCreate: 创建标签
-    tagEdit: 编辑标签
-    commentManagement: 评论管理
-    commentList: 评论列表
-    commentCreate: 创建评论
-    commentEdit: 编辑评论
-    commentDetail: 评论详情
+    keyword: 关键词
+    searchPlaceholder: 搜索分类名称
+    onlyShowActive: 只看启用
+    treeView: 树形结构
+    listView: 列表
+    refresh: 刷新
+    debug: 调试
+    noData: 暂无分类数据
 
 menus:
   pureHome: 首页
