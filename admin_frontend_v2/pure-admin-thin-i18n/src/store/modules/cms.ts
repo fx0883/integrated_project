@@ -815,11 +815,11 @@ export const useCmsStore = defineStore("cms", {
         const response = await getCategoryList(params);
         console.log("[CmsStore] fetchCategoryList - 分类列表API响应:", response);
         
-        // 确保response.data存在且包含results属性
-        if (response && response.data && response.data.results) {
-          console.log("[CmsStore] fetchCategoryList - 分类列表数据有效, 长度:", response.data.results.length);
-          this.categoryList = response.data.results;
-          this.categoryTotal = response.data.pagination ? response.data.pagination.count : response.data.results.length;
+        // 处理新的API响应格式
+        if (response && response.data) {
+          console.log("[CmsStore] fetchCategoryList - 分类列表数据有效, 长度:", response.data.length);
+          this.categoryList = response.data;
+          this.categoryTotal = response.data.length;
         } else {
           console.error("[CmsStore] fetchCategoryList - 分类列表API响应格式异常:", response);
           this.categoryList = [];
@@ -842,29 +842,37 @@ export const useCmsStore = defineStore("cms", {
     async fetchCategoryTree() {
       this.categoryLoading = true;
       try {
-        const response = await getCategoryTree();
-        console.log("分类树API响应:", response);
+        // 首先获取分类列表
+        await this.fetchCategoryList();
         
-        // 更详细的日志记录
-        if (response && response.data) {
-          console.log("分类树数据:", JSON.stringify(response.data));
-          console.log("分类树数据长度:", Array.isArray(response.data) ? response.data.length : "不是数组");
+        // 从分类列表构建树形结构
+        const buildTree = () => {
+          // 找出所有顶级分类（没有父级的分类）
+          const rootCategories = this.categoryList.filter(item => !item.parent);
           
-          // 检查数据是否为空数组
-          if (Array.isArray(response.data) && response.data.length === 0) {
-            console.warn("分类树API返回空数组");
-          }
+          // 递归构建子树
+          const buildSubTree = (parentId: number): Category[] => {
+            return this.categoryList
+              .filter(item => item.parent === parentId)
+              .map(item => ({
+                ...item,
+                children: buildSubTree(item.id)
+              }));
+          };
           
-          this.categoryTree = response.data;
-        } else {
-          console.error("分类树API响应格式异常:", response);
-          // 确保即使响应格式异常也设置为空数组而不是undefined
-          this.categoryTree = [];
-        }
+          // 为每个顶级分类添加子分类
+          return rootCategories.map(root => ({
+            ...root,
+            children: buildSubTree(root.id)
+          }));
+        };
         
-        return response.data;
+        this.categoryTree = buildTree();
+        console.log("构建的树形结构:", this.categoryTree);
+        
+        return this.categoryTree;
       } catch (error) {
-        console.error("获取分类树失败", error);
+        console.error("构建分类树失败", error);
         // 确保错误时也设置为空数组
         this.categoryTree = [];
         ElMessage.error("获取分类树失败");

@@ -29,25 +29,42 @@ class Command(BaseCommand):
         log_files = []
         for root, dirs, files in os.walk(logs_dir):
             for file in files:
-                # 只处理以.log开头或结尾的文件
-                if file.endswith('.log') or '.log.' in file:
+                # 处理新的日志文件命名格式 (base_name.YYYY-MM-DD.log)
+                if file.endswith('.log'):
                     file_path = os.path.join(root, file)
                     log_files.append(file_path)
+                    
+                    # 尝试从文件名中提取日期
+                    try:
+                        # 假设文件名格式为 base_name.YYYY-MM-DD.log
+                        parts = file.split('.')
+                        if len(parts) >= 3:  # 至少有base_name、日期和.log三部分
+                            date_str = parts[-2]  # 日期应该是倒数第二部分
+                            # 尝试解析日期
+                            try:
+                                file_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').timestamp()
+                                # 如果日期早于截止日期，标记为删除
+                                if file_date < cutoff_time:
+                                    self.stdout.write(f'根据文件名日期删除: {file_path}')
+                                    try:
+                                        os.remove(file_path)
+                                    except Exception as e:
+                                        self.stderr.write(f'删除文件失败: {file_path}, 错误: {str(e)}')
+                                continue  # 已处理此文件，继续下一个
+                            except ValueError:
+                                # 日期格式不正确，回退到使用文件修改时间
+                                pass
+                    except Exception:
+                        # 任何解析错误，回退到使用文件修改时间
+                        pass
+                    
+                    # 如果无法从文件名解析日期，使用文件修改时间
+                    file_mtime = os.path.getmtime(file_path)
+                    if file_mtime < cutoff_time:
+                        try:
+                            self.stdout.write(f'根据修改时间删除: {file_path}')
+                            os.remove(file_path)
+                        except Exception as e:
+                            self.stderr.write(f'删除文件失败: {file_path}, 错误: {str(e)}')
         
-        # 检查每个日志文件的修改时间
-        deleted_count = 0
-        for file_path in log_files:
-            file_mtime = os.path.getmtime(file_path)
-            if file_mtime < cutoff_time:
-                try:
-                    # 文件修改时间早于截止时间，删除它
-                    os.remove(file_path)
-                    self.stdout.write(f'已删除: {file_path}')
-                    deleted_count += 1
-                except Exception as e:
-                    self.stderr.write(f'删除文件失败: {file_path}, 错误: {str(e)}')
-        
-        if deleted_count > 0:
-            self.stdout.write(self.style.SUCCESS(f'成功清理了 {deleted_count} 个旧日志文件'))
-        else:
-            self.stdout.write('没有找到需要清理的旧日志文件') 
+        self.stdout.write(self.style.SUCCESS(f'日志清理完成')) 

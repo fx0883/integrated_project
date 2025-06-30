@@ -1180,6 +1180,7 @@ class CategoryViewSet(TenantModelViewSet):
     search_fields = ['name', 'slug', 'description']
     ordering_fields = ['sort_order', 'name', 'created_at']
     ordering = ['sort_order', 'name']
+    pagination_class = None  # 禁用分页
     queryset = Category.objects.all().select_related('parent', 'tenant')  # 添加select_related优化查询
     
     def get_queryset(self):

@@ -297,7 +297,7 @@ export function getCommentReplies(id: number) {
  */
 export function getCategoryList(params?: CategoryListParams) {
   console.log("[CmsApi] getCategoryList - 开始请求分类列表, 参数:", params);
-  return http.request<PaginationResponse<Category>>("get", "/cms/categories/", {
+  return http.request<ApiResponse<Category[]>>("get", "/cms/categories/", {
     params
   }).then(response => {
     console.log("[CmsApi] getCategoryList - 请求成功, 响应:", response);

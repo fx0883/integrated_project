@@ -1,25 +1,28 @@
 # 日志管理指南
 
-本项目使用 Python 的 `logging` 模块和 `TimedRotatingFileHandler` 来实现日志的轮转和管理。
+本项目使用 Python 的 `logging` 模块和 `WatchedFileHandler` 来实现日志的管理。
 
 ## 日志配置
 
 日志配置在 `core/settings.py` 文件中定义，主要特点：
 
 1. 按环境变量 `LOG_TO_CONSOLE` 决定日志输出到控制台还是文件
-2. 使用 `TimedRotatingFileHandler` 实现日志按天轮转
-3. 默认保留最近 15 天的日志文件
+2. 使用 `WatchedFileHandler` 实现日志文件管理
+3. 日志文件名包含日期，格式为 `base_name.YYYY-MM-DD.log`
+4. 默认保留最近 15 天的日志文件
 
 ## 日志文件
 
 当 `LOG_TO_CONSOLE=False` 时，日志将输出到以下文件：
 
-- `logs/debug.log`：INFO 级别及以上的日志
-- `logs/error.log`：ERROR 级别及以上的日志
+- `logs/debug.YYYY-MM-DD.log`：INFO 级别及以上的日志
+- `logs/error.YYYY-MM-DD.log`：ERROR 级别及以上的日志
 
-这些文件会每天午夜自动轮转，生成带有日期后缀的新文件，例如：
-- `debug.log.2023-05-01`
-- `error.log.2023-05-01`
+每天会自动生成新的日志文件，文件名中包含当天的日期。
+
+## Windows 兼容性说明
+
+本项目最初使用 `TimedRotatingFileHandler` 进行日志轮转，但在 Windows 系统上可能会因文件锁定而导致错误。现在改用 `WatchedFileHandler` 并在文件名中包含日期，以避免这些问题。
 
 ## 日志清理
 
@@ -27,7 +30,7 @@
 
 ### 1. 自动清理
 
-`TimedRotatingFileHandler` 配置了 `backupCount=15`，会自动保留最近 15 天的日志文件，删除更早的日志。
+系统会根据文件名中的日期或文件修改时间自动识别并清理旧日志。
 
 ### 2. 手动清理
 
@@ -45,7 +48,7 @@ python manage.py clean_old_logs --days=30
 
 ## 设置定时任务
 
-虽然 `TimedRotatingFileHandler` 会自动管理日志文件，但为了确保日志清理的可靠性，建议设置定时任务定期执行清理命令。
+为确保日志清理的可靠性，建议设置定时任务定期执行清理命令。
 
 ### Linux/Unix 系统 (使用 cron)
 

@@ -104,13 +104,6 @@
                       class="ml-2"
                       >禁用</el-tag
                     >
-                    <el-tag
-                      v-if="data.article_count"
-                      size="small"
-                      type="info"
-                      class="ml-2"
-                      >{{ data.article_count }} 篇</el-tag
-                    >
                   </div>
                   <div class="node-actions">
                     <el-tooltip content="添加子分类">
@@ -165,30 +158,32 @@
                   />
                   <el-icon v-else><Folder /></el-icon>
                   <span class="ml-1">{{ row.name }}</span>
-                  <el-tag
-                    v-if="row.level > 0"
-                    size="small"
-                    type="info"
-                    class="ml-2"
-                  >
-                    层级 {{ row.level }}
-                  </el-tag>
                 </div>
               </template>
             </el-table-column>
             <el-table-column prop="slug" label="别名" min-width="150" />
+            <el-table-column
+              prop="description"
+              label="描述"
+              min-width="180"
+              show-overflow-tooltip
+            />
             <el-table-column prop="parent" label="父级分类" min-width="100">
               <template #default="{ row }">
                 {{ row.parent ? getCategoryNameById(row.parent) : "顶级分类" }}
               </template>
             </el-table-column>
-            <el-table-column prop="article_count" label="文章数" width="100" />
-            <el-table-column prop="sort_order" label="排序" width="100" />
-            <el-table-column prop="is_active" label="状态" width="100">
+            <el-table-column prop="sort_order" label="排序" width="80" />
+            <el-table-column prop="is_active" label="状态" width="80">
               <template #default="{ row }">
                 <el-tag :type="row.is_active ? 'success' : 'danger'">
                   {{ row.is_active ? "启用" : "禁用" }}
                 </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="created_at" label="创建时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.created_at) }}
               </template>
             </el-table-column>
             <el-table-column label="操作" width="200" fixed="right">
@@ -325,8 +320,10 @@ const confirmDialog = reactive({
 const fetchCategoryData = async () => {
   loading.value = true;
   try {
-    await cmsStore.fetchCategoryTree();
+    // 获取分类列表
     await cmsStore.fetchCategoryList();
+    // 构建树形结构
+    await cmsStore.fetchCategoryTree();
 
     // 调试信息
     if (debugMode.value) {
@@ -362,42 +359,28 @@ const debugData = async () => {
       );
       const data = await response.json();
 
-      // 获取分类树数据
-      const treeResponse = await fetch(
-        "http://localhost:8000/api/v1/cms/categories/tree/",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`
-          }
-        }
-      );
-      const treeData = await treeResponse.json();
-
       // 检查树形数据结构
-      const treeDataStructure =
-        treeData && treeData.data
-          ? {
-              isArray: Array.isArray(treeData.data),
-              length: Array.isArray(treeData.data)
-                ? treeData.data.length
-                : "不是数组",
-              firstItem:
-                Array.isArray(treeData.data) && treeData.data.length > 0
-                  ? treeData.data[0]
-                  : "无数据"
-            }
-          : "无效的树形数据";
+      const treeDataStructure = {
+        isArray: Array.isArray(cmsStore.categoryTree),
+        length: Array.isArray(cmsStore.categoryTree)
+          ? cmsStore.categoryTree.length
+          : "不是数组",
+        firstItem:
+          Array.isArray(cmsStore.categoryTree) &&
+          cmsStore.categoryTree.length > 0
+            ? cmsStore.categoryTree[0]
+            : "无数据"
+      };
 
       debugInfo.value = JSON.stringify(
         {
           apiResponse: data,
-          apiTreeResponse: treeData,
-          treeDataStructure: treeDataStructure,
           storeData: {
             categoryTree: cmsStore.categoryTree,
             categoryList: cmsStore.categoryList,
             filteredCategoryTree: filteredCategoryTree.value
-          }
+          },
+          treeDataStructure: treeDataStructure
         },
         null,
         2
@@ -415,61 +398,64 @@ const refreshData = () => {
 
 // 计算属性：过滤后的分类树
 const filteredCategoryTree = computed(() => {
-  // 确保 categoryTree 存在
-  if (!cmsStore.categoryTree) {
-    console.warn("filteredCategoryTree - categoryTree 为 undefined");
+  // 确保 categoryList 存在
+  if (!cmsStore.categoryList || !Array.isArray(cmsStore.categoryList)) {
+    console.warn("filteredCategoryTree - categoryList 为 undefined");
     return [];
   }
 
-  if (!Array.isArray(cmsStore.categoryTree)) {
-    console.warn(
-      "filteredCategoryTree - categoryTree 不是数组:",
-      cmsStore.categoryTree
-    );
-    return [];
-  }
-
-  // 记录过滤前的树形结构
+  // 记录过滤前的分类列表长度
   console.log(
-    "filteredCategoryTree - 过滤前的分类树长度:",
-    cmsStore.categoryTree.length
+    "filteredCategoryTree - 过滤前的分类列表长度:",
+    cmsStore.categoryList.length
   );
 
-  if (!searchKeyword.value && !onlyActive.value) {
-    return cmsStore.categoryTree;
+  // 首先过滤分类列表
+  let filteredList = cmsStore.categoryList;
+
+  if (searchKeyword.value) {
+    filteredList = filteredList.filter(
+      item =>
+        item.name.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+        (item.slug &&
+          item.slug
+            .toLowerCase()
+            .includes(searchKeyword.value.toLowerCase())) ||
+        (item.description &&
+          item.description
+            .toLowerCase()
+            .includes(searchKeyword.value.toLowerCase()))
+    );
   }
 
-  // 递归过滤树
-  const filterTree = (nodes: Category[]): Category[] => {
-    if (!nodes || !Array.isArray(nodes)) return [];
+  if (onlyActive.value) {
+    filteredList = filteredList.filter(item => item.is_active);
+  }
 
-    return nodes
-      .filter(node => {
-        const matchesSearch =
-          !searchKeyword.value ||
-          node.name.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-          (node.slug &&
-            node.slug
-              .toLowerCase()
-              .includes(searchKeyword.value.toLowerCase()));
+  // 构建树形结构
+  const buildTree = () => {
+    // 找出所有顶级分类（没有父级的分类）
+    const rootCategories = filteredList.filter(item => !item.parent);
 
-        const matchesActive = !onlyActive.value || node.is_active;
+    // 递归构建子树
+    const buildSubTree = (parentId: number): Category[] => {
+      return filteredList
+        .filter(item => item.parent === parentId)
+        .map(item => ({
+          ...item,
+          children: buildSubTree(item.id)
+        }));
+    };
 
-        return matchesSearch && matchesActive;
-      })
-      .map(node => {
-        if (node.children && node.children.length > 0) {
-          return {
-            ...node,
-            children: filterTree(node.children)
-          };
-        }
-        return node;
-      });
+    // 为每个顶级分类添加子分类
+    return rootCategories.map(root => ({
+      ...root,
+      children: buildSubTree(root.id)
+    }));
   };
 
-  const result = filterTree(cmsStore.categoryTree);
-  console.log("filteredCategoryTree - 过滤后的分类树长度:", result.length);
+  const result = buildTree();
+  console.log("filteredCategoryTree - 构建的树形结构长度:", result.length);
   return result;
 });
 
@@ -487,7 +473,13 @@ const filteredCategoryList = computed(() => {
       item =>
         item.name.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
         (item.slug &&
-          item.slug.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+          item.slug
+            .toLowerCase()
+            .includes(searchKeyword.value.toLowerCase())) ||
+        (item.description &&
+          item.description
+            .toLowerCase()
+            .includes(searchKeyword.value.toLowerCase()))
     );
   }
 
@@ -495,7 +487,8 @@ const filteredCategoryList = computed(() => {
     list = list.filter(item => item.is_active);
   }
 
-  return list;
+  // 按名称排序
+  return [...list].sort((a, b) => a.name.localeCompare(b.name));
 });
 
 // 通过ID获取分类名称
@@ -708,6 +701,13 @@ const handleDialogClosed = () => {
     categoryData: formDialog.categoryData,
     defaultParentId: formDialog.defaultParentId
   });
+};
+
+// 格式化日期时间
+const formatDateTime = (dateTimeString: string) => {
+  if (!dateTimeString) return "";
+  const date = new Date(dateTimeString);
+  return date.toLocaleString();
 };
 </script>
 

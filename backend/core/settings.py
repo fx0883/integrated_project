@@ -290,6 +290,13 @@ if not os.path.exists(LOGS_DIR):
 # 日志保留天数
 LOG_RETENTION_DAYS = 15
 
+# 日志文件名格式
+def get_log_filename(base_name):
+    """生成带日期的日志文件名"""
+    from datetime import datetime
+    date_str = datetime.now().strftime('%Y-%m-%d')
+    return os.path.join(LOGS_DIR, f"{base_name}.{date_str}.log")
+
 # 日志配置
 LOGGING = {
     'version': 1,
@@ -308,21 +315,15 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',  # 使用TimedRotatingFileHandler
-            'filename': os.path.join(LOGS_DIR, 'debug.log'),
-            'when': 'midnight',  # 每天午夜轮转
-            'interval': 1,  # 每1天轮转一次
-            'backupCount': LOG_RETENTION_DAYS,  # 保留最近15天的日志
+            'class': 'logging.handlers.WatchedFileHandler',  # 使用WatchedFileHandler
+            'filename': get_log_filename('debug'),  # 使用带日期的文件名
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
         'error_file': {
             'level': 'ERROR',
-            'class': 'logging.handlers.TimedRotatingFileHandler',  # 使用TimedRotatingFileHandler
-            'filename': os.path.join(LOGS_DIR, 'error.log'),
-            'when': 'midnight',  # 每天午夜轮转
-            'interval': 1,  # 每1天轮转一次
-            'backupCount': LOG_RETENTION_DAYS,  # 保留最近15天的日志
+            'class': 'logging.handlers.WatchedFileHandler',  # 使用WatchedFileHandler
+            'filename': get_log_filename('error'),  # 使用带日期的文件名
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
