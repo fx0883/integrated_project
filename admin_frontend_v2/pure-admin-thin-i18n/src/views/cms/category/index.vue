@@ -572,20 +572,37 @@ const handleAddSubCategory = (parent: Category) => {
 
 // 编辑分类
 const handleEditCategory = async (category: Category) => {
-  formDialog.visible = true;
-  formDialog.title = `编辑分类: ${category.name}`;
-  formDialog.mode = "edit";
-  formDialog.editId = category.id;
-  formDialog.loading = true;
+  // 先重置对话框状态
+  formDialog.visible = false;
+  formDialog.categoryData = null; // 先清空数据，避免显示旧数据
 
-  try {
-    const data = await cmsStore.fetchCategoryDetail(category.id);
-    formDialog.categoryData = data;
-  } catch (error) {
-    console.error("获取分类详情失败", error);
-  } finally {
-    formDialog.loading = false;
-  }
+  // 使用nextTick确保DOM更新后再打开对话框
+  nextTick(async () => {
+    formDialog.title = `编辑分类: ${category.name}`;
+    formDialog.mode = "edit";
+    formDialog.editId = category.id;
+    formDialog.loading = true;
+    formDialog.visible = true;
+
+    try {
+      const data = await cmsStore.fetchCategoryDetail(category.id);
+      console.log("获取到的分类详情:", data);
+
+      // 确保数据获取成功后再设置
+      if (data) {
+        formDialog.categoryData = data;
+        console.log("设置表单数据:", formDialog.categoryData);
+      } else {
+        console.error("获取分类详情失败，返回数据为空");
+        ElMessage.error("获取分类详情失败，返回数据为空");
+      }
+    } catch (error) {
+      console.error("获取分类详情失败", error);
+      ElMessage.error("获取分类详情失败");
+    } finally {
+      formDialog.loading = false;
+    }
+  });
 };
 
 // 删除分类

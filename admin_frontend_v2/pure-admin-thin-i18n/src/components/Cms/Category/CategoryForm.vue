@@ -184,27 +184,49 @@ const rules = {
   ]
 };
 
+// 监听loading属性变化
+watch(
+  () => props.loading,
+  newVal => {
+    console.log("[CategoryForm] props.loading变化:", newVal);
+    loading.value = newVal;
+  }
+);
+
 // 初始化数据
 const initFormData = () => {
   console.log("[CategoryForm] initFormData - props:", {
     formMode: props.formMode,
     categoryData: props.categoryData,
     editId: props.editId,
-    defaultParentId: props.defaultParentId
+    defaultParentId: props.defaultParentId,
+    loading: props.loading
   });
 
   if (props.formMode === "edit" && props.categoryData) {
-    console.log("[CategoryForm] 编辑模式 - 设置表单数据:", props.categoryData);
-    Object.assign(form, {
-      name: props.categoryData.name,
-      slug: props.categoryData.slug,
-      description: props.categoryData.description || "",
-      parent: props.categoryData.parent,
-      icon: props.categoryData.icon || "",
-      is_active: props.categoryData.is_active,
-      sort_order: props.categoryData.sort_order
-    });
-    console.log("[CategoryForm] 编辑模式 - 设置后的表单数据:", form);
+    console.log(
+      "[CategoryForm] 编辑模式 - 设置表单数据:",
+      JSON.stringify(props.categoryData)
+    );
+    // 确保所有字段都被正确设置
+    form.name = props.categoryData.name || "";
+    form.slug = props.categoryData.slug || "";
+    form.description = props.categoryData.description || "";
+    form.parent = props.categoryData.parent || null;
+    form.icon = props.categoryData.icon || "";
+    form.is_active =
+      props.categoryData.is_active !== undefined
+        ? props.categoryData.is_active
+        : true;
+    form.sort_order =
+      props.categoryData.sort_order !== undefined
+        ? props.categoryData.sort_order
+        : 0;
+
+    console.log(
+      "[CategoryForm] 编辑模式 - 设置后的表单数据:",
+      JSON.stringify(form)
+    );
   } else if (
     props.formMode === "create" &&
     props.categoryData &&
@@ -216,7 +238,10 @@ const initFormData = () => {
       props.categoryData.parent
     );
     form.parent = props.categoryData.parent;
-    console.log("[CategoryForm] 创建子分类模式 - 设置后的表单数据:", form);
+    console.log(
+      "[CategoryForm] 创建子分类模式 - 设置后的表单数据:",
+      JSON.stringify(form)
+    );
   } else if (props.formMode === "create" && props.defaultParentId) {
     // 使用默认父级ID
     console.log(
@@ -224,9 +249,15 @@ const initFormData = () => {
       props.defaultParentId
     );
     form.parent = props.defaultParentId;
-    console.log("[CategoryForm] 创建模式 - 设置后的表单数据:", form);
+    console.log(
+      "[CategoryForm] 创建模式 - 设置后的表单数据:",
+      JSON.stringify(form)
+    );
   } else {
-    console.log("[CategoryForm] 其他模式 - 当前表单数据:", form);
+    console.log(
+      "[CategoryForm] 其他模式 - 当前表单数据:",
+      JSON.stringify(form)
+    );
   }
 };
 
@@ -235,9 +266,9 @@ watch(
   () => props.categoryData,
   newVal => {
     console.log("[CategoryForm] watch categoryData - 新值:", newVal);
-    if (newVal && newVal.parent) {
-      console.log("[CategoryForm] 从 categoryData 设置父级ID:", newVal.parent);
-      form.parent = newVal.parent;
+    if (newVal) {
+      console.log("[CategoryForm] categoryData变化，重新初始化表单数据");
+      initFormData();
     }
   },
   { immediate: true }
@@ -263,8 +294,8 @@ const fetchCategoryList = async () => {
     categoriesLoading.value = true; // 设置加载状态
     const result = await cmsStore.fetchCategoryList();
     console.log("[CategoryForm] 获取到的分类列表:", result);
-    if (result && result.results) {
-      categoryList.value = result.results;
+    if (result && Array.isArray(result)) {
+      categoryList.value = result;
       console.log(
         "[CategoryForm] 分类列表设置成功, 长度:",
         categoryList.value.length

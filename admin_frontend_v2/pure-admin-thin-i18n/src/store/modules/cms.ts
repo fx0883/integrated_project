@@ -888,10 +888,21 @@ export const useCmsStore = defineStore("cms", {
     async fetchCategoryDetail(id: number) {
       this.categoryLoading = true;
       try {
-        const { data } = await getCategoryDetail(id);
-        this.categoryDetail = data;
-        return data;
+        console.log("[CmsStore] fetchCategoryDetail - 开始获取分类详情:", id);
+        const response = await getCategoryDetail(id);
+        console.log("[CmsStore] fetchCategoryDetail - API响应:", response);
+        
+        if (response && response.data) {
+          console.log("[CmsStore] fetchCategoryDetail - 分类详情数据:", response.data);
+          this.categoryDetail = response.data;
+          this.currentCategory = response.data;
+          return response.data;
+        } else {
+          console.error("[CmsStore] fetchCategoryDetail - API响应格式异常:", response);
+          return null;
+        }
       } catch (error) {
+        console.error("[CmsStore] fetchCategoryDetail - 获取分类详情失败:", error);
         ElMessage.error("获取分类详情失败");
         throw error;
       } finally {

@@ -320,7 +320,16 @@ export function getCategoryTree() {
  * @param id 分类ID
  */
 export function getCategoryDetail(id: number) {
-  return http.request<ApiResponse<Category>>("get", `/cms/categories/${id}/`);
+  console.log("[CmsApi] getCategoryDetail - 开始请求分类详情, ID:", id);
+  return http.request<ApiResponse<Category>>('get', `/cms/categories/${id}/`)
+    .then(response => {
+      console.log("[CmsApi] getCategoryDetail - 请求成功, 响应:", response);
+      return response;
+    })
+    .catch(error => {
+      console.error("[CmsApi] getCategoryDetail - 请求失败:", error);
+      throw error;
+    });
 }
 
 /**
