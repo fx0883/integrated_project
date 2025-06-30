@@ -256,7 +256,11 @@ const handleEdit = async (row: Article) => {
 
 // 查看文章详情
 const handleDetail = (row: Article) => {
-  router.push(`/cms/article/detail/${row.id}`);
+  // 在新窗口中打开文章详情页面，使用不带布局的预览路由
+  const routeUrl = router.resolve({
+    path: `/preview/article/${row.id}`
+  });
+  window.open(routeUrl.href, "_blank");
 };
 
 // 删除文章

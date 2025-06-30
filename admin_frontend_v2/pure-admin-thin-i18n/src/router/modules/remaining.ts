@@ -27,5 +27,15 @@ export default [
         component: () => import("@/layout/redirect.vue")
       }
     ]
+  },
+  {
+    path: "/preview/article/:id",
+    name: "ArticlePreview",
+    component: () => import("@/views/cms/article/detail.vue"),
+    meta: {
+      title: $t("cms.article.articleDetail"),
+      showLink: false,
+      rank: 103
+    }
   }
 ] satisfies Array<RouteConfigsTable>;
