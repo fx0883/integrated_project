@@ -28,6 +28,7 @@
                 :placeholder="$t('cms.tag.isActive')"
                 clearable
                 style="width: 100%"
+                @change="handleStatusChange"
               >
                 <el-option :label="$t('cms.tag.statusAll')" value="" />
                 <el-option :label="$t('cms.tag.statusActive')" :value="true" />
@@ -228,12 +229,24 @@ const fetchData = async () => {
 
 // 刷新数据
 const refreshData = () => {
+  // 重置所有查询参数
+  searchKeyword.value = "";
+  queryParams.search = "";
+  queryParams.is_active = "";
+  queryParams.page = 1;
+  queryParams.page_size = 10;
   fetchData();
 };
 
 // 搜索
 const handleSearch = () => {
   queryParams.search = searchKeyword.value;
+  queryParams.page = 1;
+  fetchData();
+};
+
+// 状态过滤变化
+const handleStatusChange = () => {
   queryParams.page = 1;
   fetchData();
 };
@@ -302,7 +315,7 @@ const handleFormSubmit = async () => {
   formLoading.value = true;
   try {
     await tagFormRef.value?.submitForm();
-    const formData = tagFormRef.value?.$el.__vue__?._setupState?.form;
+    const formData = tagFormRef.value?.form;
 
     if (!formData) {
       throw new Error(t("cms.tag.formDataError") || "获取表单数据失败");

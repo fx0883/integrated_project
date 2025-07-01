@@ -16,7 +16,7 @@ export default [
     path: "/redirect",
     component: Layout,
     meta: {
-      title: $t("status.pureLoad"),
+      title: $t("common.loading"),
       showLink: false,
       rank: 102
     },

@@ -161,7 +161,8 @@ const resetForm = () => {
 // 暴露方法给父组件
 defineExpose({
   submitForm,
-  resetForm
+  resetForm,
+  form
 });
 
 // 初始化

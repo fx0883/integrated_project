@@ -16,7 +16,7 @@ export default {
       showLink: false,
       component: () => import("@/views/error/403.vue"),
       meta: {
-        title: $t("menus.pureFourZeroOne")
+        title: $t("menus.pureFourZeroThree")
       }
     },
     {
@@ -34,7 +34,7 @@ export default {
       showLink: false,
       component: () => import("@/views/error/500.vue"),
       meta: {
-        title: $t("menus.pureFive")
+        title: $t("menus.pureFiveZeroZero")
       }
     }
   ]

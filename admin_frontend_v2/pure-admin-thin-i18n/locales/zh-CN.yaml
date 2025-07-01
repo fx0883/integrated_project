@@ -253,16 +253,31 @@ cms:
     id: ID
     name: 名称
     slug: 别名
+    slugTip: 别名只能包含小写字母、数字和连字符，用于URL
+    generateSlug: 根据名称自动生成别名
+    nameLength: 名称长度应在{min}到{max}个字符之间
+    nameRequired: 请输入标签名称
+    slugInvalid: 别名格式不正确，只能包含小写字母、数字和连字符
     description: 描述
+    keyword: 关键词
     articleCount: 文章数
     createdAt: 创建时间
     actions: 操作
     basicInfo: 基本信息
     advancedSettings: 高级设置
     color: 颜色
+    colorTip: 标签显示的颜色，可以使用颜色选择器或输入HEX值
     confirmDelete: 确认删除
     confirmDeleteMessage: 确定要删除标签 {name} 吗？
     fetchListFailed: 获取标签列表失败
+    createSuccess: 创建标签成功
+    createFailed: 创建标签失败
+    updateSuccess: 更新标签成功
+    updateFailed: 更新标签失败
+    deleteSuccess: 删除标签成功
+    deleteFailed: 删除标签失败
+    formDataError: 获取表单数据失败
+    idNotFound: 标签ID不存在
   
   comment:
     createComment: 创建评论

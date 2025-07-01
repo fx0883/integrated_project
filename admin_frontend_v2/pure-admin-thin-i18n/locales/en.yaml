@@ -253,16 +253,31 @@ cms:
     id: ID
     name: Name
     slug: Slug
+    slugTip: Slug can only contain lowercase letters, numbers, and hyphens, used for URLs
+    generateSlug: Auto-generate slug from name
+    nameLength: Name length should be between {min} and {max} characters
+    nameRequired: Please enter tag name
+    slugInvalid: Invalid slug format, only lowercase letters, numbers, and hyphens are allowed
     description: Description
+    keyword: Keyword
     articleCount: Articles
     createdAt: Created At
     actions: Actions
     basicInfo: Basic Info
     advancedSettings: Advanced Settings
     color: Color
+    colorTip: Color for displaying the tag, use the color picker or enter a HEX value
     confirmDelete: Confirm Delete
     confirmDeleteMessage: Are you sure you want to delete tag {name}?
     fetchListFailed: Failed to fetch tag list
+    createSuccess: Tag created successfully
+    createFailed: Failed to create tag
+    updateSuccess: Tag updated successfully
+    updateFailed: Failed to update tag
+    deleteSuccess: Tag deleted successfully
+    deleteFailed: Failed to delete tag
+    formDataError: Failed to get form data
+    idNotFound: Tag ID not found
   
   comment:
     createComment: Create Comment
