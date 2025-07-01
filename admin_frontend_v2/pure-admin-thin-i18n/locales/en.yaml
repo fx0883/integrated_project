@@ -2,6 +2,7 @@ common:
   back: Back
   cancel: Cancel
   confirm: Confirm
+  create: Create
   delete: Delete
   edit: Edit
   save: Save

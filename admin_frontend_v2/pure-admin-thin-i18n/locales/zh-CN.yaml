@@ -2,6 +2,7 @@ common:
   back: 返回
   cancel: 取消
   confirm: 确认
+  create: 创建
   delete: 删除
   edit: 编辑
   save: 保存

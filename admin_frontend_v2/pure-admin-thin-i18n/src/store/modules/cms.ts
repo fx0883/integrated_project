@@ -988,13 +988,39 @@ export const useCmsStore = defineStore("cms", {
      * 获取标签列表
      */
     async fetchTagList(params?: TagListParams) {
+      console.log("[CmsStore] fetchTagList - 开始获取标签列表, 参数:", params);
       this.tagLoading = true;
       try {
         const response = await getTagList(params);
-        this.tagList = response.data.results;
-        this.tagTotal = response.data.count;
+        console.log("[CmsStore] fetchTagList - 标签列表API响应:", response);
+        
+        // 处理API响应
+        if (response && response.data) {
+          console.log("[CmsStore] fetchTagList - 响应数据:", response.data);
+          // 如果有分页结构
+          if (response.data.results && Array.isArray(response.data.results)) {
+            console.log("[CmsStore] fetchTagList - 标签列表数据长度:", response.data.results.length);
+            this.tagList = response.data.results;
+            this.tagTotal = response.data.count || response.data.results.length;
+          } else if (Array.isArray(response.data)) {
+            // 如果直接是数组
+            console.log("[CmsStore] fetchTagList - 标签列表是数组，长度:", response.data.length);
+            this.tagList = response.data;
+            this.tagTotal = response.data.length;
+          } else {
+            console.error("[CmsStore] fetchTagList - 标签列表API响应格式异常:", response.data);
+            this.tagList = [];
+            this.tagTotal = 0;
+          }
+        } else {
+          console.error("[CmsStore] fetchTagList - 标签列表API响应异常:", response);
+          this.tagList = [];
+          this.tagTotal = 0;
+        }
+        
         return response;
       } catch (error) {
+        console.error("[CmsStore] fetchTagList - 获取标签列表失败:", error);
         ElMessage.error("获取标签列表失败");
         throw error;
       } finally {

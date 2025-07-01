@@ -382,7 +382,16 @@ export function updateCategoryOrder(data: CategoryOrderParams[]) {
  * @param params 查询参数
  */
 export function getTagList(params?: TagListParams) {
-  return http.request<PaginationResponse<Tag>>("get", "/cms/tags/", { params });
+  console.log("[CmsApi] getTagList - 开始请求标签列表, 参数:", params);
+  return http.request<PaginationResponse<Tag>>("get", "/cms/tags/", { params })
+    .then(response => {
+      console.log("[CmsApi] getTagList - 请求成功, 响应:", response);
+      return response;
+    })
+    .catch(error => {
+      console.error("[CmsApi] getTagList - 请求失败:", error);
+      throw error;
+    });
 }
 
 /**

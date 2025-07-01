@@ -144,23 +144,84 @@ const fetchArticles = async () => {
 
 // 获取分类列表
 const fetchCategories = async () => {
+  console.log("[ArticleIndex] 开始获取分类列表");
   try {
     const response = await cmsStore.fetchCategoryList();
-    categories.value = response?.data || [];
+    console.log("[ArticleIndex] 获取分类列表成功:", response);
+
+    // 从响应中提取分类数据
+    if (response && Array.isArray(response)) {
+      categories.value = response;
+      console.log(
+        "[ArticleIndex] 分类数据已更新, 数量:",
+        categories.value.length
+      );
+    } else if (response && response.data && Array.isArray(response.data)) {
+      categories.value = response.data;
+      console.log(
+        "[ArticleIndex] 分类数据已更新, 数量:",
+        categories.value.length
+      );
+    } else {
+      console.warn("[ArticleIndex] 分类数据格式异常:", response);
+      categories.value = [];
+    }
   } catch (error) {
+    console.error("[ArticleIndex] 获取分类列表失败:", error);
     logger.error("获取分类列表失败", error);
     ElMessage.error(t("cms.category.fetchListFailed"));
+    categories.value = [];
   }
 };
 
 // 获取标签列表
 const fetchTags = async () => {
+  console.log("[ArticleIndex] 开始获取标签列表");
   try {
     const response = await cmsStore.fetchTagList();
-    tags.value = response?.data || [];
+    console.log("[ArticleIndex] 获取标签列表成功:", response);
+
+    // 从响应中提取标签数据
+    if (
+      response &&
+      response.data &&
+      response.data.results &&
+      Array.isArray(response.data.results)
+    ) {
+      // 分页响应格式
+      tags.value = response.data.results;
+      console.log(
+        "[ArticleIndex] 标签数据已更新(分页格式), 数量:",
+        tags.value.length
+      );
+    } else if (response && response.data && Array.isArray(response.data)) {
+      // 直接是数组
+      tags.value = response.data;
+      console.log(
+        "[ArticleIndex] 标签数据已更新(数组格式), 数量:",
+        tags.value.length
+      );
+    } else if (response && Array.isArray(response)) {
+      // 直接是数组
+      tags.value = response;
+      console.log(
+        "[ArticleIndex] 标签数据已更新(直接数组), 数量:",
+        tags.value.length
+      );
+    } else {
+      console.warn("[ArticleIndex] 标签数据格式异常:", response);
+      tags.value = [];
+    }
+
+    // 检查是否成功获取了标签数据
+    if (tags.value.length === 0) {
+      console.warn("[ArticleIndex] 未能获取到标签数据");
+    }
   } catch (error) {
+    console.error("[ArticleIndex] 获取标签列表失败:", error);
     logger.error("获取标签列表失败", error);
     ElMessage.error(t("cms.tag.fetchListFailed"));
+    tags.value = [];
   }
 };
 
@@ -243,10 +304,28 @@ const handleEdit = async (row: Article) => {
     await Promise.all([fetchCategories(), fetchTags()]);
 
     // 获取文章详情
-    const articleData = await cmsStore.fetchArticleDetail(row.id);
-    editArticleDialog.articleData = articleData;
+    const response = await cmsStore.fetchArticleDetail(row.id);
+    console.log("[ArticleIndex] 获取到的文章详情数据:", response);
+
+    // 确保我们获取到了文章数据对象
+    if (response && response.data) {
+      editArticleDialog.articleData = response.data;
+    } else if (cmsStore.currentArticle) {
+      // 如果响应中没有直接提供数据，但store中已更新了currentArticle
+      editArticleDialog.articleData = cmsStore.currentArticle;
+    } else {
+      // 如果无法获取详细数据，至少使用表格中的行数据（不够完整但至少有基本信息）
+      editArticleDialog.articleData = row;
+      console.warn("[ArticleIndex] 无法获取完整的文章详情，使用表格行数据");
+    }
+
+    console.log(
+      "[ArticleIndex] 传递给编辑表单的文章数据:",
+      editArticleDialog.articleData
+    );
     editArticleDialog.visible = true;
   } catch (error) {
+    console.error("[ArticleIndex] 获取文章详情失败:", error);
     logger.error("获取文章详情失败", error);
     ElMessage.error(t("cms.article.fetchDetailFailed"));
   } finally {
@@ -367,6 +446,9 @@ const handleEditFormCancel = () => {
 onMounted(() => {
   if (checkPermission()) {
     fetchArticles();
+    // 加载分类和标签数据，确保搜索下拉框有数据
+    fetchCategories();
+    fetchTags();
   }
 });
 </script>
@@ -450,6 +532,48 @@ onMounted(() => {
                 value-format="YYYY-MM-DD"
                 clearable
               />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item :label="t('cms.article.category')">
+              <el-select v-model="searchForm.category" clearable class="w-full">
+                <el-option
+                  v-for="category in categories"
+                  :key="category.id"
+                  :label="category.name"
+                  :value="category.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item :label="t('cms.article.tag')">
+              <el-select v-model="searchForm.tag" clearable class="w-full">
+                <el-option
+                  v-for="tag in tags"
+                  :key="tag.id"
+                  :label="tag.name"
+                  :value="tag.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item :label="t('cms.article.pinned')">
+              <el-select
+                v-model="searchForm.is_pinned"
+                clearable
+                class="w-full"
+              >
+                <el-option
+                  v-for="option in pinnedOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>

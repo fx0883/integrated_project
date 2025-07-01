@@ -134,14 +134,45 @@ const needPassword = computed(() => formData.visibility === "password");
 
 // 编辑模式下，初始化表单数据
 const initFormData = () => {
+  console.log("[ArticleForm] 开始初始化表单数据, 模式:", props.mode);
+  console.log("[ArticleForm] 接收到的文章数据:", props.article);
+
   if (props.mode === "edit" && props.article) {
     const article = props.article;
+    console.log("[ArticleForm] 填充表单数据:", article);
+
+    // 重置表单，防止旧数据残留
+    Object.keys(formData).forEach(key => {
+      // 对于数组类型的字段，初始化为空数组而不是undefined
+      if (Array.isArray(formData[key])) {
+        formData[key] = [];
+      } else if (typeof formData[key] === "boolean") {
+        formData[key] = false;
+      } else if (typeof formData[key] === "string") {
+        formData[key] = "";
+      }
+    });
+
+    // 填充表单数据
     Object.keys(formData).forEach(key => {
       if (key in article) {
         formData[key] = article[key];
+        console.log(`[ArticleForm] 设置字段 ${key}:`, article[key]);
       }
     });
+
+    // 单独处理content字段
     editorContent.value = article.content || "";
+    console.log(
+      "[ArticleForm] 设置编辑器内容:",
+      editorContent.value.substring(0, 100) +
+        (editorContent.value.length > 100 ? "..." : "")
+    );
+
+    console.log("[ArticleForm] 表单数据初始化完成:", formData);
+  } else if (props.mode === "create") {
+    // 创建模式，重置为默认值
+    resetForm();
   }
 };
 
