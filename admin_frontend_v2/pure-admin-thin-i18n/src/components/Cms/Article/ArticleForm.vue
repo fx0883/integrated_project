@@ -214,11 +214,6 @@ const resetForm = () => {
   editorContent.value = "";
 };
 
-// 初始化
-onMounted(() => {
-  initFormData();
-});
-
 // 监听文章变化，更新表单数据
 watch(
   () => props.article,
@@ -229,6 +224,23 @@ watch(
   }
 );
 
+// 监听分类和标签列表变化
+watch(
+  () => props.categories,
+  newVal => {
+    console.log("[ArticleForm] 监听到categories变化:", newVal);
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.tags,
+  newVal => {
+    console.log("[ArticleForm] 监听到tags变化:", newVal);
+  },
+  { deep: true }
+);
+
 // 监听编辑器内容变化，同步到表单数据的content字段
 watch(
   () => editorContent.value,
@@ -236,6 +248,14 @@ watch(
     formData.content = newVal;
   }
 );
+
+// 在组件挂载后检查分类和标签数据
+onMounted(() => {
+  initFormData();
+  // 记录初始props数据
+  console.log("[ArticleForm] 挂载时的categories:", props.categories);
+  console.log("[ArticleForm] 挂载时的tags:", props.tags);
+});
 </script>
 
 <template>
@@ -369,6 +389,9 @@ watch(
         :placeholder="t('cms.article.categoriesPlaceholder')"
         class="w-full"
       >
+        <div v-if="!categories || categories.length === 0" class="empty-tip">
+          {{ t("cms.article.noCategories") }}
+        </div>
         <el-option
           v-for="category in categories"
           :key="category.id"
@@ -376,6 +399,9 @@ watch(
           :value="category.id"
         />
       </el-select>
+      <div class="selection-debug">
+        {{ categories?.length || 0 }} {{ t("cms.article.categoriesAvailable") }}
+      </div>
     </el-form-item>
 
     <el-form-item :label="t('cms.article.tags')" prop="tags">
@@ -386,6 +412,9 @@ watch(
         :placeholder="t('cms.article.tagsPlaceholder')"
         class="w-full"
       >
+        <div v-if="!tags || tags.length === 0" class="empty-tip">
+          {{ t("cms.article.noTags") }}
+        </div>
         <el-option
           v-for="tag in tags"
           :key="tag.id"
@@ -393,6 +422,9 @@ watch(
           :value="tag.id"
         />
       </el-select>
+      <div class="selection-debug">
+        {{ tags?.length || 0 }} {{ t("cms.article.tagsAvailable") }}
+      </div>
     </el-form-item>
 
     <!-- 表单按钮 -->
@@ -421,6 +453,18 @@ watch(
   font-size: 12px;
   color: #909399;
   margin-top: 5px;
+}
+
+.selection-debug {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
+}
+
+.empty-tip {
+  padding: 8px 12px;
+  color: #909399;
+  font-style: italic;
 }
 
 :deep(.el-textarea__inner) {

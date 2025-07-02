@@ -820,16 +820,22 @@ export const useCmsStore = defineStore("cms", {
           console.log("[CmsStore] fetchCategoryList - 分类列表数据有效, 长度:", response.data.length);
           this.categoryList = response.data;
           this.categoryTotal = response.data.length;
+          this.categories = response.data; // 确保同时更新categories字段
         } else {
           console.error("[CmsStore] fetchCategoryList - 分类列表API响应格式异常:", response);
           this.categoryList = [];
           this.categoryTotal = 0;
+          this.categories = [];
         }
         
-        return response.data;
+        return response;
       } catch (error) {
         console.error("[CmsStore] fetchCategoryList - 获取分类列表失败", error);
         ElMessage.error("获取分类列表失败");
+        // 确保错误时重置为空数组
+        this.categoryList = [];
+        this.categoryTotal = 0;
+        this.categories = [];
         throw error;
       } finally {
         this.categoryLoading = false;
@@ -1002,26 +1008,41 @@ export const useCmsStore = defineStore("cms", {
             console.log("[CmsStore] fetchTagList - 标签列表数据长度:", response.data.results.length);
             this.tagList = response.data.results;
             this.tagTotal = response.data.count || response.data.results.length;
+            // 同时更新tags字段
+            this.tags.data = response.data.results;
+            this.tags.total = response.data.count || response.data.results.length;
           } else if (Array.isArray(response.data)) {
             // 如果直接是数组
             console.log("[CmsStore] fetchTagList - 标签列表是数组，长度:", response.data.length);
             this.tagList = response.data;
             this.tagTotal = response.data.length;
+            // 同时更新tags字段
+            this.tags.data = response.data;
+            this.tags.total = response.data.length;
           } else {
             console.error("[CmsStore] fetchTagList - 标签列表API响应格式异常:", response.data);
             this.tagList = [];
             this.tagTotal = 0;
+            this.tags.data = [];
+            this.tags.total = 0;
           }
         } else {
           console.error("[CmsStore] fetchTagList - 标签列表API响应异常:", response);
           this.tagList = [];
           this.tagTotal = 0;
+          this.tags.data = [];
+          this.tags.total = 0;
         }
         
         return response;
       } catch (error) {
         console.error("[CmsStore] fetchTagList - 获取标签列表失败:", error);
         ElMessage.error("获取标签列表失败");
+        // 确保错误时重置为空数组
+        this.tagList = [];
+        this.tagTotal = 0;
+        this.tags.data = [];
+        this.tags.total = 0;
         throw error;
       } finally {
         this.tagLoading = false;

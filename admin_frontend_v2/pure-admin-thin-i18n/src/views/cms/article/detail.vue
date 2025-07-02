@@ -86,20 +86,45 @@ const handleEdit = async () => {
 // 加载分类和标签数据
 const loadCategoriesAndTags = async () => {
   try {
+    console.log("[ArticleDetail] 开始加载分类和标签数据");
+    
     // 加载分类数据
     const categoryResponse = await cmsStore.fetchCategoryList();
-    if (categoryResponse && categoryResponse.success) {
-      categories.value = categoryResponse.data || [];
+    console.log("[ArticleDetail] 分类数据响应:", categoryResponse);
+    
+    if (categoryResponse && categoryResponse.data) {
+      categories.value = Array.isArray(categoryResponse.data) 
+        ? categoryResponse.data 
+        : [];
+      console.log("[ArticleDetail] 已加载分类数据:", categories.value);
+    } else {
+      console.warn("[ArticleDetail] 分类数据响应为空或格式不正确");
+      categories.value = [];
     }
 
     // 加载标签数据
     const tagResponse = await cmsStore.fetchTagList();
-    if (tagResponse && tagResponse.success) {
-      tags.value = tagResponse.data || [];
+    console.log("[ArticleDetail] 标签数据响应:", tagResponse);
+    
+    if (tagResponse && tagResponse.data) {
+      if (Array.isArray(tagResponse.data)) {
+        tags.value = tagResponse.data;
+      } else if (tagResponse.data.results && Array.isArray(tagResponse.data.results)) {
+        tags.value = tagResponse.data.results;
+      } else {
+        tags.value = [];
+      }
+      console.log("[ArticleDetail] 已加载标签数据:", tags.value);
+    } else {
+      console.warn("[ArticleDetail] 标签数据响应为空或格式不正确");
+      tags.value = [];
     }
   } catch (error) {
-    logger.error("获取分类和标签数据失败", error);
+    console.error("[ArticleDetail] 获取分类和标签数据失败", error);
     ElMessage.warning(t("cms.article.fetchCategoriesTagsFailed"));
+    // 确保在发生错误时也有空数组而不是undefined
+    categories.value = [];
+    tags.value = [];
   }
 };
 

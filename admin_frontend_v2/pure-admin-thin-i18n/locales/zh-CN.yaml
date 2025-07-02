@@ -341,15 +341,52 @@ cms:
   
   article:
     title: 标题
+    titleRequired: 请输入文章标题
+    titleLength: 标题长度应为2-200个字符
+    titlePlaceholder: 请输入文章标题
+    slug: 别名(Slug)
+    slugPlaceholder: 文章的URL别名，留空将自动生成
+    excerpt: 摘要
+    excerptPlaceholder: 请输入文章摘要
     content: 内容
-    summary: 摘要
-    author: 作者
-    category: 分类
-    tags: 标签
+    contentRequired: 请输入文章内容
+    contentPlaceholder: 请输入文章内容
+    editorTip: 支持Markdown格式，建议使用专业的编辑器编写内容后粘贴到此处
+    settings: 文章设置
     status: 状态
-    publishTime: 发布时间
+    statusDraft: 草稿
+    statusPending: 待审核
+    statusPublished: 已发布
+    statusArchived: 已归档
+    contentType: 内容类型
+    contentTypeMarkdown: Markdown
+    contentTypeHtml: HTML
+    visibility: 可见性
+    visibilityPublic: 公开
+    visibilityPrivate: 私密
+    visibilityPassword: 密码保护
+    visibilityRequired: 请选择可见性
+    password: 访问密码
+    passwordRequired: 请设置访问密码
+    passwordPlaceholder: 请设置访问密码
+    featured: 推荐
+    pinned: 置顶
+    allowComment: 允许评论
+    categories: 分类
+    categoriesPlaceholder: 请选择文章分类
+    categoriesAvailable: 个分类可用
+    noCategories: 暂无分类
+    tags: 标签
+    tagsPlaceholder: 请选择文章标签
+    tagsAvailable: 个标签可用
+    noTags: 暂无标签
+    author: 作者
     createTime: 创建时间
     updateTime: 更新时间
+    publishTime: 发布时间
+    summary: 摘要
+    category: 分类
+    tag: 标签
     viewCount: 浏览次数
     commentCount: 评论数
     likeCount: 点赞数
@@ -375,17 +412,8 @@ cms:
     oldVersion: 旧版本
     currentVersion: 当前版本
     latest: 最新
-    statusPublished: 已发布
-    statusDraft: 草稿
-    statusPending: 待审核
-    statusArchived: 已归档
-    featured: 精选
     featuredTooltip: 精选文章
-    pinned: 置顶
     pinnedTooltip: 置顶文章
-    noTags: 无标签
-    noCategories: 无分类
-    excerpt: 摘要
     noExcerpt: 无摘要
     mainContent: 主要内容
     statistics: 统计信息
@@ -451,9 +479,6 @@ cms:
     pleaseSelectCategory: 请选择分类
     pleaseSelectTags: 请选择标签
     pleaseUploadCoverImage: 请上传封面图片
-    titleRequired: 标题不能为空
-    contentRequired: 内容不能为空
-    summaryRequired: 摘要不能为空
     categoryRequired: 分类不能为空
     tagsRequired: 标签不能为空
     coverImageRequired: 封面图片不能为空
@@ -472,26 +497,7 @@ cms:
     updateSuccess: 更新文章成功
     updateFailed: 更新文章失败
     fetchDetailFailed: 获取文章详情失败
-    titleLength: 标题长度应在1-100个字符之间
-    visibilityRequired: 可见性为必填项
-    visibilityPublic: 公开
-    visibilityPrivate: 私有
-    visibilityPassword: 密码保护
-    contentTypeMarkdown: Markdown
-    contentTypeHtml: HTML
-    slug: 别名
-    categories: 分类
-    titlePlaceholder: 请输入文章标题
-    slugPlaceholder: 请输入文章别名
-    excerptPlaceholder: 请输入文章摘要
-    contentPlaceholder: 请输入文章内容
-    editorTip: 支持Markdown和HTML格式
-    settings: 设置
-    contentType: 内容类型
-    visibility: 可见性
-    allowComment: 允许评论
-    categoriesPlaceholder: 请选择分类
-    tagsPlaceholder: 请选择标签
+    basicInfo: 基本信息
     fetchCategoriesTagsFailed: 获取分类和标签数据失败
 
   category:

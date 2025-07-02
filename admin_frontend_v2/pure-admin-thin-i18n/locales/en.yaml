@@ -474,6 +474,10 @@ cms:
     fetchDetailFailed: Failed to get article details
     fetchCategoriesTagsFailed: Failed to load categories and tags
     titleLength: Title length should be between 1-100 characters
+    categoriesPlaceholder: Please select categories
+    categoriesAvailable: categories available
+    tagsPlaceholder: Please select tags
+    tagsAvailable: tags available
   
   category:
     editCategory: Edit Category
