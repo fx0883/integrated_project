@@ -110,7 +110,7 @@
 
 <script lang="ts" setup>
 import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElButton, ElSelect, ElOption, ElInput } from "element-plus";
 import { RefreshRight } from "@element-plus/icons-vue";
 import { useCmsStore } from "@/store/modules/cms";
 import type {
@@ -120,6 +120,8 @@ import type {
 } from "@/types/cms";
 import IconSelector from "@/components/Cms/Category/IconSelector.vue";
 import { IconifyIconOnline } from "@/components/ReIcon";
+import { useI18n } from "vue-i18n";
+import { slugify } from "@/utils/string";
 
 interface Props {
   formMode: "create" | "edit";
@@ -350,13 +352,7 @@ const generateSlug = () => {
     return;
   }
 
-  // 将中文转为拼音，简单处理
-  const slug = form.name
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-]/g, "");
-
-  form.slug = slug || form.name.toLowerCase().replace(/\s+/g, "-");
+  form.slug = slugify(form.name);
 };
 
 // 打开图标选择器

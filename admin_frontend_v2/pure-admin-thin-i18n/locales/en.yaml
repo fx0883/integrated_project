@@ -353,6 +353,7 @@ cms:
     viewCount: View Count
     commentCount: Comment Count
     likeCount: Like Count
+    wordCount: Word Count
     coverImage: Cover Image
     isTop: Is Top
     isRecommend: Is Recommend
@@ -383,6 +384,7 @@ cms:
     pinned: Pinned
     pinnedTooltip: Pinned article
     noTags: No Tags
+    noCategories: No Categories
     excerpt: Excerpt
     noExcerpt: No excerpt available
     mainContent: Main Content
@@ -467,6 +469,11 @@ cms:
     deleteFailed: Failed to delete
     createSuccess: Article created successfully
     createFailed: Failed to create article
+    updateSuccess: Article updated successfully
+    updateFailed: Failed to update article
+    fetchDetailFailed: Failed to get article details
+    fetchCategoriesTagsFailed: Failed to load categories and tags
+    titleLength: Title length should be between 1-100 characters
   
   category:
     editCategory: Edit Category

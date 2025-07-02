@@ -11,6 +11,7 @@ import type {
   Category,
   Tag
 } from "@/types/cms";
+import { slugify } from "@/utils/string";
 import logger from "@/utils/logger";
 
 const { t } = useI18n();
@@ -180,13 +181,7 @@ const initFormData = () => {
 const generateSlug = () => {
   if (!formData.title) return;
 
-  // 简单的 slug 生成逻辑，实际项目中可能需要更复杂的处理
-  const slug = formData.title
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fa5]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  formData.slug = slug;
+  formData.slug = slugify(formData.title);
 };
 
 // 处理表单提交

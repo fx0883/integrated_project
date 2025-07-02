@@ -61,6 +61,7 @@ import { RefreshRight } from "@element-plus/icons-vue";
 import { Tag, TagCreateParams, TagUpdateParams } from "@/types/cms";
 import { useCmsStore } from "@/store/modules/cms";
 import { useI18n } from "vue-i18n";
+import { slugify } from "@/utils/string";
 
 const props = defineProps({
   tag: {
@@ -132,11 +133,7 @@ const generateSlug = () => {
     return;
   }
 
-  // 转换为小写，替换非字母数字字符为连字符，去除首尾连字符
-  form.slug = form.name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  form.slug = slugify(form.name);
 };
 
 // 提交表单

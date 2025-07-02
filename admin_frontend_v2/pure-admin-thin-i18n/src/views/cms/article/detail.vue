@@ -6,7 +6,6 @@ import { ElMessage } from "element-plus";
 import {
   Edit,
   Delete,
-  Back,
   Upload,
   Download,
   Archive,
@@ -15,6 +14,7 @@ import {
 import { useCmsStoreHook } from "@/store/modules/cms";
 import { useUserStoreHook } from "@/store/modules/user";
 import ConfirmDialog from "@/components/Cms/Article/ConfirmDialog.vue";
+import ArticleForm from "@/components/Cms/Article/ArticleForm.vue";
 import logger from "@/utils/logger";
 
 const { t } = useI18n();
@@ -25,6 +25,9 @@ const userStore = useUserStoreHook();
 
 // 获取文章ID
 const articleId = computed(() => Number(route.params.id));
+
+// 编辑模式状态
+const isEditMode = ref(false);
 
 // 检查用户权限
 const checkPermission = () => {
@@ -43,6 +46,10 @@ const currentArticle = computed(() => cmsStore.currentArticle);
 
 // 文章统计数据
 const articleStatistics = computed(() => cmsStore.articleStatistics);
+
+// 可用分类列表和标签列表
+const categories = ref([]);
+const tags = ref([]);
 
 // 确认对话框
 const confirmDialog = reactive({
@@ -68,14 +75,51 @@ const fetchArticleDetail = async () => {
   }
 };
 
-// 返回列表
-const handleBack = () => {
-  router.push("/cms/article");
+// 编辑文章
+const handleEdit = async () => {
+  // 开启编辑模式前先加载分类和标签数据
+  await loadCategoriesAndTags();
+  // 开启编辑模式
+  isEditMode.value = true;
 };
 
-// 编辑文章
-const handleEdit = () => {
-  router.push(`/cms/article/edit/${articleId.value}`);
+// 加载分类和标签数据
+const loadCategoriesAndTags = async () => {
+  try {
+    // 加载分类数据
+    const categoryResponse = await cmsStore.fetchCategoryList();
+    if (categoryResponse && categoryResponse.success) {
+      categories.value = categoryResponse.data || [];
+    }
+
+    // 加载标签数据
+    const tagResponse = await cmsStore.fetchTagList();
+    if (tagResponse && tagResponse.success) {
+      tags.value = tagResponse.data || [];
+    }
+  } catch (error) {
+    logger.error("获取分类和标签数据失败", error);
+    ElMessage.warning(t("cms.article.fetchCategoriesTagsFailed"));
+  }
+};
+
+// 取消编辑
+const handleCancelEdit = () => {
+  // 关闭编辑模式
+  isEditMode.value = false;
+};
+
+// 提交表单
+const handleSubmitEdit = async formData => {
+  try {
+    await cmsStore.updateArticle(articleId.value, formData);
+    ElMessage.success(t("cms.article.updateSuccess"));
+    isEditMode.value = false;
+    fetchArticleDetail(); // 重新获取文章详情
+  } catch (error) {
+    logger.error("更新文章失败", error);
+    ElMessage.error(t("cms.article.updateFailed"));
+  }
 };
 
 // 删除文章
@@ -174,6 +218,8 @@ const viewVersionHistory = () => {
 // 页面加载时获取数据
 onMounted(() => {
   fetchArticleDetail();
+  // 预加载分类和标签数据，以便快速进入编辑模式
+  loadCategoriesAndTags();
 });
 </script>
 
@@ -184,238 +230,270 @@ onMounted(() => {
   >
     <!-- 标题和操作按钮 -->
     <div class="article-detail-header">
-      <h2 class="article-detail-title">{{ t("cms.article.articleDetail") }}</h2>
+      <h2 class="article-detail-title">
+        {{
+          isEditMode
+            ? t("cms.article.editArticle")
+            : t("cms.article.articleDetail")
+        }}
+      </h2>
       <div class="article-detail-actions">
-        <el-button :icon="Back" @click="handleBack">
-          {{ t("common.back") }}
-        </el-button>
-        <el-button type="primary" :icon="Edit" @click="handleEdit">
-          {{ t("common.edit") }}
-        </el-button>
-        <el-button
-          v-if="currentArticle && currentArticle.status !== 'published'"
-          type="success"
-          :icon="Upload"
-          @click="handlePublish"
-        >
-          {{ t("cms.article.publish") }}
-        </el-button>
-        <el-button :icon="Document" @click="viewVersionHistory">
-          {{ t("cms.article.versionHistory") }}
-        </el-button>
-        <el-button type="danger" :icon="Delete" @click="handleDelete">
-          {{ t("common.delete") }}
-        </el-button>
+        <template v-if="!isEditMode">
+          <el-button type="primary" :icon="Edit" @click="handleEdit">
+            {{ t("common.edit") }}
+          </el-button>
+          <el-button
+            v-if="currentArticle && currentArticle.status !== 'published'"
+            type="success"
+            :icon="Upload"
+            @click="handlePublish"
+          >
+            {{ t("cms.article.publish") }}
+          </el-button>
+          <el-button :icon="Document" @click="viewVersionHistory">
+            {{ t("cms.article.versionHistory") }}
+          </el-button>
+          <el-button type="danger" :icon="Delete" @click="handleDelete">
+            {{ t("common.delete") }}
+          </el-button>
+        </template>
+        <template v-else>
+          <el-button @click="handleCancelEdit">
+            {{ t("common.cancel") }}
+          </el-button>
+        </template>
       </div>
     </div>
 
-    <!-- 文章基本信息 -->
-    <el-card class="article-info-card" v-if="currentArticle">
-      <template #header>
-        <div class="article-info-header">
-          <span>{{ t("cms.article.basicInfo") }}</span>
-        </div>
-      </template>
+    <!-- 编辑模式 -->
+    <div v-if="isEditMode && currentArticle" class="article-edit-content">
+      <el-card>
+        <ArticleForm
+          mode="edit"
+          :article="currentArticle"
+          :loading="cmsStore.loading.articleUpdate"
+          :categories="categories"
+          :tags="tags"
+          @submit="handleSubmitEdit"
+          @cancel="handleCancelEdit"
+        />
+      </el-card>
+    </div>
 
-      <el-descriptions :column="3" border>
-        <el-descriptions-item :label="t('cms.article.title')" :span="3">
-          <div class="article-title">
-            <el-tag
-              v-if="currentArticle.is_featured"
-              type="danger"
-              size="small"
-            >
-              {{ t("cms.article.featured") }}
-            </el-tag>
-            <el-tag v-if="currentArticle.is_pinned" type="warning" size="small">
-              {{ t("cms.article.pinned") }}
-            </el-tag>
-            {{ currentArticle.title }}
+    <!-- 详情模式 -->
+    <template v-if="!isEditMode">
+      <!-- 文章基本信息 -->
+      <el-card class="article-info-card" v-if="currentArticle">
+        <template #header>
+          <div class="article-info-header">
+            <span>{{ t("cms.article.basicInfo") }}</span>
           </div>
-        </el-descriptions-item>
+        </template>
 
-        <el-descriptions-item :label="t('cms.article.slug')">
-          {{ currentArticle.slug }}
-        </el-descriptions-item>
+        <el-descriptions :column="3" border>
+          <el-descriptions-item :label="t('cms.article.title')" :span="3">
+            <div class="article-title">
+              <el-tag
+                v-if="currentArticle.is_featured"
+                type="danger"
+                size="small"
+              >
+                {{ t("cms.article.featured") }}
+              </el-tag>
+              <el-tag
+                v-if="currentArticle.is_pinned"
+                type="warning"
+                size="small"
+              >
+                {{ t("cms.article.pinned") }}
+              </el-tag>
+              {{ currentArticle.title }}
+            </div>
+          </el-descriptions-item>
 
-        <el-descriptions-item :label="t('cms.article.status')">
-          <el-tag
-            :type="
-              currentArticle.status === 'published'
-                ? 'success'
-                : currentArticle.status === 'draft'
-                  ? 'info'
-                  : currentArticle.status === 'pending'
-                    ? 'warning'
-                    : 'danger'
-            "
-          >
-            {{ formatStatus(currentArticle.status) }}
-          </el-tag>
-        </el-descriptions-item>
+          <el-descriptions-item :label="t('cms.article.slug')">
+            {{ currentArticle.slug }}
+          </el-descriptions-item>
 
-        <el-descriptions-item :label="t('cms.article.visibility')">
-          <el-tag type="info">
-            {{ formatVisibility(currentArticle.visibility) }}
-          </el-tag>
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.author')">
-          {{ currentArticle.author_info?.username || "-" }}
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.contentType')">
-          {{ formatContentType(currentArticle.content_type) }}
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.allowComment')">
-          <el-tag :type="currentArticle.allow_comment ? 'success' : 'danger'">
-            {{
-              currentArticle.allow_comment ? t("common.yes") : t("common.no")
-            }}
-          </el-tag>
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.createTime')">
-          {{ formatDate(currentArticle.created_at) }}
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.updateTime')">
-          {{ formatDate(currentArticle.updated_at) }}
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.publishTime')">
-          {{
-            currentArticle.published_at
-              ? formatDate(currentArticle.published_at)
-              : "-"
-          }}
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.categories')" :span="3">
-          <div class="tags-container">
+          <el-descriptions-item :label="t('cms.article.status')">
             <el-tag
-              v-for="category in currentArticle.categories"
-              :key="typeof category === 'object' ? category.id : category"
-              class="category-tag"
-            >
-              {{ typeof category === "object" ? category.name : category }}
-            </el-tag>
-            <span
-              v-if="
-                !currentArticle.categories ||
-                currentArticle.categories.length === 0
+              :type="
+                currentArticle.status === 'published'
+                  ? 'success'
+                  : currentArticle.status === 'draft'
+                    ? 'info'
+                    : currentArticle.status === 'pending'
+                      ? 'warning'
+                      : 'danger'
               "
             >
-              {{ t("cms.article.noCategories") }}
-            </span>
-          </div>
-        </el-descriptions-item>
-
-        <el-descriptions-item :label="t('cms.article.tags')" :span="3">
-          <div class="tags-container">
-            <el-tag
-              v-for="tag in currentArticle.tags"
-              :key="typeof tag === 'object' ? tag.id : tag"
-              type="success"
-              class="tag-item"
-            >
-              {{ typeof tag === "object" ? tag.name : tag }}
+              {{ formatStatus(currentArticle.status) }}
             </el-tag>
-            <span
-              v-if="!currentArticle.tags || currentArticle.tags.length === 0"
-            >
-              {{ t("cms.article.noTags") }}
-            </span>
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.visibility')">
+            <el-tag type="info">
+              {{ formatVisibility(currentArticle.visibility) }}
+            </el-tag>
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.author')">
+            {{ currentArticle.author_info?.username || "-" }}
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.contentType')">
+            {{ formatContentType(currentArticle.content_type) }}
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.allowComment')">
+            <el-tag :type="currentArticle.allow_comment ? 'success' : 'danger'">
+              {{
+                currentArticle.allow_comment ? t("common.yes") : t("common.no")
+              }}
+            </el-tag>
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.createTime')">
+            {{ formatDate(currentArticle.created_at) }}
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.updateTime')">
+            {{ formatDate(currentArticle.updated_at) }}
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.publishTime')">
+            {{
+              currentArticle.published_at
+                ? formatDate(currentArticle.published_at)
+                : "-"
+            }}
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.categories')" :span="3">
+            <div class="tags-container">
+              <el-tag
+                v-for="category in currentArticle.categories"
+                :key="typeof category === 'object' ? category.id : category"
+                class="category-tag"
+              >
+                {{ typeof category === "object" ? category.name : category }}
+              </el-tag>
+              <span
+                v-if="
+                  !currentArticle.categories ||
+                  currentArticle.categories.length === 0
+                "
+              >
+                {{ t("cms.article.noCategories") }}
+              </span>
+            </div>
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="t('cms.article.tags')" :span="3">
+            <div class="tags-container">
+              <el-tag
+                v-for="tag in currentArticle.tags"
+                :key="typeof tag === 'object' ? tag.id : tag"
+                type="success"
+                class="tag-item"
+              >
+                {{ typeof tag === "object" ? tag.name : tag }}
+              </el-tag>
+              <span
+                v-if="!currentArticle.tags || currentArticle.tags.length === 0"
+              >
+                {{ t("cms.article.noTags") }}
+              </span>
+            </div>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-card>
+
+      <!-- 文章内容 -->
+      <el-card class="article-content-card" v-if="currentArticle">
+        <template #header>
+          <div class="article-content-header">
+            <span>{{ t("cms.article.content") }}</span>
           </div>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-card>
+        </template>
 
-    <!-- 文章内容 -->
-    <el-card class="article-content-card" v-if="currentArticle">
-      <template #header>
-        <div class="article-content-header">
-          <span>{{ t("cms.article.content") }}</span>
+        <div class="article-excerpt">
+          <h3>{{ t("cms.article.excerpt") }}</h3>
+          <div class="excerpt-content">
+            {{ currentArticle.excerpt || t("cms.article.noExcerpt") }}
+          </div>
         </div>
-      </template>
 
-      <div class="article-excerpt">
-        <h3>{{ t("cms.article.excerpt") }}</h3>
-        <div class="excerpt-content">
-          {{ currentArticle.excerpt || t("cms.article.noExcerpt") }}
+        <el-divider />
+
+        <div class="article-content">
+          <h3>{{ t("cms.article.mainContent") }}</h3>
+          <div
+            class="content-display"
+            :class="{
+              'markdown-content': currentArticle.content_type === 'markdown'
+            }"
+          >
+            {{ currentArticle.content }}
+          </div>
         </div>
-      </div>
+      </el-card>
 
-      <el-divider />
+      <!-- 文章统计 -->
+      <el-card class="article-stats-card" v-if="currentArticle">
+        <template #header>
+          <div class="article-stats-header">
+            <span>{{ t("cms.article.statistics") }}</span>
+          </div>
+        </template>
 
-      <div class="article-content">
-        <h3>{{ t("cms.article.mainContent") }}</h3>
-        <div
-          class="content-display"
-          :class="{
-            'markdown-content': currentArticle.content_type === 'markdown'
-          }"
-        >
-          {{ currentArticle.content }}
-        </div>
-      </div>
-    </el-card>
+        <el-row :gutter="20">
+          <el-col :span="6">
+            <el-statistic
+              :title="t('cms.article.viewCount')"
+              :value="currentArticle.view_count || 0"
+            >
+              <template #suffix>
+                <el-icon><View /></el-icon>
+              </template>
+            </el-statistic>
+          </el-col>
 
-    <!-- 文章统计 -->
-    <el-card class="article-stats-card" v-if="currentArticle">
-      <template #header>
-        <div class="article-stats-header">
-          <span>{{ t("cms.article.statistics") }}</span>
-        </div>
-      </template>
+          <el-col :span="6">
+            <el-statistic
+              :title="t('cms.article.commentCount')"
+              :value="currentArticle.comment_count || 0"
+            >
+              <template #suffix>
+                <el-icon><ChatLineRound /></el-icon>
+              </template>
+            </el-statistic>
+          </el-col>
 
-      <el-row :gutter="20">
-        <el-col :span="6">
-          <el-statistic
-            :title="t('cms.article.viewCount')"
-            :value="currentArticle.view_count || 0"
-          >
-            <template #suffix>
-              <el-icon><View /></el-icon>
-            </template>
-          </el-statistic>
-        </el-col>
+          <el-col :span="6">
+            <el-statistic
+              :title="t('cms.article.likeCount')"
+              :value="currentArticle.like_count || 0"
+            >
+              <template #suffix>
+                <el-icon><Star /></el-icon>
+              </template>
+            </el-statistic>
+          </el-col>
 
-        <el-col :span="6">
-          <el-statistic
-            :title="t('cms.article.commentCount')"
-            :value="currentArticle.comment_count || 0"
-          >
-            <template #suffix>
-              <el-icon><ChatLineRound /></el-icon>
-            </template>
-          </el-statistic>
-        </el-col>
-
-        <el-col :span="6">
-          <el-statistic
-            :title="t('cms.article.likeCount')"
-            :value="currentArticle.like_count || 0"
-          >
-            <template #suffix>
-              <el-icon><Star /></el-icon>
-            </template>
-          </el-statistic>
-        </el-col>
-
-        <el-col :span="6">
-          <el-statistic
-            :title="t('cms.article.wordCount')"
-            :value="currentArticle.content?.length || 0"
-          >
-            <template #suffix>
-              <el-icon><Document /></el-icon>
-            </template>
-          </el-statistic>
-        </el-col>
-      </el-row>
-    </el-card>
+          <el-col :span="6">
+            <el-statistic
+              :title="t('cms.article.wordCount')"
+              :value="currentArticle.content?.length || 0"
+            >
+              <template #suffix>
+                <el-icon><Document /></el-icon>
+              </template>
+            </el-statistic>
+          </el-col>
+        </el-row>
+      </el-card>
+    </template>
 
     <!-- 确认对话框 -->
     <ConfirmDialog
@@ -453,7 +531,8 @@ onMounted(() => {
 
 .article-info-card,
 .article-content-card,
-.article-stats-card {
+.article-stats-card,
+.article-edit-content {
   margin-bottom: 20px;
 }
 
