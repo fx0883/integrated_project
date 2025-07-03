@@ -21,7 +21,12 @@ export function getMenuList(params: MenuListParams = {}) {
  * 获取菜单树形结构
  */
 export function getMenuTree(params: { is_active?: boolean } = {}) {
-  logger.debug("API请求: 获取菜单树形结构", params);
+  const requestId = `tree_api_${Date.now()}`;
+  logger.debug("API请求: 获取菜单树形结构", { 
+    params, 
+    requestId,
+    timestamp: new Date().getTime() 
+  });
   
   return http.request<ApiResponse<MenuTree[]>>(
     "get",
@@ -184,7 +189,12 @@ export function exportMenus() {
  * @param userId 用户ID
  */
 export function getUserMenus(userId: number) {
-  logger.debug("API请求: 获取用户菜单配置", { userId });
+  const requestId = `userMenus_api_${userId}_${Date.now()}`;
+  logger.debug("API请求: 获取用户菜单配置", { 
+    userId, 
+    requestId,
+    timestamp: new Date().getTime() 
+  });
   
   return http.request<ApiResponse<{
     user_id: number;

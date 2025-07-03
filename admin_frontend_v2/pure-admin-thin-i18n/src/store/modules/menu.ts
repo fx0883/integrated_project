@@ -131,8 +131,23 @@ export const useMenuStore = defineStore("menu", {
      */
     async fetchMenuTree(params: { is_active?: boolean } = {}) {
       this.loading.tree = true;
+      const requestId = `tree_${Date.now()}`;
       try {
+        logger.debug("开始获取菜单树", { 
+          params, 
+          requestId,
+          timestamp: new Date().getTime() 
+        });
+        
         const response = await getMenuTree(params);
+        
+        logger.debug("菜单树获取完成", { 
+          success: response.success, 
+          itemCount: response.data?.length || 0,
+          requestId,
+          timestamp: new Date().getTime()
+        });
+        
         if (response.success) {
           this.menuTree = response.data || [];
           return response;
@@ -141,7 +156,7 @@ export const useMenuStore = defineStore("menu", {
           return Promise.reject(new Error(response.message));
         }
       } catch (error) {
-        logger.error("获取菜单树失败", error);
+        logger.error("获取菜单树失败", { error, requestId });
         ElMessage.error(error.message || "获取菜单树失败");
         throw error;
       } finally {
@@ -439,8 +454,24 @@ export const useMenuStore = defineStore("menu", {
      */
     async fetchUserMenus(userId: number) {
       this.loading.userMenus = true;
+      const requestId = `userMenus_${userId}_${Date.now()}`;
       try {
+        logger.debug("开始获取用户菜单配置", { 
+          userId, 
+          requestId,
+          timestamp: new Date().getTime() 
+        });
+        
         const response = await getUserMenus(userId);
+        
+        logger.debug("用户菜单配置获取完成", { 
+          success: response.success, 
+          menuCount: response.data?.menus?.length || 0,
+          userId,
+          requestId,
+          timestamp: new Date().getTime()
+        });
+        
         if (response.success) {
           this.userMenus = response.data;
           return response;
@@ -449,7 +480,7 @@ export const useMenuStore = defineStore("menu", {
           return Promise.reject(new Error(response.message));
         }
       } catch (error) {
-        logger.error("获取用户菜单配置失败", error);
+        logger.error("获取用户菜单配置失败", { error, userId, requestId });
         ElMessage.error(error.message || "获取用户菜单配置失败");
         throw error;
       } finally {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   ElMessage,
@@ -16,6 +16,9 @@ import logger from "@/utils/logger";
 
 const { t } = useI18n();
 const menuStore = useMenuStore();
+
+// 添加一个标志位，用于防止重复加载数据
+const dataLoaded = ref(false);
 
 const props = defineProps({
   visible: {
@@ -44,35 +47,60 @@ const menuTreeRef = ref(null);
 // 内部对话框可见性状态
 const dialogVisible = ref(false);
 
-// 同步props.visible到内部状态
+// 同步props.visible到内部状态，并在可见性变为true时加载数据
 watch(
   () => props.visible,
-  val => {
+  async (val, oldVal) => {
+    logger.debug("MenuSettingDialog - props.visible变化", {
+      oldValue: oldVal,
+      newValue: val,
+      userId: props.userId,
+      dataLoaded: dataLoaded.value
+    });
+
     dialogVisible.value = val;
+
+    // 当对话框显示且有有效的用户ID时加载数据
+    if (val && props.userId > 0) {
+      // 对话框显示，加载数据
+      logger.debug("MenuSettingDialog - 对话框打开，准备加载数据", {
+        userId: props.userId,
+        username: props.username,
+        dataLoaded: dataLoaded.value
+      });
+
+      // 使用标志位防止重复加载
+      if (!dataLoaded.value) {
+        dataLoaded.value = true;
+        logger.debug("MenuSettingDialog - 设置dataLoaded=true，开始加载数据");
+        await loadData();
+      } else {
+        logger.debug("MenuSettingDialog - 数据已加载，跳过重复加载");
+      }
+    } else if (!val) {
+      // 对话框关闭时重置标志位
+      logger.debug("MenuSettingDialog - 对话框关闭，重置dataLoaded标志位");
+      dataLoaded.value = false;
+    }
   }
 );
 
 // 同步内部状态到props.visible
-watch(dialogVisible, val => {
+watch(dialogVisible, (val, oldVal) => {
+  logger.debug("MenuSettingDialog - dialogVisible变化", {
+    oldValue: oldVal,
+    newValue: val,
+    propsVisible: props.visible
+  });
+
   if (val !== props.visible) {
+    logger.debug("MenuSettingDialog - 发出update:visible事件", {
+      value: val,
+      propsVisible: props.visible
+    });
     emit("update:visible", val);
   }
 });
-
-// 监听对话框可见性变化
-watch(
-  () => props.visible,
-  async val => {
-    if (val && props.userId > 0) {
-      // 对话框显示，加载数据
-      logger.debug("菜单设置对话框打开", {
-        userId: props.userId,
-        username: props.username
-      });
-      await loadData();
-    }
-  }
-);
 
 // 配置tree组件的属性
 const defaultProps = reactive({
@@ -90,13 +118,22 @@ const previewMenus = ref([]);
 watch(
   () => props.userId,
   async (newVal, oldVal) => {
-    logger.debug("MenuSettingDialog userId 属性变化", newVal, oldVal);
+    logger.debug("MenuSettingDialog - userId属性变化", {
+      oldValue: oldVal,
+      newValue: newVal,
+      visible: props.visible,
+      dataLoaded: dataLoaded.value
+    });
 
     if (props.visible && newVal > 0 && newVal !== oldVal) {
-      logger.debug("用户ID变化，重新加载菜单数据", {
+      logger.debug("MenuSettingDialog - 用户ID变化，重新加载菜单数据", {
         userId: newVal,
-        username: props.username
+        username: props.username,
+        dataLoaded: dataLoaded.value
       });
+
+      // 用户ID变化时重置标志位并重新加载数据
+      dataLoaded.value = true;
       await loadData();
     }
   }
@@ -128,36 +165,60 @@ const loadData = async () => {
   }
 
   loading.value = true;
-  logger.debug("开始加载菜单数据", { userId: props.userId });
+  logger.debug("MenuSettingDialog - 开始加载菜单数据", {
+    userId: props.userId,
+    timestamp: new Date().getTime()
+  });
 
   try {
     // 获取菜单树
+    logger.debug("MenuSettingDialog - 发起fetchMenuTree请求", {
+      userId: props.userId,
+      timestamp: new Date().getTime()
+    });
     const menuTreeResponse = await menuStore.fetchMenuTree({ is_active: true });
-    logger.debug("菜单树加载结果", menuTreeResponse);
+    logger.debug("MenuSettingDialog - fetchMenuTree请求完成", {
+      timestamp: new Date().getTime(),
+      responseStatus: menuTreeResponse?.success
+    });
 
     // 处理菜单树数据
     menuTree.value = menuTreeResponse?.data || [];
-    logger.debug("菜单树数据已设置", menuTree.value);
+    logger.debug("MenuSettingDialog - 菜单树数据已设置", {
+      itemCount: menuTree.value.length
+    });
   } catch (error) {
-    logger.error("加载菜单树失败", error);
+    logger.error("MenuSettingDialog - 加载菜单树失败", error);
     ElMessage.error(t("menu.loadTreeFailed") || "加载菜单树失败");
   }
 
   try {
     // 获取用户当前菜单配置
+    logger.debug("MenuSettingDialog - 发起fetchUserMenus请求", {
+      userId: props.userId,
+      timestamp: new Date().getTime()
+    });
     const userMenusResponse = await menuStore.fetchUserMenus(props.userId);
-    logger.debug("用户菜单加载结果", userMenusResponse);
+    logger.debug("MenuSettingDialog - fetchUserMenus请求完成", {
+      timestamp: new Date().getTime(),
+      responseStatus: userMenusResponse?.success
+    });
 
     // 处理用户菜单数据，设置选中状态
     checkedKeys.value = (userMenusResponse?.data?.menus || [])
       .filter(menu => menu.is_active)
       .map(menu => menu.id);
-    logger.debug("已选中菜单ID", checkedKeys.value);
+    logger.debug("MenuSettingDialog - 已选中菜单ID", {
+      checkedCount: checkedKeys.value.length
+    });
   } catch (error) {
-    logger.error("加载用户菜单失败", error);
+    logger.error("MenuSettingDialog - 加载用户菜单失败", error);
     ElMessage.error(t("menu.loadUserMenusFailed") || "加载用户菜单失败");
   } finally {
     loading.value = false;
+    logger.debug("MenuSettingDialog - 菜单数据加载完成", {
+      timestamp: new Date().getTime()
+    });
   }
 };
 
@@ -184,6 +245,7 @@ const getTotalMenuCount = menus => {
 
 // 处理对话框关闭
 const handleClose = () => {
+  logger.debug("MenuSettingDialog - 对话框关闭处理函数被调用");
   dialogVisible.value = false;
   emit("update:visible", false);
   emit("cancel");
@@ -323,22 +385,14 @@ const handleSave = async () => {
   }
 };
 
-// 组件挂载时检查状态
+// 组件挂载时记录状态
 onMounted(() => {
-  logger.debug("MenuSettingDialog 组件挂载", {
+  logger.debug("MenuSettingDialog - 组件挂载", {
     visible: props.visible,
     userId: props.userId,
-    username: props.username
+    username: props.username,
+    timestamp: new Date().getTime()
   });
-
-  // 如果对话框打开，加载数据
-  if (props.visible && props.userId > 0) {
-    logger.debug("菜单设置对话框打开", {
-      userId: props.userId,
-      username: props.username
-    });
-    loadData();
-  }
 });
 </script>
 

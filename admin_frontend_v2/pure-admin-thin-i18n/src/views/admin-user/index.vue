@@ -509,17 +509,25 @@ const formatDateTime = (dateTimeString: string) => {
 
 // 处理菜单设置点击
 const handleMenuSetting = (row: AdminUser) => {
-  logger.debug("菜单设置被点击", {
+  logger.debug("菜单设置按钮被点击", {
     userId: row.id,
-    username: row.username
+    username: row.username,
+    timestamp: new Date().getTime()
   });
+
+  // 先设置用户数据，再设置对话框状态
   userForMenuSetting.value = row;
-  menuSettingDialogVisible.value = true;
-  logger.debug("菜单设置对话框状态已设置", {
-    visible: menuSettingDialogVisible.value,
-    userId: row.id,
-    username: row.username
-  });
+
+  // 添加延迟，避免可能的重复渲染和事件循环
+  setTimeout(() => {
+    menuSettingDialogVisible.value = true;
+    logger.debug("菜单设置对话框状态已设置", {
+      visible: menuSettingDialogVisible.value,
+      userId: row.id,
+      username: row.username,
+      timestamp: new Date().getTime()
+    });
+  }, 0);
 };
 
 // 处理菜单设置完成

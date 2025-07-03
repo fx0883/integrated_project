@@ -50,9 +50,12 @@ const canManageUserMenu = computed(() => {
 });
 
 const handleClick = () => {
+  const clickId = `click_${Date.now()}`;
   logger.debug("菜单设置按钮被点击", {
     userId: props.user.id,
-    username: props.user.username
+    username: props.user.username,
+    clickId,
+    timestamp: new Date().getTime()
   });
   emit("click", props.user);
 };

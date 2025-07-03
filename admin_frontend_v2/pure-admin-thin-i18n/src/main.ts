@@ -20,7 +20,7 @@ logger.configure({
   enabled: true,
   level: logger.LogLevel.DEBUG,
   apiLogging: true,
-  apiLogFullResponse: false,
+  apiLogFullResponse: true,
   useColors: true,
   consoleOutput: true // 设置为false可以禁止输出到控制台
 });

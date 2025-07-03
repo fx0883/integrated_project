@@ -321,31 +321,7 @@ tenant_comprehensive_response_examples = [
                         "products": 25.0
                     }
                 },
-                "business_info": {
-                    "company_name": "测试科技有限公司",
-                    "legal_representative": "张三",
-                    "unified_social_credit_code": "91310000MA1FL1000X",
-                    "registration_number": "310000000000000",
-                    "company_type": "有限责任公司",
-                    "registered_capital": 1000000,
-                    "registered_capital_currency": "CNY",
-                    "business_scope": "水产养殖技术开发、技术咨询、技术服务",
-                    "establishment_date": "2020-01-01",
-                    "business_term_start": "2020-01-01",
-                    "business_term_end": "2050-01-01",
-                    "registration_authority": "市场监督管理局",
-                    "approval_date": "2020-01-01",
-                    "business_status": "存续",
-                    "registered_address": "上海市浦东新区张江高科技园区",
-                    "office_address": "上海市浦东新区张江高科技园区",
-                    "contact_person": "张三",
-                    "contact_phone": "13800138000",
-                    "email": "info@example.com",
-                    "website": "https://www.example.com",
-                    "license_image_url": "https://storage.example.com/licenses/tenant1.jpg",
-                    "verification_status": "verified",
-                    "verification_status_display": "已验证"
-                }
+                "business_info": None
             }
         },
         response_only=True

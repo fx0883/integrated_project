@@ -2,7 +2,7 @@
 租户和租户配额的序列化器
 """
 from rest_framework import serializers
-from tenants.models import Tenant, TenantQuota, TenantBusinessInfo
+from tenants.models import Tenant, TenantQuota
 from users.serializers import UserMinimalSerializer
 from django.utils.translation import gettext_lazy as _
 
@@ -28,10 +28,8 @@ class TenantSerializer(serializers.ModelSerializer):
     
     def get_has_business_info(self, obj):
         """检查租户是否有企业信息"""
-        try:
-            return hasattr(obj, 'business_info')
-        except:
-            return False
+        # 始终返回 False，因为 TenantBusinessInfo 模型已被删除
+        return False
 
 
 class TenantCreateSerializer(serializers.ModelSerializer):
@@ -140,80 +138,6 @@ class TenantSimpleSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'code', 'status')
 
 
-class TenantBusinessInfoSerializer(serializers.ModelSerializer):
-    """
-    租户企业信息序列化器
-    """
-    tenant_name = serializers.CharField(source='tenant.name', read_only=True)
-    verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
-    business_term_formatted = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = TenantBusinessInfo
-        fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by',
-                            'verification_status', 'verification_time', 'verification_user')
-    
-    def get_business_term_formatted(self, obj):
-        """
-        格式化营业期限
-        """
-        if obj.business_term_start and obj.business_term_end:
-            return f"{obj.business_term_start} 至 {obj.business_term_end}"
-        elif obj.business_term_start:
-            return f"{obj.business_term_start} 起"
-        return ""
-    
-    def validate_unified_social_credit_code(self, value):
-        """
-        验证统一社会信用代码
-        """
-        # 检查是否已存在相同的统一社会信用代码
-        instance = getattr(self, 'instance', None)
-        if TenantBusinessInfo.objects.filter(unified_social_credit_code=value).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError(_("该统一社会信用代码已被使用"))
-        
-        # 可以在这里添加更多的验证逻辑，比如格式检查
-        # 标准的统一社会信用代码为18位
-        if len(value) != 18:
-            raise serializers.ValidationError(_("统一社会信用代码应为18位"))
-        
-        return value
-    
-    def create(self, validated_data):
-        """
-        创建时设置创建人
-        """
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['created_by'] = request.user
-        
-        return super().create(validated_data)
-    
-    def update(self, instance, validated_data):
-        """
-        更新时设置更新人
-        """
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['updated_by'] = request.user
-        
-        return super().update(instance, validated_data)
-
-
-class TenantBusinessInfoSimpleSerializer(serializers.ModelSerializer):
-    """
-    简化版租户企业信息序列化器，用于列表展示
-    """
-    tenant_name = serializers.CharField(source='tenant.name', read_only=True)
-    verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
-    
-    class Meta:
-        model = TenantBusinessInfo
-        fields = ('id', 'tenant', 'tenant_name', 'company_name', 'legal_representative', 
-                  'unified_social_credit_code', 'verification_status', 'verification_status_display')
-
-
 class TenantComprehensiveSerializer(serializers.ModelSerializer):
     """
     全面的租户详细信息序列化器，包含租户所有关联信息
@@ -264,32 +188,5 @@ class TenantComprehensiveSerializer(serializers.ModelSerializer):
     
     def get_business_info(self, obj):
         """获取租户企业信息"""
-        try:
-            business_info = obj.business_info
-            return {
-                'company_name': business_info.company_name,
-                'legal_representative': business_info.legal_representative,
-                'unified_social_credit_code': business_info.unified_social_credit_code,
-                'registration_number': business_info.registration_number,
-                'company_type': business_info.company_type,
-                'registered_capital': business_info.registered_capital,
-                'registered_capital_currency': business_info.registered_capital_currency,
-                'business_scope': business_info.business_scope,
-                'establishment_date': business_info.establishment_date,
-                'business_term_start': business_info.business_term_start,
-                'business_term_end': business_info.business_term_end,
-                'registration_authority': business_info.registration_authority,
-                'approval_date': business_info.approval_date,
-                'business_status': business_info.business_status,
-                'registered_address': business_info.registered_address,
-                'office_address': business_info.office_address,
-                'contact_person': business_info.contact_person,
-                'contact_phone': business_info.contact_phone,
-                'email': business_info.email,
-                'website': business_info.website,
-                'license_image_url': business_info.license_image_url,
-                'verification_status': business_info.verification_status,
-                'verification_status_display': business_info.get_verification_status_display()
-            }
-        except (AttributeError, TenantBusinessInfo.DoesNotExist):
-            return None 
+        # TenantBusinessInfo 模型已被删除，始终返回 None
+        return None 

@@ -4,7 +4,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
-from tenants.models import Tenant, TenantQuota, TenantBusinessInfo
+from tenants.models import Tenant, TenantQuota
 from common.admin import TenantAdminMixin
 
 # 添加调试信息
@@ -32,10 +32,10 @@ class TenantAdmin(admin.ModelAdmin):
     租户管理界面配置
     """
     list_display = ('name', 'code', 'status', 'contact_name', 'contact_phone', 
-                    'user_count', 'storage_usage', 'created_at')
+                    'user_count', 'storage_usage', 'customer_relations_count', 'created_at')
     list_filter = ('status', 'is_deleted', 'created_at')
     search_fields = ('name', 'code', 'contact_name', 'contact_email', 'contact_phone')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'customer_relations_display')
     inlines = (TenantQuotaInline,)
     
     fieldsets = (
@@ -44,6 +44,9 @@ class TenantAdmin(admin.ModelAdmin):
         }),
         (_('联系人信息'), {
             'fields': ('contact_name', 'contact_email', 'contact_phone')
+        }),
+        (_('客户关系'), {
+            'fields': ('customer_relations_display',),
         }),
         (_('时间信息'), {
             'fields': ('created_at', 'updated_at'),
@@ -116,6 +119,32 @@ class TenantAdmin(admin.ModelAdmin):
             return _("未设置")
     
     storage_usage.short_description = _("存储使用")
+    
+    def customer_relations_count(self, obj):
+        """显示租户的客户关系数量"""
+        count = obj.customer_relations.count()
+        if count > 0:
+            return format_html(
+                '<a href="{}?tenant__id__exact={}">{}</a>',
+                '/admin/customers/customertenantrelation/',
+                obj.id,
+                count
+            )
+        return count
+    customer_relations_count.short_description = _('客户关系数')
+    
+    def customer_relations_display(self, obj):
+        """在详情页显示租户的客户关系列表"""
+        relations = obj.customer_relations.all()
+        if not relations:
+            return _('无客户关系')
+        
+        html = '<table style="width:100%"><tr><th>客户</th><th>关系类型</th><th>主要关系</th><th>合同编号</th><th>开始日期</th><th>结束日期</th></tr>'
+        for relation in relations:
+            html += f'<tr><td>{relation.customer.name}</td><td>{relation.get_relation_type_display()}</td><td>{"是" if relation.is_primary else "否"}</td><td>{relation.contract_number or "-"}</td><td>{relation.start_date or "-"}</td><td>{relation.end_date or "长期"}</td></tr>'
+        html += '</table>'
+        return format_html(html)
+    customer_relations_display.short_description = _('客户关系')
     
     def activate_tenants(self, request, queryset):
         """
@@ -262,140 +291,6 @@ class TenantQuotaAdmin(TenantAdminMixin, admin.ModelAdmin):
         
         # 只能修改自己租户的配额
         return obj.tenant == tenant
-
-
-@admin.register(TenantBusinessInfo)
-class TenantBusinessInfoAdmin(admin.ModelAdmin):
-    """
-    租户企业信息管理界面配置
-    """
-    list_display = ('company_name', 'tenant', 'legal_representative', 
-                    'unified_social_credit_code', 'verification_status', 
-                    'license_display', 'created_at')
-    list_filter = ('verification_status', 'business_status', 'created_at')
-    search_fields = ('company_name', 'tenant__name', 'legal_representative', 
-                     'unified_social_credit_code', 'registration_number')
-    readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at',
-                       'verification_status', 'verification_time', 'verification_user')
-    
-    fieldsets = (
-        (_('关联租户'), {
-            'fields': ('tenant',)
-        }),
-        (_('企业基本信息'), {
-            'fields': ('company_name', 'legal_representative', 'unified_social_credit_code',
-                      'registration_number', 'company_type', 
-                      ('registered_capital', 'registered_capital_currency'),
-                      'business_scope')
-        }),
-        (_('日期信息'), {
-            'fields': ('establishment_date', 'business_term_start', 'business_term_end')
-        }),
-        (_('注册信息'), {
-            'fields': ('registration_authority', 'approval_date', 'business_status', 
-                       'registered_address')
-        }),
-        (_('联系信息'), {
-            'fields': ('office_address', 'contact_person', 'contact_phone', 'email', 'website')
-        }),
-        (_('营业执照信息'), {
-            'fields': ('license_image_url', 'license_image_preview', 'license_issue_date', 
-                       'license_expiry_date')
-        }),
-        (_('验证信息'), {
-            'fields': ('verification_status', 'verification_time', 'verification_user',
-                       'rejection_reason')
-        }),
-        (_('其他信息'), {
-            'fields': ('remark',)
-        }),
-        (_('审计信息'), {
-            'fields': ('created_by', 'created_at', 'updated_by', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    actions = ['verify_business_info', 'reject_business_info', 'mark_as_expired']
-    
-    def license_display(self, obj):
-        """
-        显示营业执照缩略图
-        """
-        if obj.license_image_url:
-            return format_html(
-                '<a href="{}" target="_blank"><img src="{}" height="30" /></a>',
-                obj.license_image_url, obj.license_image_url
-            )
-        return '-'
-    
-    license_display.short_description = _("营业执照")
-    
-    def license_image_preview(self, obj):
-        """
-        显示营业执照预览
-        """
-        if obj.license_image_url:
-            return format_html(
-                '<a href="{0}" target="_blank"><img src="{0}" height="300" /></a>',
-                obj.license_image_url
-            )
-        return _("未上传营业执照图片")
-    
-    license_image_preview.short_description = _("营业执照预览")
-    
-    def verify_business_info(self, request, queryset):
-        """
-        批量验证企业信息
-        """
-        from django.utils import timezone
-        
-        for business_info in queryset:
-            business_info.verification_status = 'verified'
-            business_info.verification_time = timezone.now()
-            business_info.verification_user = request.user
-            business_info.save(update_fields=[
-                'verification_status', 'verification_time', 'verification_user', 'updated_at'
-            ])
-            
-        self.message_user(request, _('成功验证 {} 条企业信息').format(queryset.count()))
-    
-    verify_business_info.short_description = _("批量验证选中的企业信息")
-    
-    def reject_business_info(self, request, queryset):
-        """
-        批量拒绝企业信息
-        """
-        from django.utils import timezone
-        
-        for business_info in queryset:
-            business_info.verification_status = 'rejected'
-            business_info.verification_time = timezone.now()
-            business_info.verification_user = request.user
-            business_info.save(update_fields=[
-                'verification_status', 'verification_time', 'verification_user', 'updated_at'
-            ])
-            
-        self.message_user(request, _('成功拒绝 {} 条企业信息').format(queryset.count()))
-    
-    reject_business_info.short_description = _("批量拒绝选中的企业信息")
-    
-    def mark_as_expired(self, request, queryset):
-        """
-        批量标记企业信息为已过期
-        """
-        from django.utils import timezone
-        
-        for business_info in queryset:
-            business_info.verification_status = 'expired'
-            business_info.verification_time = timezone.now()
-            business_info.verification_user = request.user
-            business_info.save(update_fields=[
-                'verification_status', 'verification_time', 'verification_user', 'updated_at'
-            ])
-            
-        self.message_user(request, _('成功将 {} 条企业信息标记为已过期').format(queryset.count()))
-    
-    mark_as_expired.short_description = _("批量标记选中的企业信息为已过期")
 
 # 添加调试信息
 print("=== tenants/admin.py execution completed ===")
