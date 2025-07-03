@@ -36,6 +36,10 @@ npx @agentdeskai/browser-tools-mcp
     },
     "context7": {
       "url": "<https://mcp.context7.com/mcp>"
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": ["@browsermcp/mcp@latest"]
     }
   }
 }
