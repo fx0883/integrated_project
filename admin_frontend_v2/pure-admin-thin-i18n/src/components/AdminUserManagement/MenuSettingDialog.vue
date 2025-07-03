@@ -207,7 +207,7 @@ const loadData = async () => {
     // 处理用户菜单数据，设置选中状态
     checkedKeys.value = (userMenusResponse?.data?.menus || [])
       .filter(menu => menu.is_active)
-      .map(menu => menu.id);
+      .map(menu => menu.menu_id);
     logger.debug("MenuSettingDialog - 已选中菜单ID", {
       checkedCount: checkedKeys.value.length
     });
