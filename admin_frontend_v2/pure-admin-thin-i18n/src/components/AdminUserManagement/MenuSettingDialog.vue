@@ -69,6 +69,12 @@ watch(
         dataLoaded: dataLoaded.value
       });
 
+      // 每次显示对话框时，先清空选中状态
+      checkedKeys.value = [];
+
+      // 重置数据加载标志，确保每次打开对话框都重新加载数据
+      dataLoaded.value = false;
+
       // 使用标志位防止重复加载
       if (!dataLoaded.value) {
         dataLoaded.value = true;
@@ -132,8 +138,13 @@ watch(
         dataLoaded: dataLoaded.value
       });
 
-      // 用户ID变化时重置标志位并重新加载数据
-      dataLoaded.value = true;
+      // 用户ID变化时重置所有状态并重新加载数据
+      checkedKeys.value = []; // 清空选中状态
+      menuTree.value = []; // 清空菜单树
+      previewMenus.value = []; // 清空预览菜单
+      dataLoaded.value = false; // 重置数据加载标志
+
+      // 重新加载数据
       await loadData();
     }
   }
@@ -209,7 +220,9 @@ const loadData = async () => {
       .filter(menu => menu.is_active)
       .map(menu => menu.menu_id);
     logger.debug("MenuSettingDialog - 已选中菜单ID", {
-      checkedCount: checkedKeys.value.length
+      checkedCount: checkedKeys.value.length,
+      checkedKeys: checkedKeys.value,
+      userMenus: userMenusResponse?.data?.menus
     });
   } catch (error) {
     logger.error("MenuSettingDialog - 加载用户菜单失败", error);
@@ -241,6 +254,18 @@ const getTotalMenuCount = menus => {
   };
   countMenu(menus);
   return count;
+};
+
+// 处理对话框关闭前的清理工作
+const handleBeforeClose = done => {
+  logger.debug("MenuSettingDialog - 对话框关闭前处理函数被调用");
+  // 清理状态
+  checkedKeys.value = [];
+  menuTree.value = [];
+  previewMenus.value = [];
+  dataLoaded.value = false;
+  searchKeyword.value = "";
+  done(); // 允许对话框关闭
 };
 
 // 处理对话框关闭
@@ -305,6 +330,13 @@ const isIndeterminate = computed(() => {
 const handlePreview = () => {
   // 根据选中的ID过滤菜单树
   const filterMenus = (menus, checkedIds) => {
+    logger.debug("过滤菜单树", {
+      menuCount: menus.length,
+      checkedIdsCount: checkedIds.length,
+      menuIds: menus.map(m => m.id),
+      checkedIds
+    });
+
     return menus
       .filter(menu => checkedIds.includes(menu.id))
       .map(menu => {
@@ -403,6 +435,7 @@ onMounted(() => {
     width="680px"
     :close-on-click-modal="false"
     destroy-on-close
+    :before-close="handleBeforeClose"
     @closed="handleClose"
   >
     <div class="menu-setting-dialog">
