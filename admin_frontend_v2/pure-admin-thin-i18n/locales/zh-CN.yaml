@@ -195,6 +195,7 @@ menu:
   createMenu: 创建菜单
   editMenu: 编辑菜单
   cancel: 取消
+  save: 保存
   confirmDelete: 确认删除
   confirmDeleteMessage: 确定要删除菜单 {name} 吗？
   confirmBatchDelete: 确认批量删除
@@ -214,6 +215,43 @@ menu:
   userMenuSetting: 用户菜单设置
   setUserMenu: 设置菜单
   preview: 预览
+  basicInfo: 基本信息
+  routeConfig: 路由配置
+  displaySettings: 显示设置
+  permissionSettings: 权限设置
+  advancedSettings: 高级设置
+  nameRequired: 请输入菜单名称
+  codeRequired: 请输入菜单代码
+  pathRequired: 请输入路径
+  rankRequired: 请输入排序值
+  activePath: 激活路径
+  frameSrc: 框架源
+  frameLoading: 框架加载
+  icon: 图标
+  selectIcon: 选择图标
+  extraIcon: 附加图标
+  showLink: 显示链接
+  showParent: 显示父级
+  keepAlive: 保持活跃
+  hiddenTag: 隐藏标签
+  roles: 角色
+  auths: 权限
+  dynamicLevel: 动态等级
+  transitionName: 过渡名称
+  enterTransition: 进入过渡
+  leaveTransition: 离开过渡
+  remarks: 备注
+  exportSuccess: 导出菜单配置成功
+  exportFailed: 导出菜单配置失败
+  importSuccess: 导入菜单配置成功
+  importFailed: 导入菜单配置失败
+  enableSuccess: 启用菜单成功
+  enableFailed: 启用菜单失败
+  disableSuccess: 禁用菜单成功
+  disableFailed: 禁用菜单失败
+  orderUpdateSuccess: 菜单顺序更新成功
+  orderUpdateFailed: 菜单顺序更新失败
+  selectMenusFirst: 请先选择菜单
 
 cms:
   management: CMS管理

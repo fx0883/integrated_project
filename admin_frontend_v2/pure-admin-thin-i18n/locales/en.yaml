@@ -195,10 +195,11 @@ menu:
   createMenu: Create Menu
   editMenu: Edit Menu
   cancel: Cancel
+  save: Save
   confirmDelete: Confirm Delete
   confirmDeleteMessage: Are you sure you want to delete menu {name}?
   confirmBatchDelete: Confirm Batch Delete
-  confirmBatchDeleteMessage: Are you sure you want to delete {count} selected menus?
+  confirmBatchDeleteMessage: Are you sure you want to delete the selected {count} menus?
   confirmStatusChange: Confirm {action}
   confirmStatusChangeMessage: Are you sure you want to {action} menu {name}?
   createSuccess: Menu created successfully
@@ -207,13 +208,50 @@ menu:
   updateFailed: Failed to update menu
   deleteSuccess: Menu deleted successfully
   deleteFailed: Failed to delete menu
-  batchDeleteSuccess: Menus deleted successfully
-  batchDeleteFailed: Failed to delete menus
+  batchDeleteSuccess: Batch delete successful
+  batchDeleteFailed: Batch delete failed
   statusChangeSuccess: Menu status changed successfully
   statusChangeFailed: Failed to change menu status
   userMenuSetting: User Menu Setting
   setUserMenu: Set Menu
   preview: Preview
+  basicInfo: Basic Information
+  routeConfig: Route Configuration
+  displaySettings: Display Settings
+  permissionSettings: Permission Settings
+  advancedSettings: Advanced Settings
+  nameRequired: Please enter menu name
+  codeRequired: Please enter menu code
+  pathRequired: Please enter path
+  rankRequired: Please enter rank value
+  activePath: Active Path
+  frameSrc: Frame Source
+  frameLoading: Frame Loading
+  icon: Icon
+  selectIcon: Select Icon
+  extraIcon: Extra Icon
+  showLink: Show Link
+  showParent: Show Parent
+  keepAlive: Keep Alive
+  hiddenTag: Hidden Tag
+  roles: Roles
+  auths: Authorizations
+  dynamicLevel: Dynamic Level
+  transitionName: Transition Name
+  enterTransition: Enter Transition
+  leaveTransition: Leave Transition
+  remarks: Remarks
+  exportSuccess: Menu configuration exported successfully
+  exportFailed: Failed to export menu configuration
+  importSuccess: Menu configuration imported successfully
+  importFailed: Failed to import menu configuration
+  enableSuccess: Menu enabled successfully
+  enableFailed: Failed to enable menu
+  disableSuccess: Menu disabled successfully
+  disableFailed: Failed to disable menu
+  orderUpdateSuccess: Menu order updated successfully
+  orderUpdateFailed: Failed to update menu order
+  selectMenusFirst: Please select menus first
 
 cms:
   management: CMS Management
