@@ -392,19 +392,43 @@ export const useMenuStore = defineStore("menu", {
     async exportMenusAction() {
       this.loading.export = true;
       try {
-        const response = await exportMenus();
+        // 根据是否有树形数据决定导出哪种数据格式
+        let exportData;
         
-        // 创建Blob链接并下载文件
-        const url = window.URL.createObjectURL(new Blob([response]));
+        // 如果菜单树有数据，优先使用树形结构
+        if (this.menuTree && this.menuTree.length > 0) {
+          exportData = this.menuTree;
+        } 
+        // 如果菜单树为空但列表有数据，使用列表数据
+        else if (this.menuList.data && this.menuList.data.length > 0) {
+          exportData = this.menuList.data;
+        } 
+        // 两者都为空，先获取菜单列表数据再导出
+        else {
+          // 获取尽可能多的菜单数据
+          await this.fetchMenuList({ page_size: 999 });
+          exportData = this.menuList.data;
+        }
+        
+        // 序列化为JSON字符串，使用2个空格缩进美化输出
+        const jsonContent = JSON.stringify(exportData, null, 2);
+        
+        // 创建Blob对象
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        
+        // 创建下载链接并触发下载
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', 'menus_config.json');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url); // 释放URL对象
         
+        // 显示成功消息
         ElMessage.success("导出菜单配置成功");
-        return response;
+        return jsonContent;
       } catch (error) {
         logger.error("导出菜单配置失败", error);
         ElMessage.error("导出菜单配置失败");
