@@ -580,9 +580,37 @@ adminUser:
   cancel: 取消
   backToList: 返回列表
   username: 用户名
+  usernamePlaceholder: 请输入用户名
+  usernameRequired: 用户名不能为空
+  usernameLength: 用户名长度应为3-30个字符
   email: 邮箱
+  emailPlaceholder: 请输入邮箱
+  emailRequired: 邮箱不能为空
+  emailInvalid: 请输入有效的邮箱地址
   nickName: 昵称
+  nickNamePlaceholder: 请输入昵称
+  phone: 电话
+  phonePlaceholder: 请输入电话号码
+  firstName: 名
+  firstNamePlaceholder: 请输入名
+  lastName: 姓
+  lastNamePlaceholder: 请输入姓
+  isActive: 是否激活
+  avatar: 头像
+  uploadAvatar: 上传头像
+  update: 更新
   tenant: 租户
+  tenantPlaceholder: 请选择租户
+  password: 密码
+  passwordPlaceholder: 请输入密码
+  passwordRequired: 密码不能为空
+  passwordLength: 密码长度至少为8个字符
+  confirmPassword: 确认密码
+  confirmPasswordPlaceholder: 请再次输入密码
+  confirmPasswordRequired: 请确认密码
+  passwordMismatch: 两次输入的密码不一致
+  formValidationFailed: 表单验证失败
+  close: 关闭
   status: 状态
   statusAll: 所有状态
   statusActive: 活跃

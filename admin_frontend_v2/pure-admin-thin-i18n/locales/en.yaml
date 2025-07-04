@@ -545,13 +545,41 @@ adminUser:
   activate: Activate
   deactivate: Deactivate
   search: Search
-  searchPlaceholder: Search by username or email
+  searchPlaceholder: Search username or email
   cancel: Cancel
   backToList: Back to List
   username: Username
+  usernamePlaceholder: Please enter username
+  usernameRequired: Username is required
+  usernameLength: Username should be 3-30 characters
   email: Email
+  emailPlaceholder: Please enter email
+  emailRequired: Email is required
+  emailInvalid: Please enter a valid email
   nickName: Nickname
+  nickNamePlaceholder: Please enter nickname
+  phone: Phone
+  phonePlaceholder: Please enter phone number
+  firstName: First Name
+  firstNamePlaceholder: Please enter first name
+  lastName: Last Name
+  lastNamePlaceholder: Please enter last name
+  isActive: Active
+  avatar: Avatar
+  uploadAvatar: Upload Avatar
+  update: Update
   tenant: Tenant
+  tenantPlaceholder: Please select tenant
+  password: Password
+  passwordPlaceholder: Please enter password
+  passwordRequired: Password is required
+  passwordLength: Password should be at least 8 characters
+  confirmPassword: Confirm Password
+  confirmPasswordPlaceholder: Please enter password again
+  confirmPasswordRequired: Please confirm password
+  passwordMismatch: Passwords do not match
+  formValidationFailed: Form validation failed
+  close: Close
   status: Status
   statusAll: All Status
   statusActive: Active

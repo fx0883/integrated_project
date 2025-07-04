@@ -47,12 +47,12 @@ const formRef = ref();
 const formData = reactive<AdminUserCreateParams | AdminUserUpdateParams>({
   username: "",
   email: "",
-  password: "",
-  password_confirm: "",
+  password: undefined,
+  password_confirm: undefined,
   phone: "",
   nick_name: "",
   first_name: "",
-  last_name: "",
+  last_name: undefined,
   tenant_id: undefined,
   is_active: true,
   is_super_admin: false
@@ -118,7 +118,22 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate();
-    emit("submit", formData);
+
+    // 提交前确保undefined值被转换为适当的空字符串
+    const processedData = { ...formData };
+    if (processedData.last_name === undefined) {
+      processedData.last_name = "";
+    }
+    if ((processedData as AdminUserCreateParams).password === undefined) {
+      (processedData as AdminUserCreateParams).password = "";
+    }
+    if (
+      (processedData as AdminUserCreateParams).password_confirm === undefined
+    ) {
+      (processedData as AdminUserCreateParams).password_confirm = "";
+    }
+
+    emit("submit", processedData);
   } catch (error) {
     console.error("表单验证失败", error);
     ElMessage.error(t("adminUser.formValidationFailed"));
@@ -142,12 +157,12 @@ watch(
       formData.phone = newVal.phone || "";
       formData.nick_name = newVal.nick_name || "";
       formData.first_name = newVal.first_name || "";
-      formData.last_name = newVal.last_name || "";
+      formData.last_name = newVal.last_name || undefined;
       formData.is_active = newVal.is_active;
 
       // 清空密码字段，更新时不需要填写密码
-      (formData as AdminUserCreateParams).password = "";
-      (formData as AdminUserCreateParams).password_confirm = "";
+      (formData as AdminUserCreateParams).password = undefined;
+      (formData as AdminUserCreateParams).password_confirm = undefined;
     } else if (props.mode === "superAdmin") {
       // 创建超管模式，设置超管标志
       (formData as AdminUserCreateParams).is_super_admin = true;
