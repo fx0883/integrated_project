@@ -8,16 +8,16 @@ import { storageLocal, isObject } from "@pureadmin/utils";
 import enLocale from "element-plus/es/locale/lang/en";
 import zhLocale from "element-plus/es/locale/lang/zh-cn";
 
+// 直接导入YAML文件
+import zhCN from "../../locales/zh-CN.yaml";
+import en from "../../locales/en.yaml";
+
 const siphonI18n = (function () {
-  // 仅初始化一次国际化配置
-  const cache = Object.fromEntries(
-    Object.entries(
-      import.meta.glob("../../locales/*.y(a)?ml", { eager: true })
-    ).map(([key, value]: any) => {
-      const matched = key.match(/([A-Za-z0-9-_]+)\./i)[1];
-      return [matched, value.default];
-    })
-  );
+  // 使用直接导入的YAML文件
+  const cache = {
+    "zh-CN": zhCN,
+    "en": en
+  };
   return (prefix = "zh-CN") => {
     return cache[prefix];
   };
