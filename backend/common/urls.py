@@ -11,7 +11,8 @@ from common.views import (
     TestStandardResponseView,
     TestErrorResponseView,
     TestAuthErrorResponseView,
-    TestPaginationResponseView
+    TestPaginationResponseView,
+    FileUploadView
 )
 
 app_name = 'common'
@@ -22,6 +23,9 @@ urlpatterns = [
     
     # API日志详情
     path('api-logs/<int:pk>/', views.APILogDetailView.as_view(), name='api-log-detail'),
+    
+    # 通用文件上传
+    path('upload-file/', FileUploadView.as_view(), name='file-upload'),
     
     # 测试标准响应格式 - 类视图
     path('test-format-class/', TestStandardResponseView.as_view(), name='test-standard-response-class'),

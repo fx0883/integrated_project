@@ -13,6 +13,7 @@ import type {
 } from "@/types/cms";
 import { slugify } from "@/utils/string";
 import logger from "@/utils/logger";
+import ImageUpload from "./ImageUpload.vue";
 
 const { t } = useI18n();
 
@@ -68,6 +69,7 @@ const formData = reactive<ArticleCreateParams | ArticleUpdateParams>({
   allow_comment: true,
   visibility: "public",
   password: "",
+  cover_image: "",
   categories: [],
   tags: []
 });
@@ -280,6 +282,17 @@ onMounted(() => {
       <el-input
         v-model="formData.slug"
         :placeholder="t('cms.article.slugPlaceholder')"
+      />
+    </el-form-item>
+
+    <!-- 封面图片上传 -->
+    <el-form-item :label="t('cms.article.coverImage')" prop="cover_image">
+      <ImageUpload
+        v-model="formData.cover_image"
+        :disabled="loading"
+        :folder="'article_covers'"
+        :uploadText="t('cms.article.uploadCover')"
+        :tipText="t('cms.article.coverImageTip')"
       />
     </el-form-item>
 

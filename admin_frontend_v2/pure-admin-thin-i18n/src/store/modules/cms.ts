@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import * as cmsApi from "@/api/modules/cms";
+import { uploadFile } from "@/api/modules/common";
 import type {
   Article,
   ArticleListParams,
@@ -69,6 +70,7 @@ interface CmsState {
     articleVersions: boolean;
     articleVersionDetail: boolean;
     articleStatistics: boolean;
+    uploadCoverImage: boolean;
 
     commentList: boolean;
     commentDetail: boolean;
@@ -166,6 +168,7 @@ export const useCmsStore = defineStore("cms", {
       articleVersions: false,
       articleVersionDetail: false,
       articleStatistics: false,
+      uploadCoverImage: false,
 
       commentList: false,
       commentDetail: false,
@@ -1114,6 +1117,29 @@ export const useCmsStore = defineStore("cms", {
         throw error;
       } finally {
         this.tagLoading = false;
+      }
+    },
+
+    /**
+     * 上传文章封面图片
+     */
+    async uploadCoverImage(file: File, folder: string = "article_covers") {
+      this.loading.uploadCoverImage = true;
+      try {
+        const response = await uploadFile(file, folder);
+        if (response.success) {
+          ElMessage.success(response.message || "图片上传成功");
+          return response.data;
+        } else {
+          ElMessage.error(response.message || "图片上传失败");
+          return Promise.reject(new Error(response.message));
+        }
+      } catch (error) {
+        logger.error("上传图片失败", error);
+        ElMessage.error(error.message || "上传图片失败");
+        throw error;
+      } finally {
+        this.loading.uploadCoverImage = false;
       }
     },
 

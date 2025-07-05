@@ -261,7 +261,6 @@ cms:
   commentManagement: Comment Management
   menu:
     cmsManagement: CMS Management
-    articleManagement: Article Management
     articleList: Article List
     articleCreate: Create Article
     articleEdit: Edit Article
@@ -379,12 +378,57 @@ cms:
   
   article:
     title: Title
+    titleRequired: Please enter article title
+    titleLength: Title should be 2-200 characters
+    titlePlaceholder: Enter article title
+    slug: Slug
+    slugPlaceholder: URL slug, leave empty to generate automatically
+    excerpt: Excerpt
+    excerptPlaceholder: Enter article excerpt
     content: Content
+    contentRequired: Please enter article content
+    contentPlaceholder: Enter article content
+    editorTip: Supports Markdown format, consider using a professional editor and pasting content here
+    settings: Article Settings
+    status: Status
+    statusDraft: Draft
+    statusPending: Pending
+    statusPublished: Published
+    statusArchived: Archived
+    contentType: Content Type
+    contentTypeMarkdown: Markdown
+    contentTypeHtml: HTML
+    visibility: Visibility
+    visibilityPublic: Public
+    visibilityPrivate: Private
+    visibilityPassword: Password Protected
+    visibilityRequired: Please select visibility
+    password: Access Password
+    passwordRequired: Please set access password
+    passwordPlaceholder: Please set access password
+    featured: Featured
+    pinned: Pinned
+    allowComment: Allow Comments
+    categories: Categories
+    categoriesPlaceholder: Please select article categories
+    categoriesAvailable: categories available
+    noCategories: No categories
+    tags: Tags
+    tagsPlaceholder: Please select article tags
+    tagsAvailable: tags available
+    noTags: No tags
+    coverImage: Cover Image
+    uploadCover: Upload Cover Image
+    coverUploadSuccess: Cover image uploaded successfully
+    coverUploadFailed: Failed to upload cover image
+    uploading: Uploading...
+    imageTypeError: Only image files can be uploaded
+    imageSizeError: Image size cannot exceed 5MB
+    coverImageTip: Supports JPG, PNG, GIF formats, recommended size 1200x630 pixels, max 5MB
+    noCover: No cover image
     summary: Summary
     author: Author
     category: Category
-    tags: Tags
-    status: Status
     publishTime: Publish Time
     createTime: Create Time
     updateTime: Update Time
@@ -392,7 +436,6 @@ cms:
     commentCount: Comment Count
     likeCount: Like Count
     wordCount: Word Count
-    coverImage: Cover Image
     isTop: Is Top
     isRecommend: Is Recommend
     isOriginal: Is Original
@@ -413,17 +456,8 @@ cms:
     oldVersion: Old Version
     currentVersion: Current Version
     latest: Latest
-    statusPublished: Published
-    statusDraft: Draft
-    statusPending: Pending
-    statusArchived: Archived
-    featured: Featured
     featuredTooltip: Featured article
-    pinned: Pinned
     pinnedTooltip: Pinned article
-    noTags: No Tags
-    noCategories: No Categories
-    excerpt: Excerpt
     noExcerpt: No excerpt available
     mainContent: Main Content
     statistics: Statistics
@@ -439,7 +473,6 @@ cms:
     pinnedAll: All Pinned Status
     pinnedTrue: Pinned
     pinnedFalse: Not Pinned
-    articleManagement: Article Management
     createArticle: Create Article
     editArticle: Edit Article
     deleteArticle: Delete Article
@@ -458,10 +491,6 @@ cms:
     selectTags: Select Tags
     uploadCoverImage: Upload Cover Image
     removeCoverImage: Remove Cover Image
-    articleList: Article List
-    articleDetail: Article Details
-    articleEdit: Edit Article
-    articleCreate: Create Article
     categoryPlaceholder: Please select category
     tagPlaceholder: Please select tags
     statusPlaceholder: Please select status
@@ -489,9 +518,6 @@ cms:
     pleaseSelectCategory: Please select category
     pleaseSelectTags: Please select tags
     pleaseUploadCoverImage: Please upload cover image
-    titleRequired: Title is required
-    contentRequired: Content is required
-    summaryRequired: Summary is required
     categoryRequired: Category is required
     tagsRequired: Tags are required
     coverImageRequired: Cover image is required
@@ -511,11 +537,6 @@ cms:
     updateFailed: Failed to update article
     fetchDetailFailed: Failed to get article details
     fetchCategoriesTagsFailed: Failed to load categories and tags
-    titleLength: Title length should be between 1-100 characters
-    categoriesPlaceholder: Please select categories
-    categoriesAvailable: categories available
-    tagsPlaceholder: Please select tags
-    tagsAvailable: tags available
   
   category:
     editCategory: Edit Category

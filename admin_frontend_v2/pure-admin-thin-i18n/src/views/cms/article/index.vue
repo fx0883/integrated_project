@@ -609,6 +609,28 @@ onMounted(() => {
 
         <el-table-column prop="id" label="ID" width="80" />
 
+        <!-- 封面图片列 -->
+        <el-table-column :label="t('cms.article.coverImage')" width="120">
+          <template #default="{ row }">
+            <el-image
+              v-if="row.cover_image"
+              :src="row.cover_image"
+              style="width: 100px; height: 60px"
+              fit="contain"
+              :preview-src-list="[row.cover_image]"
+            >
+              <template #error>
+                <div class="image-placeholder">
+                  <el-icon><el-icon-picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <div v-else class="no-image">
+              {{ t("cms.article.noCover") }}
+            </div>
+          </template>
+        </el-table-column>
+
         <el-table-column :label="t('cms.article.title')" min-width="220">
           <template #default="{ row }">
             <div class="article-title">
@@ -846,6 +868,22 @@ onMounted(() => {
 }
 
 .w-full {
+  width: 100%;
+}
+
+.image-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.no-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
   width: 100%;
 }
 </style>

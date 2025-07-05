@@ -430,6 +430,14 @@ cms:
     likeCount: 点赞数
     wordCount: 字数统计
     coverImage: 封面图片
+    uploadCover: 上传封面图片
+    coverUploadSuccess: 封面图片上传成功
+    coverUploadFailed: 封面图片上传失败
+    uploading: 上传中...
+    imageTypeError: 只能上传图片文件
+    imageSizeError: 图片大小不能超过5MB
+    coverImageTip: 支持JPG、PNG、GIF等格式，建议尺寸1200x630像素，最大5MB
+    noCover: 无封面图片
     isTop: 是否置顶
     isRecommend: 是否推荐
     isOriginal: 是否原创
