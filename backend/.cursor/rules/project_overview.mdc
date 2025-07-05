@@ -3,3 +3,127 @@ description:
 globs:
 alwaysApply: false
 ---
+# 多租户用户管理系统 - 项目概述
+
+## 功能概述
+
+多租户用户管理系统是一个基于Django和Django REST Framework构建的后端服务，用于管理多个租户及其用户。系统支持租户隔离、用户角色管理、资源配额控制等核心功能，为SaaS应用提供基础的用户与权限管理能力。
+
+## 核心组件
+
+- **租户管理**：创建和管理租户，控制租户状态和资源配额
+- **用户管理**：支持管理员用户和普通成员两种用户类型，实现用户创建、认证和授权
+- **权限系统**：基于RBAC（基于角色的访问控制）模型，灵活配置权限
+- **菜单管理**：动态配置和管理系统菜单，支持权限控制
+- **内容管理**：CMS系统，支持文章、评论等内容管理
+- **打卡系统**：用户签到打卡功能
+- **图表系统**：数据可视化和统计分析
+
+## 技术栈
+
+- **后端框架**: Django 5.2
+- **API框架**: Django REST Framework 
+- **数据库**: MySQL
+- **认证方式**: JWT (JSON Web Token)
+- **API文档**: drf-spectacular
+- **跨域支持**: django-cors-headers
+- **环境变量管理**: python-dotenv
+
+## 系统架构
+
+系统采用分层架构设计，主要分为以下几层：
+
+1. **数据访问层**: 使用Django ORM实现，包含models定义
+2. **业务逻辑层**: 包括权限验证、租户隔离等核心业务逻辑
+3. **API接口层**: 基于Django REST Framework实现REST API
+4. **跨层组件**: 包括认证机制、异常处理、日志记录等
+
+## 主要应用模块
+
+1. **users**: 用户管理模块
+   - 用户认证相关功能
+   - 用户信息管理
+   - 用户角色管理
+
+2. **tenants**: 租户管理模块
+   - 租户信息管理
+   - 租户配额控制
+   - 租户状态管理
+
+3. **rbac**: 权限管理模块
+   - 权限定义和管理
+   - 角色管理
+   - 用户-角色关联
+
+4. **menus**: 菜单管理模块
+   - 系统菜单配置
+   - 用户菜单权限管理
+
+5. **cms**: 内容管理系统
+   - 文章管理
+   - 评论管理
+
+6. **check_system**: 打卡系统
+   - 用户签到打卡
+
+7. **charts**: 图表系统
+   - 数据统计和可视化
+
+8. **common**: 通用功能模块
+   - 分页组件
+   - 异常处理
+   - 中间件
+   - JWT认证
+   - API日志记录
+
+## 中间件
+
+系统实现了多个核心中间件：
+
+1. **TenantMiddleware**: 处理租户上下文，实现租户隔离
+2. **APIAuthMiddleware**: 处理API认证
+3. **EnhancedAPILoggingMiddleware**: 记录API请求日志，便于审计和调试
+4. **ResponseStandardizationMiddleware**: 统一API响应格式
+
+## 认证与权限
+
+系统使用JWT认证机制，主要实现在`common.authentication.jwt_auth`模块：
+
+- `JWTAuthentication`: 自定义的DRF认证类
+- `generate_jwt_token`: 生成JWT令牌函数
+- `refresh_jwt_token`: 刷新JWT令牌函数
+
+权限控制采用多层设计：
+1. **超级管理员**: 可以管理所有租户和用户
+2. **租户管理员**: 可以管理所属租户内的用户
+3. **普通用户**: 只能访问自己的信息和有限的资源
+
+## API设计
+
+API遵循RESTful设计原则，主要分为以下几类：
+
+1. **认证类API**:
+   - `/api/v1/auth/login/`: 用户登录
+   - `/api/v1/auth/refresh/`: 刷新令牌
+   - `/api/v1/auth/verify/`: 验证令牌
+
+2. **用户类API**:
+   - `/api/v1/users/me/`: 获取当前用户信息
+   - `/api/v1/users/`: 用户列表和创建
+   - `/api/v1/users/<id>/`: 用户详情、更新和删除
+
+3. **租户类API**:
+   - `/api/v1/tenants/`: 租户列表和创建
+   - `/api/v1/tenants/<id>/`: 租户详情、更新和删除
+   - `/api/v1/tenants/<id>/quota/`: 租户配额管理
+
+API响应格式统一为：
+
+```json
+{
+  "success": true/false,
+  "code": 2000,
+  "message": "操作成功/失败信息",
+  "data": { ... }
+}
+```

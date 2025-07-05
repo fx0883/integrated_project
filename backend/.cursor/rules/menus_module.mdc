@@ -3,3 +3,127 @@ description:
 globs:
 alwaysApply: false
 ---
+# 菜单管理模块 (menus)
+
+## 功能概述
+
+菜单管理模块负责系统导航菜单的定义、配置和权限控制，为前端应用提供动态的菜单结构。该模块支持多级菜单、权限控制、动态路由配置等功能，使系统能够根据用户角色和权限动态生成导航菜单。
+
+## 核心组件
+
+- **菜单管理**：创建、查询、更新和删除菜单项
+- **菜单层级**：支持多级菜单结构
+- **用户菜单关联**：管理用户与菜单的关联关系
+- **菜单权限控制**：基于角色和权限控制菜单的可见性
+- **前端路由配置**：为前端应用提供路由配置数据
+
+## 数据模型
+
+### 菜单模型 (Menu)
+- 主要字段：
+  - **基本路由配置**:
+    - `name`: 路由名称（对应前端 name）
+    - `code`: 唯一标识符（用于后端标识）
+    - `path`: 路由路径（对应前端 path）
+    - `component`: 前端组件路径（对应前端 component）
+    - `redirect`: 重定向路径（对应前端 redirect）
+  
+  - **Meta 相关字段**:
+    - `title`: 菜单标题（对应前端 meta.title）
+    - `icon`: 图标名称（对应前端 meta.icon）
+    - `extra_icon`: 额外图标（对应前端 meta.extraIcon）
+    - `rank`: 菜单排序（对应前端 meta.rank）
+    - `show_link`: 是否在菜单中显示（对应前端 meta.showLink）
+    - `show_parent`: 是否显示父级菜单（对应前端 meta.showParent）
+    - `roles`: 页面级别权限设置（对应前端 meta.roles）
+    - `auths`: 按钮级别权限设置（对应前端 meta.auths）
+    - `keep_alive`: 是否缓存路由页面（对应前端 meta.keepAlive）
+    - `frame_src`: iframe链接地址（对应前端 meta.frameSrc）
+    - `frame_loading`: iframe是否开启首次加载动画（对应前端 meta.frameLoading）
+    - `hidden_tag`: 禁止添加到标签页（对应前端 meta.hiddenTag）
+    - `dynamic_level`: 标签页最大数量（对应前端 meta.dynamicLevel）
+    - `active_path`: 激活菜单的路径（对应前端 meta.activePath）
+  
+  - **Transition 相关字段**:
+    - `transition_name`: 页面动画名称（对应前端 meta.transition.name）
+    - `enter_transition`: 进场动画（对应前端 meta.transition.enterTransition）
+    - `leave_transition`: 离场动画（对应前端 meta.transition.leaveTransition）
+  
+  - **层级关系**:
+    - `parent`: 父菜单（自引用关系）
+  
+  - **状态字段**:
+    - `is_active`: 是否启用
+    - `remarks`: 备注说明
+
+### 用户菜单关联模型 (UserMenu)
+- 主要字段：
+  - `user`: 关联到用户
+  - `menu`: 关联到菜单
+  - `is_active`: 是否启用
+
+## 与其他模块的关系
+
+1. **与用户模块 (users) 的关系**:
+   - UserMenu通过外键关联到User
+   - 控制用户可访问的菜单项
+
+2. **与权限模块 (rbac) 的关系**:
+   - 菜单项的roles和auths字段定义了访问菜单所需的角色和权限
+   - 系统根据用户的角色和权限决定菜单的可见性
+
+3. **与租户模块 (tenants) 的关系**:
+   - 通过用户的租户关系间接关联
+   - 不同租户可以有不同的菜单配置
+
+## 关键API
+
+### 菜单管理API
+- `GET /api/v1/menus/`: 获取菜单列表
+- `POST /api/v1/menus/`: 创建新菜单
+- `GET /api/v1/menus/{id}/`: 获取菜单详情
+- `PUT /api/v1/menus/{id}/`: 更新菜单
+- `DELETE /api/v1/menus/{id}/`: 删除菜单
+- `GET /api/v1/menus/tree/`: 获取菜单树结构
+
+### 用户菜单API
+- `GET /api/v1/users/{user_id}/menus/`: 获取用户的菜单
+- `POST /api/v1/users/{user_id}/menus/`: 为用户分配菜单
+- `DELETE /api/v1/users/{user_id}/menus/{menu_id}/`: 移除用户的菜单
+- `GET /api/v1/users/me/menus/`: 获取当前用户的菜单
+
+### 管理员菜单API
+- `GET /api/v1/admin/menus/`: 管理员获取所有菜单
+- `POST /api/v1/admin/menus/batch/`: 批量创建或更新菜单
+- `GET /api/v1/admin/menus/routes/`: 获取前端路由配置
+
+## 业务逻辑
+
+1. **菜单定义逻辑**:
+   - 菜单项包含前端路由所需的所有配置
+   - 支持多级菜单结构（通过parent字段）
+   - 防止循环引用（检查父菜单设置）
+
+2. **菜单权限控制**:
+   - 通过roles字段定义访问菜单所需的角色
+   - 通过auths字段定义按钮级别的权限控制
+   - 系统根据用户的角色和权限过滤菜单
+
+3. **用户菜单关联**:
+   - 通过UserMenu模型关联用户和菜单
+   - 支持临时禁用用户菜单关联
+   - 确保同一用户不会重复分配相同的菜单
+
+4. **菜单树结构**:
+   - 提供API获取层级化的菜单树结构
+   - 支持按用户过滤菜单树
+   - 支持按角色和权限过滤菜单树
+
+5. **前端路由配置**:
+   - 为前端应用提供完整的路由配置数据
+   - 支持动态路由生成
+   - 适配前端路由框架的配置格式
+
+6. **初始化逻辑**:
+   - 提供命令行工具初始化基本菜单
+   - 支持从JSON文件加载菜单配置

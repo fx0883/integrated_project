@@ -3,3 +3,163 @@ description:
 globs:
 alwaysApply: false
 ---
+# 数据模型文档
+
+## 核心数据模型关系图
+
+```
+User (users.models)
+├── id: 主键
+├── username: 用户名
+├── email: 邮箱
+├── password: 密码
+├── tenant: 外键 -> Tenant
+├── is_admin: 是否为管理员
+├── is_super_admin: 是否为超级管理员
+└── ...
+
+Member (users.models)
+├── id: 主键
+├── username: 用户名
+├── email: 邮箱
+├── password: 密码
+├── tenant: 外键 -> Tenant
+├── parent: 外键 -> Member (子账号关系)
+└── ...
+
+Tenant (tenants.models)
+├── id: 主键
+├── name: 租户名称
+├── code: 租户代码
+├── status: 租户状态
+├── contact_name: 联系人姓名
+└── ...
+
+TenantQuota (tenants.models)
+├── id: 主键
+├── tenant: 外键 -> Tenant
+├── max_users: 最大用户数
+├── max_admins: 最大管理员数
+└── ...
+
+Permission (rbac.models)
+├── id: 主键
+├── code: 权限代码
+├── name: 权限名称
+├── category: 权限分类
+└── ...
+
+Role (rbac.models)
+├── id: 主键
+├── name: 角色名称
+├── code: 角色代码
+├── tenant: 外键 -> Tenant (可为空，表示系统角色)
+├── permissions: 多对多 -> Permission (通过RolePermission)
+└── ...
+
+RolePermission (rbac.models)
+├── id: 主键
+├── role: 外键 -> Role
+├── permission: 外键 -> Permission
+└── ...
+
+UserRole (rbac.models)
+├── id: 主键
+├── user_type: 用户类型
+├── user_id: 用户ID
+├── role: 外键 -> Role
+└── ...
+
+Menu (menus.models)
+├── id: 主键
+├── name: 路由名称
+├── path: 路由路径
+├── title: 菜单标题
+├── parent: 外键 -> Menu (自引用)
+└── ...
+
+UserMenu (menus.models)
+├── id: 主键
+├── user: 外键 -> User
+├── menu: 外键 -> Menu
+└── ...
+
+APILog (common.models)
+├── id: 主键
+├── user: 外键 -> User
+├── tenant: 外键 -> Tenant
+├── request_method: 请求方法
+├── request_path: 请求路径
+└── ...
+```
+
+## 主要实体关系
+
+### 用户与租户关系
+- 用户（User和Member）通过外键关联到租户（Tenant）
+- 一个租户可以有多个用户
+- 超级管理员不关联到任何租户
+
+### 租户与配额关系
+- 租户（Tenant）与配额（TenantQuota）是一对一关系
+- 配额控制租户可使用的资源上限
+
+### 角色与权限关系
+- 角色（Role）通过中间表（RolePermission）关联到多个权限（Permission）
+- 一个权限可以分配给多个角色
+
+### 用户与角色关系
+- 用户通过UserRole表关联到角色
+- UserRole使用通用关系（user_type + user_id）支持两种用户类型
+
+### 菜单层级关系
+- 菜单（Menu）通过parent字段形成自引用关系
+- 支持多级菜单结构
+
+### 用户与菜单关系
+- 用户通过UserMenu表关联到菜单
+- 控制用户可访问的菜单项
+
+## 数据模型特点
+
+### 软删除机制
+- 用户和租户模型都支持软删除
+- 通过is_deleted字段标记删除状态，而不是物理删除
+
+### 租户隔离
+- 大多数模型都直接或间接关联到租户
+- 通过租户关系实现数据隔离
+
+### 通用关系
+- UserRole使用通用关系（user_type + user_id）而不是直接外键
+- 支持关联到不同类型的用户模型（User和Member）
+
+### 时间戳
+- 大多数模型都包含created_at和updated_at字段
+- 用于跟踪记录的创建和更新时间
+
+### 状态管理
+- 用户和租户模型都有status字段
+- 支持不同的状态（如活跃、暂停、删除等）
+
+## 数据完整性约束
+
+### 唯一性约束
+- 租户名称（Tenant.name）唯一
+- 租户代码（Tenant.code）唯一
+- 权限代码（Permission.code）唯一
+- 用户名（User.username和Member.username）唯一
+
+### 外键约束
+- 用户关联到租户
+- 配额关联到租户
+- 角色可以关联到租户
+- 用户角色关联到角色
+- 角色权限关联到角色和权限
+- 菜单可以关联到父菜单
+- 用户菜单关联到用户和菜单
+
+### 复合唯一约束
+- 角色名称在同一租户内唯一（Role.name + Role.tenant）
+- 用户角色关联唯一（UserRole.user_type + UserRole.user_id + UserRole.role）
+- 用户菜单关联唯一（UserMenu.user + UserMenu.menu）

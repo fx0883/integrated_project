@@ -979,3 +979,157 @@ layout:
 
 labels:
   allRole: 所有角色
+
+customer:
+  management: 客户管理
+  list: 客户列表
+  create: 创建客户
+  edit: 编辑客户
+  detail: 客户详情
+  view: 查看客户
+  delete: 删除客户
+  search: 搜索客户
+  filter: 筛选客户
+  cancel: 取消
+  backToList: 返回列表
+  name: 客户名称
+  type: 客户类型
+  typeEnterprise: 企业
+  typeGovernment: 政府机构
+  typeEducation: 教育机构
+  typeNonprofit: 非营利组织
+  typeIndividual: 个人
+  valueLevel: 价值等级
+  valuePlatinum: 白金
+  valueGold: 黄金
+  valueSilver: 白银
+  valueBronze: 青铜
+  status: 状态
+  statusAll: 所有状态
+  statusActive: 活跃
+  statusInactive: 非活跃
+  statusProspect: 潜在客户
+  statusChurned: 流失客户
+  industry: 所属行业
+  registrationNumber: 注册号
+  taxId: 税号
+  address: 地址
+  city: 城市
+  province: 省份
+  postalCode: 邮政编码
+  country: 国家
+  website: 网站
+  description: 描述
+  annualRevenue: 年收入
+  employeeCount: 员工数量
+  foundedYear: 成立年份
+  createdAt: 创建时间
+  updatedAt: 更新时间
+  memberCount: 联系人数量
+  tenantCount: 关联租户数量
+  actions: 操作
+  id: ID
+  basicInfo: 基本信息
+  contactInfo: 联系信息
+  additionalInfo: 附加信息
+  memberRelations: 联系人关系
+  tenantRelations: 租户关系
+  statistics: 统计数据
+  noData: 暂无数据
+  createSuccess: 客户创建成功
+  createFailed: 客户创建失败
+  updateSuccess: 客户更新成功
+  updateFailed: 客户更新失败
+  deleteSuccess: 客户删除成功
+  deleteFailed: 客户删除失败
+  confirmDelete: 确认删除
+  confirmDeleteMessage: 确定要删除客户 {name} 吗？
+  editBtn: 编辑
+  createCustomer: 创建客户
+  editCustomer: 编辑客户
+  
+  # 客户-联系人关系
+  memberRelation:
+    title: 联系人关系
+    create: 添加联系人
+    edit: 编辑联系人
+    delete: 删除联系人
+    view: 查看联系人
+    name: 姓名
+    email: 邮箱
+    phone: 电话
+    position: 职位
+    role: 角色
+    department: 部门
+    isPrimary: 是否主要联系人
+    isPrimaryTrue: 是
+    isPrimaryFalse: 否
+    notes: 备注
+    setPrimary: 设为主要联系人
+    createSuccess: 联系人添加成功
+    createFailed: 联系人添加失败
+    updateSuccess: 联系人更新成功
+    updateFailed: 联系人更新失败
+    deleteSuccess: 联系人删除成功
+    deleteFailed: 联系人删除失败
+    setPrimarySuccess: 已设为主要联系人
+    setPrimaryFailed: 设置主要联系人失败
+    confirmDelete: 确认删除
+    confirmDeleteMessage: 确定要删除联系人 {name} 吗？
+  
+  # 客户-租户关系
+  tenantRelation:
+    title: 租户关系
+    create: 添加租户关系
+    edit: 编辑租户关系
+    delete: 删除租户关系
+    view: 查看租户关系
+    tenant: 租户
+    relationType: 关系类型
+    relationTypeOwner: 所有者
+    relationTypePartner: 合作伙伴
+    relationTypeReseller: 经销商
+    relationTypeAffiliate: 附属机构
+    isPrimary: 是否主要关系
+    isPrimaryTrue: 是
+    isPrimaryFalse: 否
+    startDate: 开始日期
+    endDate: 结束日期
+    contractId: 合同编号
+    notes: 备注
+    setPrimary: 设为主要关系
+    createSuccess: 租户关系添加成功
+    createFailed: 租户关系添加失败
+    updateSuccess: 租户关系更新成功
+    updateFailed: 租户关系更新失败
+    deleteSuccess: 租户关系删除成功
+    deleteFailed: 租户关系删除失败
+    setPrimarySuccess: 已设为主要关系
+    setPrimaryFailed: 设置主要关系失败
+    confirmDelete: 确认删除
+    confirmDeleteMessage: 确定要删除与租户 {name} 的关系吗？
+  
+  # 批量操作
+  bulk:
+    title: 批量操作
+    create: 批量创建
+    update: 批量更新
+    delete: 批量删除
+    select: 已选择 {count} 项
+    createSuccess: 成功创建 {count} 个客户
+    updateSuccess: 成功更新 {count} 个客户
+    deleteSuccess: 成功删除 {count} 个客户
+    createFailed: 批量创建失败
+    updateFailed: 批量更新失败
+    deleteFailed: 批量删除失败
+    confirmDelete: 确认批量删除
+    confirmDeleteMessage: 确定要删除选中的 {count} 个客户吗？
+    import: 导入客户
+    export: 导出客户
+    template: 下载模板
+    uploadSuccess: 文件上传成功
+    uploadFailed: 文件上传失败
+    importSuccess: 导入成功
+    importFailed: 导入失败
+    exportSuccess: 导出成功
+    exportFailed: 导出失败

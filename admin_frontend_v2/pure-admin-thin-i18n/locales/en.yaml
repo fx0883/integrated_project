@@ -961,3 +961,157 @@ layout:
 
 labels:
   allRole: All Roles
+
+customer:
+  management: Customer Management
+  list: Customer List
+  create: Create Customer
+  edit: Edit Customer
+  detail: Customer Detail
+  view: View Customer
+  delete: Delete Customer
+  search: Search Customer
+  filter: Filter Customer
+  cancel: Cancel
+  backToList: Back to List
+  name: Customer Name
+  type: Customer Type
+  typeEnterprise: Enterprise
+  typeGovernment: Government
+  typeEducation: Education
+  typeNonprofit: Non-profit
+  typeIndividual: Individual
+  valueLevel: Value Level
+  valuePlatinum: Platinum
+  valueGold: Gold
+  valueSilver: Silver
+  valueBronze: Bronze
+  status: Status
+  statusAll: All Status
+  statusActive: Active
+  statusInactive: Inactive
+  statusProspect: Prospect
+  statusChurned: Churned
+  industry: Industry
+  registrationNumber: Registration Number
+  taxId: Tax ID
+  address: Address
+  city: City
+  province: Province
+  postalCode: Postal Code
+  country: Country
+  website: Website
+  description: Description
+  annualRevenue: Annual Revenue
+  employeeCount: Employee Count
+  foundedYear: Founded Year
+  createdAt: Created At
+  updatedAt: Updated At
+  memberCount: Contact Count
+  tenantCount: Tenant Count
+  actions: Actions
+  id: ID
+  basicInfo: Basic Information
+  contactInfo: Contact Information
+  additionalInfo: Additional Information
+  memberRelations: Contact Relations
+  tenantRelations: Tenant Relations
+  statistics: Statistics
+  noData: No Data
+  createSuccess: Customer Created Successfully
+  createFailed: Failed to Create Customer
+  updateSuccess: Customer Updated Successfully
+  updateFailed: Failed to Update Customer
+  deleteSuccess: Customer Deleted Successfully
+  deleteFailed: Failed to Delete Customer
+  confirmDelete: Confirm Delete
+  confirmDeleteMessage: Are you sure you want to delete customer {name}?
+  editBtn: Edit
+  createCustomer: Create Customer
+  editCustomer: Edit Customer
+  
+  # Customer-Member Relations
+  memberRelation:
+    title: Contact Relations
+    create: Add Contact
+    edit: Edit Contact
+    delete: Delete Contact
+    view: View Contact
+    name: Name
+    email: Email
+    phone: Phone
+    position: Position
+    role: Role
+    department: Department
+    isPrimary: Is Primary Contact
+    isPrimaryTrue: Yes
+    isPrimaryFalse: No
+    notes: Notes
+    setPrimary: Set as Primary Contact
+    createSuccess: Contact Added Successfully
+    createFailed: Failed to Add Contact
+    updateSuccess: Contact Updated Successfully
+    updateFailed: Failed to Update Contact
+    deleteSuccess: Contact Deleted Successfully
+    deleteFailed: Failed to Delete Contact
+    setPrimarySuccess: Set as Primary Contact Successfully
+    setPrimaryFailed: Failed to Set as Primary Contact
+    confirmDelete: Confirm Delete
+    confirmDeleteMessage: Are you sure you want to delete contact {name}?
+  
+  # Customer-Tenant Relations
+  tenantRelation:
+    title: Tenant Relations
+    create: Add Tenant Relation
+    edit: Edit Tenant Relation
+    delete: Delete Tenant Relation
+    view: View Tenant Relation
+    tenant: Tenant
+    relationType: Relation Type
+    relationTypeOwner: Owner
+    relationTypePartner: Partner
+    relationTypeReseller: Reseller
+    relationTypeAffiliate: Affiliate
+    isPrimary: Is Primary Relation
+    isPrimaryTrue: Yes
+    isPrimaryFalse: No
+    startDate: Start Date
+    endDate: End Date
+    contractId: Contract ID
+    notes: Notes
+    setPrimary: Set as Primary Relation
+    createSuccess: Tenant Relation Added Successfully
+    createFailed: Failed to Add Tenant Relation
+    updateSuccess: Tenant Relation Updated Successfully
+    updateFailed: Failed to Update Tenant Relation
+    deleteSuccess: Tenant Relation Deleted Successfully
+    deleteFailed: Failed to Delete Tenant Relation
+    setPrimarySuccess: Set as Primary Relation Successfully
+    setPrimaryFailed: Failed to Set as Primary Relation
+    confirmDelete: Confirm Delete
+    confirmDeleteMessage: Are you sure you want to delete relation with tenant {name}?
+  
+  # Bulk Operations
+  bulk:
+    title: Bulk Operations
+    create: Bulk Create
+    update: Bulk Update
+    delete: Bulk Delete
+    select: Selected {count} items
+    createSuccess: Successfully created {count} customers
+    updateSuccess: Successfully updated {count} customers
+    deleteSuccess: Successfully deleted {count} customers
+    createFailed: Bulk Create Failed
+    updateFailed: Bulk Update Failed
+    deleteFailed: Bulk Delete Failed
+    confirmDelete: Confirm Bulk Delete
+    confirmDeleteMessage: Are you sure you want to delete {count} selected customers?
+    import: Import Customers
+    export: Export Customers
+    template: Download Template
+    uploadSuccess: File Uploaded Successfully
+    uploadFailed: File Upload Failed
+    importSuccess: Import Successful
+    importFailed: Import Failed
+    exportSuccess: Export Successful
+    exportFailed: Export Failed

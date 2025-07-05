@@ -8,6 +8,13 @@ declare module "vue" {
     FontIcon: (typeof import("../src/components/ReIcon"))["FontIcon"];
     Auth: (typeof import("../src/components/ReAuth"))["Auth"];
     Perms: (typeof import("../src/components/RePerms"))["Perms"];
+    
+    // Customer Management Components
+    CustomerForm: (typeof import("../src/components/CustomerManagement"))["CustomerForm"];
+    CustomerStatusTag: (typeof import("../src/components/CustomerManagement"))["CustomerStatusTag"];
+    CustomerValueTag: (typeof import("../src/components/CustomerManagement"))["CustomerValueTag"];
+    ContactPersonForm: (typeof import("../src/components/CustomerManagement"))["ContactPersonForm"];
+    TenantLinkForm: (typeof import("../src/components/CustomerManagement"))["TenantLinkForm"];
   }
 }
 

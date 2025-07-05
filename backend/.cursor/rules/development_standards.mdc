@@ -3,3 +3,302 @@ description:
 globs:
 alwaysApply: false
 ---
+# 开发规范
+
+## 代码风格
+
+### Python代码风格
+- 遵循PEP 8规范
+- 使用4个空格缩进，不使用制表符
+- 行长度限制为120个字符
+- 使用双引号作为字符串引号
+- 类名使用驼峰命名法（CamelCase）
+- 函数和变量名使用小写下划线命名法（snake_case）
+- 常量使用大写下划线命名法（UPPER_SNAKE_CASE）
+- 每个导入语句占一行
+- 导入顺序：标准库 > 第三方库 > 本地应用
+- 使用类型注解提高代码可读性
+
+### Django代码风格
+- 模型字段定义时使用显式的`verbose_name`
+- 模型字段使用小写下划线命名法（snake_case）
+- 模型类使用单数名词命名（如User而不是Users）
+- 视图类使用`ViewName + View`的命名方式（如`UserListView`）
+- URL名称使用小写下划线命名法（如`user_list`）
+- 模板文件使用小写下划线命名法（如`user_list.html`）
+- 使用Django的`gettext_lazy`进行国际化处理
+
+### REST API代码风格
+- 视图集类使用`ResourceName + ViewSet`的命名方式（如`UserViewSet`）
+- 序列化器类使用`ResourceName + Serializer`的命名方式（如`UserSerializer`）
+- API URL使用资源的复数形式（如`/api/v1/users/`）
+- 使用嵌套序列化器表示资源之间的关系
+- 使用分页控制大型结果集的返回
+- 使用过滤器实现查询参数过滤
+
+## 项目结构
+
+### 应用结构
+每个Django应用应该包含以下文件和目录：
+```
+app_name/
+  ├── __init__.py
+  ├── admin.py          # 管理后台配置
+  ├── apps.py           # 应用配置
+  ├── models.py         # 数据模型
+  ├── serializers.py    # API序列化器
+  ├── urls.py           # URL配置
+  ├── views.py          # 视图函数/类
+  ├── permissions.py    # 权限类
+  ├── filters.py        # 过滤器类
+  ├── signals.py        # 信号处理
+  ├── tasks.py          # 异步任务
+  ├── tests/            # 测试目录
+  │   ├── __init__.py
+  │   ├── test_models.py
+  │   ├── test_views.py
+  │   └── test_serializers.py
+  ├── migrations/       # 数据库迁移
+  └── management/       # 管理命令
+      └── commands/
+          └── custom_command.py
+```
+
+### 大型应用结构
+对于较大的应用，可以进一步细分文件结构：
+```
+app_name/
+  ├── __init__.py
+  ├── admin.py
+  ├── apps.py
+  ├── models/           # 模型目录
+  │   ├── __init__.py
+  │   ├── user.py
+  │   └── profile.py
+  ├── serializers/      # 序列化器目录
+  │   ├── __init__.py
+  │   ├── user.py
+  │   └── profile.py
+  ├── views/            # 视图目录
+  │   ├── __init__.py
+  │   ├── user_views.py
+  │   └── profile_views.py
+  ├── urls/             # URL配置目录
+  │   ├── __init__.py
+  │   ├── user_urls.py
+  │   └── profile_urls.py
+  └── ...
+```
+
+## 命名约定
+
+### 数据库表命名
+- 表名使用小写单数形式
+- 不使用前缀或后缀
+- 关联表使用两个表名连接，如`user_role`
+
+### URL命名
+- URL路径使用小写连字符命名法（kebab-case）
+- URL名称使用小写下划线命名法（snake_case）
+- 资源URL使用复数形式
+- 操作URL使用动词
+
+例如：
+```python
+path('users/', UserListView.as_view(), name='user_list')
+path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail')
+path('users/<int:pk>/activate/', UserActivateView.as_view(), name='user_activate')
+```
+
+### 文件命名
+- Python文件使用小写下划线命名法（snake_case）
+- 模板文件使用小写下划线命名法（snake_case）
+- 静态文件使用小写连字符命名法（kebab-case）
+- 测试文件使用`test_`前缀
+
+## 注释规范
+
+### 代码注释
+- 使用文档字符串（docstring）注释模块、类和函数
+- 使用Google风格的文档字符串格式
+- 复杂的代码块应该有注释说明
+- 注释应该解释"为什么"而不是"做什么"
+
+例如：
+```python
+def get_active_users(tenant_id=None):
+    """
+    获取活跃用户列表。
+    
+    Args:
+        tenant_id: 租户ID，如果提供则只返回该租户的用户
+        
+    Returns:
+        QuerySet: 活跃用户的查询集
+        
+    Raises:
+        Tenant.DoesNotExist: 如果提供的租户ID不存在
+    """
+    queryset = User.objects.filter(is_active=True, is_deleted=False)
+    
+    if tenant_id:
+        # 检查租户是否存在并且是活跃状态
+        tenant = Tenant.objects.get(id=tenant_id)
+        if not tenant.is_active:
+            # 如果租户不是活跃状态，返回空查询集
+            return User.objects.none()
+        queryset = queryset.filter(tenant_id=tenant_id)
+    
+    return queryset
+```
+
+### 提交注释
+- 使用清晰简洁的提交消息
+- 提交消息格式：`[类型] 简短描述`
+- 类型可以是：feat, fix, docs, style, refactor, test, chore等
+
+例如：
+```
+[feat] 添加用户导出功能
+[fix] 修复租户配额计算错误
+[docs] 更新API文档
+```
+
+## 异常处理
+
+### 异常处理原则
+- 使用具体的异常类型而不是通用的Exception
+- 只捕获预期的异常
+- 在合适的抽象级别处理异常
+- 记录异常信息到日志
+- 不要在异常处理中使用pass
+
+例如：
+```python
+try:
+    user = User.objects.get(id=user_id)
+except User.DoesNotExist:
+    logger.warning(f"尝试访问不存在的用户: {user_id}")
+    raise Http404("用户不存在")
+except DatabaseError as e:
+    logger.error(f"数据库错误: {str(e)}")
+    raise ServiceUnavailable("服务暂时不可用")
+```
+
+### 自定义异常
+- 为业务逻辑错误定义自定义异常类
+- 自定义异常应该继承自适当的基类
+- 异常类名应该以`Error`或`Exception`结尾
+
+例如：
+```python
+class QuotaExceededError(Exception):
+    """当租户超出资源配额时抛出。"""
+    pass
+
+class InvalidTenantStatusError(Exception):
+    """当租户状态不允许执行操作时抛出。"""
+    pass
+```
+
+## 测试规范
+
+### 测试原则
+- 使用Django的TestCase类进行测试
+- 每个测试方法只测试一个功能点
+- 测试方法名应该清晰描述测试内容
+- 使用工厂方法或夹具创建测试数据
+- 避免测试之间的依赖
+
+### 测试命名
+- 测试文件命名为`test_<被测模块>.py`
+- 测试类命名为`<被测类>Test`
+- 测试方法命名为`test_<功能点>_<预期结果>`
+
+例如：
+```python
+# test_user_views.py
+class UserViewSetTest(TestCase):
+    def test_create_user_with_valid_data_succeeds(self):
+        # 测试代码
+        
+    def test_create_user_with_invalid_data_fails(self):
+        # 测试代码
+        
+    def test_update_user_with_permission_succeeds(self):
+        # 测试代码
+```
+
+## 日志规范
+
+### 日志级别使用
+- ERROR: 影响系统正常运行的错误
+- WARNING: 不影响系统运行但需要注意的问题
+- INFO: 系统正常运行的关键节点信息
+- DEBUG: 用于调试的详细信息
+
+### 日志内容
+- 日志应该包含足够的上下文信息
+- 敏感信息（如密码、令牌）不应记录到日志
+- 异常日志应包含异常类型和消息
+- 用户操作日志应包含用户ID和租户ID
+
+例如：
+```python
+# 好的日志示例
+logger.info(f"用户 {user.id} 创建了新租户: {tenant.name} (ID: {tenant.id})")
+logger.error(f"租户 {tenant.id} 配额检查失败: {str(e)}", exc_info=True)
+
+# 不好的日志示例
+logger.info("租户创建成功")
+logger.error("出错了")
+```
+
+## 安全规范
+
+### 数据验证
+- 所有用户输入必须经过验证
+- 使用Django表单或DRF序列化器进行数据验证
+- 不要信任前端传来的数据
+
+### 认证和授权
+- 敏感操作必须验证用户身份
+- 使用基于角色的权限控制
+- 实现对象级权限控制
+- 不在URL中传递敏感信息
+
+### 密码处理
+- 使用Django的密码哈希机制
+- 不要自己实现密码加密
+- 不要在日志中记录密码
+- 密码重置使用一次性令牌
+
+### CSRF保护
+- 所有表单提交必须包含CSRF令牌
+- 不要禁用Django的CSRF保护
+- API可以使用基于令牌的认证代替CSRF
+
+### SQL注入防护
+- 使用Django ORM或参数化查询
+- 不要使用字符串拼接构建SQL查询
+- 小心使用raw SQL和extra方法
+
+## 性能优化
+
+### 数据库优化
+- 为经常查询的字段添加索引
+- 使用select_related和prefetch_related减少查询次数
+- 大型查询使用分页
+- 避免N+1查询问题
+
+### 缓存策略
+- 缓存重复使用的计算结果
+- 缓存不经常变化的数据
+- 使用适当的缓存失效策略
+- 避免缓存用户特定的内容
+
+### 异步任务
+- 将耗时操作放入异步任务
+- 使用Celery处理异步任务
+- 设置合理的任务超时和重试策略
+- 监控任务队列的长度和执行时间

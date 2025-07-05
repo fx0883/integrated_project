@@ -3,3 +3,118 @@ description:
 globs:
 alwaysApply: false
 ---
+# 用户模块 (users)
+
+## 功能概述
+
+用户模块是系统的核心组件，负责用户的身份认证、授权和用户信息管理。该模块支持多种用户类型，包括超级管理员、租户管理员和普通成员，并实现了用户的创建、查询、更新和删除等基本操作。
+
+## 核心组件
+
+- **用户认证**：基于JWT的用户登录、令牌刷新和验证
+- **用户管理**：用户的CRUD操作，包括创建、查询、更新和删除
+- **密码管理**：密码重置、修改功能
+- **用户状态管理**：激活、暂停、软删除等状态控制
+- **子账号管理**：支持主账号创建和管理子账号
+
+## 数据模型
+
+### 基础用户模型 (BaseUserModel)
+- 抽象基类，继承自Django的AbstractUser
+- 包含所有用户类型共有的字段
+- 主要字段：
+  - `tenant`: 关联到租户
+  - `phone`: 手机号
+  - `email`: 邮箱
+  - `nick_name`: 昵称
+  - `avatar`: 头像
+  - `status`: 用户状态（活跃、暂停、未激活）
+  - `is_deleted`: 是否已删除（软删除标记）
+
+### 管理员用户模型 (User)
+- 继承自BaseUserModel
+- 用于系统管理员和租户管理员
+- 特有字段：
+  - `is_admin`: 是否为管理员（始终为True）
+  - `is_super_admin`: 是否为超级管理员
+
+### 普通成员模型 (Member)
+- 继承自BaseUserModel
+- 用于普通用户和子账号
+- 特有字段：
+  - `parent`: 关联到父账号（用于子账号功能）
+
+### 密码重置令牌模型 (PasswordResetToken)
+- 用于实现密码重置功能
+- 主要字段：
+  - `user`: 关联到User模型
+  - `token`: 重置令牌
+  - `expires_at`: 过期时间
+  - `is_used`: 是否已使用
+
+## 与其他模块的关系
+
+1. **与租户模块 (tenants) 的关系**:
+   - 用户通过`tenant`外键关联到租户
+   - 用户创建时需要检查租户的配额限制
+   - 超级管理员不关联到任何租户
+
+2. **与权限模块 (rbac) 的关系**:
+   - 通过UserRole关联用户和角色
+   - 支持基于角色的权限控制
+
+3. **与菜单模块 (menus) 的关系**:
+   - 通过UserMenu关联用户和菜单
+   - 控制用户可访问的菜单项
+
+## 关键API
+
+### 认证API
+- `POST /api/v1/auth/login/`: 用户登录，获取JWT令牌
+- `POST /api/v1/auth/refresh/`: 刷新JWT令牌
+- `POST /api/v1/auth/verify/`: 验证JWT令牌有效性
+- `POST /api/v1/auth/password-reset-request/`: 请求密码重置
+- `POST /api/v1/auth/password-reset/`: 重置密码
+
+### 管理员用户API
+- `GET /api/v1/admin/users/`: 获取用户列表
+- `POST /api/v1/admin/users/`: 创建新用户
+- `GET /api/v1/admin/users/{id}/`: 获取用户详情
+- `PUT /api/v1/admin/users/{id}/`: 更新用户信息
+- `DELETE /api/v1/admin/users/{id}/`: 删除用户（软删除）
+
+### 普通成员API
+- `GET /api/v1/members/`: 获取成员列表
+- `POST /api/v1/members/`: 创建新成员
+- `GET /api/v1/members/{id}/`: 获取成员详情
+- `PUT /api/v1/members/{id}/`: 更新成员信息
+- `DELETE /api/v1/members/{id}/`: 删除成员（软删除）
+
+### 用户个人API
+- `GET /api/v1/users/me/`: 获取当前登录用户信息
+- `PUT /api/v1/users/me/`: 更新当前用户信息
+- `PUT /api/v1/users/me/password/`: 修改当前用户密码
+
+## 业务逻辑
+
+1. **用户创建逻辑**:
+   - 检查租户配额限制
+   - 设置适当的用户类型和权限
+   - 对超级管理员特殊处理（不关联租户）
+
+2. **认证逻辑**:
+   - 使用JWT进行身份验证
+   - 令牌包含用户ID和租户信息
+   - 支持令牌刷新机制
+
+3. **密码管理**:
+   - 密码重置通过一次性令牌实现
+   - 密码存储使用Django的密码哈希机制
+
+4. **软删除机制**:
+   - 用户删除时不从数据库物理删除
+   - 标记`is_deleted`为True并设置状态为`inactive`
+
+5. **子账号管理**:
+   - 支持主账号创建多个子账号
+   - 子账号不允许直接登录系统

@@ -3,3 +3,116 @@ description:
 globs:
 alwaysApply: false
 ---
+# RBAC权限模块 (rbac)
+
+## 功能概述
+
+RBAC（基于角色的访问控制）模块是系统的权限管理核心，负责定义和管理系统中的权限、角色以及用户与角色的关联关系。该模块实现了灵活的权限控制机制，支持多租户环境下的权限隔离，确保用户只能访问其被授权的资源和功能。
+
+## 核心组件
+
+- **权限管理**：定义和管理系统中的权限项
+- **角色管理**：创建和管理角色，为角色分配权限
+- **用户角色关联**：管理用户与角色的关联关系
+- **权限验证**：验证用户是否具有执行特定操作的权限
+
+## 数据模型
+
+### 权限模型 (Permission)
+- 主要字段：
+  - `code`: 权限代码（如：user:create）
+  - `name`: 权限名称（如：创建用户）
+  - `description`: 权限描述
+  - `category`: 权限分类（如：用户管理、内容管理等）
+  - `is_system`: 是否系统权限（系统权限不允许删除）
+
+### 角色模型 (Role)
+- 主要字段：
+  - `name`: 角色名称
+  - `code`: 角色代码
+  - `description`: 角色描述
+  - `tenant`: 关联到租户（为空表示系统角色，所有租户可见）
+  - `is_system`: 是否系统角色（系统角色不允许删除）
+  - `permissions`: 通过中间表关联到权限
+
+### 角色权限关联模型 (RolePermission)
+- 主要字段：
+  - `role`: 关联到角色
+  - `permission`: 关联到权限
+
+### 用户角色关联模型 (UserRole)
+- 主要字段：
+  - `user_type`: 用户类型（管理员或普通成员）
+  - `user_id`: 用户ID
+  - `role`: 关联到角色
+  - `is_active`: 是否激活
+  - `start_date`: 生效开始日期
+  - `end_date`: 生效结束日期
+
+## 与其他模块的关系
+
+1. **与用户模块 (users) 的关系**:
+   - UserRole通过通用关系关联到User或Member
+   - 用户权限基于其关联的角色
+
+2. **与租户模块 (tenants) 的关系**:
+   - 角色可以关联到特定租户
+   - 系统角色（tenant为空）对所有租户可见
+   - 租户特定角色只对该租户可见
+
+3. **与菜单模块 (menus) 的关系**:
+   - 菜单项可以设置所需的角色和权限
+   - 基于用户的角色和权限控制菜单的可见性
+
+## 关键API
+
+### 权限管理API
+- `GET /api/v1/rbac/permissions/`: 获取权限列表
+- `POST /api/v1/rbac/permissions/`: 创建新权限
+- `GET /api/v1/rbac/permissions/{id}/`: 获取权限详情
+- `PUT /api/v1/rbac/permissions/{id}/`: 更新权限
+- `DELETE /api/v1/rbac/permissions/{id}/`: 删除权限
+
+### 角色管理API
+- `GET /api/v1/rbac/roles/`: 获取角色列表
+- `POST /api/v1/rbac/roles/`: 创建新角色
+- `GET /api/v1/rbac/roles/{id}/`: 获取角色详情
+- `PUT /api/v1/rbac/roles/{id}/`: 更新角色
+- `DELETE /api/v1/rbac/roles/{id}/`: 删除角色
+- `GET /api/v1/rbac/roles/{id}/permissions/`: 获取角色的权限
+- `PUT /api/v1/rbac/roles/{id}/permissions/`: 更新角色的权限
+
+### 用户角色管理API
+- `GET /api/v1/rbac/users/{user_id}/roles/`: 获取用户的角色
+- `POST /api/v1/rbac/users/{user_id}/roles/`: 为用户分配角色
+- `DELETE /api/v1/rbac/users/{user_id}/roles/{role_id}/`: 移除用户的角色
+
+### 权限验证API
+- `GET /api/v1/rbac/check-permission/`: 检查当前用户是否具有指定权限
+- `GET /api/v1/rbac/user-permissions/`: 获取当前用户的所有权限
+
+## 业务逻辑
+
+1. **权限定义逻辑**:
+   - 权限使用代码和名称唯一标识
+   - 权限按功能模块分类
+   - 系统权限不允许删除
+
+2. **角色管理逻辑**:
+   - 角色可以是系统级别或租户级别
+   - 角色通过中间表关联多个权限
+   - 系统角色对所有租户可见
+
+3. **用户角色关联逻辑**:
+   - 支持两种用户类型：管理员和普通成员
+   - 用户角色关联可以设置有效期
+   - 用户角色关联可以临时禁用
+
+4. **权限验证逻辑**:
+   - 用户权限是其所有角色权限的并集
+   - 验证用户是否具有执行特定操作的权限
+   - 支持基于时间的权限控制（通过start_date和end_date）
+
+5. **初始化逻辑**:
+   - 系统启动时自动创建基本权限和角色
+   - 提供命令行工具初始化RBAC数据
