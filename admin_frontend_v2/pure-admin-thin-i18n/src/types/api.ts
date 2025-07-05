@@ -15,6 +15,7 @@ export interface PaginationData<T = any> {
   total: number;         // 总条数
   page: number;          // 当前页码
   limit: number;         // 每页条数
+  total_pages?: number;  // 总页数
   data: T[];             // 数据列表
 }
 

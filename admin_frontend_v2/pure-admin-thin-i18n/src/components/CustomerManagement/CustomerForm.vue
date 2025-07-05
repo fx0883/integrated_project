@@ -15,7 +15,7 @@ const { t } = useI18n();
 const props = defineProps<{
   customer?: Customer;
   loading?: boolean;
-  mode: "create" | "edit";
+  mode: "create" | "edit" | "view";
 }>();
 
 const emit = defineEmits<{
@@ -228,6 +228,9 @@ const showEnterpriseFields = computed(() => {
 
 // 当前活动标签页
 const activeTab = ref("basic");
+
+// 是否为查看模式（只读）
+const isViewMode = computed(() => props.mode === "view");
 </script>
 
 <template>
@@ -239,7 +242,7 @@ const activeTab = ref("basic");
           :model="formData"
           :rules="rules"
           label-width="120px"
-          :disabled="loading"
+          :disabled="loading || isViewMode"
         >
           <el-form-item :label="t('customer.name')" prop="name">
             <el-input
@@ -315,7 +318,7 @@ const activeTab = ref("basic");
           :model="formData"
           :rules="rules"
           label-width="120px"
-          :disabled="loading"
+          :disabled="loading || isViewMode"
         >
           <el-form-item :label="t('customer.address')" prop="address">
             <el-input
@@ -367,7 +370,7 @@ const activeTab = ref("basic");
           :model="formData"
           :rules="rules"
           label-width="120px"
-          :disabled="loading"
+          :disabled="loading || isViewMode"
         >
           <el-form-item :label="t('customer.description')" prop="description">
             <el-input
@@ -420,14 +423,14 @@ const activeTab = ref("basic");
     </el-tabs>
 
     <div class="form-actions">
-      <el-button type="primary" @click="handleSubmit" :loading="loading">
-        {{ t("common.save") }}
-      </el-button>
-      <el-button @click="resetForm">
-        {{ t("common.reset") }}
-      </el-button>
-      <el-button @click="handleCancel">
-        {{ t("common.cancel") }}
+      <el-button @click="handleCancel">{{ t("common.cancel") }}</el-button>
+      <el-button
+        v-if="!isViewMode"
+        type="primary"
+        :loading="loading"
+        @click="handleSubmit"
+      >
+        {{ t(mode === "create" ? "common.create" : "common.update") }}
       </el-button>
     </div>
   </div>

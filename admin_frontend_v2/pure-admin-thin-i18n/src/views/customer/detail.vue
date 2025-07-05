@@ -5,6 +5,7 @@ import { useRouter, useRoute } from "vue-router";
 import { ElMessage, ElMessageBox, ElTabs, ElTabPane } from "element-plus";
 import { useCustomerStoreHook } from "@/store/modules/customer";
 import { useUserStoreHook } from "@/store/modules/user";
+import { hasPerms } from "@/utils/auth";
 import {
   CustomerStatusTag,
   CustomerValueTag,
@@ -32,7 +33,7 @@ const customerId = computed(() => Number(route.params.id));
 
 // 检查用户是否有管理权限
 const hasManagePermission = computed(
-  () => userStore.is_super_admin || userStore.hasPermission("customer:manage")
+  () => userStore.is_super_admin || hasPerms("customer:manage")
 );
 
 // 加载状态
@@ -47,7 +48,7 @@ const activeTab = ref("basic");
 const fetchCustomerDetail = async () => {
   loading.value = true;
   try {
-    await customerStore.getCustomerDetail(customerId.value);
+    await customerStore.fetchCustomerDetail(customerId.value);
   } catch (error) {
     logger.error("获取客户详情失败", error);
     ElMessage.error(t("customer.fetchDetailFailed"));
@@ -61,7 +62,7 @@ const fetchCustomerDetail = async () => {
 const fetchContactPersons = async () => {
   contactsLoading.value = true;
   try {
-    await customerStore.getCustomerContacts(customerId.value);
+    await customerStore.fetchCustomerMemberRelations(customerId.value);
   } catch (error) {
     logger.error("获取联系人列表失败", error);
     ElMessage.error(t("customer.fetchContactsFailed"));
@@ -74,7 +75,7 @@ const fetchContactPersons = async () => {
 const fetchTenantLinks = async () => {
   tenantsLoading.value = true;
   try {
-    await customerStore.getCustomerTenants(customerId.value);
+    await customerStore.fetchCustomerTenantRelations(customerId.value);
   } catch (error) {
     logger.error("获取关联租户列表失败", error);
     ElMessage.error(t("customer.fetchTenantsFailed"));
@@ -150,7 +151,7 @@ const handleDelete = () => {
     "danger",
     async () => {
       try {
-        await customerStore.deleteCustomer(customerId.value);
+        await customerStore.removeCustomer(customerId.value);
         ElMessage.success(t("customer.deleteSuccess"));
         router.push("/customer");
       } catch (error) {
@@ -193,7 +194,10 @@ const handleDeleteContact = (contact: ContactPerson) => {
     "danger",
     async () => {
       try {
-        await customerStore.deleteContactPerson(contact.id);
+        await customerStore.removeCustomerMemberRelation(
+          customerId.value,
+          contact.id
+        );
         ElMessage.success(t("customer.contact.deleteSuccess"));
         fetchContactPersons();
       } catch (error) {
@@ -211,13 +215,14 @@ const handleContactSubmit = async (
   contactPersonDialog.loading = true;
   try {
     if (contactPersonDialog.mode === "create") {
-      await customerStore.createContactPerson({
+      await customerStore.createCustomerMemberRelation({
         ...formData,
         customer_id: customerId.value
       });
       ElMessage.success(t("customer.contact.createSuccess"));
     } else {
-      await customerStore.updateContactPerson(
+      await customerStore.updateCustomerMemberRelation(
+        customerId.value,
         contactPersonDialog.currentContact!.id,
         formData
       );
@@ -279,7 +284,10 @@ const handleDeleteTenantLink = (tenantLink: CustomerTenantLink) => {
     "danger",
     async () => {
       try {
-        await customerStore.deleteCustomerTenantLink(tenantLink.id);
+        await customerStore.removeCustomerTenantRelation(
+          customerId.value,
+          tenantLink.id
+        );
         ElMessage.success(t("customer.tenantLink.deleteSuccess"));
         fetchTenantLinks();
       } catch (error) {
@@ -297,13 +305,14 @@ const handleTenantLinkSubmit = async (
   tenantLinkDialog.loading = true;
   try {
     if (tenantLinkDialog.mode === "create") {
-      await customerStore.createCustomerTenantLink({
+      await customerStore.createCustomerTenantRelation({
         ...formData,
         customer_id: customerId.value
       });
       ElMessage.success(t("customer.tenantLink.createSuccess"));
     } else {
-      await customerStore.updateCustomerTenantLink(
+      await customerStore.updateCustomerTenantRelation(
+        customerId.value,
         tenantLinkDialog.currentTenantLink!.id,
         formData
       );

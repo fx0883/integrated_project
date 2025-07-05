@@ -5,6 +5,7 @@ import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useCustomerStoreHook } from "@/store/modules/customer";
 import { useUserStoreHook } from "@/store/modules/user";
+import { hasPerms } from "@/utils/auth";
 import { CustomerForm } from "@/components/CustomerManagement";
 import type { CustomerCreateUpdateParams } from "@/types/customer";
 import logger from "@/utils/logger";
@@ -20,7 +21,7 @@ const customerId = computed(() => Number(route.params.id));
 
 // 检查用户是否有管理权限
 const hasManagePermission = computed(
-  () => userStore.is_super_admin || userStore.hasPermission("customer:manage")
+  () => userStore.is_super_admin || hasPerms("customer:manage")
 );
 
 // 如果没有管理权限，显示无权限提示
@@ -37,7 +38,7 @@ const updateLoading = computed(() => customerStore.loading.update);
 const fetchCustomerDetail = async () => {
   loading.value = true;
   try {
-    await customerStore.getCustomerDetail(customerId.value);
+    await customerStore.fetchCustomerDetail(customerId.value);
   } catch (error) {
     logger.error("获取客户详情失败", error);
     ElMessage.error(t("customer.fetchDetailFailed"));
@@ -50,7 +51,7 @@ const fetchCustomerDetail = async () => {
 // 提交表单
 const handleSubmit = async (formData: CustomerCreateUpdateParams) => {
   try {
-    await customerStore.updateCustomer(customerId.value, formData);
+    await customerStore.updateCustomerInfo(customerId.value, formData);
     ElMessage.success(t("customer.updateSuccess"));
 
     // 更新成功后跳转到客户列表

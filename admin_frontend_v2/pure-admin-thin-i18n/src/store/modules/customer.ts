@@ -156,9 +156,10 @@ export const useCustomerStore = defineStore("customer", {
           // 处理分页数据结构适配
           if (response.data && 'results' in response.data) {
             this.customerList = {
-              total: response.data.count || 0,
+              total: response.data.pagination.count || 0,
               page: params.page || 1,
               limit: params.page_size || 10,
+              total_pages: response.data.pagination.total_pages || 1,
               data: response.data.results || []
             };
           } else {

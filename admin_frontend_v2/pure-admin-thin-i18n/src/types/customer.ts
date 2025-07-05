@@ -9,7 +9,7 @@ export type CustomerType = 'enterprise' | 'government' | 'education' | 'nonprofi
 export type CustomerValueLevel = 'platinum' | 'gold' | 'silver' | 'bronze';
 
 // 客户状态
-export type CustomerStatus = 'active' | 'inactive' | 'prospect' | 'churned';
+export type CustomerStatus = 'active' | 'inactive' | 'prospect' | 'lost';
 
 // 客户基本信息接口
 export interface Customer {

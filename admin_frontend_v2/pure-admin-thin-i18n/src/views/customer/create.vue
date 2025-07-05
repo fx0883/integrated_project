@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useCustomerStoreHook } from "@/store/modules/customer";
 import { useUserStoreHook } from "@/store/modules/user";
+import { hasPerms } from "@/utils/auth";
 import { CustomerForm } from "@/components/CustomerManagement";
 import type { CustomerCreateUpdateParams } from "@/types/customer";
 import logger from "@/utils/logger";
@@ -16,7 +17,7 @@ const userStore = useUserStoreHook();
 
 // 检查用户是否有管理权限
 const hasManagePermission = computed(
-  () => userStore.is_super_admin || userStore.hasPermission("customer:manage")
+  () => userStore.is_super_admin || hasPerms("customer:manage")
 );
 
 // 如果没有管理权限，显示无权限提示

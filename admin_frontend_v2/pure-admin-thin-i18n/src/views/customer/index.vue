@@ -6,17 +6,20 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { ArrowDown } from "@element-plus/icons-vue";
 import { useCustomerStoreHook } from "@/store/modules/customer";
 import { useUserStoreHook } from "@/store/modules/user";
+import { hasPerms } from "@/utils/auth";
 import type {
   Customer,
   CustomerStatus,
   CustomerValueLevel,
   CustomerType,
-  CustomerListParams
+  CustomerListParams,
+  CustomerCreateUpdateParams
 } from "@/types/customer";
 import {
   CustomerStatusTag,
   CustomerValueTag,
-  ConfirmDialog
+  ConfirmDialog,
+  CustomerForm
 } from "@/components/CustomerManagement";
 import logger from "@/utils/logger";
 
@@ -27,7 +30,7 @@ const userStore = useUserStoreHook();
 
 // 检查用户是否有管理权限
 const hasManagePermission = computed(
-  () => userStore.is_super_admin || userStore.hasPermission("customer:manage")
+  () => userStore.is_super_admin || hasPerms("customer:manage")
 );
 
 // 表格加载状态
@@ -38,7 +41,12 @@ const customerList = computed(() => customerStore.customerList.data);
 const pagination = reactive({
   total: computed(() => customerStore.customerList.total),
   currentPage: 1,
-  pageSize: 10
+  pageSize: 10,
+  totalPages: computed(
+    () =>
+      customerStore.customerList.total_pages ||
+      Math.ceil(customerStore.customerList.total / pagination.pageSize)
+  )
 });
 
 // 搜索条件
@@ -167,6 +175,20 @@ const handleConfirmDialogCancel = () => {
   confirmDialog.visible = false;
 };
 
+// 创建客户对话框状态
+const createDialogVisible = ref(false);
+const createLoading = computed(() => customerStore.loading.create);
+
+// 查看客户对话框状态
+const viewDialogVisible = ref(false);
+const viewLoading = ref(false);
+const currentViewCustomer = ref<Customer | null>(null);
+
+// 编辑客户对话框状态
+const editDialogVisible = ref(false);
+const editLoading = computed(() => customerStore.loading.update);
+const currentEditCustomer = ref<Customer | null>(null);
+
 // 获取客户列表
 const fetchCustomerList = async () => {
   try {
@@ -189,7 +211,7 @@ const fetchCustomerList = async () => {
       params.value_level = searchForm.value_level as CustomerValueLevel;
     }
 
-    await customerStore.getCustomers(params);
+    await customerStore.fetchCustomerList(params);
   } catch (error) {
     logger.error("获取客户列表失败", error);
     ElMessage.error(t("customer.fetchFailed"));
@@ -225,19 +247,69 @@ const handleSizeChange = (size: number) => {
   fetchCustomerList();
 };
 
-// 创建客户
+// 打开创建客户对话框
 const handleCreateCustomer = () => {
-  router.push("/customer/create");
+  createDialogVisible.value = true;
+};
+
+// 提交创建客户表单
+const handleCreateSubmit = async (formData: CustomerCreateUpdateParams) => {
+  try {
+    await customerStore.createNewCustomer(formData);
+    ElMessage.success(t("customer.createSuccess"));
+    createDialogVisible.value = false;
+    // 刷新列表
+    fetchCustomerList();
+  } catch (error) {
+    logger.error("创建客户失败", error);
+    ElMessage.error(t("customer.createFailed"));
+  }
+};
+
+// 取消创建客户
+const handleCreateCancel = () => {
+  createDialogVisible.value = false;
 };
 
 // 查看客户详情
-const handleViewCustomer = (customer: Customer) => {
-  router.push(`/customer/detail/${customer.id}`);
+const handleViewCustomer = async (customer: Customer) => {
+  currentViewCustomer.value = customer;
+  viewDialogVisible.value = true;
 };
 
 // 编辑客户
-const handleEditCustomer = (customer: Customer) => {
-  router.push(`/customer/edit/${customer.id}`);
+const handleEditCustomer = async (customer: Customer) => {
+  currentEditCustomer.value = customer;
+  editDialogVisible.value = true;
+};
+
+// 提交编辑客户表单
+const handleEditSubmit = async (formData: CustomerCreateUpdateParams) => {
+  if (!currentEditCustomer.value) return;
+
+  try {
+    await customerStore.updateCustomerInfo(
+      currentEditCustomer.value.id,
+      formData
+    );
+    ElMessage.success(t("customer.updateSuccess"));
+    editDialogVisible.value = false;
+    // 刷新列表
+    fetchCustomerList();
+  } catch (error) {
+    logger.error("更新客户失败", error);
+    ElMessage.error(t("customer.updateFailed"));
+  }
+};
+
+// 取消编辑客户
+const handleEditCancel = () => {
+  editDialogVisible.value = false;
+};
+
+// 取消查看客户
+const handleViewCancel = () => {
+  viewDialogVisible.value = false;
 };
 
 // 删除客户
@@ -248,7 +320,7 @@ const handleDeleteCustomer = (customer: Customer) => {
     "danger",
     async () => {
       try {
-        await customerStore.deleteCustomer(customer.id);
+        await customerStore.removeCustomer(customer.id);
         ElMessage.success(t("customer.deleteSuccess"));
         // 如果当前页只有一条数据，且不是第一页，则跳转到上一页
         if (customerList.value.length === 1 && pagination.currentPage > 1) {
@@ -509,12 +581,61 @@ onMounted(() => {
           v-model:page-size="pagination.pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="pagination.total"
+          :pager-count="pagination.totalPages"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
+
+    <!-- 创建客户对话框 -->
+    <el-dialog
+      v-model="createDialogVisible"
+      :title="t('customer.createCustomer')"
+      width="60%"
+      destroy-on-close
+    >
+      <CustomerForm
+        mode="create"
+        :loading="createLoading"
+        @submit="handleCreateSubmit"
+        @cancel="handleCreateCancel"
+      />
+    </el-dialog>
+
+    <!-- 查看客户对话框 -->
+    <el-dialog
+      v-model="viewDialogVisible"
+      :title="t('customer.viewCustomer')"
+      width="60%"
+      destroy-on-close
+    >
+      <CustomerForm
+        v-if="currentViewCustomer"
+        mode="view"
+        :customer="currentViewCustomer"
+        :loading="viewLoading"
+        @cancel="handleViewCancel"
+      />
+    </el-dialog>
+
+    <!-- 编辑客户对话框 -->
+    <el-dialog
+      v-model="editDialogVisible"
+      :title="t('customer.editCustomer')"
+      width="60%"
+      destroy-on-close
+    >
+      <CustomerForm
+        v-if="currentEditCustomer"
+        mode="edit"
+        :customer="currentEditCustomer"
+        :loading="editLoading"
+        @submit="handleEditSubmit"
+        @cancel="handleEditCancel"
+      />
+    </el-dialog>
 
     <!-- 确认对话框 -->
     <ConfirmDialog

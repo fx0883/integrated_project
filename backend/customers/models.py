@@ -8,15 +8,19 @@ class Customer(models.Model):
     """
     # 客户类型选项
     TYPE_CHOICES = [
-        ('company', '公司'),
-        ('personal', '个人'),
+        ('enterprise', '公司'),
+        ('individual', '个人'),
+        ('government', '政府机构'),
+        ('nonprofit', '非营利组织'),
+        ('education', '教育机构'),
     ]
     
     # 价值等级选项
     VALUE_LEVEL_CHOICES = [
-        ('normal', '普通'),
-        ('vip', 'VIP'),
-        ('premium', '高级VIP'),
+        ('platinum', '铂金'),
+        ('gold', '黄金'),
+        ('silver', '白银'),
+        ('bronze', '青铜'),
     ]
     
     # 公司规模选项
