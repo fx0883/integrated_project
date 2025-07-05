@@ -14,6 +14,7 @@ common:
   actions: Actions
   anonymous: Anonymous
   operation: Operations
+  all: All
   form:
     submit: Submit
     reset: Reset
@@ -976,11 +977,25 @@ customer:
   backToList: Back to List
   name: Customer Name
   type: Customer Type
+  typeCompany: Company
   typeEnterprise: Enterprise
   typeGovernment: Government
   typeEducation: Education
   typeNonprofit: Non-profit
   typeIndividual: Individual
+  customerList: Customer List
+  createCustomer: Create Customer
+  editCustomer: Edit Customer
+  viewCustomer: View Customer
+  searchPlaceholder: Search by name, contact or phone
+  batchDelete: Batch Delete
+  id: ID
+  menu:
+    customerManagement: Customer Management
+    customerList: Customer List
+    customerCreate: Create Customer
+    customerEdit: Edit Customer
+    customerDetail: Customer Detail
   valueLevel: Value Level
   valuePlatinum: Platinum
   valueGold: Gold
@@ -992,6 +1007,7 @@ customer:
   statusInactive: Inactive
   statusProspect: Prospect
   statusChurned: Churned
+  statusLost: Lost
   industry: Industry
   registrationNumber: Registration Number
   taxId: Tax ID
@@ -1010,7 +1026,6 @@ customer:
   memberCount: Contact Count
   tenantCount: Tenant Count
   actions: Actions
-  id: ID
   basicInfo: Basic Information
   contactInfo: Contact Information
   additionalInfo: Additional Information
@@ -1024,11 +1039,10 @@ customer:
   updateFailed: Failed to Update Customer
   deleteSuccess: Customer Deleted Successfully
   deleteFailed: Failed to Delete Customer
+  fetchFailed: Failed to fetch customer list
   confirmDelete: Confirm Delete
   confirmDeleteMessage: Are you sure you want to delete customer {name}?
   editBtn: Edit
-  createCustomer: Create Customer
-  editCustomer: Edit Customer
   
   # Customer-Member Relations
   memberRelation:

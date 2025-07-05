@@ -15,22 +15,22 @@ const tagConfig = computed(() => {
   switch (props.valueLevel) {
     case "platinum":
       return {
-        type: "",
+        type: "info",
         class: "value-platinum"
       };
     case "gold":
       return {
-        type: "",
+        type: "warning",
         class: "value-gold"
       };
     case "silver":
       return {
-        type: "",
+        type: "info",
         class: "value-silver"
       };
     case "bronze":
       return {
-        type: "",
+        type: "warning",
         class: "value-bronze"
       };
     default:
