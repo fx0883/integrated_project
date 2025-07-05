@@ -1,0 +1,670 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# pure-admin-thin-i18n 国际化实现指南
+
+## 1. 国际化架构
+
+pure-admin-thin-i18n 项目使用 Vue I18n 作为国际化解决方案，结合 YAML 格式的翻译文件，实现了完整的多语言支持。
+
+### 1.1 目录结构
+
+```
+pure-admin-thin-i18n/
+├── locales/               # 国际化语言文件
+│   ├── en.yaml            # 英文翻译
+│   └── zh-CN.yaml         # 中文翻译
+└── src/
+    └── plugins/
+        └── i18n.ts        # 国际化插件配置
+```
+
+### 1.2 国际化插件配置
+
+国际化插件配置位于 `src/plugins/i18n.ts`，主要完成以下工作：
+
+1. 动态导入语言文件
+2. 创建 Vue I18n 实例
+3. 设置默认语言和回退语言
+4. 与 Element Plus 国际化集成
+
+```typescript
+// src/plugins/i18n.ts
+import { createI18n } from "vue-i18n";
+import { App } from "vue";
+import { storageLocal } from "@pureadmin/utils";
+import { LocaleEnum } from "@/enums/localeEnum";
+
+// 缓存国际化配置的函数
+export const siphonI18n = (prefix = "zh-CN") => {
+  return Object.fromEntries(
+    Object.entries(
+      import.meta.glob("../../locales/*.yaml", { eager: true })
+    ).map(([key, value]: any) => {
+      const matched = key.match(/([A-Za-z0-9-_]+)\./i)[1];
+      return [matched, value.default];
+    })
+  )[prefix];
+};
+
+// 创建 i18n 实例
+export const i18n = createI18n({
+  legacy: false,
+  locale: storageLocal().getItem("locale") || LocaleEnum.ZH_CN,
+  fallbackLocale: LocaleEnum.EN,
+  messages: {
+    [LocaleEnum.EN]: siphonI18n("en"),
+    [LocaleEnum.ZH_CN]: siphonI18n("zh-CN")
+  }
+});
+
+// 翻译函数
+export function transformI18n(message: any) {
+  if (!message) return "";
+  
+  // 处理不同类型的翻译键
+  if (typeof message === "object") {
+    return message;
+  }
+
+  try {
+    return i18n.global.t(message);
+  } catch (error) {
+    console.warn(`i18n: ${error}`);
+    return message;
+  }
+}
+
+// 安装 i18n 插件
+export function setupI18n(app: App) {
+  app.use(i18n);
+}
+```
+
+## 2. 翻译文件结构
+
+翻译文件使用 YAML 格式，按照功能模块组织，结构清晰：
+
+### 2.1 中文翻译示例 (zh-CN.yaml)
+
+```yaml
+# 通用文本
+common:
+  save: 保存
+  cancel: 取消
+  confirm: 确认
+  delete: 删除
+  search: 搜索
+  reset: 重置
+  loading: 加载中...
+  success: 操作成功
+  failed: 操作失败
+  
+# 登录页面
+login:
+  title: 系统登录
+  username: 用户名
+  password: 密码
+  captcha: 验证码
+  remember: 记住我
+  login: 登录
+  forgot: 忘记密码？
+  register: 注册账号
+  
+# 菜单和路由
+routes:
+  dashboard: 仪表盘
+  userManagement: 用户管理
+  roleManagement: 角色管理
+  permissionManagement: 权限管理
+  systemSettings: 系统设置
+  
+# 用户管理模块
+user:
+  management:
+    title: 用户管理
+    create: 创建用户
+    edit: 编辑用户
+    detail: 用户详情
+    delete: 删除用户
+  form:
+    username: 用户名
+    password: 密码
+    email: 电子邮箱
+    phone: 手机号码
+    role: 角色
+    status: 状态
+    createTime: 创建时间
+    lastLogin: 最后登录
+```
+
+### 2.2 英文翻译示例 (en.yaml)
+
+```yaml
+# Common text
+common:
+  save: Save
+  cancel: Cancel
+  confirm: Confirm
+  delete: Delete
+  search: Search
+  reset: Reset
+  loading: Loading...
+  success: Operation Successful
+  failed: Operation Failed
+  
+# Login page
+login:
+  title: System Login
+  username: Username
+  password: Password
+  captcha: Captcha
+  remember: Remember me
+  login: Login
+  forgot: Forgot Password?
+  register: Register
+  
+# Menus and routes
+routes:
+  dashboard: Dashboard
+  userManagement: User Management
+  roleManagement: Role Management
+  permissionManagement: Permission Management
+  systemSettings: System Settings
+  
+# User management module
+user:
+  management:
+    title: User Management
+    create: Create User
+    edit: Edit User
+    detail: User Detail
+    delete: Delete User
+  form:
+    username: Username
+    password: Password
+    email: Email
+    phone: Phone
+    role: Role
+    status: Status
+    createTime: Create Time
+    lastLogin: Last Login
+```
+
+## 3. 在组件中使用国际化
+
+### 3.1 基本用法
+
+在 Vue 组件中使用国际化：
+
+```vue
+<template>
+  <!-- 在模板中使用 -->
+  <h1>{{ t("login.title") }}</h1>
+  <el-button>{{ t("common.save") }}</el-button>
+  
+  <!-- 在属性中使用 -->
+  <el-input :placeholder="t('login.username')" />
+  
+  <!-- 带参数的翻译 -->
+  <p>{{ t("welcome.message", { name: username }) }}</p>
+</template>
+
+<script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
+// 获取 i18n 实例
+const { t, locale } = useI18n();
+
+// 切换语言
+const changeLanguage = (lang: string) => {
+  locale.value = lang;
+};
+</script>
+```
+
+### 3.2 在 JavaScript/TypeScript 中使用
+
+在 JavaScript/TypeScript 文件中使用国际化：
+
+```typescript
+import { i18n } from "@/plugins/i18n";
+
+// 使用 t 函数
+const message = i18n.global.t("common.success");
+
+// 带参数的翻译
+const welcome = i18n.global.t("welcome.message", { name: "John" });
+
+// 复数形式
+const itemCount = i18n.global.t("items.count", { count: 5 });
+```
+
+### 3.3 语言切换
+
+实现语言切换功能：
+
+```vue
+<template>
+  <el-dropdown @command="handleLanguageChange">
+    <span class="language-selector">
+      {{ currentLanguageName }}
+      <el-icon class="el-icon--right"><arrow-down /></el-icon>
+    </span>
+    <template #dropdown>
+      <el-dropdown-menu>
+        <el-dropdown-item command="zh-CN">简体中文</el-dropdown-item>
+        <el-dropdown-item command="en">English</el-dropdown-item>
+      </el-dropdown-menu>
+    </template>
+  </el-dropdown>
+</template>
+
+<script setup lang="ts">
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { useAppStoreHook } from "@/store/modules/app";
+import { ArrowDown } from "@element-plus/icons-vue";
+
+const { locale } = useI18n();
+const appStore = useAppStoreHook();
+
+// 当前语言名称
+const currentLanguageName = computed(() => {
+  return locale.value === "zh-CN" ? "简体中文" : "English";
+});
+
+// 切换语言
+const handleLanguageChange = (lang: string) => {
+  // 更新 Vue I18n 语言
+  locale.value = lang;
+  
+  // 更新 Element Plus 语言
+  appStore.setLanguage(lang);
+  
+  // 存储语言偏好
+  localStorage.setItem("locale", lang);
+  
+  // 可选：刷新页面以应用所有翻译
+  // location.reload();
+};
+</script>
+```
+
+## 4. 与 Element Plus 集成
+
+### 4.1 Element Plus 国际化配置
+
+将 Element Plus 的国际化与 Vue I18n 集成：
+
+```typescript
+// src/plugins/elementPlus.ts
+import { App } from "vue";
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+import zhCn from "element-plus/es/locale/lang/zh-cn";
+import en from "element-plus/es/locale/lang/en";
+import { useAppStoreHook } from "@/store/modules/app";
+
+export function setupElementPlus(app: App) {
+  const appStore = useAppStoreHook();
+  
+  // 根据当前语言设置 Element Plus 语言
+  app.use(ElementPlus, {
+    locale: appStore.language === "zh-CN" ? zhCn : en
+  });
+}
+```
+
+### 4.2 同步语言切换
+
+在切换语言时同步更新 Element Plus 的语言：
+
+```typescript
+// src/store/modules/app.ts
+import { defineStore } from "pinia";
+import { store } from "@/store";
+import { storageLocal } from "@pureadmin/utils";
+import { i18n } from "@/plugins/i18n";
+import zhCn from "element-plus/es/locale/lang/zh-cn";
+import en from "element-plus/es/locale/lang/en";
+
+export const useAppStore = defineStore({
+  id: "pure-app",
+  state: () => ({
+    language: storageLocal().getItem("locale") || "zh-CN",
+    elementPlusLocale: zhCn
+  }),
+  actions: {
+    setLanguage(lang: string) {
+      this.language = lang;
+      this.elementPlusLocale = lang === "zh-CN" ? zhCn : en;
+      i18n.global.locale.value = lang;
+      storageLocal().setItem("locale", lang);
+    }
+  }
+});
+
+export function useAppStoreHook() {
+  return useAppStore(store);
+}
+```
+
+## 5. 国际化最佳实践
+
+### 5.1 键名命名约定
+
+- **使用点表示法**：使用点分隔的路径表示嵌套结构，如 `user.management.title`
+- **使用命名空间**：按功能模块组织键名，如 `common`, `login`, `user` 等
+- **使用小写字母**：键名使用小写字母和点，如 `common.save`
+- **避免特殊字符**：键名避免使用特殊字符，如空格、中文等
+
+### 5.2 翻译文本组织
+
+- **按功能模块组织**：将相关功能的翻译文本放在一起
+- **保持结构一致**：不同语言文件的结构应保持一致
+- **使用注释**：在翻译文件中添加注释，说明翻译的上下文
+- **避免硬编码**：避免在代码中硬编码文本，全部使用翻译键
+
+### 5.3 参数化翻译
+
+使用参数化翻译处理动态内容：
+
+```yaml
+# zh-CN.yaml
+welcome:
+  message: "欢迎，{name}！"
+items:
+  count: "{count} 个项目"
+  
+# en.yaml
+welcome:
+  message: "Welcome, {name}!"
+items:
+  count: "{count} items"
+```
+
+```vue
+<template>
+  <p>{{ t("welcome.message", { name: username }) }}</p>
+  <p>{{ t("items.count", { count: itemCount }) }}</p>
+</template>
+```
+
+### 5.4 复数形式处理
+
+处理不同语言的复数形式：
+
+```yaml
+# zh-CN.yaml
+items:
+  count: "{count} 个项目"
+  
+# en.yaml
+items:
+  count: "{count} {count | plural('item', 'items')}"
+```
+
+```typescript
+// 注册自定义复数规则
+i18n.global.pluralRules = {
+  en: (choice: number) => {
+    return choice === 1 ? 0 : 1;
+  }
+};
+
+// 使用
+const message = i18n.global.t("items.count", { count: 5 });
+```
+
+### 5.5 日期和数字格式化
+
+处理不同语言的日期和数字格式：
+
+```typescript
+// 日期格式化
+const formatDate = (date: Date) => {
+  return new Intl.DateTimeFormat(i18n.global.locale.value, {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  }).format(date);
+};
+
+// 数字格式化
+const formatNumber = (number: number) => {
+  return new Intl.NumberFormat(i18n.global.locale.value, {
+    style: "currency",
+    currency: "USD"
+  }).format(number);
+};
+```
+
+## 6. 添加新语言
+
+### 6.1 添加新语言文件
+
+1. 在 `locales` 目录创建新的语言文件，如 `ja.yaml`（日语）
+2. 复制现有语言文件的结构，翻译所有文本
+
+### 6.2 更新国际化配置
+
+在 `src/plugins/i18n.ts` 中添加新语言：
+
+```typescript
+// 添加语言枚举
+export enum LocaleEnum {
+  EN = "en",
+  ZH_CN = "zh-CN",
+  JA = "ja"  // 新增日语
+}
+
+// 更新 i18n 实例
+export const i18n = createI18n({
+  legacy: false,
+  locale: storageLocal().getItem("locale") || LocaleEnum.ZH_CN,
+  fallbackLocale: LocaleEnum.EN,
+  messages: {
+    [LocaleEnum.EN]: siphonI18n("en"),
+    [LocaleEnum.ZH_CN]: siphonI18n("zh-CN"),
+    [LocaleEnum.JA]: siphonI18n("ja")  // 新增日语
+  }
+});
+```
+
+### 6.3 更新语言选择器
+
+在语言选择器组件中添加新语言选项：
+
+```vue
+<template>
+  <el-dropdown @command="handleLanguageChange">
+    <span class="language-selector">
+      {{ currentLanguageName }}
+      <el-icon class="el-icon--right"><arrow-down /></el-icon>
+    </span>
+    <template #dropdown>
+      <el-dropdown-menu>
+        <el-dropdown-item command="zh-CN">简体中文</el-dropdown-item>
+        <el-dropdown-item command="en">English</el-dropdown-item>
+        <el-dropdown-item command="ja">日本語</el-dropdown-item>  <!-- 新增日语 -->
+      </el-dropdown-menu>
+    </template>
+  </el-dropdown>
+</template>
+
+<script setup lang="ts">
+// ...
+
+// 更新当前语言名称
+const currentLanguageName = computed(() => {
+  switch (locale.value) {
+    case "zh-CN":
+      return "简体中文";
+    case "en":
+      return "English";
+    case "ja":
+      return "日本語";
+    default:
+      return "简体中文";
+  }
+});
+
+// ...
+</script>
+```
+
+### 6.4 更新 Element Plus 语言
+
+在 `src/plugins/elementPlus.ts` 中添加新语言：
+
+```typescript
+import { App } from "vue";
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+import zhCn from "element-plus/es/locale/lang/zh-cn";
+import en from "element-plus/es/locale/lang/en";
+import ja from "element-plus/es/locale/lang/ja";  // 新增日语
+import { useAppStoreHook } from "@/store/modules/app";
+
+export function setupElementPlus(app: App) {
+  const appStore = useAppStoreHook();
+  
+  // 根据当前语言设置 Element Plus 语言
+  let locale;
+  switch (appStore.language) {
+    case "zh-CN":
+      locale = zhCn;
+      break;
+    case "en":
+      locale = en;
+      break;
+    case "ja":
+      locale = ja;
+      break;
+    default:
+      locale = zhCn;
+  }
+  
+  app.use(ElementPlus, { locale });
+}
+```
+
+## 7. 国际化测试
+
+### 7.1 检查缺失的翻译
+
+创建一个工具函数检查缺失的翻译：
+
+```typescript
+// src/utils/i18nChecker.ts
+import { siphonI18n } from "@/plugins/i18n";
+
+// 获取所有语言的翻译
+const zhCN = siphonI18n("zh-CN");
+const en = siphonI18n("en");
+
+// 递归检查对象键
+const checkKeys = (
+  baseObj: Record<string, any>,
+  compareObj: Record<string, any>,
+  baseLang: string,
+  compareLang: string,
+  path = ""
+) => {
+  const missingKeys: string[] = [];
+  
+  Object.keys(baseObj).forEach(key => {
+    const currentPath = path ? `${path}.${key}` : key;
+    
+    if (typeof baseObj[key] === "object" && baseObj[key] !== null) {
+      // 递归检查嵌套对象
+      if (!compareObj[key] || typeof compareObj[key] !== "object") {
+        missingKeys.push(`${currentPath} (整个对象在 ${compareLang} 中缺失)`);
+      } else {
+        missingKeys.push(
+          ...checkKeys(baseObj[key], compareObj[key], baseLang, compareLang, currentPath)
+        );
+      }
+    } else {
+      // 检查叶子节点
+      if (compareObj[key] === undefined) {
+        missingKeys.push(`${currentPath} (在 ${compareLang} 中缺失)`);
+      }
+    }
+  });
+  
+  return missingKeys;
+};
+
+// 检查中文翻译中存在但英文翻译中缺失的键
+export const checkMissingTranslations = () => {
+  const missingInEn = checkKeys(zhCN, en, "zh-CN", "en");
+  const missingInZhCN = checkKeys(en, zhCN, "en", "zh-CN");
+  
+  console.log("英文翻译中缺失的键:", missingInEn);
+  console.log("中文翻译中缺失的键:", missingInZhCN);
+  
+  return {
+    missingInEn,
+    missingInZhCN
+  };
+};
+```
+
+### 7.2 视觉测试
+
+创建一个国际化测试页面，显示所有语言的翻译：
+
+```vue
+<template>
+  <div class="i18n-test">
+    <h1>国际化测试</h1>
+    
+    <div class="language-switcher">
+      <el-radio-group v-model="currentLocale">
+        <el-radio label="zh-CN">简体中文</el-radio>
+        <el-radio label="en">English</el-radio>
+      </el-radio-group>
+    </div>
+    
+    <div class="test-section">
+      <h2>通用文本</h2>
+      <div class="test-item">
+        <div class="key">common.save</div>
+        <div class="value">{{ t("common.save") }}</div>
+      </div>
+      <div class="test-item">
+        <div class="key">common.cancel</div>
+        <div class="value">{{ t("common.cancel") }}</div>
+      </div>
+      <!-- 更多测试项... -->
+    </div>
+    
+    <div class="test-section">
+      <h2>登录页面</h2>
+      <div class="test-item">
+        <div class="key">login.title</div>
+        <div class="value">{{ t("login.title") }}</div>
+      </div>
+      <!-- 更多测试项... -->
+    </div>
+    
+    <!-- 更多测试部分... -->
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t, locale } = useI18n();
+const currentLocale = ref(locale.value);
+
+watch(currentLocale, (val) => {
+  locale.value = val;
+});
+</script>
+```

@@ -1,0 +1,68 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# pure-admin-thin-i18n 项目文档索引
+
+本文档是 pure-admin-thin-i18n 项目的文档索引，提供项目所有文档的快速导航。
+
+## 项目文档
+
+1. [项目概述](./01_project_overview.mdc) - 项目简介、特点和核心功能
+2. [技术栈详情](./02_tech_stack.mdc) - 核心技术栈、依赖版本和技术选型理由
+3. [项目结构](./03_project_structure.mdc) - 目录结构详解和文件命名约定
+4. [核心模块详解](./04_core_modules.mdc) - 核心功能模块的详细说明
+5. [开发规范与约定](./05_development_guidelines.mdc) - 代码风格规范、开发流程和最佳实践
+6. [API 集成指南](./06_api_integration.mdc) - API 架构、HTTP 请求工具和错误处理
+7. [国际化实现指南](./07_i18n_guide.mdc) - 国际化架构、翻译文件结构和最佳实践
+
+## 核心功能模块
+
+- **用户认证与权限管理**：Token 管理、权限控制、角色管理
+- **路由与导航管理**：动态路由、菜单生成、多标签页
+- **国际化系统**：多语言支持、翻译管理、语言切换
+- **HTTP 请求与 API 管理**：请求封装、响应处理、错误处理
+- **组件系统**：基础组件、业务组件、布局组件
+- **状态管理**：Pinia 状态管理、状态持久化
+- **主题系统**：明暗主题切换、主题定制
+
+## 快速入门
+
+1. **环境准备**
+   - Node.js: ^18.18.0 || ^20.9.0 || >=22.0.0
+   - 包管理工具: pnpm 9.0.0 或更高版本
+
+2. **安装依赖**
+   ```bash
+   pnpm install
+   ```
+
+3. **启动开发服务器**
+   ```bash
+   pnpm dev
+   ```
+
+4. **构建生产版本**
+   ```bash
+   pnpm build
+   ```
+
+## 项目特点
+
+- **开箱即用**：集成了用户认证、权限管理、多标签页等后台管理系统必备功能
+- **国际化支持**：内置中文和英文两种语言，可轻松扩展其他语言
+- **精简高效**：去除冗余代码和功能，保留核心功能，提高性能
+- **现代化技术栈**：基于 Vue 3、TypeScript、Vite 等前沿技术
+- **响应式设计**：支持多种设备和屏幕尺寸
+- **主题定制**：支持明暗主题切换和主题色定制
+
+## 参考资源
+
+- [Vue 3 文档](https://vuejs.org/)
+- [Vite 文档](https://vitejs.dev/)
+- [Element Plus 文档](https://element-plus.org/)
+- [Pinia 文档](https://pinia.vuejs.org/)
+- [Vue Router 文档](https://router.vuejs.org/)
+- [Vue I18n 文档](https://vue-i18n.intlify.dev/)
+- [TypeScript 文档](https://www.typescriptlang.org/)

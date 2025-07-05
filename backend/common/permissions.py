@@ -115,6 +115,43 @@ class IsAdmin(IsAdminUser):
         return has_permission
 
 
+class IsTenantAdmin(permissions.BasePermission):
+    """
+    检查用户是否是租户管理员
+    """
+    def has_permission(self, request, view):
+        """
+        检查用户是否是租户管理员
+        
+        Args:
+            request: HTTP请求对象
+            view: 视图对象
+            
+        Returns:
+            布尔值，指示用户是否具有权限
+        """
+        user = request.user
+        path = request.path
+        
+        # 检查用户是否是租户管理员
+        is_authenticated = bool(user and user.is_authenticated)
+        is_tenant_admin = bool(is_authenticated and user.is_admin and not user.is_super_admin)
+        
+        logger.info(f"权限检查 [IsTenantAdmin] - 路径: {path}")
+        logger.info(f"  用户: {user.username if is_authenticated else 'Anonymous'}")
+        logger.info(f"  已认证: {is_authenticated}")
+        logger.info(f"  是租户管理员: {is_tenant_admin}")
+        logger.info(f"  权限检查结果: {'通过' if is_tenant_admin else '拒绝'}")
+        
+        if not is_tenant_admin:
+            logger.warning(
+                f"用户 {user.username if is_authenticated else 'Anonymous'} "
+                f"尝试访问需要租户管理员权限的资源 {path}，但权限检查未通过"
+            )
+        
+        return is_tenant_admin
+
+
 class IsOwnerOrAdmin(permissions.BasePermission):
     """
     对象级权限，只允许对象的所有者或管理员访问

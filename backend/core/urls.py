@@ -99,6 +99,9 @@ urlpatterns = [
         # 菜单管理系统路由
         path('menus/', include('menus.urls', namespace='menus')),
         
+        # 客户管理系统路由
+        path('customers/', include('customers.urls', namespace='customers')),
+        
         # 图表数据API
         path('admin/charts/', include('charts.urls', namespace='charts')),
         

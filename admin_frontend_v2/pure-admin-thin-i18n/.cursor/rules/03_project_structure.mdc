@@ -1,0 +1,241 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# pure-admin-thin-i18n 项目结构
+
+## 目录结构详解
+
+```
+pure-admin-thin-i18n/
+├── build/                 # 构建相关配置
+├── docs/                  # 项目文档
+│   ├── admin_manager/     # 管理员管理文档
+│   ├── admin_users/       # 用户管理文档
+│   ├── api/               # API 相关文档
+│   ├── cms/               # CMS 模块文档
+│   ├── dashboard/         # 仪表盘文档
+│   ├── menus/             # 菜单管理文档
+│   └── tenants/           # 租户管理文档
+├── locales/               # 国际化语言文件
+│   ├── en.yaml            # 英文翻译
+│   └── zh-CN.yaml         # 中文翻译
+├── mock/                  # Mock 数据
+│   ├── asyncRoutes.ts     # 模拟异步路由
+│   ├── login.ts           # 模拟登录接口
+│   └── refreshToken.ts    # 模拟刷新 Token 接口
+├── public/                # 静态资源
+│   ├── favicon.ico        # 网站图标
+│   ├── logo.svg           # Logo
+│   └── platform-config.json # 平台配置
+├── src/                   # 源代码
+│   ├── api/               # API 请求
+│   │   ├── modules/       # 按模块划分的 API
+│   │   ├── types/         # API 类型定义
+│   │   ├── utils/         # API 工具函数
+│   │   ├── routes.ts      # 路由相关 API
+│   │   └── user.ts        # 用户相关 API
+│   ├── assets/            # 静态资源
+│   │   ├── iconfont/      # 图标字体
+│   │   ├── login/         # 登录页面资源
+│   │   ├── status/        # 状态页面资源
+│   │   ├── svg/           # SVG 图标
+│   │   └── table-bar/     # 表格工具栏资源
+│   ├── components/        # 组件
+│   │   ├── AdminUserManagement/ # 管理员用户管理组件
+│   │   ├── Cms/           # CMS 相关组件
+│   │   ├── Dashboard/     # 仪表盘组件
+│   │   ├── MenuManagement/ # 菜单管理组件
+│   │   ├── ReAuth/        # 权限组件
+│   │   ├── ReDialog/      # 对话框组件
+│   │   ├── ReIcon/        # 图标组件
+│   │   ├── RePerms/       # 权限点组件
+│   │   ├── RePureTableBar/ # 表格工具栏组件
+│   │   ├── ReSegmented/   # 分段控制组件
+│   │   ├── ReText/        # 文本组件
+│   │   ├── SvgIcon/       # SVG 图标组件
+│   │   └── TenantManagement/ # 租户管理组件
+│   ├── config/            # 全局配置
+│   │   └── index.ts       # 配置入口
+│   ├── directives/        # 自定义指令
+│   │   ├── auth/          # 权限指令
+│   │   ├── copy/          # 复制指令
+│   │   ├── longpress/     # 长按指令
+│   │   ├── optimize/      # 优化指令
+│   │   ├── perms/         # 权限点指令
+│   │   └── ripple/        # 水波纹指令
+│   ├── hooks/             # 自定义钩子
+│   │   ├── useChart.ts    # 图表钩子
+│   │   └── useChartDataFlow.ts # 图表数据流钩子
+│   ├── layout/            # 布局组件
+│   │   ├── components/    # 布局子组件
+│   │   ├── hooks/         # 布局相关钩子
+│   │   ├── frame.vue      # iframe 框架
+│   │   └── index.vue      # 主布局
+│   ├── plugins/           # 插件
+│   │   ├── echarts.ts     # ECharts 插件
+│   │   ├── elementPlus.ts # Element Plus 插件
+│   │   └── i18n.ts        # 国际化插件
+│   ├── router/            # 路由
+│   │   ├── modules/       # 路由模块
+│   │   ├── index.ts       # 路由主配置
+│   │   └── utils.ts       # 路由工具函数
+│   ├── store/             # 状态管理
+│   │   ├── modules/       # 状态模块
+│   │   ├── index.ts       # 状态管理入口
+│   │   ├── types.ts       # 状态类型定义
+│   │   └── utils.ts       # 状态管理工具
+│   ├── style/             # 样式
+│   │   ├── dark.scss      # 暗色主题
+│   │   ├── element-plus.scss # Element Plus 样式覆盖
+│   │   └── index.scss     # 主样式入口
+│   ├── types/             # 类型定义
+│   │   ├── adminUser.ts   # 管理员用户类型
+│   │   ├── api.ts         # API 类型
+│   │   └── cms.ts         # CMS 类型
+│   ├── utils/             # 工具函数
+│   │   ├── auth.ts        # 认证工具
+│   │   ├── http/          # HTTP 请求工具
+│   │   ├── localforage/   # 本地存储工具
+│   │   ├── logger.ts      # 日志工具
+│   │   └── progress/      # 进度条工具
+│   ├── views/             # 页面视图
+│   │   ├── admin-user/    # 管理员用户页面
+│   │   ├── cms/           # CMS 页面
+│   │   ├── dashboard/     # 仪表盘页面
+│   │   ├── error/         # 错误页面
+│   │   ├── login/         # 登录页面
+│   │   ├── menu/          # 菜单管理页面
+│   │   ├── permission/    # 权限管理页面
+│   │   ├── tenant/        # 租户管理页面
+│   │   └── welcome/       # 欢迎页面
+│   ├── App.vue            # 根组件
+│   └── main.ts            # 入口文件
+├── types/                 # 全局类型声明
+│   ├── directives.d.ts    # 指令类型
+│   ├── global-components.d.ts # 全局组件类型
+│   ├── global.d.ts        # 全局类型
+│   ├── index.d.ts         # 类型入口
+│   ├── router.d.ts        # 路由类型
+│   ├── shims-tsx.d.ts     # TSX 类型
+│   └── shims-vue.d.ts     # Vue 类型
+├── .env.development       # 开发环境变量
+├── .env.production        # 生产环境变量
+├── eslint.config.js       # ESLint 配置
+├── index.html             # HTML 模板
+├── package.json           # 项目依赖
+├── postcss.config.js      # PostCSS 配置
+├── stylelint.config.js    # Stylelint 配置
+├── tsconfig.json          # TypeScript 配置
+└── vite.config.ts         # Vite 配置
+```
+
+## 核心目录说明
+
+### 1. `src/api` - API 请求
+
+API 目录按功能模块组织，使用 TypeScript 类型定义确保类型安全：
+
+- `modules/`: 按业务模块划分的 API 接口
+- `types/`: API 相关的类型定义
+- `utils/`: API 相关的工具函数
+- `routes.ts`: 路由相关的 API 接口
+- `user.ts`: 用户认证相关的 API 接口
+
+### 2. `src/components` - 组件库
+
+组件按功能和用途分类：
+
+- 业务组件：如 `AdminUserManagement/`, `Cms/`, `Dashboard/` 等
+- 通用组件：以 `Re` 前缀命名的组件，如 `ReDialog/`, `ReIcon/` 等
+- 基础组件：如 `SvgIcon/` 等
+
+### 3. `src/layout` - 布局组件
+
+负责整体页面结构的组件：
+
+- `components/`: 布局子组件，如侧边栏、顶部导航栏、标签栏等
+- `hooks/`: 布局相关的钩子函数
+- `frame.vue`: iframe 框架，用于嵌入外部页面
+- `index.vue`: 主布局组件，整合所有布局元素
+
+### 4. `src/router` - 路由管理
+
+路由配置和处理：
+
+- `modules/`: 按功能模块划分的路由配置
+- `index.ts`: 路由主配置，包括路由实例创建和全局导航守卫
+- `utils.ts`: 路由相关的工具函数，如路由扁平化、权限过滤等
+
+### 5. `src/store` - 状态管理
+
+使用 Pinia 进行状态管理：
+
+- `modules/`: 按功能模块划分的状态存储
+- `index.ts`: 状态管理入口，创建和导出 Pinia 实例
+- `types.ts`: 状态相关的类型定义
+- `utils.ts`: 状态管理相关的工具函数
+
+### 6. `src/utils` - 工具函数
+
+各种通用工具函数：
+
+- `auth.ts`: 认证相关的工具函数
+- `http/`: HTTP 请求工具，基于 Axios 的封装
+- `localforage/`: 本地存储工具，基于 localforage 的封装
+- `logger.ts`: 日志工具，用于开发调试和错误追踪
+- `progress/`: 进度条工具，基于 NProgress 的封装
+
+### 7. `src/views` - 页面视图
+
+按功能模块组织的页面组件：
+
+- `admin-user/`: 管理员用户管理页面
+- `cms/`: 内容管理系统页面
+- `dashboard/`: 仪表盘页面
+- `error/`: 错误页面（403、404、500）
+- `login/`: 登录页面
+- `menu/`: 菜单管理页面
+- `permission/`: 权限管理页面
+- `tenant/`: 租户管理页面
+- `welcome/`: 欢迎页面
+
+### 8. `locales` - 国际化
+
+国际化翻译文件：
+
+- `en.yaml`: 英文翻译
+- `zh-CN.yaml`: 中文翻译
+
+### 9. `types` - 全局类型声明
+
+TypeScript 类型声明文件：
+
+- `directives.d.ts`: 自定义指令类型声明
+- `global-components.d.ts`: 全局组件类型声明
+- `global.d.ts`: 全局类型声明
+- `router.d.ts`: 路由相关类型声明
+- `shims-vue.d.ts`: Vue 相关类型声明
+
+## 文件命名约定
+
+1. **组件文件**：
+   - 使用 PascalCase 命名，如 `UserProfile.vue`
+   - 基础组件使用 `Re` 前缀，如 `ReButton.vue`
+
+2. **工具函数文件**：
+   - 使用 camelCase 命名，如 `formatDate.ts`
+   - 使用动词开头，表明功能，如 `createUser.ts`
+
+3. **类型定义文件**：
+   - 使用 camelCase 命名，如 `userTypes.ts`
+   - 与相关功能模块同名，如 `user.ts` 对应 `userTypes.ts`
+
+4. **样式文件**：
+   - 使用 kebab-case 命名，如 `main-layout.scss`
+   - 与对应的组件同名，如 `UserProfile.vue` 对应 `user-profile.scss`
+
+5. **路由模块**：
+   - 使用 camelCase 命名，如 `userManagement.ts`
+   - 表示功能模块，如 `dashboard.ts`

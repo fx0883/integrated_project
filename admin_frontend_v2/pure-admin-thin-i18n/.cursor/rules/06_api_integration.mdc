@@ -1,0 +1,538 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# pure-admin-thin-i18n API 集成指南
+
+## 1. API 架构概述
+
+项目采用模块化的 API 设计，基于 Axios 进行了二次封装，实现了统一的请求处理、响应处理、错误处理和 Token 管理。
+
+### 1.1 目录结构
+
+```
+src/
+├── api/                # API 模块目录
+│   ├── modules/        # 按业务模块划分的 API
+│   │   ├── adminUser.ts  # 管理员用户 API
+│   │   ├── cms.ts        # CMS 模块 API
+│   │   ├── common.ts     # 通用 API
+│   │   ├── menu.ts       # 菜单管理 API
+│   │   └── tenant.ts     # 租户管理 API
+│   ├── types/          # API 类型定义
+│   ├── utils/          # API 工具函数
+│   ├── routes.ts       # 路由相关 API
+│   └── user.ts         # 用户相关 API
+├── types/
+│   └── api.ts          # API 通用类型定义
+└── utils/
+    └── http/           # HTTP 请求工具
+        ├── index.ts    # HTTP 客户端封装
+        └── types.d.ts  # HTTP 类型定义
+```
+
+### 1.2 API 响应格式
+
+所有 API 响应都统一为标准化的格式：
+
+```typescript
+// API 响应基础接口
+export interface ApiResponse<T = any> {
+  success: boolean;      // 请求是否成功
+  code: number;          // 状态码
+  message: string;       // 消息
+  data: T;               // 响应数据
+}
+
+// 分页数据格式
+export interface PaginationData<T = any> {
+  total: number;         // 总条数
+  page: number;          // 当前页码
+  limit: number;         // 每页条数
+  data: T[];             // 数据列表
+}
+
+// 分页响应接口
+export interface PaginationResponse<T = any> extends ApiResponse<PaginationData<T>> {}
+```
+
+## 2. HTTP 请求工具
+
+### 2.1 核心功能
+
+HTTP 客户端基于 Axios 封装，提供以下核心功能：
+
+- **统一配置**：统一的请求基础配置
+- **请求拦截**：自动添加 Token、CSRF 等请求头
+- **响应拦截**：统一处理响应格式和错误
+- **Token 刷新**：自动刷新过期 Token
+- **请求重试**：Token 刷新后自动重试请求
+- **取消请求**：支持取消重复请求
+- **类型支持**：完整的 TypeScript 类型支持
+
+### 2.2 基本用法
+
+```typescript
+import { http } from "@/utils/http";
+
+// GET 请求
+const getUser = async (id: number) => {
+  return http.get<ApiResponse<UserInfo>>(`/users/${id}`);
+};
+
+// POST 请求
+const createUser = async (user: CreateUserDto) => {
+  return http.post<ApiResponse<UserInfo>>("/users", user);
+};
+
+// PUT 请求
+const updateUser = async (id: number, user: UpdateUserDto) => {
+  return http.put<ApiResponse<UserInfo>>(`/users/${id}`, user);
+};
+
+// DELETE 请求
+const deleteUser = async (id: number) => {
+  return http.delete<ApiResponse<void>>(`/users/${id}`);
+};
+```
+
+### 2.3 高级用法
+
+#### 2.3.1 请求配置
+
+```typescript
+// 添加自定义请求头
+const getUser = async (id: number) => {
+  return http.get<ApiResponse<UserInfo>>(`/users/${id}`, {}, {
+    headers: {
+      "X-Custom-Header": "value"
+    }
+  });
+};
+
+// 设置请求超时
+const getUser = async (id: number) => {
+  return http.get<ApiResponse<UserInfo>>(`/users/${id}`, {}, {
+    timeout: 5000
+  });
+};
+```
+
+#### 2.3.2 取消请求
+
+```typescript
+// 使用取消令牌
+const controller = new AbortController();
+
+const getUser = async (id: number) => {
+  return http.get<ApiResponse<UserInfo>>(`/users/${id}`, {}, {
+    signal: controller.signal
+  });
+};
+
+// 取消请求
+controller.abort();
+```
+
+#### 2.3.3 请求钩子
+
+```typescript
+// 请求前钩子
+const getUser = async (id: number) => {
+  return http.get<ApiResponse<UserInfo>>(`/users/${id}`, {}, {
+    beforeRequestCallback: (config) => {
+      console.log("请求开始", config);
+    }
+  });
+};
+
+// 响应后钩子
+const getUser = async (id: number) => {
+  return http.get<ApiResponse<UserInfo>>(`/users/${id}`, {}, {
+    beforeResponseCallback: (response) => {
+      console.log("响应结束", response);
+    }
+  });
+};
+```
+
+## 3. API 模块化
+
+### 3.1 创建 API 模块
+
+API 接口按功能模块组织，每个模块对应一个文件：
+
+```typescript
+// src/api/modules/adminUser.ts
+import { http } from "@/utils/http";
+import { ApiResponse, PaginationResponse } from "@/types/api";
+import { AdminUser, CreateAdminUserDto, UpdateAdminUserDto } from "@/types/adminUser";
+
+// 获取管理员用户列表
+export const getAdminUserList = (params: {
+  page: number;
+  limit: number;
+  keyword?: string;
+}) => {
+  return http.get<PaginationResponse<AdminUser>>("/admin-users", { params });
+};
+
+// 获取管理员用户详情
+export const getAdminUserDetail = (id: number) => {
+  return http.get<ApiResponse<AdminUser>>(`/admin-users/${id}`);
+};
+
+// 创建管理员用户
+export const createAdminUser = (data: CreateAdminUserDto) => {
+  return http.post<ApiResponse<AdminUser>>("/admin-users", data);
+};
+
+// 更新管理员用户
+export const updateAdminUser = (id: number, data: UpdateAdminUserDto) => {
+  return http.put<ApiResponse<AdminUser>>(`/admin-users/${id}`, data);
+};
+
+// 删除管理员用户
+export const deleteAdminUser = (id: number) => {
+  return http.delete<ApiResponse<void>>(`/admin-users/${id}`);
+};
+```
+
+### 3.2 在组件中使用 API
+
+```vue
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { getAdminUserList, deleteAdminUser } from "@/api/modules/adminUser";
+import { AdminUser } from "@/types/adminUser";
+import { ElMessage, ElMessageBox } from "element-plus";
+
+// 用户列表数据
+const userList = ref<AdminUser[]>([]);
+const total = ref(0);
+const loading = ref(false);
+const queryParams = ref({
+  page: 1,
+  limit: 10,
+  keyword: ""
+});
+
+// 获取用户列表
+const fetchUserList = async () => {
+  loading.value = true;
+  try {
+    const { data } = await getAdminUserList(queryParams.value);
+    if (data.success) {
+      userList.value = data.data.data;
+      total.value = data.data.total;
+    } else {
+      ElMessage.error(data.message);
+    }
+  } catch (error) {
+    console.error("获取用户列表失败", error);
+    ElMessage.error("获取用户列表失败");
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 删除用户
+const handleDelete = async (id: number) => {
+  try {
+    await ElMessageBox.confirm("确认删除该用户?", "提示", {
+      type: "warning"
+    });
+    
+    const { data } = await deleteAdminUser(id);
+    if (data.success) {
+      ElMessage.success("删除成功");
+      fetchUserList();
+    } else {
+      ElMessage.error(data.message);
+    }
+  } catch (error) {
+    if (error !== "cancel") {
+      console.error("删除用户失败", error);
+      ElMessage.error("删除用户失败");
+    }
+  }
+};
+
+// 页面加载时获取数据
+onMounted(() => {
+  fetchUserList();
+});
+</script>
+```
+
+## 4. 错误处理
+
+### 4.1 全局错误处理
+
+HTTP 客户端已经实现了全局错误处理，会自动处理常见的错误情况：
+
+- **401 未授权**：自动刷新 Token 并重试请求
+- **403 禁止访问**：显示权限不足提示
+- **404 未找到**：显示资源不存在提示
+- **500 服务器错误**：显示服务器错误提示
+- **网络错误**：显示网络连接错误提示
+
+### 4.2 局部错误处理
+
+在组件中可以使用 try-catch 进行局部错误处理：
+
+```typescript
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const { data } = await getAdminUserList(queryParams.value);
+    if (data.success) {
+      // 处理成功响应
+      userList.value = data.data.data;
+    } else {
+      // 处理业务错误
+      ElMessage.error(data.message);
+    }
+  } catch (error) {
+    // 处理网络错误或其他异常
+    console.error("获取数据失败", error);
+    ElMessage.error("获取数据失败，请稍后重试");
+  } finally {
+    loading.value = false;
+  }
+};
+```
+
+### 4.3 错误代码处理
+
+可以根据错误代码进行不同的处理：
+
+```typescript
+try {
+  const { data } = await loginApi(loginForm.value);
+  if (data.success) {
+    // 登录成功
+  } else {
+    // 根据错误代码处理
+    switch (data.code) {
+      case 1001:
+        ElMessage.error("用户名或密码错误");
+        break;
+      case 1002:
+        ElMessage.error("账号已被锁定");
+        break;
+      case 1003:
+        ElMessage.error("验证码错误");
+        break;
+      default:
+        ElMessage.error(data.message || "登录失败");
+    }
+  }
+} catch (error) {
+  ElMessage.error("登录失败，请检查网络连接");
+}
+```
+
+## 5. Token 管理
+
+### 5.1 Token 刷新机制
+
+项目实现了无感知的 Token 刷新机制：
+
+1. 当请求返回 401 状态码时，表示 Token 已过期
+2. HTTP 客户端会自动调用刷新 Token 接口
+3. 刷新成功后，会自动重试之前失败的请求
+4. 刷新失败时，会清除用户信息并跳转到登录页
+
+### 5.2 Token 存储
+
+Token 同时存储在 localStorage 和 Cookie 中：
+
+- **localStorage**：用于 JavaScript 访问
+- **Cookie**：用于 HTTP 请求自动携带
+
+```typescript
+// 存储 Token
+const setToken = (token: string) => {
+  localStorage.setItem("access_token", token);
+  Cookies.set("access_token", token, { expires: 7 });
+};
+
+// 获取 Token
+const getToken = () => {
+  return localStorage.getItem("access_token");
+};
+
+// 清除 Token
+const removeToken = () => {
+  localStorage.removeItem("access_token");
+  Cookies.remove("access_token");
+};
+```
+
+### 5.3 多页面 Token 同步
+
+项目实现了多页面 Token 同步机制，当一个页面登出或 Token 刷新失败时，其他页面也会同步登出：
+
+```typescript
+// 监听 storage 事件
+window.addEventListener("storage", (e) => {
+  if (e.key === "access_token" && !e.newValue) {
+    // Token 被其他页面清除，执行登出操作
+    useUserStoreHook().logout();
+  }
+});
+```
+
+## 6. 文件上传
+
+### 6.1 基本上传
+
+```typescript
+// 上传文件
+export const uploadFile = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  return http.post<ApiResponse<{ url: string }>>("/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
+};
+```
+
+### 6.2 上传组件集成
+
+```vue
+<template>
+  <el-upload
+    action="#"
+    :http-request="customUpload"
+    :before-upload="beforeUpload"
+    :on-success="handleSuccess"
+    :on-error="handleError"
+  >
+    <el-button type="primary">上传文件</el-button>
+  </el-upload>
+</template>
+
+<script setup lang="ts">
+import { uploadFile } from "@/api/modules/common";
+import { ElMessage } from "element-plus";
+import type { UploadRequestOptions } from "element-plus";
+
+// 自定义上传方法
+const customUpload = async (options: UploadRequestOptions) => {
+  try {
+    const { data } = await uploadFile(options.file);
+    if (data.success) {
+      options.onSuccess(data.data);
+    } else {
+      options.onError(new Error(data.message));
+    }
+  } catch (error) {
+    options.onError(error as Error);
+  }
+};
+
+// 上传前验证
+const beforeUpload = (file: File) => {
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isLt2M) {
+    ElMessage.error("上传文件大小不能超过 2MB!");
+    return false;
+  }
+  return true;
+};
+
+// 上传成功回调
+const handleSuccess = (response: { url: string }) => {
+  ElMessage.success("上传成功");
+  // 处理上传成功后的逻辑
+  emit("update:modelValue", response.url);
+};
+
+// 上传失败回调
+const handleError = (error: Error) => {
+  ElMessage.error(`上传失败: ${error.message}`);
+};
+</script>
+```
+
+## 7. API 模拟
+
+### 7.1 使用 Mock 数据
+
+项目使用 `vite-plugin-fake-server` 进行 API 模拟：
+
+```typescript
+// mock/login.ts
+import { MockMethod } from "vite-plugin-fake-server";
+
+export default [
+  {
+    url: "/api/v1/auth/login",
+    method: "post",
+    response: ({ body }) => {
+      const { username, password } = body;
+      
+      if (username === "admin" && password === "admin123") {
+        return {
+          success: true,
+          code: 2000,
+          message: "登录成功",
+          data: {
+            access_token: "mock_access_token",
+            refresh_token: "mock_refresh_token",
+            expires_in: 7200
+          }
+        };
+      }
+      
+      return {
+        success: false,
+        code: 4001,
+        message: "用户名或密码错误",
+        data: null
+      };
+    }
+  }
+] as MockMethod[];
+```
+
+### 7.2 切换真实 API 和 Mock API
+
+在 `.env` 文件中配置是否使用 Mock 数据：
+
+```
+# .env.development
+VITE_USE_MOCK=true
+VITE_API_BASE_URL=/api/v1
+
+# .env.production
+VITE_USE_MOCK=false
+VITE_API_BASE_URL=https://api.example.com/v1
+```
+
+在 `vite.config.ts` 中根据环境变量配置 Mock 插件：
+
+```typescript
+import { defineConfig, loadEnv } from "vite";
+import { viteMockServe } from "vite-plugin-fake-server";
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd());
+  
+  return {
+    plugins: [
+      viteMockServe({
+        enable: env.VITE_USE_MOCK === "true",
+        mockPath: "mock",
+        logger: true
+      })
+    ]
+  };
+});
+```

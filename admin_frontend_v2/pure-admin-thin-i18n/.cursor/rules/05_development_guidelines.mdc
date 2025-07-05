@@ -1,0 +1,351 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# pure-admin-thin-i18n 开发规范与约定
+
+## 1. 代码风格规范
+
+### 1.1 JavaScript/TypeScript 规范
+
+项目使用 ESLint 和 Prettier 进行代码风格检查和格式化：
+
+- **文件命名**：使用 camelCase 命名，如 `userService.ts`
+- **变量命名**：
+  - 普通变量使用 camelCase，如 `userName`
+  - 常量使用 UPPER_SNAKE_CASE，如 `MAX_COUNT`
+  - 私有变量使用下划线前缀，如 `_privateVar`
+- **类型命名**：使用 PascalCase，如 `UserInfo`
+- **接口命名**：使用 PascalCase，如 `UserService`
+- **枚举命名**：使用 PascalCase，如 `UserRole`
+- **函数命名**：使用 camelCase，如 `getUserInfo`
+
+```typescript
+// 类型定义示例
+interface UserInfo {
+  id: number;
+  username: string;
+  role: UserRole;
+}
+
+enum UserRole {
+  Admin = "admin",
+  User = "user",
+  Guest = "guest"
+}
+
+// 变量命名示例
+const MAX_RETRY_COUNT = 3;
+let currentUser: UserInfo | null = null;
+
+// 函数命名示例
+function getUserById(id: number): Promise<UserInfo> {
+  // ...
+}
+```
+
+### 1.2 Vue 组件规范
+
+Vue 组件使用 Vue 3 Composition API 和 `<script setup>` 语法：
+
+- **组件命名**：使用 PascalCase，如 `UserProfile.vue`
+- **组件结构**：按照 `<template>`, `<script>`, `<style>` 顺序排列
+- **Props 命名**：使用 camelCase，如 `userName`
+- **事件命名**：使用 kebab-case，如 `@update-user`
+- **自定义事件**：使用 `defineEmits` 定义
+- **Props 定义**：使用 `defineProps` 并提供类型
+- **响应式变量**：优先使用 `ref` 和 `reactive`
+
+```vue
+<template>
+  <div class="user-card">
+    <h2>{{ userName }}</h2>
+    <p>{{ userRole }}</p>
+    <el-button @click="handleEdit">{{ t("common.edit") }}</el-button>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+// 国际化
+const { t } = useI18n();
+
+// Props 定义
+const props = defineProps<{
+  userId: number;
+  userName: string;
+  userRole: string;
+}>();
+
+// 事件定义
+const emit = defineEmits<{
+  (e: "update-user", id: number): void;
+}>();
+
+// 方法定义
+const handleEdit = () => {
+  emit("update-user", props.userId);
+};
+</script>
+
+<style lang="scss" scoped>
+.user-card {
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--el-bg-color);
+}
+</style>
+```
+
+### 1.3 CSS/SCSS 规范
+
+项目使用 SCSS 和 Tailwind CSS：
+
+- **类名命名**：使用 kebab-case，如 `user-card`
+- **SCSS 变量**：使用 kebab-case，如 `$primary-color`
+- **嵌套深度**：不超过 3 层
+- **选择器**：避免过于具体的选择器，优先使用类选择器
+- **媒体查询**：使用 SCSS 嵌套媒体查询
+- **主题变量**：优先使用 CSS 变量，便于主题切换
+
+```scss
+// 变量定义
+$border-radius: 8px;
+$card-padding: 16px;
+
+// 组件样式
+.user-card {
+  padding: $card-padding;
+  border-radius: $border-radius;
+  background-color: var(--el-bg-color);
+  
+  // 嵌套规则
+  &__header {
+    margin-bottom: 12px;
+    
+    // 媒体查询
+    @media (max-width: 768px) {
+      margin-bottom: 8px;
+    }
+  }
+  
+  // 状态样式
+  &--active {
+    border: 1px solid var(--el-color-primary);
+  }
+}
+```
+
+## 2. 项目开发流程
+
+### 2.1 功能开发流程
+
+开发新功能的标准流程：
+
+1. **需求分析**：理解需求，确定功能范围和技术方案
+2. **创建分支**：从主分支创建功能分支，命名格式 `feature/功能名称`
+3. **开发功能**：按照以下步骤开发功能：
+   - 添加类型定义（如需）
+   - 添加 API 接口（如需）
+   - 添加状态管理（如需）
+   - 开发组件和页面
+   - 添加国际化支持
+4. **本地测试**：确保功能正常工作，无明显 bug
+5. **代码提交**：提交代码，遵循提交规范
+6. **合并请求**：创建合并请求，等待代码审查
+7. **解决反馈**：根据代码审查反馈修改代码
+8. **合并代码**：通过审查后合并到主分支
+
+### 2.2 Git 提交规范
+
+项目使用 commitlint 规范化提交信息，遵循 Angular 提交规范：
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+- **type**：提交类型，如 feat, fix, docs 等
+- **scope**：可选，影响范围，如 user, auth 等
+- **subject**：简短描述，不超过 50 个字符
+- **body**：可选，详细描述
+- **footer**：可选，关闭 issue 等信息
+
+常用的提交类型：
+
+- **feat**：新功能
+- **fix**：修复 bug
+- **docs**：文档更新
+- **style**：代码风格调整，不影响功能
+- **refactor**：代码重构，不新增功能或修复 bug
+- **perf**：性能优化
+- **test**：添加或修改测试
+- **chore**：构建过程或辅助工具变动
+
+示例：
+
+```
+feat(user): add user profile page
+
+- Add user profile component
+- Add user profile API integration
+- Add i18n support for user profile
+
+Closes #123
+```
+
+### 2.3 分支管理策略
+
+项目采用 Git Flow 分支管理策略：
+
+- **main**：主分支，保存稳定版本
+- **develop**：开发分支，最新的开发版本
+- **feature/***：功能分支，用于开发新功能
+- **hotfix/***：热修复分支，用于修复生产环境 bug
+- **release/***：发布分支，用于准备新版本发布
+
+## 3. 代码组织与模块化
+
+### 3.1 组件设计原则
+
+组件设计遵循以下原则：
+
+- **单一职责**：每个组件只负责一个功能
+- **高内聚低耦合**：组件内部功能紧密相关，与外部依赖最小化
+- **可复用性**：设计通用组件，避免重复代码
+- **可测试性**：组件易于单元测试
+- **可维护性**：组件结构清晰，易于理解和修改
+
+### 3.2 组件分类
+
+项目组件分为三类：
+
+1. **基础组件**：通用的 UI 组件，如按钮、输入框等
+   - 位于 `src/components` 目录，以 `Re` 前缀命名
+   - 高度可复用，无业务逻辑
+   - 提供完善的 Props 和事件
+
+2. **业务组件**：特定业务功能的组件，如用户表单、文章列表等
+   - 位于 `src/components/[模块名]` 目录
+   - 包含特定业务逻辑
+   - 可在多个页面中复用
+
+3. **页面组件**：完整的页面，如用户管理页、仪表盘页等
+   - 位于 `src/views` 目录
+   - 组合多个基础组件和业务组件
+   - 处理页面级别的状态和逻辑
+
+### 3.3 功能模块组织
+
+功能模块按照以下方式组织：
+
+1. **API 接口**：位于 `src/api/modules/[模块名].ts`
+2. **类型定义**：位于 `src/types/[模块名].ts`
+3. **状态管理**：位于 `src/store/modules/[模块名].ts`
+4. **业务组件**：位于 `src/components/[模块名]/`
+5. **页面组件**：位于 `src/views/[模块名]/`
+6. **路由配置**：位于 `src/router/modules/[模块名].ts`
+7. **国际化文本**：位于 `locales/zh-CN.yaml` 和 `locales/en.yaml` 中的对应部分
+
+## 4. 性能优化指南
+
+### 4.1 代码层面优化
+
+- **懒加载**：使用路由懒加载和组件动态导入
+- **代码分割**：按路由和功能模块分割代码
+- **虚拟列表**：大数据列表使用虚拟滚动
+- **防抖和节流**：对频繁触发的事件使用防抖和节流
+- **计算属性缓存**：合理使用计算属性缓存结果
+- **避免大型对象响应式**：大型只读数据使用 `shallowRef` 或 `shallowReactive`
+
+### 4.2 资源优化
+
+- **图片优化**：使用适当格式和大小的图片，考虑使用 WebP 格式
+- **图标优化**：使用 SVG 图标或图标字体
+- **CSS 优化**：使用 CSS Modules 或 scoped CSS，避免全局样式污染
+- **按需导入**：第三方库按需导入，避免全量导入
+
+### 4.3 构建优化
+
+- **Tree Shaking**：移除未使用的代码
+- **代码压缩**：使用 terser 压缩 JavaScript，使用 cssnano 压缩 CSS
+- **资源压缩**：启用 Gzip 或 Brotli 压缩
+- **CDN 加速**：使用 CDN 加载第三方库
+- **缓存优化**：合理设置缓存策略，使用内容哈希命名文件
+
+## 5. 国际化开发指南
+
+### 5.1 添加新语言
+
+添加新语言的步骤：
+
+1. 在 `locales` 目录创建新的语言文件，如 `ja.yaml`
+2. 在 `src/plugins/i18n.ts` 中添加新语言的导入和配置
+3. 在语言切换组件中添加新语言选项
+
+### 5.2 翻译文本组织
+
+翻译文本按照功能模块组织，使用嵌套结构：
+
+```yaml
+# 通用文本
+common:
+  save: 保存
+  cancel: 取消
+  
+# 功能模块
+user:
+  management:
+    title: 用户管理
+    create: 创建用户
+  profile:
+    title: 用户资料
+    edit: 编辑资料
+    
+# 页面标题
+routes:
+  dashboard: 仪表盘
+  userManagement: 用户管理
+```
+
+### 5.3 国际化最佳实践
+
+- **使用键名而非默认语言**：使用 `t("common.save")` 而非 `t("保存")`
+- **避免字符串拼接**：使用参数替换而非字符串拼接
+- **考虑复数形式**：使用 Vue I18n 的复数功能处理复数形式
+- **考虑日期和数字格式**：使用 Vue I18n 的日期和数字格式化功能
+- **提取所有硬编码文本**：确保所有显示给用户的文本都使用国际化
+
+## 6. 测试指南
+
+### 6.1 单元测试
+
+单元测试使用 Vitest 和 Vue Test Utils：
+
+- **测试范围**：工具函数、组件 Props 和事件、Pinia Store
+- **命名约定**：测试文件名为 `[原文件名].spec.ts`
+- **目录结构**：测试文件与源文件放在同一目录，或集中放在 `tests` 目录
+
+### 6.2 组件测试
+
+组件测试的最佳实践：
+
+- **隔离测试**：使用 mock 隔离外部依赖
+- **测试 Props**：测试组件对不同 Props 的响应
+- **测试事件**：测试组件是否正确触发事件
+- **测试渲染**：测试组件是否正确渲染
+- **测试交互**：测试用户交互是否产生预期结果
+
+### 6.3 端到端测试
+
+端到端测试使用 Cypress：
+
+- **测试范围**：关键用户流程，如登录、创建资源等
+- **测试环境**：使用测试环境或模拟 API
+- **测试数据**：使用固定的测试数据，确保测试可重复
