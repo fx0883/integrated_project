@@ -241,8 +241,10 @@ const isViewMode = computed(() => props.mode === "view");
           ref="formRef"
           :model="formData"
           :rules="rules"
+          label-position="right"
           label-width="120px"
           :disabled="loading || isViewMode"
+          class="form-with-label-margin"
         >
           <el-form-item :label="t('customer.name')" prop="name">
             <el-input
@@ -317,8 +319,10 @@ const isViewMode = computed(() => props.mode === "view");
           ref="formRef"
           :model="formData"
           :rules="rules"
+          label-position="right"
           label-width="120px"
           :disabled="loading || isViewMode"
+          class="form-with-label-margin"
         >
           <el-form-item :label="t('customer.address')" prop="address">
             <el-input
@@ -369,8 +373,10 @@ const isViewMode = computed(() => props.mode === "view");
           ref="formRef"
           :model="formData"
           :rules="rules"
+          label-position="right"
           label-width="120px"
           :disabled="loading || isViewMode"
+          class="form-with-label-margin"
         >
           <el-form-item :label="t('customer.description')" prop="description">
             <el-input
@@ -454,5 +460,9 @@ const isViewMode = computed(() => props.mode === "view");
 
 .form-actions .el-button {
   margin-left: 10px;
+}
+
+.form-with-label-margin :deep(.el-form-item__label) {
+  padding-right: 24px;
 }
 </style>

@@ -393,7 +393,12 @@ onMounted(() => {
     </div>
 
     <el-card class="customer-list-search">
-      <el-form :inline="true" :model="searchForm" class="search-form">
+      <el-form
+        :inline="true"
+        :model="searchForm"
+        class="search-form form-with-label-margin"
+        label-position="right"
+      >
         <el-form-item :label="t('customer.search')">
           <el-input
             v-model="searchForm.search"
@@ -707,5 +712,9 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 20px;
+}
+
+.form-with-label-margin :deep(.el-form-item__label) {
+  padding-right: 24px;
 }
 </style>
