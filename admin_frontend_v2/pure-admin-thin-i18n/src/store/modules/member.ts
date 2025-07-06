@@ -212,10 +212,21 @@ export const useMemberStore = defineStore("member", {
       try {
         const response = await updateMember(id, data);
         if (response.success) {
-          // 如果当前选中的会员是被更新的会员，则更新当前选中的会员信息
+          // 如果更新的是当前选中的会员，更新本地数据
           if (this.currentMember && this.currentMember.id === id) {
-            this.currentMember = response.data;
+            this.currentMember = {
+              ...this.currentMember,
+              username: data.username || this.currentMember.username,
+              nick_name: data.nick_name || this.currentMember.nick_name,
+              first_name: data.first_name || this.currentMember.first_name,
+              last_name: data.last_name || this.currentMember.last_name,
+              email: data.email || this.currentMember.email,
+              phone: data.phone || this.currentMember.phone,
+              status: data.status || this.currentMember.status,
+              notes: data.notes || this.currentMember.notes
+            };
           }
+          
           ElMessage.success(response.message || "更新会员信息成功");
           return response;
         } else {

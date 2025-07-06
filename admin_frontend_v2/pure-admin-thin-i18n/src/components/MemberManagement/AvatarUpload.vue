@@ -75,7 +75,12 @@ const imageUrl = computed(() => {
 // 上传前验证
 const beforeAvatarUpload = (file: File) => {
   // 检查文件类型
-  const isImage = ["image/jpeg", "image/png", "image/gif"].includes(file.type);
+  const isImage = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp"
+  ].includes(file.type);
   if (!isImage) {
     ElMessage.error(t("member.avatarTypeError"));
     return false;

@@ -1,3 +1,5 @@
+# MCP 工具配置
+
 npx @agentdeskai/browser-tools-server@latest
 
 

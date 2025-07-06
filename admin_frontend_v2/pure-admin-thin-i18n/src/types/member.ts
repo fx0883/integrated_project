@@ -9,7 +9,7 @@ export type MemberStatus = "active" | "inactive" | "locked" | "pending";
 export interface Member {
   id: number; // 会员ID
   username: string; // 用户名
-  name: string; // 姓名
+  nick_name: string; // 昵称
   email: string; // 邮箱
   phone?: string; // 手机号
   avatar?: string; // 头像URL
@@ -21,6 +21,8 @@ export interface Member {
   last_login?: string; // 最后登录时间
   notes?: string; // 备注
   customer_count?: number; // 关联客户数量（可选，仅在详情中返回）
+  first_name?: string; // 名
+  last_name?: string; // 姓
 }
 
 // 会员列表请求参数接口
@@ -37,13 +39,17 @@ export interface MemberListParams {
 // 创建/更新会员请求参数接口
 export interface MemberCreateUpdateParams {
   username: string; // 用户名
-  name: string; // 姓名
+  nick_name: string; // 昵称
+  first_name?: string; // 名
+  last_name?: string; // 姓
   email: string; // 邮箱
   phone?: string; // 手机号
   password?: string; // 密码（仅创建时需要）
+  password_confirm?: string; // 确认密码（仅创建时需要）
   status?: MemberStatus; // 状态
   tenant_id?: number; // 所属租户ID
   notes?: string; // 备注
+  avatarFile?: File; // 头像文件（仅在前端使用）
 }
 
 // 会员-客户关系接口

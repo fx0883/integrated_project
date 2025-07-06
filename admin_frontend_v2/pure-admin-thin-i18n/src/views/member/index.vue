@@ -62,18 +62,18 @@
     <div class="toolbar">
       <div class="left">
         <el-button
+          v-if="hasManagePermission"
           type="primary"
           @click="handleCreate"
-          v-if="hasManagePermission"
         >
           <el-icon><Plus /></el-icon>
           {{ $t("member.createMember") }}
         </el-button>
         <el-button
-          type="danger"
-          @click="handleBulkDelete"
-          :disabled="!selectedRows.length"
           v-if="hasManagePermission"
+          type="danger"
+          :disabled="!selectedRows.length"
+          @click="handleBulkDelete"
         >
           <el-icon><Delete /></el-icon>
           {{ $t("member.bulkDelete") }}
@@ -83,8 +83,8 @@
         <el-button
           :icon="Refresh"
           circle
-          @click="refreshTable"
           :loading="tableLoading"
+          @click="refreshTable"
         />
       </div>
     </div>
@@ -108,7 +108,7 @@
       />
       <el-table-column
         :label="$t('member.name')"
-        prop="name"
+        prop="nick_name"
         min-width="120"
         show-overflow-tooltip
       />
@@ -135,11 +135,11 @@
         </template>
       </el-table-column>
       <el-table-column
+        v-if="isSuperAdmin"
         :label="$t('member.tenant')"
         prop="tenant_name"
         min-width="150"
         show-overflow-tooltip
-        v-if="isSuperAdmin"
       />
       <el-table-column
         :label="$t('member.createdAt')"
@@ -157,20 +157,20 @@
             {{ $t("common.detail") }}
           </el-button>
           <el-button
+            v-if="hasManagePermission"
             link
             type="primary"
             size="small"
             @click="handleEdit(row)"
-            v-if="hasManagePermission"
           >
             {{ $t("common.edit") }}
           </el-button>
           <el-button
+            v-if="hasManagePermission"
             link
             type="danger"
             size="small"
             @click="handleDelete(row)"
-            v-if="hasManagePermission"
           >
             {{ $t("common.delete") }}
           </el-button>
@@ -203,6 +203,44 @@
       @confirm="handleConfirmDialogConfirm"
       @cancel="handleConfirmDialogCancel"
     />
+
+    <!-- 创建会员对话框 -->
+    <el-dialog
+      v-model="createDialog.visible"
+      :title="$t('member.createMember')"
+      width="650px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="!createDialog.loading"
+      :show-close="!createDialog.loading"
+      @closed="handleCreateDialogClosed"
+    >
+      <MemberForm
+        ref="createFormRef"
+        :loading="createDialog.loading"
+        :show-tenant-select="false"
+        @submit="handleCreateSubmit"
+        @cancel="createDialog.visible = false"
+      />
+    </el-dialog>
+
+    <!-- 编辑会员对话框 -->
+    <el-dialog
+      v-model="editDialog.visible"
+      :title="$t('member.editMember')"
+      width="650px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="!editDialog.loading"
+      :show-close="!editDialog.loading"
+    >
+      <MemberForm
+        :loading="editDialog.loading"
+        :member-data="editDialog.memberData"
+        :is-edit="true"
+        :show-tenant-select="false"
+        @submit="handleEditSubmit"
+        @cancel="editDialog.visible = false"
+      />
+    </el-dialog>
   </div>
 </template>
 
@@ -216,8 +254,16 @@ import { useMemberStoreHook } from "@/store/modules/member";
 import { useTenantStoreHook } from "@/store/modules/tenant";
 import { useUserStoreHook } from "@/store/modules/user";
 import { hasPerms } from "@/utils/auth";
-import type { Member, MemberStatus } from "@/types/member";
-import { MemberStatusTag, ConfirmDialog } from "@/components/MemberManagement";
+import type {
+  Member,
+  MemberStatus,
+  MemberCreateUpdateParams
+} from "@/types/member";
+import {
+  MemberStatusTag,
+  ConfirmDialog,
+  MemberForm
+} from "@/components/MemberManagement";
 import logger from "@/utils/logger";
 
 const { t } = useI18n();
@@ -236,6 +282,9 @@ const isSuperAdmin = computed(() => userStore.is_super_admin);
 
 // 表格引用
 const tableRef = ref();
+
+// 创建表单引用
+const createFormRef = ref();
 
 // 表格加载状态
 const tableLoading = computed(() => memberStore.isLoading("list"));
@@ -299,6 +348,19 @@ const confirmDialog = reactive({
   type: "warning" as "warning" | "danger" | "info",
   loading: false,
   confirmCallback: null as (() => void) | null
+});
+
+// 创建会员对话框状态
+const createDialog = reactive({
+  visible: false,
+  loading: false
+});
+
+// 编辑会员对话框状态
+const editDialog = reactive({
+  visible: false,
+  loading: false,
+  memberData: null as Member | null
 });
 
 // 打开确认对话框
@@ -402,20 +464,90 @@ const handleView = (row: Member) => {
 };
 
 // 处理编辑
-const handleEdit = (row: Member) => {
-  router.push(`/member/edit/${row.id}`);
+const handleEdit = async (row: Member) => {
+  editDialog.loading = true;
+  editDialog.memberData = { ...row }; // 先使用表格中的数据，确保立即显示
+  editDialog.visible = true;
+
+  try {
+    // 加载会员详情
+    const response = await memberStore.fetchMemberDetail(row.id);
+    if (response.success) {
+      editDialog.memberData = memberStore.currentMember;
+    }
+  } catch (error) {
+    logger.error("加载会员详情失败", error);
+    ElMessage.error(t("member.loadDetailFailed"));
+  } finally {
+    editDialog.loading = false;
+  }
 };
 
-// 处理创建
-const handleCreate = () => {
-  router.push("/member/create");
+// 处理编辑提交
+const handleEditSubmit = async (data: MemberCreateUpdateParams) => {
+  if (!editDialog.memberData?.id) return;
+
+  editDialog.loading = true;
+  try {
+    // 如果有头像文件，先处理头像上传
+    if (data.avatarFile) {
+      const formData = new FormData();
+      formData.append("avatar", data.avatarFile);
+
+      // 先更新会员信息
+      await memberStore.updateMemberInfo(editDialog.memberData.id, {
+        username: data.username,
+        nick_name: data.nick_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        status: data.status as MemberStatus,
+        notes: data.notes
+      });
+
+      // 然后上传头像
+      try {
+        await memberStore.uploadMemberAvatar(
+          editDialog.memberData.id,
+          formData
+        );
+      } catch (error) {
+        logger.error("上传头像失败，但会员信息已更新", error);
+      }
+
+      ElMessage.success(t("member.updateSuccess"));
+      editDialog.visible = false;
+      fetchMemberList();
+    } else {
+      // 没有头像，直接更新会员信息
+      await memberStore.updateMemberInfo(editDialog.memberData.id, {
+        username: data.username,
+        nick_name: data.nick_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        status: data.status as MemberStatus,
+        notes: data.notes
+      });
+
+      ElMessage.success(t("member.updateSuccess"));
+      editDialog.visible = false;
+      fetchMemberList();
+    }
+  } catch (error) {
+    logger.error("更新会员失败", error);
+  } finally {
+    editDialog.loading = false;
+  }
 };
 
 // 处理删除
 const handleDelete = (row: Member) => {
   openConfirmDialog(
     t("member.deleteTitle"),
-    t("member.deleteConfirm", { name: row.name }),
+    t("member.deleteConfirm", { name: row.nick_name }),
     "danger",
     async () => {
       try {
@@ -483,6 +615,89 @@ const remoteTenantSearch = async (query: string) => {
     }
   } else {
     tenantOptions.value = [];
+  }
+};
+
+// 处理创建
+const handleCreate = () => {
+  createDialog.visible = true;
+  // 延迟一帧，确保对话框已经打开并且MemberForm组件已经挂载
+  setTimeout(() => {
+    if (createFormRef.value) {
+      createFormRef.value.resetForm();
+    }
+  }, 0);
+};
+
+// 处理创建对话框关闭
+const handleCreateDialogClosed = () => {
+  // 确保对话框关闭后表单被重置
+  if (createFormRef.value) {
+    createFormRef.value.resetForm();
+  }
+};
+
+// 处理创建提交
+const handleCreateSubmit = async (data: MemberCreateUpdateParams) => {
+  createDialog.loading = true;
+  try {
+    // 如果有头像文件，先处理头像上传
+    if (data.avatarFile) {
+      const formData = new FormData();
+      formData.append("avatar", data.avatarFile);
+
+      // 先创建会员，获取ID
+      const response = await memberStore.createNewMember({
+        username: data.username,
+        nick_name: data.nick_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        password_confirm: data.password,
+        status: data.status,
+        notes: data.notes
+      });
+
+      // 如果创建成功且返回了ID，上传头像
+      if (response.success && response.data?.id) {
+        try {
+          await memberStore.uploadMemberAvatar(response.data.id, formData);
+        } catch (error) {
+          logger.error("上传头像失败，但会员已创建", error);
+        }
+      }
+
+      ElMessage.success(t("member.createSuccess"));
+      createDialog.visible = false;
+      fetchMemberList();
+    } else {
+      // 没有头像，直接创建会员
+      const submitData = {
+        username: data.username,
+        nick_name: data.nick_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        password: data.password,
+        password_confirm: data.password,
+        status: data.status
+      } as any;
+
+      // 可选字段
+      if (data.email) submitData.email = data.email;
+      if (data.phone) submitData.phone = data.phone;
+      if (data.notes) submitData.notes = data.notes;
+
+      await memberStore.createNewMember(submitData);
+      ElMessage.success(t("member.createSuccess"));
+      createDialog.visible = false;
+      fetchMemberList();
+    }
+  } catch (error) {
+    logger.error("创建会员失败", error);
+  } finally {
+    createDialog.loading = false;
   }
 };
 
