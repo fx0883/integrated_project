@@ -1,0 +1,81 @@
+{
+  "success": true,
+  "code": 2000,
+  "message": "获取路由成功",
+  "data": [
+    {
+      "path": "/member",
+      "name": "Member",
+      "meta": {
+        "title": "member.memberManagement",
+        "rank": 8,
+        "showLink": true,
+        "icon": "ri:user-3-line",
+        "showParent": true,
+        "keepAlive": true,
+        "frameLoading": false,
+        "hiddenTag": false
+      },
+      "redirect": "/member/index",
+      "children": [
+        {
+          "path": "/member/index",
+          "name": "MemberList",
+          "meta": {
+            "title": "member.memberList",
+            "rank": 0,
+            "showLink": true,
+            "icon": "ri:menu-line",
+            "showParent": true,
+            "keepAlive": false,
+            "frameLoading": false,
+            "hiddenTag": false
+          },
+          "component": "/src/views/member/index.vue"
+        },
+        {
+          "path": "/member/create",
+          "name": "MemberCreate",
+          "meta": {
+            "title": "member.createMember",
+            "rank": 0,
+            "showLink": false,
+            "showParent": false,
+            "keepAlive": false,
+            "frameLoading": false,
+            "hiddenTag": false
+          },
+          "component": "/src/views/member/create.vue"
+        },
+        {
+          "path": "/member/edit/:id",
+          "name": "MemberEdit",
+          "meta": {
+            "title": "member.editMember",
+            "rank": 0,
+            "showLink": false,
+            "showParent": false,
+            "keepAlive": false,
+            "frameLoading": false,
+            "hiddenTag": false
+          },
+          "component": "/src/views/member/edit.vue"
+        },
+        {
+          "path": "/member/detail/:id",
+          "name": "MemberDetail",
+          "meta": {
+            "title": "member.memberDetail",
+            "rank": 0,
+            "showLink": false,
+            "showParent": false,
+            "keepAlive": false,
+            "frameLoading": false,
+            "hiddenTag": false
+          },
+          "component": "/src/views/member/detail.vue"
+        }
+      ]
+    }
+  ]
+}

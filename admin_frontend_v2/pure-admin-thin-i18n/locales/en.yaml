@@ -1130,3 +1130,102 @@ customer:
     importFailed: Import Failed
     exportSuccess: Export Successful
     exportFailed: Export Failed
+
+member:
+  memberManagement: Member Management
+  memberList: Member List
+  createMember: Create Member
+  editMember: Edit Member
+  memberDetail: Member Detail
+  deleteTitle: Confirm Delete Member
+  deleteConfirm: Are you sure you want to delete member {name}?
+  deleteSuccess: Member deleted successfully
+  bulkDeleteTitle: Confirm Bulk Delete
+  bulkDeleteConfirm: Are you sure you want to delete {count} selected members?
+  bulkDeleteSuccess: Members deleted successfully
+  createSuccess: Member created successfully
+  updateSuccess: Member updated successfully
+  id: ID
+  username: Username
+  usernamePlaceholder: Please enter username
+  usernameRequired: Username is required
+  usernameLength: Username should be between 3-30 characters
+  name: Name
+  namePlaceholder: Please enter name
+  nameRequired: Name is required
+  nameLength: Name should be between 2-50 characters
+  email: Email
+  emailPlaceholder: Please enter email
+  emailRequired: Email is required
+  emailInvalid: Invalid email format
+  phone: Phone
+  phonePlaceholder: Please enter phone number
+  phoneInvalid: Invalid phone format
+  password: Password
+  passwordPlaceholder: Please enter password
+  passwordRequired: Password is required
+  passwordLength: Password must be at least 8 characters
+  confirmPassword: Confirm Password
+  confirmPasswordPlaceholder: Please confirm password
+  confirmPasswordRequired: Please confirm your password
+  passwordMismatch: Passwords do not match
+  status: Status
+  statusPlaceholder: Please select status
+  statusRequired: Status is required
+  statusActive: Active
+  statusInactive: Inactive
+  statusLocked: Locked
+  statusPending: Pending
+  statusFilterPlaceholder: Filter by status
+  tenant: Tenant
+  tenantPlaceholder: Please select tenant
+  tenantRequired: Tenant is required
+  tenantFilterPlaceholder: Filter by tenant
+  notes: Notes
+  notesPlaceholder: Please enter notes
+  notesLength: Notes cannot exceed 500 characters
+  createdAt: Created At
+  updatedAt: Updated At
+  lastLogin: Last Login
+  searchPlaceholder: Search members (username, name, email)
+  bulkDelete: Bulk Delete
+  invalidId: Invalid member ID
+  notFound: Member not found
+  basicInfo: Basic Information
+  avatar: Avatar
+  clickToUpload: Click to upload
+  avatarTypeError: Avatar must be an image (JPEG/PNG/GIF)
+  avatarSizeError: Avatar size cannot exceed 2MB
+  avatarUploadSuccess: Avatar uploaded successfully
+  customerRelations: Customer Relations
+  addRelation: Add Relation
+  editRelation: Edit Relation
+  deleteRelation: Delete Relation
+  deleteRelationTitle: Confirm Delete Relation
+  deleteRelationConfirm: Are you sure you want to delete relation with customer {name}?
+  deleteRelationSuccess: Relation deleted successfully
+  createRelationSuccess: Relation created successfully
+  updateRelationSuccess: Relation updated successfully
+  noRelations: No customer relations
+  customer: Customer
+  customerPlaceholder: Please select customer
+  customerRequired: Customer is required
+  role: Role
+  rolePlaceholder: Please enter role
+  roleRequired: Role is required
+  roleLength: Role cannot exceed 50 characters
+  department: Department
+  departmentPlaceholder: Please enter department
+  departmentLength: Department cannot exceed 100 characters
+  isPrimaryCustomer: Is Primary Customer
+  setPrimary: Set as Primary
+  setPrimaryTitle: Confirm Set Primary Customer
+  setPrimaryConfirm: Are you sure you want to set {name} as primary customer?
+  setPrimarySuccess: Primary customer set successfully
+  relationNotesPlaceholder: Please enter relation notes
+  passwordManagement: Password Management
+  resetPassword: Reset Password
+  resetPasswordTitle: Reset Password
+  resetPasswordConfirm: Please enter new password
+  resetPasswordSuccess: Password reset successfully
+  newPasswordPlaceholder: Please enter new password

@@ -49,6 +49,7 @@
                 clearable
                 filterable
                 :placeholder="t('menu.parentId')"
+                value-key="id"
               >
                 <el-option label="顶级菜单" :value="null" />
                 <el-option
@@ -375,7 +376,7 @@ const menuOptions = computed(() => {
 const getParentMenuName = (parentId: number | null) => {
   if (parentId === null) return "顶级菜单";
   const parentMenu = menuStore.menuList.data.find(item => item.id === parentId);
-  return parentMenu ? parentMenu.title || parentMenu.name : `${parentId}`;
+  return parentMenu ? parentMenu.title || parentMenu.name : "顶级菜单";
 };
 
 const roleOptions = ref([
@@ -441,6 +442,30 @@ const openIconSelector = () => {
 const handleIconSelect = (icon: string) => {
   formData.icon = icon;
 };
+
+// 组件挂载时，确保菜单列表已加载
+onMounted(async () => {
+  // 如果菜单列表为空，则加载菜单列表
+  if (menuStore.menuList.data.length === 0) {
+    await menuStore.fetchMenuList({ page: 1, page_size: 100 });
+  }
+});
+
+// 监听菜单列表变化，确保父菜单显示正确
+watch(
+  () => menuStore.menuList.data,
+  () => {
+    if (formData.parent_id !== null && formData.parent_id !== undefined) {
+      // 强制更新选择器显示
+      const tempId = formData.parent_id;
+      formData.parent_id = null;
+      nextTick(() => {
+        formData.parent_id = tempId;
+      });
+    }
+  },
+  { deep: true }
+);
 
 const submitForm = async () => {
   if (!formRef.value) return;

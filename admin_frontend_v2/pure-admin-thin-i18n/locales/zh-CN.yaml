@@ -1134,3 +1134,102 @@ customer:
     importFailed: 导入失败
     exportSuccess: 导出成功
     exportFailed: 导出失败
+
+member:
+  memberManagement: 会员管理
+  memberList: 会员列表
+  createMember: 创建会员
+  editMember: 编辑会员
+  memberDetail: 会员详情
+  deleteTitle: 确认删除会员
+  deleteConfirm: 确定要删除会员 {name} 吗？
+  deleteSuccess: 会员删除成功
+  bulkDeleteTitle: 确认批量删除
+  bulkDeleteConfirm: 确定要删除选中的 {count} 个会员吗？
+  bulkDeleteSuccess: 批量删除会员成功
+  createSuccess: 会员创建成功
+  updateSuccess: 会员更新成功
+  id: ID
+  username: 用户名
+  usernamePlaceholder: 请输入用户名
+  usernameRequired: 用户名不能为空
+  usernameLength: 用户名长度应在3-30个字符之间
+  name: 姓名
+  namePlaceholder: 请输入姓名
+  nameRequired: 姓名不能为空
+  nameLength: 姓名长度应在2-50个字符之间
+  email: 邮箱
+  emailPlaceholder: 请输入邮箱
+  emailRequired: 邮箱不能为空
+  emailInvalid: 邮箱格式不正确
+  phone: 手机号
+  phonePlaceholder: 请输入手机号
+  phoneInvalid: 手机号格式不正确
+  password: 密码
+  passwordPlaceholder: 请输入密码
+  passwordRequired: 密码不能为空
+  passwordLength: 密码长度不能少于8个字符
+  confirmPassword: 确认密码
+  confirmPasswordPlaceholder: 请再次输入密码
+  confirmPasswordRequired: 请确认密码
+  passwordMismatch: 两次输入的密码不一致
+  status: 状态
+  statusPlaceholder: 请选择状态
+  statusRequired: 请选择状态
+  statusActive: 活跃
+  statusInactive: 未激活
+  statusLocked: 已锁定
+  statusPending: 待审核
+  statusFilterPlaceholder: 状态筛选
+  tenant: 所属租户
+  tenantPlaceholder: 请选择租户
+  tenantRequired: 请选择租户
+  tenantFilterPlaceholder: 租户筛选
+  notes: 备注
+  notesPlaceholder: 请输入备注信息
+  notesLength: 备注长度不能超过500个字符
+  createdAt: 创建时间
+  updatedAt: 更新时间
+  lastLogin: 最后登录时间
+  searchPlaceholder: 搜索会员（用户名、姓名、邮箱）
+  bulkDelete: 批量删除
+  invalidId: 无效的会员ID
+  notFound: 会员不存在
+  basicInfo: 基本信息
+  avatar: 头像
+  clickToUpload: 点击上传
+  avatarTypeError: 头像必须是图片格式（JPEG/PNG/GIF）
+  avatarSizeError: 头像大小不能超过2MB
+  avatarUploadSuccess: 头像上传成功
+  customerRelations: 客户关系
+  addRelation: 添加关系
+  editRelation: 编辑关系
+  deleteRelation: 删除关系
+  deleteRelationTitle: 确认删除客户关系
+  deleteRelationConfirm: 确定要删除与客户 {name} 的关系吗？
+  deleteRelationSuccess: 客户关系删除成功
+  createRelationSuccess: 客户关系创建成功
+  updateRelationSuccess: 客户关系更新成功
+  noRelations: 暂无客户关系
+  customer: 客户
+  customerPlaceholder: 请选择客户
+  customerRequired: 请选择客户
+  role: 角色
+  rolePlaceholder: 请输入角色
+  roleRequired: 请输入角色
+  roleLength: 角色长度不能超过50个字符
+  department: 部门
+  departmentPlaceholder: 请输入部门
+  departmentLength: 部门长度不能超过100个字符
+  isPrimaryCustomer: 是否主要客户
+  setPrimary: 设为主要客户
+  setPrimaryTitle: 确认设置主要客户
+  setPrimaryConfirm: 确定要将客户 {name} 设置为主要客户吗？
+  setPrimarySuccess: 设置主要客户成功
+  relationNotesPlaceholder: 请输入关系备注
+  passwordManagement: 密码管理
+  resetPassword: 重置密码
+  resetPasswordTitle: 重置密码
+  resetPasswordConfirm: 请输入新密码
+  resetPasswordSuccess: 密码重置成功
+  newPasswordPlaceholder: 请输入新密码
