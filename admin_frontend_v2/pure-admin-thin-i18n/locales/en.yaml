@@ -6,6 +6,7 @@ common:
   delete: Delete
   edit: Edit
   save: Save
+  update: Update
   generate: Generate
   view: View
   reset: Reset
