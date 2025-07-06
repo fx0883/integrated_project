@@ -101,16 +101,29 @@ export const useMenuStore = defineStore("menu", {
         const response = await getMenuList(params);
         if (response.success) {
           // 处理分页数据结构适配
-          if (response.data && 'results' in response.data) {
-            this.menuList = {
-              total: response.data.count || 0,
-              page: params.page || 1,
-              limit: params.page_size || 10,
-              data: response.data.results || []
-            };
-          } else {
-            logger.warn("菜单列表数据结构不符合预期", response.data);
-            this.menuList.data = Array.isArray(response.data) ? response.data : [];
+          if (response.data) {
+            if ('pagination' in response.data && 'results' in response.data) {
+              // 新的API响应格式
+              const { pagination, results } = response.data;
+              this.menuList = {
+                total: pagination.count || 0,
+                page: pagination.current_page || 1,
+                limit: pagination.page_size || 10,
+                total_pages: pagination.total_pages || 1,
+                data: results || []
+              };
+            } else if ('results' in response.data) {
+              // 旧的API响应格式
+              this.menuList = {
+                total: response.data.count || 0,
+                page: params.page || 1,
+                limit: params.page_size || 10,
+                data: response.data.results || []
+              };
+            } else {
+              logger.warn("菜单列表数据结构不符合预期", response.data);
+              this.menuList.data = Array.isArray(response.data) ? response.data : [];
+            }
           }
           return response;
         } else {
