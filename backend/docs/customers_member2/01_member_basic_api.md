@@ -30,9 +30,14 @@
   "code": 2000,
   "message": "操作成功",
   "data": {
-    "count": 2,
-    "next": null,
-    "previous": null,
+    "pagination": {
+      "count": 2,
+      "next": null,
+      "previous": null,
+      "page_size": 10,
+      "current_page": 1,
+      "total_pages": 1
+    },
     "results": [
       {
         "id": 34,

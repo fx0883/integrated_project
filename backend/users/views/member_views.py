@@ -14,6 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from common.pagination import StandardResultsSetPagination
 
 from common.permissions import IsAdmin, IsSuperAdmin
 from users.models import Member
@@ -35,7 +36,7 @@ class MemberListCreateView(generics.ListCreateAPIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     serializer_class = MemberSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
     
     def get_serializer_class(self):
         # 创建用户时使用创建序列化器
@@ -540,7 +541,7 @@ class SubAccountListCreateView(generics.ListCreateAPIView):
     子账号列表和创建视图
     """
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
