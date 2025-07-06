@@ -395,7 +395,8 @@ class MemberRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         
         # 检查是否尝试删除当前登录账号
-        if instance.pk == user.pk:
+        # 只有当用户是Member类型且ID相同时才拒绝操作
+        if isinstance(user, Member) and instance.pk == user.pk:
             logger.warning(f"用户 {user.username} 尝试删除自己的账号，操作被拒绝")
             raise PermissionDenied("不能删除当前登录的账号")
         

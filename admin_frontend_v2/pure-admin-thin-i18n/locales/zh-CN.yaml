@@ -15,6 +15,11 @@ common:
   actions: 操作
   anonymous: 匿名
   operation: 操作
+  operations: 操作
+  detail: 详情
+  submit: 提交
+  never: 从不
+  noNotes: 无备注
   all: 全部
   form:
     submit: 提交

@@ -15,6 +15,11 @@ common:
   actions: Actions
   anonymous: Anonymous
   operation: Operations
+  operations: Operations
+  detail: Detail
+  submit: Submit
+  never: Never
+  noNotes: No Notes
   all: All
   form:
     submit: Submit
