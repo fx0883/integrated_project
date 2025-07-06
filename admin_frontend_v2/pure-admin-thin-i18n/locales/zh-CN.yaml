@@ -1158,6 +1158,12 @@ member:
   namePlaceholder: 请输入姓名
   nameRequired: 姓名不能为空
   nameLength: 姓名长度应在2-50个字符之间
+  nickName: 昵称
+  nickNamePlaceholder: 请输入昵称
+  firstName: 名
+  firstNamePlaceholder: 请输入名
+  lastName: 姓
+  lastNamePlaceholder: 请输入姓
   email: 邮箱
   emailPlaceholder: 请输入邮箱
   emailRequired: 邮箱不能为空

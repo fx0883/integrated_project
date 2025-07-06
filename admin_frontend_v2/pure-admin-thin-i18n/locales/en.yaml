@@ -1154,6 +1154,12 @@ member:
   namePlaceholder: Please enter name
   nameRequired: Name is required
   nameLength: Name should be between 2-50 characters
+  nickName: Nickname
+  nickNamePlaceholder: Please enter nickname
+  firstName: First Name
+  firstNamePlaceholder: Please enter first name
+  lastName: Last Name
+  lastNamePlaceholder: Please enter last name
   email: Email
   emailPlaceholder: Please enter email
   emailRequired: Email is required
