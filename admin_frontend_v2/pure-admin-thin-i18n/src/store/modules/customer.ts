@@ -50,6 +50,8 @@ interface CustomerState {
   statistics: CustomerStatistics | null;
   // 当前客户的联系人关系列表
   customerMemberRelations: PaginationData<CustomerMemberRelation>;
+  // 按客户ID存储的联系人关系列表映射
+  customerMemberRelationsMap: Record<number, PaginationData<CustomerMemberRelation>>;
   // 当前客户的租户关系列表
   customerTenantRelations: PaginationData<CustomerTenantRelation>;
   // 加载状态
@@ -93,6 +95,7 @@ export const useCustomerStore = defineStore("customer", {
       limit: 10,
       data: []
     },
+    customerMemberRelationsMap: {},
     customerTenantRelations: {
       total: 0,
       page: 1,
@@ -134,6 +137,10 @@ export const useCustomerStore = defineStore("customer", {
     
     // 获取客户的联系人关系列表
     getMemberRelations: (state) => state.customerMemberRelations.data,
+    
+    // 根据客户ID获取对应的会员关系数据
+    getCustomerMemberRelationsByCustomerId: (state) => (customerId: number) => 
+      state.customerMemberRelationsMap[customerId]?.data || [],
     
     // 获取客户的租户关系列表
     getTenantRelations: (state) => state.customerTenantRelations.data,
@@ -469,7 +476,16 @@ export const useCustomerStore = defineStore("customer", {
             updated_at: ''
           }));
           
+          // 更新全局状态（保持向后兼容）
           this.customerMemberRelations = {
+            total: response.data.length,
+            page: params.page || 1,
+            limit: params.page_size || 10,
+            data: memberRelations
+          };
+          
+          // 按客户ID存储会员关系数据
+          this.customerMemberRelationsMap[customerId] = {
             total: response.data.length,
             page: params.page || 1,
             limit: params.page_size || 10,
@@ -506,6 +522,19 @@ export const useCustomerStore = defineStore("customer", {
           this.customerMemberRelations.data.unshift(response.data);
           this.customerMemberRelations.total++;
           
+          // 将新创建的关系添加到对应客户的关系映射中
+          const customerId = data.customer_id;
+          if (!this.customerMemberRelationsMap[customerId]) {
+            this.customerMemberRelationsMap[customerId] = {
+              total: 0,
+              page: 1,
+              limit: 10,
+              data: []
+            };
+          }
+          this.customerMemberRelationsMap[customerId].data.unshift(response.data);
+          this.customerMemberRelationsMap[customerId].total++;
+          
           ElMessage.success(response.message || "创建客户-联系人关系成功");
           return response;
         } else {
@@ -539,6 +568,14 @@ export const useCustomerStore = defineStore("customer", {
             this.customerMemberRelations.data[index] = response.data;
           }
           
+          // 更新客户关系映射中的关系信息
+          if (this.customerMemberRelationsMap[customerId]) {
+            const mapIndex = this.customerMemberRelationsMap[customerId].data.findIndex(relation => relation.id === relationId);
+            if (mapIndex !== -1) {
+              this.customerMemberRelationsMap[customerId].data[mapIndex] = response.data;
+            }
+          }
+          
           ElMessage.success(response.message || "更新客户-联系人关系成功");
           return response;
         } else {
@@ -569,6 +606,12 @@ export const useCustomerStore = defineStore("customer", {
           // 从关系列表中移除被删除的关系
           this.customerMemberRelations.data = this.customerMemberRelations.data.filter(relation => relation.id !== relationId);
           this.customerMemberRelations.total--;
+          
+          // 从客户关系映射中移除被删除的关系
+          if (this.customerMemberRelationsMap[customerId]) {
+            this.customerMemberRelationsMap[customerId].data = this.customerMemberRelationsMap[customerId].data.filter(relation => relation.id !== relationId);
+            this.customerMemberRelationsMap[customerId].total--;
+          }
           
           ElMessage.success(response.message || "删除客户-联系人关系成功");
           return response;
@@ -602,6 +645,14 @@ export const useCustomerStore = defineStore("customer", {
             ...relation,
             is_primary: relation.id === relationId
           }));
+          
+          // 更新客户关系映射中的关系信息
+          if (this.customerMemberRelationsMap[customerId]) {
+            this.customerMemberRelationsMap[customerId].data = this.customerMemberRelationsMap[customerId].data.map(relation => ({
+              ...relation,
+              is_primary: relation.id === relationId
+            }));
+          }
           
           ElMessage.success(response.message || "设置主要联系人成功");
           return response;
@@ -802,6 +853,29 @@ export const useCustomerStore = defineStore("customer", {
           );
           this.customerMemberRelations.total -= response.data.success_count || relationIds.length;
           
+          // 从客户关系映射中移除被删除的关系
+          // 需要先找出这些关系所属的客户ID
+          const relationsToDelete = this.customerMemberRelations.data.filter(
+            relation => relationIds.includes(relation.id)
+          );
+          
+          // 按客户ID分组
+          const customerIds = [...new Set(relationsToDelete.map(relation => relation.customer.id))];
+          
+          // 从每个客户的关系映射中移除
+          customerIds.forEach(customerId => {
+            if (this.customerMemberRelationsMap[customerId]) {
+              this.customerMemberRelationsMap[customerId].data = this.customerMemberRelationsMap[customerId].data.filter(
+                relation => !relationIds.includes(relation.id)
+              );
+              // 更新计数
+              const deletedCount = relationsToDelete.filter(
+                relation => relation.customer.id === customerId
+              ).length;
+              this.customerMemberRelationsMap[customerId].total -= deletedCount;
+            }
+          });
+          
           ElMessage.success(response.message || "批量删除客户-会员关系成功");
           return response;
         } else {
@@ -837,6 +911,7 @@ export const useCustomerStore = defineStore("customer", {
         limit: 10,
         data: []
       };
+      this.customerMemberRelationsMap = {};
       this.customerTenantRelations = {
         total: 0,
         page: 1,

@@ -248,12 +248,19 @@ const dialogTitle = computed(() => {
   }
 });
 
+// 计算属性：根据当前客户ID过滤会员关系数据
+const filteredMemberRelations = computed(() => {
+  return props.memberRelations.filter(
+    relation => relation.customer && relation.customer.id === props.customerId
+  );
+});
+
 // 计算属性：过滤后的数据
 const filteredData = computed(() => {
-  if (!searchQuery.value) return props.memberRelations;
+  if (!searchQuery.value) return filteredMemberRelations.value;
 
   const query = searchQuery.value.toLowerCase();
-  return props.memberRelations.filter(
+  return filteredMemberRelations.value.filter(
     relation =>
       relation.member.username.toLowerCase().includes(query) ||
       relation.member.email.toLowerCase().includes(query) ||

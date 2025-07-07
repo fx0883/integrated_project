@@ -516,7 +516,9 @@ onMounted(() => {
           <template #default="{ row }">
             <CustomerMembersSubTable
               :customer-id="row.id"
-              :member-relations="customerStore.customerMemberRelations.data"
+              :member-relations="
+                customerStore.getCustomerMemberRelationsByCustomerId(row.id)
+              "
               :loading="memberRelationsLoading"
               @refresh="() => handleRefreshMemberRelations(row.id)"
             />
