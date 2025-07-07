@@ -15,6 +15,7 @@
         :member-data="memberData"
         :is-edit="true"
         :loading="updateLoading"
+        :show-tenant-select="false"
         @submit="handleSubmit"
         @cancel="goBack"
       />

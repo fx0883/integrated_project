@@ -11,7 +11,12 @@
     </div>
 
     <el-card class="form-card">
-      <MemberForm :loading="loading" @submit="handleSubmit" @cancel="goBack" />
+      <MemberForm
+        :loading="loading"
+        :show-tenant-select="false"
+        @submit="handleSubmit"
+        @cancel="goBack"
+      />
     </el-card>
   </div>
 </template>

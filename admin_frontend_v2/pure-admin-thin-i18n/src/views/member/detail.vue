@@ -38,7 +38,14 @@
                 {{ memberData.username }}
               </el-descriptions-item>
               <el-descriptions-item :label="$t('member.name')">
-                {{ memberData.name }}
+                {{
+                  memberData.nick_name ||
+                  (memberData.first_name && memberData.last_name
+                    ? `${memberData.first_name} ${memberData.last_name}`
+                    : memberData.first_name ||
+                      memberData.last_name ||
+                      $t("common.notSet"))
+                }}
               </el-descriptions-item>
               <el-descriptions-item :label="$t('member.email')">
                 {{ memberData.email }}
@@ -376,7 +383,9 @@ const handleEdit = () => {
 const handleDelete = () => {
   openConfirmDialog(
     t("member.deleteTitle"),
-    t("member.deleteConfirm", { name: memberData.value?.name || "" }),
+    t("member.deleteConfirm", {
+      name: memberData.value?.nick_name || memberData.value?.first_name || ""
+    }),
     "danger",
     async () => {
       try {
