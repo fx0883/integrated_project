@@ -10,6 +10,9 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiPara
 from common.permissions import IsAdmin, IsSuperAdmin
 from customers.models import Customer, CustomerMemberRelation
 from customers.serializers import CustomerMemberRelationSerializer, CustomerMemberRelationDetailSerializer
+from users.models import Member
+from users.serializers import MemberSerializer
+from customers.serializers import CustomerListSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -119,4 +122,74 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
             serializer = CustomerMemberRelationDetailSerializer(relation)
             return Response(serializer.data)
         except CustomerMemberRelation.DoesNotExist:
-            return Response({"error": "未找到主要联系人"}, status=status.HTTP_404_NOT_FOUND) 
+            return Response({"error": "未找到主要联系人"}, status=status.HTTP_404_NOT_FOUND)
+            
+    @extend_schema(
+        summary="获取客户的所有联系人",
+        description="获取指定客户ID下的所有联系人列表",
+        tags=["客户-联系人关系"],
+        parameters=[
+            OpenApiParameter(name="customer_id", description="客户ID", required=True, type=int),
+        ],
+        responses={200: MemberSerializer(many=True)}
+    )
+    @action(detail=False, methods=['get'], url_path='customer-members')
+    def customer_members(self, request):
+        """
+        获取客户的所有联系人
+        """
+        customer_id = request.query_params.get('customer_id')
+        if not customer_id:
+            return Response({"error": "请提供客户ID"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # 获取客户
+            customer = Customer.objects.get(id=customer_id)
+            
+            # 获取与该客户关联的所有联系人ID
+            member_ids = CustomerMemberRelation.objects.filter(
+                customer=customer
+            ).values_list('member_id', flat=True)
+            
+            # 获取这些联系人的详细信息
+            members = Member.objects.filter(id__in=member_ids)
+            
+            serializer = MemberSerializer(members, many=True)
+            return Response(serializer.data)
+        except Customer.DoesNotExist:
+            return Response({"error": "客户不存在"}, status=status.HTTP_404_NOT_FOUND)
+    
+    @extend_schema(
+        summary="获取联系人所属的所有客户",
+        description="获取指定联系人ID所属的所有客户列表",
+        tags=["客户-联系人关系"],
+        parameters=[
+            OpenApiParameter(name="member_id", description="联系人ID", required=True, type=int),
+        ],
+        responses={200: CustomerListSerializer(many=True)}
+    )
+    @action(detail=False, methods=['get'], url_path='member-customers')
+    def member_customers(self, request):
+        """
+        获取联系人所属的所有客户
+        """
+        member_id = request.query_params.get('member_id')
+        if not member_id:
+            return Response({"error": "请提供联系人ID"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # 获取联系人
+            member = Member.objects.get(id=member_id)
+            
+            # 获取与该联系人关联的所有客户ID
+            customer_ids = CustomerMemberRelation.objects.filter(
+                member=member
+            ).values_list('customer_id', flat=True)
+            
+            # 获取这些客户的详细信息
+            customers = Customer.objects.filter(id__in=customer_ids)
+            
+            serializer = CustomerListSerializer(customers, many=True)
+            return Response(serializer.data)
+        except Member.DoesNotExist:
+            return Response({"error": "联系人不存在"}, status=status.HTTP_404_NOT_FOUND) 

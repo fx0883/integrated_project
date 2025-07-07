@@ -93,53 +93,22 @@
                 show-overflow-tooltip
               />
               <el-table-column
-                prop="role"
-                :label="$t('member.role')"
+                prop="customer.type"
+                :label="$t('member.customerType')"
                 min-width="120"
                 show-overflow-tooltip
-              />
-              <el-table-column
-                prop="department"
-                :label="$t('member.department')"
-                min-width="120"
-                show-overflow-tooltip
-              />
-              <el-table-column
-                :label="$t('member.isPrimaryCustomer')"
-                width="120"
-                align="center"
               >
                 <template #default="{ row }">
-                  <el-tag v-if="row.is_primary" type="success">
-                    {{ $t("common.yes") }}
-                  </el-tag>
-                  <span v-else>{{ $t("common.no") }}</span>
+                  {{ formatCustomerType(row.customer.type) }}
                 </template>
               </el-table-column>
               <el-table-column
                 :label="$t('common.operations')"
-                width="200"
+                width="120"
                 fixed="right"
                 v-if="hasManagePermission"
               >
                 <template #default="{ row }">
-                  <el-button
-                    link
-                    type="primary"
-                    size="small"
-                    @click="handleEditRelation(row)"
-                  >
-                    {{ $t("common.edit") }}
-                  </el-button>
-                  <el-button
-                    link
-                    type="primary"
-                    size="small"
-                    @click="handleSetPrimary(row)"
-                    v-if="!row.is_primary"
-                  >
-                    {{ $t("member.setPrimary") }}
-                  </el-button>
                   <el-button
                     link
                     type="danger"
@@ -469,33 +438,6 @@ const handleAddRelation = () => {
   relationDialog.visible = true;
 };
 
-// 处理编辑客户关系
-const handleEditRelation = (row: MemberCustomerRelation) => {
-  relationDialog.title = t("member.editRelation");
-  relationDialog.isEdit = true;
-  relationDialog.data = row;
-  relationDialog.visible = true;
-};
-
-// 处理设置主要客户关系
-const handleSetPrimary = (row: MemberCustomerRelation) => {
-  if (!memberId.value) return;
-
-  openConfirmDialog(
-    t("member.setPrimaryTitle"),
-    t("member.setPrimaryConfirm", { name: row.customer.name }),
-    "warning",
-    async () => {
-      try {
-        await memberStore.setPrimaryCustomerRelation(memberId.value, row.id);
-        ElMessage.success(t("member.setPrimarySuccess"));
-      } catch (error) {
-        logger.error("设置主要客户关系失败", error);
-      }
-    }
-  );
-};
-
 // 处理删除客户关系
 const handleDeleteRelation = (row: MemberCustomerRelation) => {
   if (!memberId.value) return;
@@ -547,6 +489,18 @@ const handleRelationSubmit = async (
   } finally {
     relationDialog.loading = false;
   }
+};
+
+// 格式化客户类型
+const formatCustomerType = (type: string) => {
+  const typeMap: Record<string, string> = {
+    enterprise: t("customer.typeEnterprise"),
+    individual: t("customer.typeIndividual"),
+    government: t("customer.typeGovernment"),
+    education: t("customer.typeEducation"),
+    nonprofit: t("customer.typeNonprofit")
+  };
+  return typeMap[type] || type;
 };
 
 // 初始化

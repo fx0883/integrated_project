@@ -92,7 +92,8 @@ export interface MemberPasswordResetParams {
 
 // 会员头像上传响应接口
 export interface MemberAvatarUploadResponse {
-  avatar_url: string; // 头像URL
+  avatar_url?: string; // 头像URL（旧版API可能返回此字段）
+  avatar?: string; // 头像URL（新版API返回此字段）
 }
 
 // 批量操作请求参数接口

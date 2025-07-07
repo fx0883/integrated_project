@@ -13,8 +13,6 @@
         :placeholder="$t('member.customerPlaceholder')"
         style="width: 100%"
         filterable
-        remote
-        :remote-method="remoteCustomerSearch"
         :loading="customerLoading"
         :disabled="isEdit"
       >
@@ -212,33 +210,29 @@ const submitForm = async () => {
   }
 };
 
-// 远程搜索客户
-const remoteCustomerSearch = async (query: string) => {
-  if (query) {
-    customerLoading.value = true;
-    try {
-      await customerStore.fetchCustomerList({
-        search: query,
-        page: 1,
-        limit: 10
-      });
-      customerOptions.value = customerStore.getCustomers.map(customer => ({
-        value: customer.id,
-        label: customer.name
-      }));
-    } catch (error) {
-      logger.error("搜索客户失败", error);
-    } finally {
-      customerLoading.value = false;
-    }
-  } else {
-    customerOptions.value = [];
+// 加载所有客户
+const loadAllCustomers = async () => {
+  customerLoading.value = true;
+  try {
+    await customerStore.fetchCustomerList({
+      page: 1,
+      limit: 100
+    });
+    customerOptions.value = customerStore.getCustomers.map(customer => ({
+      value: customer.id,
+      label: customer.name
+    }));
+  } catch (error) {
+    logger.error("加载客户列表失败", error);
+  } finally {
+    customerLoading.value = false;
   }
 };
 
 // 初始化
 onMounted(() => {
   initFormData();
+  loadAllCustomers(); // 加载所有客户
 });
 </script>
 

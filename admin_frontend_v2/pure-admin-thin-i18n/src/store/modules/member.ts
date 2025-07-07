@@ -352,18 +352,36 @@ export const useMemberStore = defineStore("member", {
       try {
         const response = await getMemberCustomerRelations(memberId, params);
         if (response.success) {
-          // 处理分页数据结构适配
-          if (response.data && 'results' in response.data) {
+          // 新API直接返回客户数组，需要转换为内部使用的格式
+          if (Array.isArray(response.data)) {
+            // 将客户数据转换为会员-客户关系数据
             this.memberCustomerRelations = {
-              total: response.data.pagination.count || 0,
-              page: params.page || 1,
-              limit: params.page_size || 10,
-              total_pages: response.data.pagination.total_pages || 1,
-              data: response.data.results || []
+              total: response.data.length,
+              page: 1,
+              limit: response.data.length,
+              total_pages: 1,
+              data: response.data.map(customer => ({
+                id: customer.id,
+                member: {
+                  id: memberId,
+                  name: this.currentMember?.nick_name || '',
+                  username: this.currentMember?.username || ''
+                },
+                customer: {
+                  id: customer.id,
+                  name: customer.name,
+                  type: customer.type
+                },
+                role: '', // 新API没有提供角色信息
+                is_primary: false, // 新API没有提供是否为主要客户的信息
+                department: '', // 新API没有提供部门信息
+                created_at: customer.created_at,
+                updated_at: customer.created_at
+              }))
             };
           } else {
             logger.warn("会员客户关系列表数据结构不符合预期", response.data);
-            this.memberCustomerRelations.data = Array.isArray(response.data) ? response.data : [];
+            this.memberCustomerRelations.data = [];
           }
           return response;
         } else {
@@ -539,11 +557,15 @@ export const useMemberStore = defineStore("member", {
         const response = await uploadMemberAvatar(memberId, formData);
         if (response.success) {
           // 如果当前选中的会员是被更新的会员，则更新当前选中的会员头像
-          if (this.currentMember && this.currentMember.id === memberId) {
-            this.currentMember = {
-              ...this.currentMember,
-              avatar: response.data.avatar_url
-            };
+          if (this.currentMember && this.currentMember.id === memberId && response.data) {
+            // 使用 response.data.avatar 而不是 response.data.avatar_url
+            const avatarUrl = response.data.avatar || response.data.avatar_url;
+            if (avatarUrl) {
+              this.currentMember = {
+                ...this.currentMember,
+                avatar: avatarUrl
+              };
+            }
           }
           ElMessage.success(response.message || "上传会员头像成功");
           return response;

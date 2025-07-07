@@ -27,6 +27,10 @@
    - 获取租户视角下的客户详情
    - 获取租户的客户统计数据
 
+5. [客户-联系人关系列表API](./05_customer_member_relation_list_api.md)
+   - 获取客户下的所有联系人列表
+   - 获取联系人所属的所有客户列表
+
 ## API基础信息
 
 - **基础URL**: `/api/v1/customers/`

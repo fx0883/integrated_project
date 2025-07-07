@@ -48,6 +48,10 @@ Authorization: Bearer <token>
 4. [密码管理 API](./04_member_password_api.md)
    - 修改当前成员密码
 
+5. [客户-联系人关系 API](./05_customer_member_relation_api.md)
+   - 获取客户下的所有联系人列表
+   - 获取联系人所属的所有客户列表
+
 ## 数据模型
 
 ### Member 模型

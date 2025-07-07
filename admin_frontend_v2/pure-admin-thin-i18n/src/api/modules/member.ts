@@ -134,9 +134,9 @@ export function bulkDeleteMembers(memberIds: number[]) {
 export function getMemberCustomerRelations(memberId: number, params: { page?: number; page_size?: number } = {}) {
   logger.debug("API请求: 获取会员的客户关系", { memberId, params });
   
-  return http.request<PaginationResponse<MemberCustomerRelation>>(
+  return http.request<ApiResponse<any[]>>(
     "get",
-    `/members/${memberId}/customers/`,
+    `/customers/members/relations/member-customers/?member_id=${memberId}`,
     { params }
   );
 }
@@ -149,7 +149,7 @@ export function createMemberCustomerRelation(data: MemberCustomerRelationCreateU
   
   return http.request<ApiResponse<MemberCustomerRelation>>(
     "post",
-    `/members/${data.member_id}/customers/`,
+    `/customers/members/relations/`,
     { data }
   );
 }

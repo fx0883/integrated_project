@@ -20,9 +20,9 @@
         <div v-if="loading" class="loading-mask">
           <el-icon class="loading-icon" :size="30"><Loading /></el-icon>
         </div>
-      </div>
-      <div class="upload-text" v-if="!disabled">
-        {{ $t("member.clickToUpload") }}
+        <div class="upload-text" v-if="!disabled">
+          {{ $t("member.clickToUpload") }}
+        </div>
       </div>
     </el-upload>
   </div>
@@ -132,6 +132,7 @@ const customUpload = (options: UploadRequestOptions) => {
   border-radius: 50%;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background-color: var(--el-fill-color-lighter);
@@ -153,9 +154,14 @@ const customUpload = (options: UploadRequestOptions) => {
 }
 
 .upload-text {
-  margin-top: 8px;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--el-text-color-secondary);
+  position: absolute;
+  bottom: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  width: 100%;
+  text-align: center;
+  padding: 2px 0;
 }
 
 .loading-mask {
