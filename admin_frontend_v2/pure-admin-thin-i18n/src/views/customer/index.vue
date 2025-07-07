@@ -19,7 +19,8 @@ import {
   CustomerStatusTag,
   CustomerValueTag,
   ConfirmDialog,
-  CustomerForm
+  CustomerForm,
+  CustomerMembersSubTable
 } from "@/components/CustomerManagement";
 import logger from "@/utils/logger";
 
@@ -188,6 +189,12 @@ const currentViewCustomer = ref<Customer | null>(null);
 const editDialogVisible = ref(false);
 const editLoading = computed(() => customerStore.loading.update);
 const currentEditCustomer = ref<Customer | null>(null);
+
+// 表格展开行
+const expandedRows = ref<number[]>([]);
+const memberRelationsLoading = computed(
+  () => customerStore.loading.memberRelations
+);
 
 // 获取客户列表
 const fetchCustomerList = async () => {
@@ -371,6 +378,36 @@ const handleBatchDelete = () => {
   );
 };
 
+// 获取会员关系
+const fetchMemberRelations = async (customerId: number) => {
+  try {
+    await customerStore.fetchCustomerMemberRelations(customerId);
+  } catch (error) {
+    logger.error("获取客户会员关系失败", error);
+    ElMessage.error(t("customer.member.fetchFailed"));
+  }
+};
+
+// 表格展开行变化
+const handleExpandChange = (row: Customer, expanded: boolean) => {
+  if (expanded) {
+    // 加载会员关系数据
+    fetchMemberRelations(row.id);
+    // 添加到已展开行
+    if (!expandedRows.value.includes(row.id)) {
+      expandedRows.value.push(row.id);
+    }
+  } else {
+    // 从已展开行中移除
+    expandedRows.value = expandedRows.value.filter(id => id !== row.id);
+  }
+};
+
+// 刷新会员关系
+const handleRefreshMemberRelations = (customerId: number) => {
+  fetchMemberRelations(customerId);
+};
+
 // 初始化
 onMounted(() => {
   fetchCustomerList();
@@ -473,7 +510,19 @@ onMounted(() => {
         stripe
         style="width: 100%"
         @selection-change="handleSelectionChange"
+        @expand-change="handleExpandChange"
       >
+        <el-table-column type="expand">
+          <template #default="{ row }">
+            <CustomerMembersSubTable
+              :customer-id="row.id"
+              :member-relations="customerStore.customerMemberRelations.data"
+              :loading="memberRelationsLoading"
+              @refresh="() => handleRefreshMemberRelations(row.id)"
+            />
+          </template>
+        </el-table-column>
+
         <el-table-column
           v-if="hasManagePermission"
           type="selection"

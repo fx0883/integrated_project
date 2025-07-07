@@ -23,7 +23,8 @@ import {
   updateCustomerTenantRelation,
   deleteCustomerTenantRelation,
   setPrimaryTenantRelation,
-  getPrimaryTenantRelation
+  getPrimaryTenantRelation,
+  batchDeleteCustomerMemberRelations
 } from "@/api/modules/customer";
 import type {
   Customer,
@@ -66,6 +67,7 @@ interface CustomerState {
     createMemberRelation: boolean;
     updateMemberRelation: boolean;
     deleteMemberRelation: boolean;
+    batchDeleteMemberRelations: boolean;
     tenantRelations: boolean;
     createTenantRelation: boolean;
     updateTenantRelation: boolean;
@@ -111,6 +113,7 @@ export const useCustomerStore = defineStore("customer", {
       createMemberRelation: false,
       updateMemberRelation: false,
       deleteMemberRelation: false,
+      batchDeleteMemberRelations: false,
       tenantRelations: false,
       createTenantRelation: false,
       updateTenantRelation: false,
@@ -442,18 +445,37 @@ export const useCustomerStore = defineStore("customer", {
       try {
         const response = await getCustomerMemberRelations(customerId, params);
         if (response.success) {
-          // 处理分页数据结构适配
-          if (response.data && 'results' in response.data) {
-            this.customerMemberRelations = {
-              total: response.data.count || 0,
-              page: params.page || 1,
-              limit: params.page_size || 10,
-              data: response.data.results || []
-            };
-          } else {
-            logger.warn("客户联系人关系列表数据结构不符合预期", response.data);
-            this.customerMemberRelations.data = Array.isArray(response.data) ? response.data : [];
-          }
+          // 将会员数据转换为关系数据
+          const memberRelations = response.data.map(member => ({
+            id: member.id,
+            member: {
+              id: member.id,
+              name: member.nick_name || `${member.first_name} ${member.last_name}`.trim() || member.username,
+              username: member.username,
+              email: member.email,
+              phone: member.phone,
+              avatar: member.avatar
+            },
+            customer: {
+              id: customerId,
+              name: this.currentCustomer?.name || '',
+              type: this.currentCustomer?.type || ''
+            },
+            role: '',
+            is_primary: false,
+            department: '',
+            notes: member.notes || '',
+            created_at: member.date_joined,
+            updated_at: ''
+          }));
+          
+          this.customerMemberRelations = {
+            total: response.data.length,
+            page: params.page || 1,
+            limit: params.page_size || 10,
+            data: memberRelations
+          };
+          
           return response;
         } else {
           this.error = response.message || "获取客户联系人关系列表失败";
@@ -761,6 +783,39 @@ export const useCustomerStore = defineStore("customer", {
         throw error;
       } finally {
         this.loading.updateTenantRelation = false;
+      }
+    },
+    
+    /**
+     * 批量删除客户-会员关系
+     */
+    async batchDeleteCustomerMemberRelations(relationIds: number[]) {
+      this.loading.batchDeleteMemberRelations = true;
+      this.error = null;
+      
+      try {
+        const response = await batchDeleteCustomerMemberRelations(relationIds);
+        if (response.success) {
+          // 从关系列表中移除被删除的关系
+          this.customerMemberRelations.data = this.customerMemberRelations.data.filter(
+            relation => !relationIds.includes(relation.id)
+          );
+          this.customerMemberRelations.total -= response.data.success_count || relationIds.length;
+          
+          ElMessage.success(response.message || "批量删除客户-会员关系成功");
+          return response;
+        } else {
+          this.error = response.message || "批量删除客户-会员关系失败";
+          ElMessage.error(this.error);
+          return Promise.reject(new Error(this.error));
+        }
+      } catch (error) {
+        logger.error("批量删除客户-会员关系失败", error);
+        this.error = error.message || "批量删除客户-会员关系失败";
+        ElMessage.error(this.error);
+        throw error;
+      } finally {
+        this.loading.batchDeleteMemberRelations = false;
       }
     },
     

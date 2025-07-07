@@ -491,13 +491,20 @@ const handleRelationSubmit = async (
       ElMessage.success(t("member.updateRelationSuccess"));
     } else {
       // 创建模式
-      await memberStore.createMemberCustomerRelation(data);
-      ElMessage.success(t("member.createRelationSuccess"));
+      const response = await memberStore.createMemberCustomerRelation({
+        ...data,
+        member_id: memberId.value
+      });
+      if (response && response.success) {
+        ElMessage.success(t("member.createRelationSuccess"));
+      }
     }
     relationDialog.visible = false;
-    fetchCustomerRelations();
+    // 重新获取客户关系列表以确保数据是最新的
+    await fetchCustomerRelations();
   } catch (error) {
     logger.error("保存客户关系失败", error);
+    ElMessage.error(t("member.saveRelationFailed"));
   } finally {
     relationDialog.loading = false;
   }

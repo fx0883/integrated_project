@@ -19,6 +19,7 @@ import {
   resetMemberPassword,
   uploadMemberAvatar
 } from "@/api/modules/member";
+import { http } from "@/utils/http";
 import type {
   Member,
   MemberListParams,
@@ -28,7 +29,7 @@ import type {
   MemberPasswordResetParams,
   MemberBulkOperationParams
 } from "@/types/member";
-import type { PaginationData } from "@/types/api";
+import type { PaginationData, ApiResponse } from "@/types/api";
 import logger from "@/utils/logger";
 
 interface MemberState {
@@ -544,6 +545,31 @@ export const useMemberStore = defineStore("member", {
         throw error;
       } finally {
         this.loading.resetPassword = false;
+      }
+    },
+    
+    /**
+     * 搜索会员
+     */
+    async searchMembers(query: string, params: MemberListParams = {}) {
+      this.error = null;
+      
+      try {
+        // 使用 API 模块中定义的 searchMembers 函数
+        const response = await searchMembers(query, params);
+        
+        if (response.success) {
+          return response;
+        } else {
+          this.error = response.message || "搜索会员失败";
+          ElMessage.error(this.error);
+          return Promise.reject(new Error(this.error));
+        }
+      } catch (error) {
+        logger.error("搜索会员失败", error);
+        this.error = error.message || "搜索会员失败";
+        ElMessage.error(this.error);
+        throw error;
       }
     },
     

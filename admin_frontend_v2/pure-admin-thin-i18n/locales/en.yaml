@@ -1137,6 +1137,38 @@ customer:
     exportSuccess: Export Successful
     exportFailed: Export Failed
 
+  # Member Relations
+  member:
+    title: Member Relations
+    list: Member List
+    addMember: Add Member
+    editRelation: Edit Member Relation
+    viewRelation: View Member Relation
+    deleteRelation: Delete Member Relation
+    batchDeleteRelation: Batch Delete Member Relations
+    memberInfo: Member Information
+    memberSelect: Select Member
+    memberSelectPlaceholder: Please select a member
+    memberRequired: Please select a member
+    role: Role
+    rolePlaceholder: Please enter role
+    roleRequired: Role is required
+    department: Department
+    departmentPlaceholder: Please enter department
+    isPrimary: Primary Contact
+    notes: Notes
+    notesPlaceholder: Please enter notes
+    searchPlaceholder: Search by name, email or role
+    createSuccess: Member relation added successfully
+    updateSuccess: Member relation updated successfully
+    deleteSuccess: Member relation deleted successfully
+    batchDeleteSuccess: Member relations deleted successfully
+    saveError: Failed to save member relation
+    deleteError: Failed to delete member relation
+    searchMemberFailed: Failed to search members
+    deleteRelationConfirm: Are you sure you want to delete relation with member {username}?
+    batchDeleteRelationConfirm: Are you sure you want to delete {count} selected member relations?
+
 member:
   memberManagement: Member Management
   memberList: Member List

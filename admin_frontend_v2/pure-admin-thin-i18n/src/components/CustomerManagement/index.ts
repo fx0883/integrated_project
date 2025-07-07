@@ -4,6 +4,8 @@ import CustomerValueTag from "./CustomerValueTag.vue";
 import ContactPersonForm from "./ContactPersonForm.vue";
 import TenantLinkForm from "./TenantLinkForm.vue";
 import ConfirmDialog from "./ConfirmDialog.vue";
+import CustomerRelationForm from "./CustomerRelationForm.vue";
+import CustomerMembersSubTable from "./CustomerMembersSubTable.vue";
 
 export {
   CustomerForm,
@@ -11,7 +13,9 @@ export {
   CustomerValueTag,
   ContactPersonForm,
   TenantLinkForm,
-  ConfirmDialog
+  ConfirmDialog,
+  CustomerRelationForm,
+  CustomerMembersSubTable
 };
 
 export default {
@@ -20,5 +24,7 @@ export default {
   CustomerValueTag,
   ContactPersonForm,
   TenantLinkForm,
-  ConfirmDialog
+  ConfirmDialog,
+  CustomerRelationForm,
+  CustomerMembersSubTable
 }; 

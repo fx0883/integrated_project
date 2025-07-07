@@ -13,6 +13,7 @@ import type {
   CustomerStatistics,
   CustomerSearchResult
 } from "@/types/customer";
+import type { Member } from "@/types/member";
 import logger from "@/utils/logger";
 
 /**
@@ -160,9 +161,9 @@ export function bulkDeleteCustomers(customerIds: number[]) {
 export function getCustomerMemberRelations(customerId: number, params: { page?: number; page_size?: number } = {}) {
   logger.debug("API请求: 获取客户的联系人关系", { customerId, params });
   
-  return http.request<PaginationResponse<CustomerMemberRelation>>(
+  return http.request<ApiResponse<Member[]>>(
     "get",
-    `/customers/${customerId}/members/`,
+    `/customers/members/relations/customer-members/?customer_id=${customerId}`,
     { params }
   );
 }
@@ -175,7 +176,7 @@ export function createCustomerMemberRelation(data: CustomerMemberRelationCreateU
   
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "post",
-    `/customers/${data.customer_id}/members/`,
+    `/customers/members/relations/`,
     { data }
   );
 }
@@ -341,5 +342,18 @@ export function getRelationBetween(customerId: number, tenantId: number) {
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "get",
     `/customers/${customerId}/tenants/relation/${tenantId}/`
+  );
+}
+
+/**
+ * 批量删除客户-会员关系
+ */
+export function batchDeleteCustomerMemberRelations(relationIds: number[]) {
+  logger.debug("API请求: 批量删除客户-会员关系", { count: relationIds.length });
+  
+  return http.request<ApiResponse<{ success_count: number; failed_count: number; failed_ids?: number[] }>>(
+    "delete",
+    "/customers/members/bulk/delete/",
+    { data: { relation_ids: relationIds } }
   );
 } 

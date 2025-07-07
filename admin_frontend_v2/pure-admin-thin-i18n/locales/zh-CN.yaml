@@ -1141,6 +1141,38 @@ customer:
     exportSuccess: 导出成功
     exportFailed: 导出失败
 
+  # 会员关系
+  member:
+    title: 会员关系
+    list: 会员列表
+    addMember: 添加会员
+    editRelation: 编辑会员关系
+    viewRelation: 查看会员关系
+    deleteRelation: 删除会员关系
+    batchDeleteRelation: 批量删除会员关系
+    memberInfo: 会员信息
+    memberSelect: 会员选择
+    memberSelectPlaceholder: 请选择会员
+    memberRequired: 请选择会员
+    role: 角色
+    rolePlaceholder: 请输入角色
+    roleRequired: 请输入角色
+    department: 部门
+    departmentPlaceholder: 请输入部门
+    isPrimary: 主要联系人
+    notes: 备注
+    notesPlaceholder: 请输入备注
+    searchPlaceholder: 搜索会员名称、邮箱或角色
+    createSuccess: 添加会员关系成功
+    updateSuccess: 更新会员关系成功
+    deleteSuccess: 删除会员关系成功
+    batchDeleteSuccess: 批量删除会员关系成功
+    saveError: 保存会员关系失败
+    deleteError: 删除会员关系失败
+    searchMemberFailed: 搜索会员失败
+    deleteRelationConfirm: 确定要删除与会员 {username} 的关系吗？
+    batchDeleteRelationConfirm: 确定要删除选中的 {count} 个会员关系吗？
+
 member:
   memberManagement: 会员管理
   memberList: 会员列表

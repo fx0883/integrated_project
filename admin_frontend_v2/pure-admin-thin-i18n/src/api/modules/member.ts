@@ -89,7 +89,7 @@ export function searchMembers(query: string, params: MemberListParams = {}) {
   
   return http.request<PaginationResponse<MemberSearchResult>>(
     "get",
-    `/members/search/?query=${encodeURIComponent(query)}`,
+    `/members/?search=${encodeURIComponent(query)}`,
     { params }
   );
 }
