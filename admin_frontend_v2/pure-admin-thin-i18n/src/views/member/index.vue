@@ -20,6 +20,8 @@
             v-model="searchForm.status"
             :placeholder="$t('member.statusFilterPlaceholder')"
             clearable
+            class="status-filter"
+            @change="handleSearch"
           >
             <el-option
               v-for="item in statusOptions"
@@ -38,6 +40,8 @@
             remote
             :remote-method="remoteTenantSearch"
             :loading="tenantLoading"
+            class="tenant-filter"
+            @change="handleSearch"
           >
             <el-option
               v-for="item in tenantOptions"
@@ -603,7 +607,11 @@ const remoteTenantSearch = async (query: string) => {
   if (query) {
     tenantLoading.value = true;
     try {
-      await tenantStore.fetchTenantList({ search: query, page: 1, limit: 10 });
+      await tenantStore.fetchTenantList({
+        search: query,
+        page: 1,
+        page_size: 10
+      });
       tenantOptions.value = tenantStore.tenantList.data.map(tenant => ({
         value: tenant.id,
         label: tenant.name
@@ -730,5 +738,10 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.status-filter,
+.tenant-filter {
+  min-width: 150px;
 }
 </style>
