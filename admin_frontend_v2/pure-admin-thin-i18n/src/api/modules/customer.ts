@@ -25,12 +25,10 @@ import logger from "@/utils/logger";
  */
 export function getCustomerList(params: CustomerListParams = {}) {
   logger.debug("API请求: 获取客户列表", params);
-  
-  return http.request<PaginationResponse<Customer>>(
-    "get",
-    "/customers/",
-    { params }
-  );
+
+  return http.request<PaginationResponse<Customer>>("get", "/customers/", {
+    params
+  });
 }
 
 /**
@@ -38,11 +36,8 @@ export function getCustomerList(params: CustomerListParams = {}) {
  */
 export function getCustomerDetail(id: number) {
   logger.debug("API请求: 获取客户详情", { id });
-  
-  return http.request<ApiResponse<Customer>>(
-    "get",
-    `/customers/${id}/`
-  );
+
+  return http.request<ApiResponse<Customer>>("get", `/customers/${id}/`);
 }
 
 /**
@@ -50,12 +45,8 @@ export function getCustomerDetail(id: number) {
  */
 export function createCustomer(data: CustomerCreateUpdateParams) {
   logger.debug("API请求: 创建客户", data);
-  
-  return http.request<ApiResponse<Customer>>(
-    "post",
-    "/customers/",
-    { data }
-  );
+
+  return http.request<ApiResponse<Customer>>("post", "/customers/", { data });
 }
 
 /**
@@ -63,12 +54,10 @@ export function createCustomer(data: CustomerCreateUpdateParams) {
  */
 export function updateCustomer(id: number, data: CustomerCreateUpdateParams) {
   logger.debug("API请求: 更新客户", { id, data });
-  
-  return http.request<ApiResponse<Customer>>(
-    "put",
-    `/customers/${id}/`,
-    { data }
-  );
+
+  return http.request<ApiResponse<Customer>>("put", `/customers/${id}/`, {
+    data
+  });
 }
 
 /**
@@ -76,19 +65,19 @@ export function updateCustomer(id: number, data: CustomerCreateUpdateParams) {
  */
 export function deleteCustomer(id: number) {
   logger.debug("API请求: 删除客户", { id });
-  
-  return http.request<ApiResponse<any>>(
-    "delete",
-    `/customers/${id}/`
-  );
+
+  return http.request<ApiResponse<any>>("delete", `/customers/${id}/`);
 }
 
 /**
  * 搜索客户
  */
-export function searchCustomers(query: string, params: CustomerListParams = {}) {
+export function searchCustomers(
+  query: string,
+  params: CustomerListParams = {}
+) {
   logger.debug("API请求: 搜索客户", { query, params });
-  
+
   return http.request<PaginationResponse<CustomerSearchResult>>(
     "get",
     `/customers/search/?query=${encodeURIComponent(query)}`,
@@ -101,7 +90,7 @@ export function searchCustomers(query: string, params: CustomerListParams = {}) 
  */
 export function getCustomerStatistics() {
   logger.debug("API请求: 获取客户统计数据");
-  
+
   return http.request<ApiResponse<CustomerStatistics>>(
     "get",
     "/customers/statistics/"
@@ -117,7 +106,7 @@ export function getCustomerStatistics() {
  */
 export function bulkCreateCustomers(data: CustomerCreateUpdateParams[]) {
   logger.debug("API请求: 批量创建客户", { count: data.length });
-  
+
   return http.request<ApiResponse<CustomerBulkOperationResponse>>(
     "post",
     "/customers/bulk/create/",
@@ -130,7 +119,7 @@ export function bulkCreateCustomers(data: CustomerCreateUpdateParams[]) {
  */
 export function bulkUpdateCustomers(data: CustomerBulkOperationParams) {
   logger.debug("API请求: 批量更新客户", { count: data.customer_ids.length });
-  
+
   return http.request<ApiResponse<CustomerBulkOperationResponse>>(
     "put",
     "/customers/bulk/update/",
@@ -143,7 +132,7 @@ export function bulkUpdateCustomers(data: CustomerBulkOperationParams) {
  */
 export function bulkDeleteCustomers(customerIds: number[]) {
   logger.debug("API请求: 批量删除客户", { count: customerIds.length });
-  
+
   return http.request<ApiResponse<CustomerBulkOperationResponse>>(
     "delete",
     "/customers/bulk/delete/",
@@ -158,9 +147,12 @@ export function bulkDeleteCustomers(customerIds: number[]) {
 /**
  * 获取客户的联系人关系列表
  */
-export function getCustomerMemberRelations(customerId: number, params: { page?: number; page_size?: number } = {}) {
+export function getCustomerMemberRelations(
+  customerId: number,
+  params: { page?: number; page_size?: number } = {}
+) {
   logger.debug("API请求: 获取客户的联系人关系", { customerId, params });
-  
+
   return http.request<ApiResponse<Member[]>>(
     "get",
     `/customers/members/relations/customer-members/?customer_id=${customerId}`,
@@ -171,9 +163,11 @@ export function getCustomerMemberRelations(customerId: number, params: { page?: 
 /**
  * 创建客户-联系人关系
  */
-export function createCustomerMemberRelation(data: CustomerMemberRelationCreateUpdateParams) {
+export function createCustomerMemberRelation(
+  data: CustomerMemberRelationCreateUpdateParams
+) {
   logger.debug("API请求: 创建客户-联系人关系", data);
-  
+
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "post",
     `/customers/members/relations/`,
@@ -184,9 +178,12 @@ export function createCustomerMemberRelation(data: CustomerMemberRelationCreateU
 /**
  * 获取客户-联系人关系详情
  */
-export function getCustomerMemberRelationDetail(customerId: number, relationId: number) {
+export function getCustomerMemberRelationDetail(
+  customerId: number,
+  relationId: number
+) {
   logger.debug("API请求: 获取客户-联系人关系详情", { customerId, relationId });
-  
+
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "get",
     `/customers/${customerId}/members/${relationId}/`
@@ -196,9 +193,17 @@ export function getCustomerMemberRelationDetail(customerId: number, relationId: 
 /**
  * 更新客户-联系人关系
  */
-export function updateCustomerMemberRelation(customerId: number, relationId: number, data: Omit<CustomerMemberRelationCreateUpdateParams, 'customer_id'>) {
-  logger.debug("API请求: 更新客户-联系人关系", { customerId, relationId, data });
-  
+export function updateCustomerMemberRelation(
+  customerId: number,
+  relationId: number,
+  data: Omit<CustomerMemberRelationCreateUpdateParams, "customer_id">
+) {
+  logger.debug("API请求: 更新客户-联系人关系", {
+    customerId,
+    relationId,
+    data
+  });
+
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "put",
     `/customers/${customerId}/members/${relationId}/`,
@@ -209,9 +214,12 @@ export function updateCustomerMemberRelation(customerId: number, relationId: num
 /**
  * 删除客户-联系人关系
  */
-export function deleteCustomerMemberRelation(customerId: number, relationId: number) {
+export function deleteCustomerMemberRelation(
+  customerId: number,
+  relationId: number
+) {
   logger.debug("API请求: 删除客户-联系人关系", { customerId, relationId });
-  
+
   return http.request<ApiResponse<any>>(
     "delete",
     `/customers/${customerId}/members/${relationId}/`
@@ -221,9 +229,12 @@ export function deleteCustomerMemberRelation(customerId: number, relationId: num
 /**
  * 设置主要联系人
  */
-export function setPrimaryMemberRelation(customerId: number, relationId: number) {
+export function setPrimaryMemberRelation(
+  customerId: number,
+  relationId: number
+) {
   logger.debug("API请求: 设置主要联系人", { customerId, relationId });
-  
+
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "post",
     `/customers/${customerId}/members/${relationId}/set-primary/`
@@ -235,7 +246,7 @@ export function setPrimaryMemberRelation(customerId: number, relationId: number)
  */
 export function getPrimaryMemberRelation(customerId: number) {
   logger.debug("API请求: 获取主要联系人", { customerId });
-  
+
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "get",
     `/customers/${customerId}/members/primary/`
@@ -249,9 +260,12 @@ export function getPrimaryMemberRelation(customerId: number) {
 /**
  * 获取客户的租户关系列表
  */
-export function getCustomerTenantRelations(customerId: number, params: { page?: number; page_size?: number } = {}) {
+export function getCustomerTenantRelations(
+  customerId: number,
+  params: { page?: number; page_size?: number } = {}
+) {
   logger.debug("API请求: 获取客户的租户关系", { customerId, params });
-  
+
   return http.request<PaginationResponse<CustomerTenantRelation>>(
     "get",
     `/customers/${customerId}/tenants/`,
@@ -262,9 +276,11 @@ export function getCustomerTenantRelations(customerId: number, params: { page?: 
 /**
  * 创建客户-租户关系
  */
-export function createCustomerTenantRelation(data: CustomerTenantRelationCreateUpdateParams) {
+export function createCustomerTenantRelation(
+  data: CustomerTenantRelationCreateUpdateParams
+) {
   logger.debug("API请求: 创建客户-租户关系", data);
-  
+
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "post",
     `/customers/${data.customer_id}/tenants/`,
@@ -275,9 +291,12 @@ export function createCustomerTenantRelation(data: CustomerTenantRelationCreateU
 /**
  * 获取客户-租户关系详情
  */
-export function getCustomerTenantRelationDetail(customerId: number, relationId: number) {
+export function getCustomerTenantRelationDetail(
+  customerId: number,
+  relationId: number
+) {
   logger.debug("API请求: 获取客户-租户关系详情", { customerId, relationId });
-  
+
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "get",
     `/customers/${customerId}/tenants/${relationId}/`
@@ -287,9 +306,13 @@ export function getCustomerTenantRelationDetail(customerId: number, relationId: 
 /**
  * 更新客户-租户关系
  */
-export function updateCustomerTenantRelation(customerId: number, relationId: number, data: Omit<CustomerTenantRelationCreateUpdateParams, 'customer_id'>) {
+export function updateCustomerTenantRelation(
+  customerId: number,
+  relationId: number,
+  data: Omit<CustomerTenantRelationCreateUpdateParams, "customer_id">
+) {
   logger.debug("API请求: 更新客户-租户关系", { customerId, relationId, data });
-  
+
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "put",
     `/customers/${customerId}/tenants/${relationId}/`,
@@ -300,9 +323,12 @@ export function updateCustomerTenantRelation(customerId: number, relationId: num
 /**
  * 删除客户-租户关系
  */
-export function deleteCustomerTenantRelation(customerId: number, relationId: number) {
+export function deleteCustomerTenantRelation(
+  customerId: number,
+  relationId: number
+) {
   logger.debug("API请求: 删除客户-租户关系", { customerId, relationId });
-  
+
   return http.request<ApiResponse<any>>(
     "delete",
     `/customers/${customerId}/tenants/${relationId}/`
@@ -312,9 +338,12 @@ export function deleteCustomerTenantRelation(customerId: number, relationId: num
 /**
  * 设置主要租户关系
  */
-export function setPrimaryTenantRelation(customerId: number, relationId: number) {
+export function setPrimaryTenantRelation(
+  customerId: number,
+  relationId: number
+) {
   logger.debug("API请求: 设置主要租户关系", { customerId, relationId });
-  
+
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "post",
     `/customers/${customerId}/tenants/${relationId}/set-primary/`
@@ -326,7 +355,7 @@ export function setPrimaryTenantRelation(customerId: number, relationId: number)
  */
 export function getPrimaryTenantRelation(customerId: number) {
   logger.debug("API请求: 获取主要租户关系", { customerId });
-  
+
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "get",
     `/customers/${customerId}/tenants/primary/`
@@ -338,7 +367,7 @@ export function getPrimaryTenantRelation(customerId: number) {
  */
 export function getRelationBetween(customerId: number, tenantId: number) {
   logger.debug("API请求: 获取客户与租户之间的关系", { customerId, tenantId });
-  
+
   return http.request<ApiResponse<CustomerTenantRelation>>(
     "get",
     `/customers/${customerId}/tenants/relation/${tenantId}/`
@@ -350,10 +379,14 @@ export function getRelationBetween(customerId: number, tenantId: number) {
  */
 export function batchDeleteCustomerMemberRelations(relationIds: number[]) {
   logger.debug("API请求: 批量删除客户-会员关系", { count: relationIds.length });
-  
-  return http.request<ApiResponse<{ success_count: number; failed_count: number; failed_ids?: number[] }>>(
-    "delete",
-    "/customers/members/bulk/delete/",
-    { data: { relation_ids: relationIds } }
-  );
-} 
+
+  return http.request<
+    ApiResponse<{
+      success_count: number;
+      failed_count: number;
+      failed_ids?: number[];
+    }>
+  >("delete", "/customers/members/bulk/delete/", {
+    data: { relation_ids: relationIds }
+  });
+}

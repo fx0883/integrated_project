@@ -397,9 +397,6 @@ const handleFormSubmit = async (formData: any) => {
       };
       await customerStore.createCustomerMemberRelation(relationData);
       ElMessage.success(t("customer.member.createSuccess"));
-
-      // 刷新当前客户的会员信息
-      await customerStore.fetchCustomerMemberRelations(props.customerId);
     } else if (formMode.value === "edit" && currentMemberRelation.value) {
       // 更新会员关系
       await customerStore.updateCustomerMemberRelation(
@@ -408,9 +405,6 @@ const handleFormSubmit = async (formData: any) => {
         formData
       );
       ElMessage.success(t("customer.member.updateSuccess"));
-
-      // 刷新当前客户的会员信息
-      await customerStore.fetchCustomerMemberRelations(props.customerId);
     }
 
     // 关闭对话框
