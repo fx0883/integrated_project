@@ -14,13 +14,14 @@ common:
   search: Search
   actions: Actions
   anonymous: Anonymous
-  operation: Operations
+  operation: Operation
   operations: Operations
   detail: Detail
   submit: Submit
   never: Never
   noNotes: No Notes
   all: All
+  notSet: Not Set
   form:
     submit: Submit
     reset: Reset
@@ -1209,6 +1210,7 @@ member:
   avatarSizeError: Avatar size cannot exceed 2MB
   avatarUploadSuccess: Avatar uploaded successfully
   customerRelations: Customer Relations
+  customerType: Customer Type
   addRelation: Add Relation
   editRelation: Edit Relation
   deleteRelation: Delete Relation

@@ -21,6 +21,7 @@ common:
   never: 从不
   noNotes: 无备注
   all: 全部
+  notSet: 未设置
   form:
     submit: 提交
     reset: 重置
@@ -1213,6 +1214,7 @@ member:
   avatarSizeError: 头像大小不能超过2MB
   avatarUploadSuccess: 头像上传成功
   customerRelations: 客户关系
+  customerType: 客户类型
   addRelation: 添加关系
   editRelation: 编辑关系
   deleteRelation: 删除关系
