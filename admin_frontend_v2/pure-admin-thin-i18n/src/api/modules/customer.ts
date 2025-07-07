@@ -390,3 +390,29 @@ export function batchDeleteCustomerMemberRelations(relationIds: number[]) {
     data: { relation_ids: relationIds }
   });
 }
+
+/**
+ * 按客户ID和会员ID数组批量删除客户-会员关系
+ */
+export function batchDeleteCustomerMembersByIds(
+  customerId: number,
+  memberIds: number[]
+) {
+  logger.debug("API请求: 按客户ID和会员ID批量删除会员关系", {
+    customerId,
+    count: memberIds.length
+  });
+
+  return http.request<
+    ApiResponse<{
+      success_count: number;
+      failed_count: number;
+      failed_ids?: number[];
+    }>
+  >("post", "/customers/members/relations/customer-members/delete/", {
+    data: {
+      customer_id: customerId,
+      member_ids: memberIds
+    }
+  });
+}

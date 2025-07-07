@@ -22,6 +22,9 @@ common:
   noNotes: No Notes
   all: All
   notSet: Not Set
+  batchDelete: Batch Delete
+  no: No
+  close: Close
   form:
     submit: Submit
     reset: Reset

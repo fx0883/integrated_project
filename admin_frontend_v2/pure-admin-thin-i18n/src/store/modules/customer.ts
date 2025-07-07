@@ -24,7 +24,8 @@ import {
   deleteCustomerTenantRelation,
   setPrimaryTenantRelation,
   getPrimaryTenantRelation,
-  batchDeleteCustomerMemberRelations
+  batchDeleteCustomerMemberRelations,
+  batchDeleteCustomerMembersByIds
 } from "@/api/modules/customer";
 import type {
   Customer,
@@ -875,6 +876,55 @@ export const useCustomerStore = defineStore("customer", {
               this.customerMemberRelationsMap[customerId].total -= deletedCount;
             }
           });
+          
+          ElMessage.success(response.message || "批量删除客户-会员关系成功");
+          return response;
+        } else {
+          this.error = response.message || "批量删除客户-会员关系失败";
+          ElMessage.error(this.error);
+          return Promise.reject(new Error(this.error));
+        }
+      } catch (error) {
+        logger.error("批量删除客户-会员关系失败", error);
+        this.error = error.message || "批量删除客户-会员关系失败";
+        ElMessage.error(this.error);
+        throw error;
+      } finally {
+        this.loading.batchDeleteMemberRelations = false;
+      }
+    },
+    
+    /**
+     * 按客户ID和会员ID数组批量删除客户-会员关系
+     */
+    async batchDeleteCustomerMembersByIds(customerId: number, memberIds: number[]) {
+      this.loading.batchDeleteMemberRelations = true;
+      this.error = null;
+      
+      try {
+        const response = await batchDeleteCustomerMembersByIds(customerId, memberIds);
+        if (response.success) {
+          // 从关系列表中移除被删除的关系
+          // 需要找出会员ID对应的关系ID
+          const relationsToDelete = this.customerMemberRelations.data.filter(
+            relation => relation.customer.id === customerId && memberIds.includes(relation.member.id)
+          );
+          
+          const relationIds = relationsToDelete.map(relation => relation.id);
+          
+          // 从全局关系列表中移除
+          this.customerMemberRelations.data = this.customerMemberRelations.data.filter(
+            relation => !relationIds.includes(relation.id)
+          );
+          this.customerMemberRelations.total -= response.data.success_count || relationIds.length;
+          
+          // 从客户关系映射中移除
+          if (this.customerMemberRelationsMap[customerId]) {
+            this.customerMemberRelationsMap[customerId].data = this.customerMemberRelationsMap[customerId].data.filter(
+              relation => !relationIds.includes(relation.id)
+            );
+            this.customerMemberRelationsMap[customerId].total -= response.data.success_count || relationIds.length;
+          }
           
           ElMessage.success(response.message || "批量删除客户-会员关系成功");
           return response;

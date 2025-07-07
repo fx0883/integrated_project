@@ -76,7 +76,6 @@
             </el-avatar>
             <div class="member-details">
               <div class="member-name">{{ row.member.username }}</div>
-              <div class="member-email">{{ row.member.email }}</div>
             </div>
           </div>
         </template>
@@ -180,7 +179,15 @@
     </el-dialog>
 
     <!-- 确认对话框 -->
-    <confirm-dialog ref="confirmDialogRef" @confirm="confirmDelete" />
+    <confirm-dialog
+      v-model:visible="confirmDialogVisible"
+      :title="confirmDialogTitle"
+      :content="confirmDialogContent"
+      :type="confirmDialogType"
+      :loading="formLoading"
+      @confirm="confirmDelete"
+      @cancel="closeConfirmDialog"
+    />
   </div>
 </template>
 
@@ -226,13 +233,18 @@ const searchQuery = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const selectedRows = ref<MemberCustomerRelation[]>([]);
-const confirmDialogRef = ref();
+const confirmDialogVisible = ref(false);
+const confirmDialogTitle = ref("");
+const confirmDialogContent = ref("");
+const confirmDialogType = ref<"success" | "warning" | "info" | "danger">(
+  "danger"
+);
+const formLoading = ref(false);
 
 // 对话框相关
 const dialogVisible = ref(false);
 const formMode = ref<"create" | "edit" | "view">("create");
 const currentMemberRelation = ref<MemberCustomerRelation | null>(null);
-const formLoading = ref(false);
 
 // 计算属性：对话框标题
 const dialogTitle = computed(() => {
@@ -263,7 +275,7 @@ const filteredData = computed(() => {
   return filteredMemberRelations.value.filter(
     relation =>
       relation.member.username.toLowerCase().includes(query) ||
-      relation.member.email.toLowerCase().includes(query) ||
+      relation.member.name.toLowerCase().includes(query) ||
       (relation.role && relation.role.toLowerCase().includes(query)) ||
       (relation.department && relation.department.toLowerCase().includes(query))
   );
@@ -326,37 +338,25 @@ const handleEdit = (row: MemberCustomerRelation) => {
 
 // 删除会员关系
 const handleDelete = (row: MemberCustomerRelation) => {
-  if (confirmDialogRef.value) {
-    confirmDialogRef.value.show({
-      title: t("customer.member.deleteRelation"),
-      content: t("customer.member.deleteRelationConfirm", {
-        username: row.member.username
-      }),
-      confirmType: "danger",
-      confirmButtonText: t("common.delete"),
-      cancelButtonText: t("common.cancel")
-    });
-
-    // 保存当前要删除的关系
-    currentMemberRelation.value = row;
-  }
+  confirmDialogTitle.value = t("customer.member.deleteRelation");
+  confirmDialogContent.value = t("customer.member.deleteRelationConfirm", {
+    username: row.member.username
+  });
+  confirmDialogType.value = "danger";
+  confirmDialogVisible.value = true;
+  currentMemberRelation.value = row;
 };
 
 // 批量删除
 const handleBatchDelete = () => {
   if (selectedRows.value.length === 0) return;
 
-  if (confirmDialogRef.value) {
-    confirmDialogRef.value.show({
-      title: t("customer.member.batchDeleteRelation"),
-      content: t("customer.member.batchDeleteRelationConfirm", {
-        count: selectedRows.value.length
-      }),
-      confirmType: "danger",
-      confirmButtonText: t("common.delete"),
-      cancelButtonText: t("common.cancel")
-    });
-  }
+  confirmDialogTitle.value = t("customer.member.batchDeleteRelation");
+  confirmDialogContent.value = t("customer.member.batchDeleteRelationConfirm", {
+    count: selectedRows.value.length
+  });
+  confirmDialogType.value = "danger";
+  confirmDialogVisible.value = true;
 };
 
 // 确认删除
@@ -366,8 +366,11 @@ const confirmDelete = async () => {
   try {
     if (selectedRows.value.length > 0) {
       // 批量删除
-      const relationIds = selectedRows.value.map(row => row.id);
-      await customerStore.batchDeleteCustomerMemberRelations(relationIds);
+      const memberIds = selectedRows.value.map(row => row.member.id);
+      await customerStore.batchDeleteCustomerMembersByIds(
+        props.customerId,
+        memberIds
+      );
       ElMessage.success(t("customer.member.batchDeleteSuccess"));
     } else if (currentMemberRelation.value) {
       // 单个删除
@@ -380,6 +383,8 @@ const confirmDelete = async () => {
 
     // 刷新数据
     emit("refresh");
+    // 关闭确认对话框
+    confirmDialogVisible.value = false;
   } catch (error) {
     logger.error("删除会员关系失败", error);
     ElMessage.error(t("customer.member.deleteError"));
@@ -430,6 +435,12 @@ const handleFormSubmit = async (formData: any) => {
 // 关闭对话框
 const closeDialog = () => {
   dialogVisible.value = false;
+  currentMemberRelation.value = null;
+};
+
+// 关闭确认对话框
+const closeConfirmDialog = () => {
+  confirmDialogVisible.value = false;
   currentMemberRelation.value = null;
 };
 
