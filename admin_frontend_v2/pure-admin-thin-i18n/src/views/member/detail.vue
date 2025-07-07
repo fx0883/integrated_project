@@ -448,7 +448,10 @@ const handleDeleteRelation = (row: MemberCustomerRelation) => {
     "danger",
     async () => {
       try {
-        await memberStore.removeMemberCustomerRelation(memberId.value, row.id);
+        await memberStore.removeMemberCustomerRelation(
+          memberId.value,
+          row.customer.id
+        );
         ElMessage.success(t("member.deleteRelationSuccess"));
       } catch (error) {
         logger.error("删除客户关系失败", error);

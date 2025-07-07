@@ -252,4 +252,22 @@ export function uploadMemberAvatar(memberId: number, formData: FormData) {
       }
     }
   );
+}
+
+/**
+ * 删除会员-客户关系 (新API)
+ */
+export function deleteMemberCustomerRelations(memberId: number, customerIds: number[]) {
+  logger.debug("API请求: 删除会员-客户关系", { memberId, customerIds });
+  
+  return http.request<ApiResponse<any>>(
+    "post",
+    `/customers/members/relations/member-customers/delete/`,
+    { 
+      data: { 
+        member_id: memberId, 
+        customer_ids: customerIds 
+      } 
+    }
+  );
 } 

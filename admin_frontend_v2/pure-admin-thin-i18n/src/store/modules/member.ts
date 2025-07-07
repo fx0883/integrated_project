@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ElMessage } from "element-plus";
 import {
   getMemberList,
   getMemberDetail,
@@ -12,7 +13,7 @@ import {
   createMemberCustomerRelation,
   getMemberCustomerRelationDetail,
   updateMemberCustomerRelation,
-  deleteMemberCustomerRelation,
+  deleteMemberCustomerRelations,
   setPrimaryCustomerRelation,
   getPrimaryCustomerRelation,
   resetMemberPassword,
@@ -28,7 +29,6 @@ import type {
   MemberBulkOperationParams
 } from "@/types/member";
 import type { PaginationData } from "@/types/api";
-import { ElMessage } from "element-plus";
 import logger from "@/utils/logger";
 
 interface MemberState {
@@ -461,16 +461,17 @@ export const useMemberStore = defineStore("member", {
     /**
      * 删除会员-客户关系
      */
-    async removeMemberCustomerRelation(memberId: number, relationId: number) {
+    async removeMemberCustomerRelation(memberId: number, customerId: number) {
       this.loading.deleteCustomerRelation = true;
       this.error = null;
       
       try {
-        const response = await deleteMemberCustomerRelation(memberId, relationId);
-        if (response.success) {
+        // 使用新的API，传递会员ID和客户ID数组
+        const response = await deleteMemberCustomerRelations(memberId, [customerId]);
+        if (response.success || response.status === 204) { // 新API返回204状态码表示成功
           // 从关系列表中移除被删除的关系
-          this.memberCustomerRelations.data = this.memberCustomerRelations.data.filter(relation => relation.id !== relationId);
-          ElMessage.success(response.message || "删除会员-客户关系成功");
+          this.memberCustomerRelations.data = this.memberCustomerRelations.data.filter(relation => relation.customer.id !== customerId);
+          ElMessage.success("删除会员-客户关系成功");
           return response;
         } else {
           this.error = response.message || "删除会员-客户关系失败";
