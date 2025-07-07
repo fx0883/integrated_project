@@ -192,4 +192,86 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
             serializer = CustomerListSerializer(customers, many=True)
             return Response(serializer.data)
         except Member.DoesNotExist:
-            return Response({"error": "联系人不存在"}, status=status.HTTP_404_NOT_FOUND) 
+            return Response({"error": "联系人不存在"}, status=status.HTTP_404_NOT_FOUND)
+            
+    @extend_schema(
+        summary="删除客户的多个联系人关系",
+        description="删除指定客户与多个联系人之间的关系",
+        tags=["客户-联系人关系"],
+        request={"application/json": {"type": "object", "properties": {
+            "customer_id": {"type": "integer", "description": "客户ID"},
+            "member_ids": {"type": "array", "items": {"type": "integer"}, "description": "联系人ID列表"}
+        }, "required": ["customer_id", "member_ids"]}},
+        responses={204: None}
+    )
+    @action(detail=False, methods=['post'], url_path='customer-members/delete')
+    def delete_customer_members(self, request):
+        """
+        删除客户的多个联系人关系
+        """
+        customer_id = request.data.get('customer_id')
+        member_ids = request.data.get('member_ids', [])
+        
+        if not customer_id:
+            return Response({"error": "请提供客户ID"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not member_ids:
+            return Response({"error": "请提供联系人ID列表"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # 验证客户是否存在
+            customer = Customer.objects.get(id=customer_id)
+            
+            # 删除关系
+            deleted_count = CustomerMemberRelation.objects.filter(
+                customer=customer,
+                member_id__in=member_ids
+            ).delete()[0]
+            
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Customer.DoesNotExist:
+            return Response({"error": "客户不存在"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"删除客户联系人关系时出错: {str(e)}")
+            return Response({"error": "删除关系时发生错误"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+    @extend_schema(
+        summary="删除联系人的多个客户关系",
+        description="删除指定联系人与多个客户之间的关系",
+        tags=["客户-联系人关系"],
+        request={"application/json": {"type": "object", "properties": {
+            "member_id": {"type": "integer", "description": "联系人ID"},
+            "customer_ids": {"type": "array", "items": {"type": "integer"}, "description": "客户ID列表"}
+        }, "required": ["member_id", "customer_ids"]}},
+        responses={204: None}
+    )
+    @action(detail=False, methods=['post'], url_path='member-customers/delete')
+    def delete_member_customers(self, request):
+        """
+        删除联系人的多个客户关系
+        """
+        member_id = request.data.get('member_id')
+        customer_ids = request.data.get('customer_ids', [])
+        
+        if not member_id:
+            return Response({"error": "请提供联系人ID"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not customer_ids:
+            return Response({"error": "请提供客户ID列表"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # 验证联系人是否存在
+            member = Member.objects.get(id=member_id)
+            
+            # 删除关系
+            deleted_count = CustomerMemberRelation.objects.filter(
+                member=member,
+                customer_id__in=customer_ids
+            ).delete()[0]
+            
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Member.DoesNotExist:
+            return Response({"error": "联系人不存在"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"删除联系人客户关系时出错: {str(e)}")
+            return Response({"error": "删除关系时发生错误"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 

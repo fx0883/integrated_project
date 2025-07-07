@@ -4,6 +4,10 @@
 1. 获取客户下的所有联系人列表
 2. 获取联系人所属的所有客户列表
 
+以及两个批量删除关系的API：
+1. 删除客户与多个联系人的关系
+2. 删除联系人与多个客户的关系
+
 ## API端点
 
 客户-联系人关系API的基础URL为：`/api/v1/customers/members/relations/`
@@ -86,7 +90,7 @@
 ```json
 {
   "success": false,
-  "code": 4004,
+  "code": 4040,
   "message": "资源不存在",
   "data": {
     "error": "客户不存在"
@@ -121,36 +125,24 @@
     {
       "id": 8,
       "name": "示例科技有限公司",
-      "type": "enterprise",
-      "type_display": "公司",
-      "value_level": "gold",
-      "value_level_display": "黄金",
+      "type": "company",
+      "value_level": "vip",
       "status": "active",
-      "status_display": "活跃",
-      "industry_type": "IT服务",
-      "company_size": "medium",
-      "company_size_display": "中型",
       "primary_contact_name": "张三",
       "primary_contact_phone": "13800138000",
       "primary_contact_email": "zhangsan@example.com",
-      "created_at": "2025-05-15T09:30:00Z"
+      "created_at": "2025-05-20T14:30:00Z"
     },
     {
-      "id": 10,
-      "name": "优创数字科技有限公司",
-      "type": "enterprise",
-      "type_display": "公司",
-      "value_level": "silver",
-      "value_level_display": "白银",
+      "id": 9,
+      "name": "测试有限公司",
+      "type": "company",
+      "value_level": "normal",
       "status": "active",
-      "status_display": "活跃",
-      "industry_type": "软件开发",
-      "company_size": "small",
-      "company_size_display": "小型",
-      "primary_contact_name": "张三",
-      "primary_contact_phone": "13800138000",
-      "primary_contact_email": "zhangsan@example.com",
-      "created_at": "2025-06-10T14:20:00Z"
+      "primary_contact_name": "李四",
+      "primary_contact_phone": "13900139000",
+      "primary_contact_email": "lisi@example.com",
+      "created_at": "2025-05-25T09:45:00Z"
     }
   ]
 }
@@ -176,11 +168,137 @@
 ```json
 {
   "success": false,
-  "code": 4004,
+  "code": 4040,
   "message": "资源不存在",
   "data": {
     "error": "联系人不存在"
   }
+}
+```
+
+## 3. 删除客户与多个联系人的关系
+
+删除指定客户与多个联系人之间的关系。
+
+### 请求
+
+- **方法**: `POST`
+- **URL**: `/api/v1/customers/members/relations/customer-members/delete/`
+- **权限**: 管理员
+- **Content-Type**: `application/json`
+
+### 请求体
+
+```json
+{
+  "customer_id": 8,
+  "member_ids": [15, 16, 17]
+}
+```
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| customer_id | int | 是 | 客户ID |
+| member_ids | array | 是 | 联系人ID列表 |
+
+### 响应
+
+- **状态码**: `204 No Content`
+
+### 错误响应
+
+#### 未提供客户ID
+
+```json
+{
+  "error": "请提供客户ID"
+}
+```
+
+#### 未提供联系人ID列表
+
+```json
+{
+  "error": "请提供联系人ID列表"
+}
+```
+
+#### 客户不存在
+
+```json
+{
+  "error": "客户不存在"
+}
+```
+
+#### 服务器错误
+
+```json
+{
+  "error": "删除关系时发生错误"
+}
+```
+
+## 4. 删除联系人与多个客户的关系
+
+删除指定联系人与多个客户之间的关系。
+
+### 请求
+
+- **方法**: `POST`
+- **URL**: `/api/v1/customers/members/relations/member-customers/delete/`
+- **权限**: 管理员
+- **Content-Type**: `application/json`
+
+### 请求体
+
+```json
+{
+  "member_id": 15,
+  "customer_ids": [8, 9, 10]
+}
+```
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| member_id | int | 是 | 联系人ID |
+| customer_ids | array | 是 | 客户ID列表 |
+
+### 响应
+
+- **状态码**: `204 No Content`
+
+### 错误响应
+
+#### 未提供联系人ID
+
+```json
+{
+  "error": "请提供联系人ID"
+}
+```
+
+#### 未提供客户ID列表
+
+```json
+{
+  "error": "请提供客户ID列表"
+}
+```
+
+#### 联系人不存在
+
+```json
+{
+  "error": "联系人不存在"
+}
+```
+
+#### 服务器错误
+
+```json
+{
+  "error": "删除关系时发生错误"
 }
 ```
 
