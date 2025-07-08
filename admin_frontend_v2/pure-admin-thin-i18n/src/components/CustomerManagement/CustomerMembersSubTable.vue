@@ -373,11 +373,10 @@ const confirmDelete = async () => {
       );
       ElMessage.success(t("customer.member.batchDeleteSuccess"));
     } else if (currentMemberRelation.value) {
-      // 单个删除
-      await customerStore.removeCustomerMemberRelation(
-        props.customerId,
-        currentMemberRelation.value.id
-      );
+      // 单个删除 - 使用批量删除API
+      await customerStore.batchDeleteCustomerMembersByIds(props.customerId, [
+        currentMemberRelation.value.member.id
+      ]);
       ElMessage.success(t("customer.member.deleteSuccess"));
     }
 

@@ -453,9 +453,9 @@ export const useCustomerStore = defineStore("customer", {
       try {
         const response = await getCustomerMemberRelations(customerId, params);
         if (response.success) {
-          // 将会员数据转换为关系数据
+          // 将会员数据转换为关系数据，使用新的API返回结构
           const memberRelations = response.data.map(member => ({
-            id: member.id,
+            id: member.relation?.id || member.id, // 使用relation中的ID作为关系ID
             member: {
               id: member.id,
               name: member.nick_name || `${member.first_name} ${member.last_name}`.trim() || member.username,
@@ -469,15 +469,15 @@ export const useCustomerStore = defineStore("customer", {
               name: this.currentCustomer?.name || '',
               type: this.currentCustomer?.type || ''
             },
-            role: '',
-            is_primary: false,
-            department: '',
+            role: member.relation?.role || '',
+            is_primary: member.relation?.is_primary || false,
+            department: member.relation?.department || '',
             notes: member.notes || '',
-            created_at: member.date_joined,
-            updated_at: ''
+            created_at: member.relation?.created_at || member.date_joined,
+            updated_at: member.relation?.updated_at || ''
           }));
           
-          // 更新全局状态（保持向后兼容）
+          // 更新全局状态
           this.customerMemberRelations = {
             total: response.data.length,
             page: params.page || 1,

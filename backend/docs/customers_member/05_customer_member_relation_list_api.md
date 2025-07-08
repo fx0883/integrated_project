@@ -14,7 +14,7 @@
 
 ## 1. 获取客户下的所有联系人列表
 
-获取指定客户ID下的所有联系人列表。
+获取指定客户ID下的所有联系人列表，同时返回联系人与客户的关系信息。
 
 ### 请求
 
@@ -31,43 +31,52 @@
 ### 响应
 
 ```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "操作成功",
-  "data": [
-    {
-      "id": 15,
-      "username": "zhangsan",
-      "email": "zhangsan@example.com",
-      "phone": "13800138000",
-      "nick_name": "张三",
-      "tenant": 1,
-      "tenant_name": "示例租户",
-      "is_sub_account": false,
-      "parent": null,
-      "parent_username": null,
-      "status": "active",
-      "avatar": "https://example.com/media/avatars/zhangsan.jpg",
-      "date_joined": "2025-06-01T08:30:00Z"
-    },
-    {
-      "id": 16,
-      "username": "lisi",
-      "email": "lisi@example.com",
-      "phone": "13900139000",
-      "nick_name": "李四",
-      "tenant": 1,
-      "tenant_name": "示例租户",
-      "is_sub_account": false,
-      "parent": null,
-      "parent_username": null,
-      "status": "active",
-      "avatar": "https://example.com/media/avatars/lisi.jpg",
-      "date_joined": "2025-06-05T10:15:00Z"
+[
+  {
+    "id": 15,
+    "username": "zhangsan",
+    "email": "zhangsan@example.com",
+    "phone": "13800138000",
+    "nick_name": "张三",
+    "tenant": 1,
+    "tenant_name": "示例租户",
+    "is_sub_account": false,
+    "parent": null,
+    "parent_username": null,
+    "status": "active",
+    "avatar": "https://example.com/media/avatars/zhangsan.jpg",
+    "date_joined": "2025-06-01T08:30:00Z",
+    "relation": {
+      "id": 5,
+      "role": "销售经理",
+      "is_primary": true,
+      "created_at": "2025-07-05T06:14:42.362927Z",
+      "updated_at": "2025-07-05T06:14:42.362927Z"
     }
-  ]
-}
+  },
+  {
+    "id": 16,
+    "username": "lisi",
+    "email": "lisi@example.com",
+    "phone": "13900139000",
+    "nick_name": "李四",
+    "tenant": 1,
+    "tenant_name": "示例租户",
+    "is_sub_account": false,
+    "parent": null,
+    "parent_username": null,
+    "status": "active",
+    "avatar": "https://example.com/media/avatars/lisi.jpg",
+    "date_joined": "2025-06-05T10:15:00Z",
+    "relation": {
+      "id": 6,
+      "role": "技术支持",
+      "is_primary": false,
+      "created_at": "2025-07-05T06:15:42.362927Z",
+      "updated_at": "2025-07-05T06:15:42.362927Z"
+    }
+  }
+]
 ```
 
 ### 错误响应
@@ -76,12 +85,7 @@
 
 ```json
 {
-  "success": false,
-  "code": 4000,
-  "message": "请求参数错误",
-  "data": {
-    "error": "请提供客户ID"
-  }
+  "error": "请提供客户ID"
 }
 ```
 
@@ -89,18 +93,13 @@
 
 ```json
 {
-  "success": false,
-  "code": 4040,
-  "message": "资源不存在",
-  "data": {
-    "error": "客户不存在"
-  }
+  "error": "客户不存在"
 }
 ```
 
 ## 2. 获取联系人所属的所有客户列表
 
-获取指定联系人ID所属的所有客户列表。
+获取指定联系人ID所属的所有客户列表，同时返回客户与联系人的关系信息。
 
 ### 请求
 
@@ -117,35 +116,44 @@
 ### 响应
 
 ```json
-{
-  "success": true,
-  "code": 2000,
-  "message": "操作成功",
-  "data": [
-    {
-      "id": 8,
-      "name": "示例科技有限公司",
-      "type": "company",
-      "value_level": "vip",
-      "status": "active",
-      "primary_contact_name": "张三",
-      "primary_contact_phone": "13800138000",
-      "primary_contact_email": "zhangsan@example.com",
-      "created_at": "2025-05-20T14:30:00Z"
-    },
-    {
-      "id": 9,
-      "name": "测试有限公司",
-      "type": "company",
-      "value_level": "normal",
-      "status": "active",
-      "primary_contact_name": "李四",
-      "primary_contact_phone": "13900139000",
-      "primary_contact_email": "lisi@example.com",
-      "created_at": "2025-05-25T09:45:00Z"
+[
+  {
+    "id": 8,
+    "name": "示例科技有限公司",
+    "type": "company",
+    "value_level": "vip",
+    "status": "active",
+    "primary_contact_name": "张三",
+    "primary_contact_phone": "13800138000",
+    "primary_contact_email": "zhangsan@example.com",
+    "created_at": "2025-05-20T14:30:00Z",
+    "relation": {
+      "id": 5,
+      "role": "销售经理",
+      "is_primary": true,
+      "created_at": "2025-07-05T06:14:42.362927Z",
+      "updated_at": "2025-07-05T06:14:42.362927Z"
     }
-  ]
-}
+  },
+  {
+    "id": 9,
+    "name": "测试有限公司",
+    "type": "company",
+    "value_level": "normal",
+    "status": "active",
+    "primary_contact_name": "李四",
+    "primary_contact_phone": "13900139000",
+    "primary_contact_email": "lisi@example.com",
+    "created_at": "2025-05-25T09:45:00Z",
+    "relation": {
+      "id": 6,
+      "role": "技术支持",
+      "is_primary": false,
+      "created_at": "2025-07-05T06:15:42.362927Z",
+      "updated_at": "2025-07-05T06:15:42.362927Z"
+    }
+  }
+]
 ```
 
 ### 错误响应
@@ -154,12 +162,7 @@
 
 ```json
 {
-  "success": false,
-  "code": 4000,
-  "message": "请求参数错误",
-  "data": {
-    "error": "请提供联系人ID"
-  }
+  "error": "请提供联系人ID"
 }
 ```
 
@@ -167,12 +170,7 @@
 
 ```json
 {
-  "success": false,
-  "code": 4040,
-  "message": "资源不存在",
-  "data": {
-    "error": "联系人不存在"
-  }
+  "error": "联系人不存在"
 }
 ```
 

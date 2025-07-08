@@ -126,7 +126,7 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
             
     @extend_schema(
         summary="获取客户的所有联系人",
-        description="获取指定客户ID下的所有联系人列表",
+        description="获取指定客户ID下的所有联系人列表，同时包含联系人与客户的关系信息",
         tags=["客户-联系人关系"],
         parameters=[
             OpenApiParameter(name="customer_id", description="客户ID", required=True, type=int),
@@ -136,7 +136,7 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='customer-members')
     def customer_members(self, request):
         """
-        获取客户的所有联系人
+        获取客户的所有联系人，并附加联系人与客户的关系信息
         """
         customer_id = request.query_params.get('customer_id')
         if not customer_id:
@@ -146,22 +146,35 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
             # 获取客户
             customer = Customer.objects.get(id=customer_id)
             
-            # 获取与该客户关联的所有联系人ID
-            member_ids = CustomerMemberRelation.objects.filter(
-                customer=customer
-            ).values_list('member_id', flat=True)
+            # 获取与该客户关联的所有联系人关系
+            relations = CustomerMemberRelation.objects.filter(customer=customer)
             
-            # 获取这些联系人的详细信息
-            members = Member.objects.filter(id__in=member_ids)
+            # 创建结果列表
+            result = []
             
-            serializer = MemberSerializer(members, many=True)
-            return Response(serializer.data)
+            # 遍历关系，获取联系人信息并添加关系信息
+            for relation in relations:
+                member = relation.member
+                member_data = MemberSerializer(member).data
+                
+                # 添加关系信息
+                member_data['relation'] = {
+                    'id': relation.id,
+                    'role': relation.role,
+                    'is_primary': relation.is_primary,
+                    'created_at': relation.created_at,
+                    'updated_at': relation.updated_at
+                }
+                
+                result.append(member_data)
+            
+            return Response(result)
         except Customer.DoesNotExist:
             return Response({"error": "客户不存在"}, status=status.HTTP_404_NOT_FOUND)
     
     @extend_schema(
         summary="获取联系人所属的所有客户",
-        description="获取指定联系人ID所属的所有客户列表",
+        description="获取指定联系人ID所属的所有客户列表，同时包含客户与联系人的关系信息",
         tags=["客户-联系人关系"],
         parameters=[
             OpenApiParameter(name="member_id", description="联系人ID", required=True, type=int),
@@ -171,7 +184,7 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='member-customers')
     def member_customers(self, request):
         """
-        获取联系人所属的所有客户
+        获取联系人所属的所有客户，并附加客户与联系人的关系信息
         """
         member_id = request.query_params.get('member_id')
         if not member_id:
@@ -181,16 +194,29 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
             # 获取联系人
             member = Member.objects.get(id=member_id)
             
-            # 获取与该联系人关联的所有客户ID
-            customer_ids = CustomerMemberRelation.objects.filter(
-                member=member
-            ).values_list('customer_id', flat=True)
+            # 获取与该联系人关联的所有客户关系
+            relations = CustomerMemberRelation.objects.filter(member=member)
             
-            # 获取这些客户的详细信息
-            customers = Customer.objects.filter(id__in=customer_ids)
+            # 创建结果列表
+            result = []
             
-            serializer = CustomerListSerializer(customers, many=True)
-            return Response(serializer.data)
+            # 遍历关系，获取客户信息并添加关系信息
+            for relation in relations:
+                customer = relation.customer
+                customer_data = CustomerListSerializer(customer).data
+                
+                # 添加关系信息
+                customer_data['relation'] = {
+                    'id': relation.id,
+                    'role': relation.role,
+                    'is_primary': relation.is_primary,
+                    'created_at': relation.created_at,
+                    'updated_at': relation.updated_at
+                }
+                
+                result.append(customer_data)
+            
+            return Response(result)
         except Member.DoesNotExist:
             return Response({"error": "联系人不存在"}, status=status.HTTP_404_NOT_FOUND)
             
