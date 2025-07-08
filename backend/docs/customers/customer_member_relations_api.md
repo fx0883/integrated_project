@@ -104,7 +104,7 @@
     "role": "financial_contact",
     "position": "CFO",
     "is_primary": false,
-    "notes": "财务联系人"
+    "remarks": "财务联系人，负责合同审批"
   }
   ```
 
@@ -132,7 +132,7 @@
       "role": "financial_contact",
       "position": "CFO",
       "is_primary": false,
-      "notes": "财务联系人",
+      "remarks": "财务联系人，负责合同审批",
       "created_at": "2025-07-05T05:20:00.000000Z",
       "updated_at": "2025-07-05T05:20:00.000000Z",
       "created_by": "admin",
@@ -203,7 +203,7 @@
       "role": "decision_maker",
       "position": "CEO",
       "is_primary": true,
-      "notes": "主要决策者",
+      "remarks": "主要决策者，负责最终签字",
       "created_at": "2025-07-03T10:00:00.000000Z",
       "updated_at": "2025-07-03T10:00:00.000000Z",
       "created_by": "admin",
@@ -237,7 +237,7 @@
     "role": "decision_maker",
     "position": "董事长",
     "is_primary": true,
-    "notes": "最终决策者"
+    "remarks": "最终决策者，全面负责项目"
   }
   ```
 
@@ -265,7 +265,7 @@
       "role": "decision_maker",
       "position": "董事长",
       "is_primary": true,
-      "notes": "最终决策者",
+      "remarks": "最终决策者，全面负责项目",
       "created_at": "2025-07-03T10:00:00.000000Z",
       "updated_at": "2025-07-05T05:25:00.000000Z",
       "created_by": "admin",
@@ -348,7 +348,7 @@
       "role": "technical_contact",
       "position": "CTO",
       "is_primary": true,
-      "notes": "技术联系人",
+      "remarks": "技术联系人，负责技术对接",
       "created_at": "2025-07-03T10:05:00.000000Z",
       "updated_at": "2025-07-05T05:30:00.000000Z",
       "created_by": "admin",
@@ -401,7 +401,7 @@
       "role": "technical_contact",
       "position": "CTO",
       "is_primary": true,
-      "notes": "技术联系人",
+      "remarks": "技术联系人，负责技术对接",
       "created_at": "2025-07-03T10:05:00.000000Z",
       "updated_at": "2025-07-05T05:30:00.000000Z",
       "created_by": "admin",
@@ -443,7 +443,7 @@
 | role | 字符串 | 是 | 联系人角色，如 decision_maker（决策者）、technical_contact（技术联系人）、financial_contact（财务联系人）等 |
 | position | 字符串 | 否 | 联系人职位 |
 | is_primary | 布尔值 | 否 | 是否为主要联系人，默认为 false |
-| notes | 字符串 | 否 | 备注 |
+| remarks | 字符串 | 否 | 关于该联系人与客户关系的补充说明 |
 | created_at | 日期时间 | 否 | 创建时间，自动生成 |
 | updated_at | 日期时间 | 否 | 更新时间，自动生成 |
 | created_by | 字符串 | 否 | 创建者，自动填充当前用户 |

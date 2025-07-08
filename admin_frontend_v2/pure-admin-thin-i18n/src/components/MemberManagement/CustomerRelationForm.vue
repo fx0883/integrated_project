@@ -1,11 +1,11 @@
 <template>
   <el-form
     ref="formRef"
+    v-loading="loading"
     :model="form"
     :rules="rules"
     label-width="100px"
     :disabled="disabled"
-    v-loading="loading"
   >
     <el-form-item :label="$t('member.customer')" prop="customer_id">
       <el-select
@@ -32,20 +32,13 @@
       />
     </el-form-item>
 
-    <el-form-item :label="$t('member.department')" prop="department">
-      <el-input
-        v-model="form.department"
-        :placeholder="$t('member.departmentPlaceholder')"
-      />
-    </el-form-item>
-
     <el-form-item :label="$t('member.isPrimaryCustomer')" prop="is_primary">
       <el-switch v-model="form.is_primary" />
     </el-form-item>
 
-    <el-form-item :label="$t('member.notes')" prop="notes">
+    <el-form-item :label="$t('member.notes')" prop="remarks">
       <el-input
-        v-model="form.notes"
+        v-model="form.remarks"
         type="textarea"
         :rows="3"
         :placeholder="$t('member.relationNotesPlaceholder')"
@@ -53,7 +46,7 @@
     </el-form-item>
 
     <el-form-item v-if="!disabled">
-      <el-button type="primary" @click="submitForm" :loading="submitLoading">
+      <el-button type="primary" :loading="submitLoading" @click="submitForm">
         {{ $t("common.submit") }}
       </el-button>
       <el-button @click="resetForm">{{ $t("common.reset") }}</el-button>
@@ -125,9 +118,8 @@ const customerOptions = ref<Array<{ value: number; label: string }>>([]);
 const form = reactive({
   customer_id: undefined as number | undefined,
   role: "",
-  department: "",
   is_primary: false,
-  notes: ""
+  remarks: ""
 });
 
 // 表单验证规则
@@ -139,10 +131,7 @@ const rules = reactive<FormRules>({
     { required: true, message: t("member.roleRequired"), trigger: "blur" },
     { max: 50, message: t("member.roleLength"), trigger: "blur" }
   ],
-  department: [
-    { max: 100, message: t("member.departmentLength"), trigger: "blur" }
-  ],
-  notes: [{ max: 500, message: t("member.notesLength"), trigger: "blur" }]
+  remarks: [{ max: 500, message: t("member.notesLength"), trigger: "blur" }]
 });
 
 // 初始化表单数据
@@ -150,9 +139,8 @@ const initFormData = () => {
   if (props.relationData) {
     form.customer_id = props.relationData.customer?.id;
     form.role = props.relationData.role || "";
-    form.department = props.relationData.department || "";
     form.is_primary = props.relationData.is_primary || false;
-    form.notes = props.relationData.notes || "";
+    form.remarks = props.relationData.remarks || "";
 
     // 如果有客户信息，添加到客户选项中
     if (props.relationData.customer) {
@@ -175,9 +163,8 @@ const resetForm = () => {
   }
   form.customer_id = undefined;
   form.role = "";
-  form.department = "";
   form.is_primary = false;
-  form.notes = "";
+  form.remarks = "";
 };
 
 // 提交表单
@@ -196,9 +183,8 @@ const submitForm = async () => {
     };
 
     // 可选字段
-    if (form.department) submitData.department = form.department;
     if (form.is_primary) submitData.is_primary = form.is_primary;
-    if (form.notes) submitData.notes = form.notes;
+    if (form.remarks) submitData.remarks = form.remarks;
 
     // 触发提交事件
     emit("submit", submitData);
@@ -216,7 +202,7 @@ const loadAllCustomers = async () => {
   try {
     await customerStore.fetchCustomerList({
       page: 1,
-      limit: 100
+      page_size: 100
     });
     customerOptions.value = customerStore.getCustomers.map(customer => ({
       value: customer.id,

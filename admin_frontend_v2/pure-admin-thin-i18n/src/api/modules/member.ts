@@ -174,7 +174,7 @@ export function updateMemberCustomerRelation(memberId: number, relationId: numbe
   
   return http.request<ApiResponse<MemberCustomerRelation>>(
     "put",
-    `/members/${memberId}/customers/${relationId}/`,
+    `/customers/members/relations/${relationId}/`,
     { data }
   );
 }

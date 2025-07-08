@@ -94,8 +94,7 @@ export interface CustomerMemberRelation {
   };
   role: string; // 联系人角色
   is_primary: boolean; // 是否主要联系人
-  department?: string; // 部门
-  notes?: string; // 备注
+  remarks?: string; // 备注
   created_at: string; // 创建时间
   updated_at: string; // 更新时间
 }
@@ -106,8 +105,7 @@ export interface CustomerMemberRelationCreateUpdateParams {
   member_id: number; // 联系人ID
   role: string; // 联系人角色
   is_primary?: boolean; // 是否主要联系人
-  department?: string; // 部门
-  notes?: string; // 备注
+  remarks?: string; // 备注
 }
 
 // 客户-租户关系接口

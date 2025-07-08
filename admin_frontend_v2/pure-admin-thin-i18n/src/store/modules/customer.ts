@@ -471,8 +471,7 @@ export const useCustomerStore = defineStore("customer", {
             },
             role: member.relation?.role || '',
             is_primary: member.relation?.is_primary || false,
-            department: member.relation?.department || '',
-            notes: member.notes || '',
+            remarks: member.relation?.remarks !== null ? member.relation?.remarks || '' : '',
             created_at: member.relation?.created_at || member.date_joined,
             updated_at: member.relation?.updated_at || ''
           }));

@@ -96,17 +96,18 @@
   "code": 2000,
   "message": "操作成功",
   "data": {
-    "id": 5,
+    "id": 6,
     "customer_id": 8,
     "customer_name": "示例科技有限公司",
-    "member_id": 15,
-    "member_name": "张三",
-    "member_email": "zhangsan@example.com",
-    "member_phone": "13800138000",
-    "role": "销售经理",
+    "member_id": 16,
+    "member_name": "李四",
+    "member_email": "lisi@example.com",
+    "member_phone": "13900139000",
+    "role": "技术支持",
     "is_primary": true,
-    "created_at": "2025-07-05T06:14:42.362927Z",
-    "updated_at": "2025-07-05T06:14:42.362927Z"
+    "remarks": "负责技术对接和问题解决",
+    "created_at": "2025-07-05T06:15:42.362927Z",
+    "updated_at": "2025-07-05T06:15:42.362927Z"
   }
 }
 ```
@@ -128,8 +129,9 @@
 {
   "customer_id": 8,
   "member_id": 17,
-  "role": "财务负责人",
-  "is_primary": false
+  "role": "财务联系人",
+  "is_primary": false,
+  "remarks": "负责合同审批和付款事宜"
 }
 ```
 
@@ -148,8 +150,9 @@
     "member_name": "王五",
     "member_email": "wangwu@example.com",
     "member_phone": "13700137000",
-    "role": "财务负责人",
+    "role": "财务联系人",
     "is_primary": false,
+    "remarks": "负责合同审批和付款事宜",
     "created_at": "2025-07-10T08:15:30.123456Z",
     "updated_at": "2025-07-10T08:15:30.123456Z"
   }
@@ -177,10 +180,9 @@
 
 ```json
 {
-  "customer_id": 8,
-  "member_id": 17,
   "role": "财务总监",
-  "is_primary": false
+  "is_primary": false,
+  "remarks": "负责财务审批，可以直接联系"
 }
 ```
 
@@ -201,6 +203,7 @@
     "member_phone": "13700137000",
     "role": "财务总监",
     "is_primary": false,
+    "remarks": "负责财务审批，可以直接联系",
     "created_at": "2025-07-10T08:15:30.123456Z",
     "updated_at": "2025-07-10T09:20:15.123456Z"
   }
@@ -228,7 +231,8 @@
 
 ```json
 {
-  "role": "财务总监"
+  "role": "财务总监",
+  "remarks": "新任财务总监，负责所有财务决策"
 }
 ```
 
@@ -249,6 +253,7 @@
     "member_phone": "13700137000",
     "role": "财务总监",
     "is_primary": false,
+    "remarks": "新任财务总监，负责所有财务决策",
     "created_at": "2025-07-10T08:15:30.123456Z",
     "updated_at": "2025-07-10T09:20:15.123456Z"
   }
@@ -315,6 +320,7 @@
     "member_phone": "13900139000",
     "role": "技术支持",
     "is_primary": true,
+    "remarks": "主要技术联系人，负责所有技术对接",
     "created_at": "2025-07-05T06:15:42.362927Z",
     "updated_at": "2025-07-10T10:30:45.123456Z"
   }
@@ -354,6 +360,7 @@
     "member_phone": "13900139000",
     "role": "技术支持",
     "is_primary": true,
+    "remarks": "主要技术联系人，负责所有技术对接",
     "created_at": "2025-07-05T06:15:42.362927Z",
     "updated_at": "2025-07-10T10:30:45.123456Z"
   }
@@ -399,5 +406,6 @@
 | member_phone | string | 联系人电话 |
 | role | string | 联系人在客户中的角色 |
 | is_primary | boolean | 是否为主要联系人 |
+| remarks | string | 关于该联系人与客户关系的补充说明 |
 | created_at | datetime | 创建时间 |
 | updated_at | datetime | 更新时间 | 

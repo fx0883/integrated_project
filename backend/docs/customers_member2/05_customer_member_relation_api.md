@@ -45,7 +45,15 @@
       "parent_username": null,
       "status": "active",
       "avatar": "https://example.com/media/avatars/zhangsan.jpg",
-      "date_joined": "2025-06-01T08:30:00Z"
+      "date_joined": "2025-06-01T08:30:00Z",
+      "relation": {
+        "id": 5,
+        "role": "销售经理",
+        "is_primary": true,
+        "remarks": "负责销售和客户关系维护",
+        "created_at": "2025-07-05T06:14:42.362927Z",
+        "updated_at": "2025-07-05T06:14:42.362927Z"
+      }
     },
     {
       "id": 16,
@@ -60,7 +68,15 @@
       "parent_username": null,
       "status": "active",
       "avatar": "https://example.com/media/avatars/lisi.jpg",
-      "date_joined": "2025-06-05T10:15:00Z"
+      "date_joined": "2025-06-05T10:15:00Z",
+      "relation": {
+        "id": 6,
+        "role": "技术支持",
+        "is_primary": false,
+        "remarks": "负责技术对接和问题解决",
+        "created_at": "2025-07-05T06:15:42.362927Z",
+        "updated_at": "2025-07-05T06:15:42.362927Z"
+      }
     }
   ]
 }
@@ -133,7 +149,15 @@
       "primary_contact_name": "张三",
       "primary_contact_phone": "13800138000",
       "primary_contact_email": "zhangsan@example.com",
-      "created_at": "2025-05-15T09:30:00Z"
+      "created_at": "2025-05-15T09:30:00Z",
+      "relation": {
+        "id": 5,
+        "role": "销售经理",
+        "is_primary": true,
+        "remarks": "负责销售和客户关系维护",
+        "created_at": "2025-07-05T06:14:42.362927Z",
+        "updated_at": "2025-07-05T06:14:42.362927Z"
+      }
     },
     {
       "id": 10,
@@ -150,7 +174,15 @@
       "primary_contact_name": "张三",
       "primary_contact_phone": "13800138000",
       "primary_contact_email": "zhangsan@example.com",
-      "created_at": "2025-06-10T14:20:00Z"
+      "created_at": "2025-06-10T14:20:00Z",
+      "relation": {
+        "id": 8,
+        "role": "技术顾问",
+        "is_primary": false,
+        "remarks": "提供技术咨询服务",
+        "created_at": "2025-07-05T06:16:42.362927Z",
+        "updated_at": "2025-07-05T06:16:42.362927Z"
+      }
     }
   ]
 }

@@ -45,9 +45,9 @@
       </el-form-item>
 
       <!-- 备注 -->
-      <el-form-item :label="$t('customer.member.notes')" prop="notes">
+      <el-form-item :label="$t('customer.member.notes')" prop="remarks">
         <el-input
-          v-model="formData.notes"
+          v-model="formData.remarks"
           type="textarea"
           :rows="3"
           :placeholder="$t('customer.member.notesPlaceholder')"
@@ -127,12 +127,13 @@ const memberSearchLoading = ref(false);
 const memberOptions = ref<Array<{ value: number; label: string }>>([]);
 
 // 表单数据
-const formData = reactive<MemberCustomerRelationCreateUpdateParams>({
+const formData = reactive<MemberCustomerRelationCreateUpdateParams & { remarks: string }>({
   customer_id: props.customerId,
   member_id: 0,
   role: "",
   is_primary: false,
-  notes: ""
+  notes: "", // 保留notes字段以保持向后兼容
+  remarks: "" // 添加新的remarks字段，API现在使用remarks而不是notes
 });
 
 // 表单验证规则
@@ -157,7 +158,7 @@ const rules = reactive<FormRules>({
     }
   ],
 
-  notes: [
+  remarks: [
     {
       max: 500,
       message: t("common.form.maxLength", { max: 500 }),
@@ -194,7 +195,8 @@ const initFormData = () => {
     formData.member_id = props.memberRelation.member.id;
     formData.role = props.memberRelation.role || "";
     formData.is_primary = props.memberRelation.is_primary || false;
-    formData.notes = props.memberRelation.notes || "";
+    formData.notes = ""; // 保留notes字段但设为空字符串
+    formData.remarks = props.memberRelation.remarks !== null ? props.memberRelation.remarks || "" : ""; // 确保null值被转换为空字符串
 
     // 添加当前会员到选项中
     if (props.memberRelation.member) {
@@ -216,7 +218,15 @@ const handleSubmit = async () => {
 
   await formRef.value.validate((valid, fields) => {
     if (valid) {
-      emit("submit", { ...formData });
+      // 创建一个新对象，将notes替换为remarks
+      const submitData = {
+        customer_id: formData.customer_id,
+        member_id: formData.member_id,
+        role: formData.role,
+        is_primary: formData.is_primary,
+        remarks: formData.remarks // 使用remarks替代notes
+      };
+      emit("submit", submitData);
     } else {
       logger.warn("表单验证失败", fields);
       ElMessage.warning(t("common.form.validationFailed"));
@@ -240,6 +250,7 @@ const resetForm = () => {
   formData.role = "";
   formData.is_primary = false;
   formData.notes = "";
+  formData.remarks = "";
 
   memberOptions.value = [];
 };

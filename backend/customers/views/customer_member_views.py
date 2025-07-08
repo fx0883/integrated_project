@@ -131,7 +131,29 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(name="customer_id", description="客户ID", required=True, type=int),
         ],
-        responses={200: MemberSerializer(many=True)}
+        responses={200: {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "username": {"type": "string"},
+                    "email": {"type": "string", "format": "email"},
+                    "phone": {"type": "string"},
+                    "relation": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer"},
+                            "role": {"type": "string"},
+                            "is_primary": {"type": "boolean"},
+                            "remarks": {"type": "string", "nullable": True},
+                            "created_at": {"type": "string", "format": "date-time"},
+                            "updated_at": {"type": "string", "format": "date-time"}
+                        }
+                    }
+                }
+            }
+        }}
     )
     @action(detail=False, methods=['get'], url_path='customer-members')
     def customer_members(self, request):
@@ -180,7 +202,30 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(name="member_id", description="联系人ID", required=True, type=int),
         ],
-        responses={200: CustomerListSerializer(many=True)}
+        responses={200: {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "name": {"type": "string"},
+                    "type": {"type": "string"},
+                    "value_level": {"type": "string"},
+                    "status": {"type": "string"},
+                    "relation": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer"},
+                            "role": {"type": "string"},
+                            "is_primary": {"type": "boolean"},
+                            "remarks": {"type": "string", "nullable": True},
+                            "created_at": {"type": "string", "format": "date-time"},
+                            "updated_at": {"type": "string", "format": "date-time"}
+                        }
+                    }
+                }
+            }
+        }}
     )
     @action(detail=False, methods=['get'], url_path='member-customers')
     def member_customers(self, request):

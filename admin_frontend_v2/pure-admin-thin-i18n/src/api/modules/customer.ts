@@ -206,7 +206,7 @@ export function updateCustomerMemberRelation(
 
   return http.request<ApiResponse<CustomerMemberRelation>>(
     "put",
-    `/customers/${customerId}/members/${relationId}/`,
+    `/customers/members/relations/${relationId}/`,
     { data }
   );
 }

@@ -483,9 +483,8 @@ const handleRelationSubmit = async (
         {
           customer_id: data.customer_id,
           role: data.role,
-          department: data.department,
           is_primary: data.is_primary,
-          notes: data.notes
+          remarks: data.remarks
         }
       );
       ElMessage.success(t("member.updateRelationSuccess"));
