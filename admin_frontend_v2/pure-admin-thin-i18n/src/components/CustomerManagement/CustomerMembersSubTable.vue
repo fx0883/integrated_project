@@ -92,16 +92,6 @@
       </el-table-column>
 
       <el-table-column
-        prop="department"
-        :label="$t('customer.member.department')"
-        min-width="120"
-      >
-        <template #default="{ row }">
-          {{ row.department || $t("common.notSet") }}
-        </template>
-      </el-table-column>
-
-      <el-table-column
         prop="is_primary"
         :label="$t('customer.member.isPrimary')"
         width="100"
@@ -276,8 +266,7 @@ const filteredData = computed(() => {
     relation =>
       relation.member.username.toLowerCase().includes(query) ||
       relation.member.name.toLowerCase().includes(query) ||
-      (relation.role && relation.role.toLowerCase().includes(query)) ||
-      (relation.department && relation.department.toLowerCase().includes(query))
+      (relation.role && relation.role.toLowerCase().includes(query))
   );
 });
 

@@ -39,14 +39,6 @@
         />
       </el-form-item>
 
-      <!-- 部门 -->
-      <el-form-item :label="$t('customer.member.department')" prop="department">
-        <el-input
-          v-model="formData.department"
-          :placeholder="$t('customer.member.departmentPlaceholder')"
-        />
-      </el-form-item>
-
       <!-- 是否主要联系人 -->
       <el-form-item :label="$t('customer.member.isPrimary')" prop="is_primary">
         <el-switch v-model="formData.is_primary" />
@@ -139,7 +131,6 @@ const formData = reactive<MemberCustomerRelationCreateUpdateParams>({
   customer_id: props.customerId,
   member_id: 0,
   role: "",
-  department: "",
   is_primary: false,
   notes: ""
 });
@@ -165,13 +156,7 @@ const rules = reactive<FormRules>({
       trigger: "blur"
     }
   ],
-  department: [
-    {
-      max: 100,
-      message: t("common.form.maxLength", { max: 100 }),
-      trigger: "blur"
-    }
-  ],
+
   notes: [
     {
       max: 500,
@@ -208,7 +193,6 @@ const initFormData = () => {
     formData.customer_id = props.customerId;
     formData.member_id = props.memberRelation.member.id;
     formData.role = props.memberRelation.role || "";
-    formData.department = props.memberRelation.department || "";
     formData.is_primary = props.memberRelation.is_primary || false;
     formData.notes = props.memberRelation.notes || "";
 
@@ -254,7 +238,6 @@ const resetForm = () => {
   formData.customer_id = props.customerId;
   formData.member_id = 0;
   formData.role = "";
-  formData.department = "";
   formData.is_primary = false;
   formData.notes = "";
 

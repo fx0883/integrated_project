@@ -75,7 +75,7 @@ class CustomerMemberRelationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CustomerMemberRelation
-        fields = ['id', 'customer_id', 'member_id', 'role', 'is_primary', 'created_at', 'updated_at']
+        fields = ['id', 'customer_id', 'member_id', 'role', 'is_primary', 'remarks', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
@@ -95,7 +95,7 @@ class CustomerMemberRelationDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer_id', 'customer_name', 'member_id', 
             'member_name', 'member_email', 'member_phone',
-            'role', 'is_primary', 'created_at', 'updated_at'
+            'role', 'is_primary', 'remarks', 'created_at', 'updated_at'
         ]
 
 

@@ -162,6 +162,7 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
                     'id': relation.id,
                     'role': relation.role,
                     'is_primary': relation.is_primary,
+                    'remarks': relation.remarks,
                     'created_at': relation.created_at,
                     'updated_at': relation.updated_at
                 }
@@ -210,6 +211,7 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
                     'id': relation.id,
                     'role': relation.role,
                     'is_primary': relation.is_primary,
+                    'remarks': relation.remarks,
                     'created_at': relation.created_at,
                     'updated_at': relation.updated_at
                 }

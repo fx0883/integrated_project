@@ -81,9 +81,9 @@ class CustomerAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerMemberRelation)
 class CustomerMemberRelationAdmin(admin.ModelAdmin):
-    list_display = ('customer', 'member', 'role', 'is_primary', 'created_at')
+    list_display = ('customer', 'member', 'role', 'is_primary', 'remarks', 'created_at')
     list_filter = ('is_primary', 'customer', 'role')
-    search_fields = ('customer__name', 'member__username', 'role')
+    search_fields = ('customer__name', 'member__username', 'role', 'remarks')
     raw_id_fields = ('customer', 'member')
     readonly_fields = ('created_at', 'updated_at')
     
@@ -92,7 +92,7 @@ class CustomerMemberRelationAdmin(admin.ModelAdmin):
             'fields': ('customer', 'member')
         }),
         (_('关系信息'), {
-            'fields': ('role', 'is_primary')
+            'fields': ('role', 'is_primary', 'remarks')
         }),
         (_('审计信息'), {
             'fields': ('created_at', 'updated_at'),

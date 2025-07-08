@@ -162,6 +162,7 @@ class CustomerMemberRelation(models.Model):
     # 关系信息
     role = models.CharField(_("角色"), max_length=50, blank=True, null=True, help_text=_("联系人在客户中的角色"))
     is_primary = models.BooleanField(_("主要联系人"), default=False, help_text=_("是否为该客户的主要联系人"))
+    remarks = models.TextField(_("备注"), blank=True, null=True, help_text=_("关于该联系人与客户关系的补充说明"))
     
     # 审计字段
     created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
