@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'menus',  # 菜单管理应用
     'charts',  # 图表应用
     'customers',  # 客户管理应用
+    'orders',  # 订单管理应用
 ]
 
 MIDDLEWARE = [
