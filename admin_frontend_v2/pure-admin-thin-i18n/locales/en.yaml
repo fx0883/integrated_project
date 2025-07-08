@@ -23,6 +23,7 @@ common:
   all: All
   notSet: Not Set
   batchDelete: Batch Delete
+  yes: Yes
   no: No
   close: Close
   form:

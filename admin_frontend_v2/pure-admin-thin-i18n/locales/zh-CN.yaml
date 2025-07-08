@@ -23,6 +23,7 @@ common:
   all: 全部
   notSet: 未设置
   batchDelete: 批量删除
+  yes: 是
   no: 否
   close: 关闭
   form:
