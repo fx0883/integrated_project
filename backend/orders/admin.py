@@ -26,16 +26,16 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('start_date', 'due_date', 'delivery_date')
         }),
         (_('费用信息'), {
-            'fields': ('unit_price', 'total_amount', 'translator_fee', 'other_costs')
+            'fields': ('price', 'total_amount', 'translator_fee', 'other_costs', 'project_fee', 'project_details')
         }),
         (_('支付信息'), {
             'fields': ('payment_status', 'payment_date', 'payment_method', 'payment_remarks')
         }),
         (_('发票和合同信息'), {
-            'fields': ('invoice_status', 'invoice_info', 'contract_number', 'contract_info')
+            'fields': ('invoice_status', 'invoice_info', 'contract_number', 'contract_info', 'contract_remarks')
         }),
         (_('其他信息'), {
-            'fields': ('remarks', 'attachments', 'tags')
+            'fields': ('remarks', 'tags', 'follow_up_record')
         }),
         (_('系统信息'), {
             'fields': ('tenant', 'created_at', 'updated_at', 'is_deleted'),

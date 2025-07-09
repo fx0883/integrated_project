@@ -162,12 +162,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                 '服务类型': order.get_service_type_display(),
                 '语言方向': order.get_language_direction_display(),
                 '字数': order.word_count,
-                '单价': float(order.unit_price),
+                '单价': order.price,
                 '总金额': float(order.total_amount),
                 '译员费用': float(order.translator_fee),
+                '项目费用': float(order.project_fee),
+                '其他成本': float(order.other_costs),
                 '毛利': float(order.calculate_profit()),
                 '毛利率': f"{order.calculate_profit_rate():.2%}",
-                '译员': order.translator_name or (order.translator.username if order.translator else ''),
+                '译员': order.translator or '',
                 '开始日期': order.start_date,
                 '截止日期': order.due_date,
                 '交付日期': order.delivery_date,
@@ -175,6 +177,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 '支付日期': order.payment_date,
                 '支付方式': order.payment_method or '',
                 '创建时间': order.created_at,
+                '项目明细': order.project_details or '',
+                '回访记录': order.follow_up_record or '',
             })
         
         # 创建DataFrame
@@ -263,9 +267,9 @@ class OrderViewSet(viewsets.ModelViewSet):
                         'service_type': row.get('服务类型'),
                         'language_direction': row.get('语言方向'),
                         'word_count': row.get('字数'),
-                        'unit_price': row.get('单价'),
+                        'price': row.get('单价'),
                         'description': row.get('描述', ''),
-                        'translator_name': row.get('译员', ''),
+                        'translator': row.get('译员', ''),
                         'start_date': row.get('开始日期'),
                         'due_date': row.get('截止日期'),
                         'status': row.get('状态', 'draft')
@@ -273,8 +277,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                     
                     # 检查必填字段
                     if not all([order_data['customer'], order_data['service_type'], 
-                              order_data['language_direction'], order_data['word_count'], 
-                              order_data['unit_price']]):
+                              order_data['language_direction'], order_data['word_count']]):
                         errors.append(f"第{index+1}行: 缺少必填字段")
                         failed_count += 1
                         continue
@@ -392,13 +395,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         amount_stats = queryset.aggregate(
             total_amount=Sum('total_amount'),
             total_translator_fee=Sum('translator_fee'),
-            total_other_costs=Sum('other_costs')
+            total_other_costs=Sum('other_costs'),
+            total_project_fee=Sum('project_fee')
         )
         
         total_amount = amount_stats['total_amount'] or 0
         total_translator_fee = amount_stats['total_translator_fee'] or 0
         total_other_costs = amount_stats['total_other_costs'] or 0
-        total_profit = total_amount - total_translator_fee - total_other_costs
+        total_project_fee = amount_stats['total_project_fee'] or 0
+        total_profit = total_amount - total_translator_fee - total_other_costs - total_project_fee
         
         # 计算平均毛利率
         average_profit_rate = total_profit / total_amount if total_amount > 0 else 0
@@ -438,7 +443,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             ).values('date').annotate(
                 count=Count('id'),
                 amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs')
+                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
             ).order_by('date')
             
             by_period = [
@@ -456,7 +461,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             ).values('week').annotate(
                 count=Count('id'),
                 amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs')
+                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
             ).order_by('week')
             
             by_period = [
@@ -474,7 +479,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             ).values('month').annotate(
                 count=Count('id'),
                 amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs')
+                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
             ).order_by('month')
             
             by_period = [
@@ -492,7 +497,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             ).values('year').annotate(
                 count=Count('id'),
                 amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs')
+                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
             ).order_by('year')
             
             by_period = [

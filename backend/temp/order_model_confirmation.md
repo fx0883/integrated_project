@@ -37,7 +37,7 @@
 
 | 字段名 | 类型 | 描述 | 约束条件 | 默认值 |
 |-------|------|------|---------|-------|
-| service_type | CharField | 服务类型 | 最大长度50 | 必填 |
+| service_type | CharField | 服务类型 | 最大长度200 | 必填 |
 | language_direction | CharField | 语言方向 | 最大长度50 | 必填 |
 | word_count | PositiveIntegerField | 字数 | 正整数 | 0 |
 | description | TextField | 项目描述 | 可空 | NULL |
@@ -61,10 +61,12 @@
 
 | 字段名 | 类型 | 描述 | 约束条件 | 默认值 |
 |-------|------|------|---------|-------|
-| unit_price | DecimalField | 单价(元/千字) | 10位数字，2位小数 | 0 |
+| price | CharField | 单价 | 最大长度100，可空 | NULL |
 | total_amount | DecimalField | 总金额 | 10位数字，2位小数 | 0 |
 | translator_fee | DecimalField | 译员费用 | 10位数字，2位小数 | 0 |
 | other_costs | DecimalField | 其他成本 | 10位数字，2位小数 | 0 |
+| project_fee | DecimalField | 项目费用 | 10位数字，2位小数 | 0 |
+| project_details | TextField | 项目明细 | 可空 | NULL |
 
 ### 6. 支付信息
 
@@ -80,17 +82,18 @@
 | 字段名 | 类型 | 描述 | 约束条件 | 默认值 |
 |-------|------|------|---------|-------|
 | invoice_status | CharField | 发票状态 | 最大长度50 | 'not_required' |
-| invoice_info | JSONField | 发票信息 | 可空 | NULL |
+| invoice_info | TextField | 发票信息 | 可空 | NULL |
 | contract_number | CharField | 合同编号 | 最大长度100，可空 | NULL |
-| contract_info | JSONField | 合同信息 | 可空 | NULL |
+| contract_info | TextField | 合同信息 | 可空 | NULL |
+| contract_remarks | TextField | 合同备注 | 可空 | NULL |
 
 ### 8. 其他信息
 
 | 字段名 | 类型 | 描述 | 约束条件 | 默认值 |
 |-------|------|------|---------|-------|
 | remarks | TextField | 备注 | 可空 | NULL |
-| attachments | JSONField | 附件列表 | 可空 | NULL |
-| tags | JSONField | 标签 | 可空 | NULL |
+| tags | TextField | 标签 | 可空 | NULL |
+| follow_up_record | TextField | 回访记录 | 可空 | NULL |
 
 ## 数据库索引
 
@@ -105,11 +108,10 @@
 
 订单模型包含以下主要方法：
 
-1. **save()**: 重写保存方法，自动生成订单编号和计算订单总金额
+1. **save()**: 重写保存方法，自动生成订单编号
 2. **_generate_order_number()**: 生成唯一的订单编号，格式：PQ-{年份}{月份}-{4位随机数}
-3. **calculate_total_amount()**: 计算订单总金额，公式：单价(元/千字) * 字数 / 1000
-4. **calculate_profit()**: 计算订单毛利，公式：总金额 - 译员费用 - 其他成本
-5. **calculate_profit_rate()**: 计算订单毛利率，公式：(总金额 - 译员费用 - 其他成本) / 总金额
+3. **calculate_profit()**: 计算订单毛利，公式：总金额 - 译员费用 - 其他成本 - 项目费用
+4. **calculate_profit_rate()**: 计算订单毛利率，公式：(总金额 - 译员费用 - 其他成本 - 项目费用) / 总金额
 
 ## 确认事项
 

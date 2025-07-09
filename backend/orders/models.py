@@ -44,7 +44,7 @@ class Order(BaseModel):
     )
     
     # 2. 服务和语种信息
-    service_type = models.CharField(_("服务类型"), max_length=50)
+    service_type = models.CharField(_("服务类型"), max_length=200)
     language_direction = models.CharField(_("语言方向"), max_length=50)
     word_count = models.PositiveIntegerField(_("字数"), default=0)
     description = models.TextField(_("项目描述"), blank=True, null=True)
@@ -69,10 +69,12 @@ class Order(BaseModel):
     delivery_date = models.DateField(_("交付日期"), null=True, blank=True)
     
     # 5. 费用信息
-    unit_price = models.DecimalField(_("单价(元/千字)"), max_digits=10, decimal_places=2, default=0)
+    price = models.CharField(_("单价"), max_length=100, blank=True, null=True)
     total_amount = models.DecimalField(_("总金额"), max_digits=10, decimal_places=2, default=0)
     translator_fee = models.DecimalField(_("译员费用"), max_digits=10, decimal_places=2, default=0)
     other_costs = models.DecimalField(_("其他成本"), max_digits=10, decimal_places=2, default=0)
+    project_fee = models.DecimalField(_("项目费用"), max_digits=10, decimal_places=2, default=0)
+    project_details = models.TextField(_("项目明细"), blank=True, null=True)
     
     # 6. 支付信息
     payment_status = models.CharField(_("支付状态"), max_length=50, default='unpaid')
@@ -82,14 +84,15 @@ class Order(BaseModel):
     
     # 7. 发票和合同信息
     invoice_status = models.CharField(_("发票状态"), max_length=50, default='not_required')
-    invoice_info = models.JSONField(_("发票信息"), blank=True, null=True)
+    invoice_info = models.TextField(_("发票信息"), blank=True, null=True)
     contract_number = models.CharField(_("合同编号"), max_length=100, blank=True, null=True)
-    contract_info = models.JSONField(_("合同信息"), blank=True, null=True)
+    contract_info = models.TextField(_("合同信息"), blank=True, null=True)
+    contract_remarks = models.TextField(_("合同备注"), blank=True, null=True)
     
     # 8. 其他信息
     remarks = models.TextField(_("备注"), blank=True, null=True)
-    attachments = models.JSONField(_("附件列表"), blank=True, null=True)
-    tags = models.JSONField(_("标签"), blank=True, null=True)
+    tags = models.TextField(_("标签"), blank=True, null=True)
+    follow_up_record = models.TextField(_("回访记录"), blank=True, null=True)
     
     class Meta:
         verbose_name = _('订单')
@@ -111,9 +114,11 @@ class Order(BaseModel):
         if not self.order_number:
             self.order_number = self._generate_order_number()
         
-        # 计算订单总金额（如果没有手动设置）
-        if self.word_count > 0 and self.unit_price > 0 and self.total_amount == 0:
-            self.total_amount = self.calculate_total_amount()
+        # 总金额计算逻辑可能需要更新，因为单价字段改变了
+        # 如果总金额为0，可以尝试根据其他字段计算
+        if self.total_amount == 0:
+            # 这里可以添加新的计算逻辑
+            pass
         
         super().save(*args, **kwargs)
     
@@ -127,24 +132,17 @@ class Order(BaseModel):
         random_suffix = str(uuid.uuid4().int)[:4]
         return f"{prefix}{random_suffix}"
     
-    def calculate_total_amount(self):
-        """
-        计算订单总金额
-        公式：单价(元/千字) * 字数 / 1000
-        """
-        return (self.unit_price * self.word_count) / 1000
-    
     def calculate_profit(self):
         """
         计算订单毛利
-        公式：总金额 - 译员费用 - 其他成本
+        公式：总金额 - 译员费用 - 其他成本 - 项目费用
         """
-        return self.total_amount - self.translator_fee - self.other_costs
+        return self.total_amount - self.translator_fee - self.other_costs - self.project_fee
     
     def calculate_profit_rate(self):
         """
         计算订单毛利率
-        公式：(总金额 - 译员费用 - 其他成本) / 总金额
+        公式：(总金额 - 译员费用 - 其他成本 - 项目费用) / 总金额
         """
         if self.total_amount == 0:
             return 0
@@ -171,8 +169,8 @@ class OrderHistory(models.Model):
         related_name="order_modifications"
     )
     modified_at = models.DateTimeField(_("修改时间"), auto_now_add=True)
-    change_details = models.JSONField(_("变更详情"), default=dict)
-    snapshot = models.JSONField(_("快照"), default=dict)
+    change_details = models.TextField(_("变更详情"), default="{}")
+    snapshot = models.TextField(_("快照"), default="{}")
     
     class Meta:
         verbose_name = _('订单历史')
@@ -213,14 +211,16 @@ class OrderHistory(models.Model):
             'word_count': order.word_count,
             'description': order.description,
             'customer_contact_id': order.customer_contact_id,
-            'translator_id': order.translator_id,
+            'translator': order.translator,
             'start_date': order.start_date.isoformat() if order.start_date else None,
             'due_date': order.due_date.isoformat() if order.due_date else None,
             'delivery_date': order.delivery_date.isoformat() if order.delivery_date else None,
-            'unit_price': float(order.unit_price),
+            'price': order.price,
             'total_amount': float(order.total_amount),
             'translator_fee': float(order.translator_fee),
             'other_costs': float(order.other_costs),
+            'project_fee': float(order.project_fee),
+            'project_details': order.project_details,
             'payment_status': order.payment_status,
             'payment_date': order.payment_date.isoformat() if order.payment_date else None,
             'payment_method': order.payment_method,
@@ -229,20 +229,25 @@ class OrderHistory(models.Model):
             'invoice_info': order.invoice_info,
             'contract_number': order.contract_number,
             'contract_info': order.contract_info,
+            'contract_remarks': order.contract_remarks,
             'remarks': order.remarks,
-            'attachments': order.attachments,
             'tags': order.tags,
+            'follow_up_record': order.follow_up_record,
             'tenant_id': order.tenant_id if order.tenant_id else None,
             'created_at': order.created_at.isoformat() if order.created_at else None,
             'updated_at': order.updated_at.isoformat() if order.updated_at else None,
             'is_deleted': order.is_deleted,
         }
         
+        # 将字典转换为JSON字符串
+        snapshot_json = json.dumps(snapshot)
+        change_details_json = json.dumps(change_details or {})
+        
         # 创建历史记录
         return OrderHistory.objects.create(
             order=order,
             version=new_version,
             modified_by=user,
-            change_details=change_details or {},
-            snapshot=snapshot
+            change_details=change_details_json,
+            snapshot=snapshot_json
         )
