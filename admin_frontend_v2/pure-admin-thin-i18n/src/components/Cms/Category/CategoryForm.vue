@@ -296,35 +296,66 @@ const fetchCategoryList = async () => {
     categoriesLoading.value = true; // 设置加载状态
     const result = await cmsStore.fetchCategoryList();
     console.log("[CategoryForm] 获取到的分类列表:", result);
-    if (result && Array.isArray(result)) {
+
+    // 详细检查返回的数据结构
+    if (result && result.data && Array.isArray(result.data)) {
+      // 如果result.data是数组，使用它
+      categoryList.value = result.data;
+      console.log(
+        "[CategoryForm] 分类列表设置成功 (data属性), 长度:",
+        categoryList.value.length,
+        "内容:",
+        categoryList.value
+      );
+    } else if (result && Array.isArray(result)) {
+      // 如果result本身是数组，使用它
       categoryList.value = result;
       console.log(
-        "[CategoryForm] 分类列表设置成功, 长度:",
-        categoryList.value.length
+        "[CategoryForm] 分类列表设置成功 (直接数组), 长度:",
+        categoryList.value.length,
+        "内容:",
+        categoryList.value
       );
-
-      // 在分类列表加载完成后，确保父级ID正确设置
-      nextTick(() => {
-        if (props.defaultParentId) {
-          console.log(
-            "[CategoryForm] 分类列表加载完成后设置默认父级ID:",
-            props.defaultParentId
-          );
-          form.parent = props.defaultParentId;
-        } else if (props.categoryData && props.categoryData.parent) {
-          console.log(
-            "[CategoryForm] 分类列表加载完成后设置父级ID:",
-            props.categoryData.parent
-          );
-          form.parent = props.categoryData.parent;
-        }
-      });
+    } else if (result && result.success && Array.isArray(result.data)) {
+      // 如果result有success属性，并且data是数组
+      categoryList.value = result.data;
+      console.log(
+        "[CategoryForm] 分类列表设置成功 (success.data), 长度:",
+        categoryList.value.length,
+        "内容:",
+        categoryList.value
+      );
     } else {
       console.warn("[CategoryForm] 获取的分类列表格式不正确:", result);
+      console.warn("[CategoryForm] result类型:", typeof result);
+      if (result) {
+        console.warn("[CategoryForm] result包含的属性:", Object.keys(result));
+      }
       categoryList.value = []; // 确保是空数组而不是 undefined
     }
+
+    // 在分类列表加载完成后，确保父级ID正确设置
+    nextTick(() => {
+      if (props.defaultParentId) {
+        console.log(
+          "[CategoryForm] 分类列表加载完成后设置默认父级ID:",
+          props.defaultParentId
+        );
+        form.parent = props.defaultParentId;
+      } else if (props.categoryData && props.categoryData.parent) {
+        console.log(
+          "[CategoryForm] 分类列表加载完成后设置父级ID:",
+          props.categoryData.parent
+        );
+        form.parent = props.categoryData.parent;
+      }
+    });
   } catch (error) {
     console.error("[CategoryForm] 获取分类列表失败:", error);
+    if (error instanceof Error) {
+      console.error("[CategoryForm] 错误详情:", error.message);
+      console.error("[CategoryForm] 错误堆栈:", error.stack);
+    }
     categoryList.value = []; // 确保是空数组而不是 undefined
   } finally {
     categoriesLoading.value = false; // 重置加载状态

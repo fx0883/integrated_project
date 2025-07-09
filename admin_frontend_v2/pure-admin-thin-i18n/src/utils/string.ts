@@ -24,13 +24,13 @@ export function slugify(text: string): string {
   
   // 检查是否包含中文
   if (containsChinese(text)) {
-    // 转换为拼音(不带声调)，小写，用下划线连接
-    const pinyinText = pinyin(text, { toneType: 'none', type: 'array' }).join('_');
-    return `${pinyinText.toLowerCase()}_${timestamp}`;
+    // 转换为拼音(不带声调)，小写，用连字符连接
+    const pinyinText = pinyin(text, { toneType: 'none', type: 'array' }).join('-');
+    return `${pinyinText.toLowerCase()}-${timestamp}`;
   } else {
-    // 非中文处理：转小写，替换空格和特殊字符为下划线
-    const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-    return `${slug}_${timestamp}`;
+    // 非中文处理：转小写，替换空格和特殊字符为连字符
+    const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `${slug}-${timestamp}`;
   }
 }
 

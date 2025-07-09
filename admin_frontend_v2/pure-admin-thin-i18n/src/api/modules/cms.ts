@@ -301,9 +301,38 @@ export function getCategoryList(params?: CategoryListParams) {
     params
   }).then(response => {
     console.log("[CmsApi] getCategoryList - 请求成功, 响应:", response);
+    
+    // 详细检查响应格式
+    if (!response) {
+      console.error("[CmsApi] getCategoryList - 响应为空");
+      throw new Error("获取分类列表失败: 响应为空");
+    }
+    
+    if (!response.data) {
+      console.error("[CmsApi] getCategoryList - 响应中没有data字段:", response);
+      console.error("[CmsApi] getCategoryList - 响应类型:", typeof response);
+      console.error("[CmsApi] getCategoryList - 响应包含的属性:", Object.keys(response));
+      throw new Error("获取分类列表失败: 响应中没有data字段");
+    }
+    
+    if (!Array.isArray(response.data)) {
+      console.error("[CmsApi] getCategoryList - data不是数组:", response.data);
+      console.error("[CmsApi] getCategoryList - data类型:", typeof response.data);
+      throw new Error("获取分类列表失败: 响应中的data不是数组");
+    }
+    
+    console.log("[CmsApi] getCategoryList - 成功获取分类列表, 数量:", response.data.length);
+    if (response.data.length > 0) {
+      console.log("[CmsApi] getCategoryList - 第一个分类示例:", response.data[0]);
+    }
+    
     return response;
   }).catch(error => {
     console.error("[CmsApi] getCategoryList - 请求失败:", error);
+    if (error instanceof Error) {
+      console.error("[CmsApi] getCategoryList - 错误详情:", error.message);
+      console.error("[CmsApi] getCategoryList - 错误堆栈:", error.stack);
+    }
     throw error;
   });
 }

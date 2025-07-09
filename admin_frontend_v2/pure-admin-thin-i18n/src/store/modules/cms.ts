@@ -814,34 +814,51 @@ export const useCmsStore = defineStore("cms", {
     async fetchCategoryList(params?: CategoryListParams) {
       console.log("[CmsStore] fetchCategoryList - 开始获取分类列表, 参数:", params);
       this.categoryLoading = true;
+      this.loading.categoryList = true;
       try {
         const response = await getCategoryList(params);
         console.log("[CmsStore] fetchCategoryList - 分类列表API响应:", response);
         
-        // 处理新的API响应格式
+        // 详细检查响应格式
         if (response && response.data) {
           console.log("[CmsStore] fetchCategoryList - 分类列表数据有效, 长度:", response.data.length);
+          console.log("[CmsStore] fetchCategoryList - 第一个分类示例:", response.data[0]);
           this.categoryList = response.data;
           this.categoryTotal = response.data.length;
           this.categories = response.data; // 确保同时更新categories字段
+          return response.data; // 直接返回数据数组，方便组件使用
+        } else if (response && response.success && response.data) {
+          console.log("[CmsStore] fetchCategoryList - 分类列表数据有效 (success.data), 长度:", response.data.length);
+          this.categoryList = response.data;
+          this.categoryTotal = response.data.length;
+          this.categories = response.data;
+          return response.data; // 直接返回数据数组
         } else {
           console.error("[CmsStore] fetchCategoryList - 分类列表API响应格式异常:", response);
+          console.error("[CmsStore] fetchCategoryList - 响应类型:", typeof response);
+          if (response) {
+            console.error("[CmsStore] fetchCategoryList - 响应包含的属性:", Object.keys(response));
+          }
           this.categoryList = [];
           this.categoryTotal = 0;
           this.categories = [];
+          return []; // 返回空数组
         }
-        
-        return response;
       } catch (error) {
         console.error("[CmsStore] fetchCategoryList - 获取分类列表失败", error);
+        if (error instanceof Error) {
+          console.error("[CmsStore] fetchCategoryList - 错误详情:", error.message);
+          console.error("[CmsStore] fetchCategoryList - 错误堆栈:", error.stack);
+        }
         ElMessage.error("获取分类列表失败");
         // 确保错误时重置为空数组
         this.categoryList = [];
         this.categoryTotal = 0;
         this.categories = [];
-        throw error;
+        return []; // 返回空数组
       } finally {
         this.categoryLoading = false;
+        this.loading.categoryList = false;
       }
     },
 
