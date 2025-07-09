@@ -165,6 +165,48 @@ class OrderHistorySerializer(serializers.ModelSerializer):
         return None
 
 
+class OrderHistoryDetailSerializer(OrderHistorySerializer):
+    """
+    订单历史记录详情序列化器，包含完整快照
+    """
+    modified_by = UserMinimalSerializer(read_only=True)
+    
+    class Meta(OrderHistorySerializer.Meta):
+        depth = 1  # 增加序列化深度，展开关联对象
+
+
+class OrderCompareSerializer(serializers.Serializer):
+    """
+    订单版本比较序列化器
+    """
+    order_id = serializers.IntegerField(read_only=True)
+    order_number = serializers.CharField(read_only=True)
+    version1 = serializers.IntegerField(required=True)
+    version2 = serializers.IntegerField(required=True)
+    differences = serializers.JSONField(read_only=True)
+    
+    def validate(self, data):
+        """
+        验证两个版本号
+        """
+        version1 = data.get('version1')
+        version2 = data.get('version2')
+        
+        # 检查版本号是否相同
+        if version1 == version2:
+            raise serializers.ValidationError(_("两个版本号不能相同"))
+        
+        # 检查版本号是否存在
+        order_id = self.context.get('order_id')
+        if not OrderHistory.objects.filter(order_id=order_id, version=version1).exists():
+            raise serializers.ValidationError(_(f"版本 {version1} 不存在"))
+        
+        if not OrderHistory.objects.filter(order_id=order_id, version=version2).exists():
+            raise serializers.ValidationError(_(f"版本 {version2} 不存在"))
+        
+        return data
+
+
 class OrderListSerializer(serializers.ModelSerializer):
     """
     订单列表序列化器（简化版，用于列表展示）
@@ -205,7 +247,7 @@ class OrderDetailSerializer(OrderSerializer):
     """
     customer = CustomerListSerializer(read_only=True)
     created_by = UserMinimalSerializer(read_only=True)
-    project_manager = UserMinimalSerializer(read_only=True)
+    customer_contact = UserMinimalSerializer(read_only=True)
     translator_detail = serializers.SerializerMethodField()
     history_count = serializers.SerializerMethodField()
     
@@ -234,3 +276,19 @@ class OrderDetailSerializer(OrderSerializer):
         获取历史记录数量
         """
         return obj.history_records.count()
+
+
+class OrderStatisticsSerializer(serializers.Serializer):
+    """
+    订单统计数据序列化器
+    """
+    period = serializers.CharField(read_only=True)
+    start_date = serializers.DateField(read_only=True)
+    end_date = serializers.DateField(read_only=True)
+    total_orders = serializers.IntegerField(read_only=True)
+    total_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    total_profit = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    average_profit_rate = serializers.FloatField(read_only=True)
+    by_period = serializers.ListField(child=serializers.JSONField(), read_only=True)
+    by_service_type = serializers.ListField(child=serializers.JSONField(), read_only=True)
+    by_status = serializers.ListField(child=serializers.JSONField(), read_only=True)

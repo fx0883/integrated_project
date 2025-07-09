@@ -102,6 +102,9 @@ urlpatterns = [
         # 客户管理系统路由
         path('customers/', include('customers.urls', namespace='customers')),
         
+        # 订单管理系统路由
+        path('orders/', include('orders.urls', namespace='orders')),
+        
         # 图表数据API
         path('admin/charts/', include('charts.urls', namespace='charts')),
         
