@@ -1163,7 +1163,7 @@ class ArticleViewSet(TenantModelViewSet):
             403: OpenApiResponse(description="权限不足"),
             404: OpenApiResponse(description="分类不存在"),
         }
-    ),
+    )
 )
 class CategoryViewSet(TenantModelViewSet):
     """
@@ -1305,15 +1305,65 @@ class CategoryViewSet(TenantModelViewSet):
     
     @extend_schema(
         summary="获取分类树",
-        description="以树形结构获取所有分类",
+        description="以树形结构获取当前租户的所有分类",
         tags=["CMS-分类管理"],
         parameters=[
             OpenApiParameter(name="X-Tenant-ID", description="租户ID", required=False, type=str, location=OpenApiParameter.HEADER),
         ],
         responses={
-            200: OpenApiResponse(description="分类树结构"),
+            200: OpenApiResponse(
+                description="分类树结构",
+                response={
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer", "description": "分类ID"},
+                            "name": {"type": "string", "description": "分类名称"},
+                            "slug": {"type": "string", "description": "分类别名"},
+                            "description": {"type": "string", "description": "分类描述", "nullable": True},
+                            "is_active": {"type": "boolean", "description": "是否激活"},
+                            "sort_order": {"type": "integer", "description": "排序"},
+                            "children": {
+                                "type": "array",
+                                "description": "子分类",
+                                "items": {"$ref": "#/components/schemas/CategoryTree"}
+                            }
+                        }
+                    }
+                }
+            ),
             403: OpenApiResponse(description="权限不足"),
-        }
+        },
+        examples=[
+            OpenApiExample(
+                'Category Tree Example',
+                summary='分类树示例',
+                description='获取当前租户的分类树结构',
+                value=[
+                    {
+                        'id': 1,
+                        'name': '技术博客',
+                        'slug': 'tech-blog',
+                        'description': '技术相关文章',
+                        'is_active': True,
+                        'sort_order': 0,
+                        'children': [
+                            {
+                                'id': 2,
+                                'name': 'Python教程',
+                                'slug': 'python-tutorial',
+                                'description': 'Python编程教程',
+                                'is_active': True,
+                                'sort_order': 0,
+                                'children': []
+                            }
+                        ]
+                    }
+                ]
+            )
+        ],
+        operation_id="get_category_tree"
     )
     @action(detail=False, methods=['get'], url_path='tree')
     def get_category_tree(self, request):

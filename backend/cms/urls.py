@@ -23,4 +23,6 @@ router.register(r'comments', CommentViewSet, basename='comment')
 # API URLs
 urlpatterns = [
     path('', include(router.urls)),
+    # 添加专门的分类树API路由
+    path('categories/tree/', CategoryViewSet.as_view({'get': 'get_category_tree'}), name='category-tree'),
 ] 
