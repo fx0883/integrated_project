@@ -135,6 +135,21 @@ const fetchArticles = async () => {
     if (params.is_pinned === "true") params.is_pinned = true;
     if (params.is_pinned === "false") params.is_pinned = false;
 
+    // 记录请求参数，用于调试
+    console.log("[ArticleIndex] 文章列表请求参数:", params);
+
+    // 确保分类ID是数字类型
+    if (params.category !== undefined && params.category !== null) {
+      params.category = Number(params.category);
+      console.log("[ArticleIndex] 使用分类过滤:", params.category);
+    }
+
+    // 确保标签ID是数字类型
+    if (params.tag !== undefined && params.tag !== null) {
+      params.tag = Number(params.tag);
+      console.log("[ArticleIndex] 使用标签过滤:", params.tag);
+    }
+
     await cmsStore.fetchArticleList(params);
   } catch (error) {
     logger.error("获取文章列表失败", error);
@@ -442,6 +457,18 @@ const handleEditFormCancel = () => {
   editArticleDialog.visible = false;
 };
 
+// 分类选择器变化时触发搜索
+const handleCategoryChange = () => {
+  pagination.currentPage = 1;
+  fetchArticles();
+};
+
+// 标签选择器变化时触发搜索
+const handleTagChange = () => {
+  pagination.currentPage = 1;
+  fetchArticles();
+};
+
 // 页面加载时获取数据
 onMounted(() => {
   if (checkPermission()) {
@@ -538,7 +565,13 @@ onMounted(() => {
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item :label="t('cms.article.category')">
-              <el-select v-model="searchForm.category" clearable class="w-full">
+              <el-select
+                v-model="searchForm.category"
+                clearable
+                class="w-full"
+                placeholder="选择分类"
+                @change="handleCategoryChange"
+              >
                 <el-option
                   v-for="category in categories"
                   :key="category.id"
@@ -550,7 +583,13 @@ onMounted(() => {
           </el-col>
           <el-col :span="8">
             <el-form-item :label="t('cms.article.tag')">
-              <el-select v-model="searchForm.tag" clearable class="w-full">
+              <el-select 
+                v-model="searchForm.tag" 
+                clearable 
+                class="w-full"
+                placeholder="选择标签"
+                @change="handleTagChange"
+              >
                 <el-option
                   v-for="tag in tags"
                   :key="tag.id"

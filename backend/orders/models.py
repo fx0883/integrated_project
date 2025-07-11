@@ -28,26 +28,32 @@ class Order(BaseModel):
 
     
     # 1. 订单基本信息
-    order_number = models.CharField(_("订单编号"), max_length=50, unique=True, editable=False)
+    order_number = models.CharField(_("订单编号"), max_length=100, unique=True, editable=False)
     customer = models.ForeignKey(
         Customer, 
         verbose_name=_("客户"), 
         on_delete=models.PROTECT,
         related_name="orders"
     )
-    status = models.CharField(_("订单状态"), max_length=20, choices=STATUS_CHOICES, default='draft')
-    created_by = models.ForeignKey(
-        User,
-        verbose_name=_("创建人"),
-        on_delete=models.PROTECT,
-        related_name="created_orders"
-    )
+    source_platform = models.CharField(_("来源平台"), max_length=100, blank=True, null=True, 
+                                       help_text=_("如：淘宝、小红书店铺、抖音私信等"))
+    project_manager = models.CharField(_("项目负责人"), max_length=100, blank=True, null=True,
+                                       help_text=_("如：三组、六组、九组等"))
+    customer_type = models.CharField(_("客户类型"), max_length=100, blank=True, null=True,
+                                     help_text=_("如：老客户、新客户、VIP客户等"))
+    order_date = models.DateField(_("下单日期"), null=True, blank=True)
     
     # 2. 服务和语种信息
-    service_type = models.CharField(_("服务类型"), max_length=200)
-    language_direction = models.CharField(_("语言方向"), max_length=50)
-    word_count = models.PositiveIntegerField(_("字数"), default=0)
-    description = models.TextField(_("项目描述"), blank=True, null=True)
+    service_type = models.CharField(_("服务类型"), max_length=200, default="翻译")
+    language = models.CharField(_("语种"), max_length=100, default="中英")  # 原 语种
+    customer_count = models.CharField(_("客户数量"), max_length=100, blank=True, null=True,
+                                      help_text=_("如：份、字、天、半天、小时、页"))
+    translation_count = models.CharField(_("翻译数量"), max_length=100, blank=True, null=True,
+                                       help_text=_("与客户数量单位相同但单独计算"))
+    service_time = models.CharField(_("服务时间"), max_length=200, blank=True, null=True,
+                             help_text=_("如：笔译的约定交稿时间、口译的项目具体时间"))
+    project_location = models.CharField(_("项目地点"), max_length=100, blank=True, null=True,
+                                      help_text=_("如：城市、线上"))
     
     # 3. 人员信息
     customer_contact = models.ForeignKey(
@@ -63,35 +69,40 @@ class Order(BaseModel):
 
 
     
-    # 4. 时间信息
-    start_date = models.DateField(_("开始日期"), null=True, blank=True)
-    due_date = models.DateField(_("截止日期"), null=True, blank=True)
-    delivery_date = models.DateField(_("交付日期"), null=True, blank=True)
-    
-    # 5. 费用信息
-    price = models.CharField(_("单价"), max_length=100, blank=True, null=True)
-    total_amount = models.DecimalField(_("总金额"), max_digits=10, decimal_places=2, default=0)
+    # 4. 费用信息
+    customer_price = models.CharField(_("客户单价"), max_length=100, blank=True, null=True,
+                             help_text=_("如：元/份、元/字、元/天、元/半天、元/小时、元/页"))
+    customer_total_amount = models.DecimalField(_("客户总价"), max_digits=10, decimal_places=2, default=0)  # 原 客户总价
     translator_fee = models.DecimalField(_("译员费用"), max_digits=10, decimal_places=2, default=0)
-    other_costs = models.DecimalField(_("其他成本"), max_digits=10, decimal_places=2, default=0)
+    translator_price = models.CharField(_("翻译单价"), max_length=100, blank=True, null=True,
+                                      help_text=_("如：元/份、元/字、元/天、元/半天、元/小时、元/页"))
+    translator_payment_status = models.CharField(_("译费支付状态"), max_length=100, blank=True, null=True,
+                                              help_text=_("如：已付款、未付款、月结30天"))
+    translator_payment_method = models.CharField(_("译费支付方式"), max_length=100, blank=True, null=True,
+                                              help_text=_("如：对公转账、微信转账、支付宝转账"))
     project_fee = models.DecimalField(_("项目费用"), max_digits=10, decimal_places=2, default=0)
-    project_details = models.TextField(_("项目明细"), blank=True, null=True)
+    project_details = models.TextField(_("项目明细"), blank=True, null=True)  # 原 项目明细
+    cost_details = models.TextField(_("费用明细"), blank=True, null=True)
+    refund_amount = models.DecimalField(_("项目退款"), max_digits=10, decimal_places=2, default=0)
+    refund_reason = models.CharField(_("退款原因"), max_length=200, blank=True, null=True)
     
-    # 6. 支付信息
+    # 5. 支付信息
     payment_status = models.CharField(_("支付状态"), max_length=50, default='unpaid')
     payment_date = models.DateField(_("支付日期"), null=True, blank=True)
     payment_method = models.CharField(_("支付方式"), max_length=50, blank=True, null=True)
     payment_remarks = models.TextField(_("支付备注"), blank=True, null=True)
     
-    # 7. 发票和合同信息
+    # 6. 发票和合同信息
     invoice_status = models.CharField(_("发票状态"), max_length=50, default='not_required')
     invoice_info = models.TextField(_("发票信息"), blank=True, null=True)
     contract_number = models.CharField(_("合同编号"), max_length=100, blank=True, null=True)
     contract_info = models.TextField(_("合同信息"), blank=True, null=True)
     contract_remarks = models.TextField(_("合同备注"), blank=True, null=True)
     
-    # 8. 其他信息
+    # 7. 其他信息
+    delivery_address = models.CharField(_("收件地址"), max_length=200, blank=True, null=True)
+    order_address = models.CharField(_("订单地址"), max_length=200, blank=True, null=True)
     remarks = models.TextField(_("备注"), blank=True, null=True)
-    tags = models.TextField(_("标签"), blank=True, null=True)
     follow_up_record = models.TextField(_("回访记录"), blank=True, null=True)
     
     class Meta:
@@ -102,23 +113,15 @@ class Order(BaseModel):
         indexes = [
             models.Index(fields=['order_number']),
             models.Index(fields=['customer']),
-            models.Index(fields=['status']),
-            models.Index(fields=['payment_status']),
         ]
     
     def __str__(self):
-        return f"{self.order_number} - {self.customer.name} ({self.get_status_display()})"
+        return f"{self.order_number} - {self.customer.name}"
     
     def save(self, *args, **kwargs):
         # 如果是新订单，生成订单编号
         if not self.order_number:
             self.order_number = self._generate_order_number()
-        
-        # 总金额计算逻辑可能需要更新，因为单价字段改变了
-        # 如果总金额为0，可以尝试根据其他字段计算
-        if self.total_amount == 0:
-            # 这里可以添加新的计算逻辑
-            pass
         
         super().save(*args, **kwargs)
     
@@ -135,20 +138,20 @@ class Order(BaseModel):
     def calculate_profit(self):
         """
         计算订单毛利
-        公式：总金额 - 译员费用 - 其他成本 - 项目费用
+        公式：客户总价 - 译员费用 - 项目费用
         """
-        return self.total_amount - self.translator_fee - self.other_costs - self.project_fee
+        return self.customer_total_amount - self.translator_fee - self.project_fee
     
     def calculate_profit_rate(self):
         """
         计算订单毛利率
-        公式：(总金额 - 译员费用 - 其他成本 - 项目费用) / 总金额
+        公式：(客户总价 - 译员费用 - 项目费用) / 客户总价
         """
-        if self.total_amount == 0:
+        if self.customer_total_amount == 0:
             return 0
         
         profit = self.calculate_profit()
-        return profit / self.total_amount
+        return profit / self.customer_total_amount
 
 
 class OrderHistory(models.Model):
@@ -205,22 +208,29 @@ class OrderHistory(models.Model):
             'order_number': order.order_number,
             'customer_id': order.customer_id,
             'customer_name': order.customer.name,
-            'status': order.status,
+            'source_platform': order.source_platform,
+            'project_manager': order.project_manager,
+            'customer_type': order.customer_type,
+            'order_date': order.order_date.isoformat() if order.order_date else None,
             'service_type': order.service_type,
-            'language_direction': order.language_direction,
-            'word_count': order.word_count,
-            'description': order.description,
+            'language': order.language,
+            'customer_count': order.customer_count,
+            'translation_count': order.translation_count,
+            'service_time': order.service_time,
+            'project_location': order.project_location,
             'customer_contact_id': order.customer_contact_id,
             'translator': order.translator,
-            'start_date': order.start_date.isoformat() if order.start_date else None,
-            'due_date': order.due_date.isoformat() if order.due_date else None,
-            'delivery_date': order.delivery_date.isoformat() if order.delivery_date else None,
-            'price': order.price,
-            'total_amount': float(order.total_amount),
+            'customer_price': order.customer_price,
+            'customer_total_amount': float(order.customer_total_amount),
             'translator_fee': float(order.translator_fee),
-            'other_costs': float(order.other_costs),
+            'translator_price': order.translator_price,
+            'translator_payment_status': order.translator_payment_status,
+            'translator_payment_method': order.translator_payment_method,
             'project_fee': float(order.project_fee),
             'project_details': order.project_details,
+            'cost_details': order.cost_details,
+            'refund_amount': float(order.refund_amount),
+            'refund_reason': order.refund_reason,
             'payment_status': order.payment_status,
             'payment_date': order.payment_date.isoformat() if order.payment_date else None,
             'payment_method': order.payment_method,
@@ -230,13 +240,19 @@ class OrderHistory(models.Model):
             'contract_number': order.contract_number,
             'contract_info': order.contract_info,
             'contract_remarks': order.contract_remarks,
+            'delivery_address': order.delivery_address,
+            'order_address': order.order_address,
             'remarks': order.remarks,
-            'tags': order.tags,
             'follow_up_record': order.follow_up_record,
             'tenant_id': order.tenant_id if order.tenant_id else None,
             'created_at': order.created_at.isoformat() if order.created_at else None,
             'updated_at': order.updated_at.isoformat() if order.updated_at else None,
             'is_deleted': order.is_deleted,
+            # 记录当前执行更新的用户信息
+            'modified_by_id': user.id,
+            'modified_by_username': user.username,
+            'modified_by_display_name': user.display_name if hasattr(user, 'display_name') else user.username,
+            'modified_at': timezone.now().isoformat(),
         }
         
         # 将字典转换为JSON字符串

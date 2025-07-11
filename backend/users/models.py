@@ -49,6 +49,7 @@ class BaseUserModel(AbstractUser):
     email = models.EmailField(_("邮箱"))
     nick_name = models.CharField(_("昵称"), max_length=30, null=True, blank=True)
     avatar = models.CharField(_("头像"), max_length=200, default="", blank=True)
+    wechat_id = models.CharField(_("微信号"), max_length=32, null=True, blank=True, help_text=_("用户的微信号"))
     is_deleted = models.BooleanField(_("是否删除"), default=False)
     
     # 状态字段

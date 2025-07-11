@@ -30,14 +30,12 @@ logger = logging.getLogger(__name__)
         description="获取系统中的所有订单，支持分页、排序和筛选",
         tags=["订单管理"],
         parameters=[
-            OpenApiParameter(name="status", description="按状态筛选订单", required=False, type=str),
             OpenApiParameter(name="payment_status", description="按支付状态筛选订单", required=False, type=str),
             OpenApiParameter(name="service_type", description="按服务类型筛选订单", required=False, type=str),
+            OpenApiParameter(name="language", description="按语种筛选订单", required=False, type=str),
             OpenApiParameter(name="customer_id", description="按客户ID筛选订单", required=False, type=int),
-            OpenApiParameter(name="start_date_from", description="按开始日期范围筛选（起始）", required=False, type=str),
-            OpenApiParameter(name="start_date_to", description="按开始日期范围筛选（结束）", required=False, type=str),
-            OpenApiParameter(name="due_date_from", description="按截止日期范围筛选（起始）", required=False, type=str),
-            OpenApiParameter(name="due_date_to", description="按截止日期范围筛选（结束）", required=False, type=str),
+            OpenApiParameter(name="customer_type", description="按客户类型筛选订单", required=False, type=str),
+            OpenApiParameter(name="service_time", description="按服务时间筛选订单", required=False, type=str),
             OpenApiParameter(name="search", description="搜索订单编号、客户名称等信息", required=False, type=str),
         ]
     ),
@@ -75,9 +73,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated, IsAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'payment_status', 'service_type', 'customer']
-    search_fields = ['order_number', 'customer__name', 'translator_name', 'description']
-    ordering_fields = ['created_at', 'due_date', 'total_amount', 'payment_status']
+    filterset_fields = ['payment_status', 'service_type', 'language', 'customer', 'customer_type']
+    search_fields = ['order_number', 'customer__name', 'translator', 'project_details']
+    ordering_fields = ['created_at', 'order_date', 'customer_total_amount', 'payment_status']
     ordering = ['-created_at']
     
     def get_serializer_class(self):
@@ -112,21 +110,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
         
-        # 按开始日期范围筛选
-        start_date_from = self.request.query_params.get('start_date_from')
-        start_date_to = self.request.query_params.get('start_date_to')
-        if start_date_from:
-            queryset = queryset.filter(start_date__gte=start_date_from)
-        if start_date_to:
-            queryset = queryset.filter(start_date__lte=start_date_to)
+        # 按服务时间筛选
+        service_time = self.request.query_params.get('service_time')
+        if service_time:
+            queryset = queryset.filter(service_time__icontains=service_time)
         
-        # 按截止日期范围筛选
-        due_date_from = self.request.query_params.get('due_date_from')
-        due_date_to = self.request.query_params.get('due_date_to')
-        if due_date_from:
-            queryset = queryset.filter(due_date__gte=due_date_from)
-        if due_date_to:
-            queryset = queryset.filter(due_date__lte=due_date_to)
+        # 按下单日期范围筛选
+        order_date_from = self.request.query_params.get('order_date_from')
+        order_date_to = self.request.query_params.get('order_date_to')
+        if order_date_from:
+            queryset = queryset.filter(order_date__gte=order_date_from)
+        if order_date_to:
+            queryset = queryset.filter(order_date__lte=order_date_to)
         
         return queryset
     
@@ -158,27 +153,46 @@ class OrderViewSet(viewsets.ModelViewSet):
             data.append({
                 '订单编号': order.order_number,
                 '客户': order.customer.name,
-                '状态': order.get_status_display(),
-                '服务类型': order.get_service_type_display(),
-                '语言方向': order.get_language_direction_display(),
-                '字数': order.word_count,
-                '单价': order.price,
-                '总金额': float(order.total_amount),
+                '客户类型': order.customer_type or '',
+                '来源平台': order.source_platform or '',
+                '项目负责人': order.project_manager or '',
+                '下单日期': order.order_date,
+                '服务类型': order.service_type,
+                '语种': order.language,
+                '客户数量': order.customer_count or '',
+                '翻译数量': order.translation_count or '',
+                '服务时间': order.service_time or '',
+                '项目地点': order.project_location or '',
+                '客户联系人': order.customer_contact.name if order.customer_contact else '',
+                '客户单价': order.customer_price or '',
+                '客户总价': float(order.customer_total_amount),
+                '译员': order.translator or '',
                 '译员费用': float(order.translator_fee),
+                '翻译单价': order.translator_price or '',
+                '译费支付状态': order.translator_payment_status or '',
+                '译费支付方式': order.translator_payment_method or '',
                 '项目费用': float(order.project_fee),
-                '其他成本': float(order.other_costs),
+                '项目明细': order.project_details or '',
+                '费用明细': order.cost_details or '',
+                '项目退款': float(order.refund_amount),
+                '退款原因': order.refund_reason or '',
                 '毛利': float(order.calculate_profit()),
                 '毛利率': f"{order.calculate_profit_rate():.2%}",
-                '译员': order.translator or '',
-                '开始日期': order.start_date,
-                '截止日期': order.due_date,
-                '交付日期': order.delivery_date,
-                '支付状态': order.get_payment_status_display(),
+                '支付状态': order.payment_status,
                 '支付日期': order.payment_date,
                 '支付方式': order.payment_method or '',
-                '创建时间': order.created_at,
-                '项目明细': order.project_details or '',
+                '支付备注': order.payment_remarks or '',
+                '发票状态': order.invoice_status,
+                '发票信息': order.invoice_info or '',
+                '合同编号': order.contract_number or '',
+                '合同信息': order.contract_info or '',
+                '合同备注': order.contract_remarks or '',
+                '收件地址': order.delivery_address or '',
+                '下单地址': order.order_address or '',
+                '备注': order.remarks or '',
                 '回访记录': order.follow_up_record or '',
+                '创建时间': order.created_at,
+                '更新时间': order.updated_at,
             })
         
         # 创建DataFrame
@@ -383,48 +397,46 @@ class OrderViewSet(viewsets.ModelViewSet):
                 'start_date': start_date,
                 'end_date': end_date,
                 'total_orders': 0,
-                'total_amount': 0,
+                'customer_total_amount': 0,
                 'total_profit': 0,
                 'average_profit_rate': 0,
                 'by_period': [],
                 'by_service_type': [],
-                'by_status': []
+                'by_payment_status': []
             })
         
         # 计算总金额和毛利
         amount_stats = queryset.aggregate(
-            total_amount=Sum('total_amount'),
+            total_amount=Sum('customer_total_amount'),
             total_translator_fee=Sum('translator_fee'),
-            total_other_costs=Sum('other_costs'),
             total_project_fee=Sum('project_fee')
         )
         
         total_amount = amount_stats['total_amount'] or 0
         total_translator_fee = amount_stats['total_translator_fee'] or 0
-        total_other_costs = amount_stats['total_other_costs'] or 0
         total_project_fee = amount_stats['total_project_fee'] or 0
-        total_profit = total_amount - total_translator_fee - total_other_costs - total_project_fee
+        total_profit = total_amount - total_translator_fee - total_project_fee
         
         # 计算平均毛利率
         average_profit_rate = total_profit / total_amount if total_amount > 0 else 0
         
-        # 按状态统计
-        status_stats = queryset.values('status').annotate(
+        # 按支付状态统计
+        payment_status_stats = queryset.values('payment_status').annotate(
             count=Count('id'),
-            amount=Sum('total_amount')
+            amount=Sum('customer_total_amount')
         )
-        by_status = [
+        by_payment_status = [
             {
-                'status': item['status'],
+                'payment_status': item['payment_status'],
                 'orders': item['count'],
                 'amount': float(item['amount'] or 0)
-            } for item in status_stats
+            } for item in payment_status_stats
         ]
         
         # 按服务类型统计
         service_type_stats = queryset.values('service_type').annotate(
             count=Count('id'),
-            amount=Sum('total_amount')
+            amount=Sum('customer_total_amount')
         )
         by_service_type = [
             {
@@ -442,8 +454,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 select={'date': "DATE(created_at)"}
             ).values('date').annotate(
                 count=Count('id'),
-                amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
+                amount=Sum('customer_total_amount'),
+                profit=Sum('customer_total_amount') - Sum('translator_fee') - Sum('project_fee')
             ).order_by('date')
             
             by_period = [
@@ -460,8 +472,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 select={'week': "CONCAT(YEAR(created_at), '-', WEEK(created_at))"}
             ).values('week').annotate(
                 count=Count('id'),
-                amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
+                amount=Sum('customer_total_amount'),
+                profit=Sum('customer_total_amount') - Sum('translator_fee') - Sum('project_fee')
             ).order_by('week')
             
             by_period = [
@@ -478,8 +490,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 select={'month': "DATE_FORMAT(created_at, '%Y-%m')"}
             ).values('month').annotate(
                 count=Count('id'),
-                amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
+                amount=Sum('customer_total_amount'),
+                profit=Sum('customer_total_amount') - Sum('translator_fee') - Sum('project_fee')
             ).order_by('month')
             
             by_period = [
@@ -496,8 +508,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 select={'year': "YEAR(created_at)"}
             ).values('year').annotate(
                 count=Count('id'),
-                amount=Sum('total_amount'),
-                profit=Sum('total_amount') - Sum('translator_fee') - Sum('other_costs') - Sum('project_fee')
+                amount=Sum('customer_total_amount'),
+                profit=Sum('customer_total_amount') - Sum('translator_fee') - Sum('project_fee')
             ).order_by('year')
             
             by_period = [
@@ -515,92 +527,80 @@ class OrderViewSet(viewsets.ModelViewSet):
             'start_date': start_date,
             'end_date': end_date,
             'total_orders': total_count,
-            'total_amount': float(total_amount),
+            'customer_total_amount': float(total_amount),
             'total_profit': float(total_profit),
             'average_profit_rate': float(average_profit_rate),
             'by_period': by_period,
             'by_service_type': by_service_type,
-            'by_status': by_status
+            'by_payment_status': by_payment_status
         })
     
     @extend_schema(
         summary="获取订单提醒",
-        description="获取即将开始或截止的订单提醒",
+        description="获取需要关注的订单提醒",
         tags=["订单管理"],
         parameters=[
-            OpenApiParameter(name="type", description="提醒类型，可选值: start, due, all", required=False, type=str, default="all"),
-            OpenApiParameter(name="days", description="天数范围", required=False, type=int, default=7),
+            OpenApiParameter(name="days", description="近期天数范围", required=False, type=int, default=7),
+            OpenApiParameter(name="keyword", description="关键字筛选", required=False, type=str),
         ]
     )
     @action(detail=False, methods=['get'])
     def reminders(self, request):
         """
-        获取订单提醒
+        获取订单提醒，基于service_time字段分析近期需要关注的订单
         """
         # 获取查询参数
-        reminder_type = request.query_params.get('type', 'all')
         days = int(request.query_params.get('days', 7))
+        keyword = request.query_params.get('keyword', '')
         
         # 计算日期范围
         today = datetime.now().date()
         future_date = today + timedelta(days=days)
+        today_str = today.strftime('%Y-%m-%d')
+        future_str = future_date.strftime('%Y-%m-%d')
         
-        # 初始化查询集
+        # 初始化查询集，筛选未删除订单
         queryset = Order.objects.filter(is_deleted=False)
+        
+        # 对service_time字段进行筛选，寻找可能包含近期日期的订单
+        # 使用简单的包含判断来预筛选，后续会更精确处理
+        if keyword:
+            queryset = queryset.filter(
+                Q(service_time__icontains=keyword) | 
+                Q(service_time__icontains=today_str) | 
+                Q(service_time__icontains=future_str)
+            )
+        else:
+            # 简单筛选今明两天相关的订单
+            today_short = today.strftime('%-m月%-d日')  # 例如：6月1日
+            tomorrow = today + timedelta(days=1)
+            tomorrow_short = tomorrow.strftime('%-m月%-d日')
+            
+            queryset = queryset.filter(
+                Q(service_time__icontains=today_str) | 
+                Q(service_time__icontains=future_str) |
+                Q(service_time__icontains=today_short) |
+                Q(service_time__icontains=tomorrow_short)
+            )
         
         reminders = []
         
-        # 按提醒类型筛选
-        if reminder_type == 'start' or reminder_type == 'all':
-            # 获取即将开始的订单
-            start_reminders = queryset.filter(
-                start_date__gte=today,
-                start_date__lte=future_date,
-                status='draft'  # 只提醒草稿状态的订单
-            )
-            
-            for order in start_reminders:
-                days_left = (order.start_date - today).days
-                reminders.append({
-                    'id': order.id,
-                    'order_number': order.order_number,
-                    'customer': {
-                        'id': order.customer.id,
-                        'name': order.customer.name
-                    },
-                    'reminder_type': 'start',
-                    'date': order.start_date,
-                    'days_left': days_left,
-                    'service_type': order.service_type,
-                    'language_direction': order.language_direction
-                })
-        
-        if reminder_type == 'due' or reminder_type == 'all':
-            # 获取即将到期的订单
-            due_reminders = queryset.filter(
-                due_date__gte=today,
-                due_date__lte=future_date,
-                status='in_progress'  # 只提醒进行中的订单
-            )
-            
-            for order in due_reminders:
-                days_left = (order.due_date - today).days
-                reminders.append({
-                    'id': order.id,
-                    'order_number': order.order_number,
-                    'customer': {
-                        'id': order.customer.id,
-                        'name': order.customer.name
-                    },
-                    'reminder_type': 'due',
-                    'date': order.due_date,
-                    'days_left': days_left,
-                    'service_type': order.service_type,
-                    'language_direction': order.language_direction
-                })
-        
-        # 按剩余天数排序
-        reminders.sort(key=lambda x: x['days_left'])
+        # 处理结果
+        for order in queryset:
+            reminders.append({
+                'id': order.id,
+                'order_number': order.order_number,
+                'customer': {
+                    'id': order.customer.id,
+                    'name': order.customer.name
+                },
+                'service_time': order.service_time,
+                'service_type': order.service_type,
+                'language': order.language,
+                'customer_count': order.customer_count,
+                'project_location': order.project_location,
+                'payment_status': order.payment_status
+            })
         
         return Response({
             'count': len(reminders),

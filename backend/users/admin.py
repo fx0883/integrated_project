@@ -22,7 +22,7 @@ class UserAdmin(TenantAdminMixin, DjangoUserAdmin):
     
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('个人信息'), {'fields': ('first_name', 'last_name', 'email', 'phone', 'nick_name', 'avatar')}),
+        (_('个人信息'), {'fields': ('first_name', 'last_name', 'email', 'phone', 'nick_name', 'avatar', 'wechat_id')}),
         (_('权限'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'is_super_admin', 
                      'groups', 'user_permissions'),
@@ -91,7 +91,7 @@ class MemberAdmin(TenantAdminMixin, DjangoUserAdmin):
     
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('个人信息'), {'fields': ('first_name', 'last_name', 'email', 'phone', 'nick_name', 'avatar')}),
+        (_('个人信息'), {'fields': ('first_name', 'last_name', 'email', 'phone', 'nick_name', 'avatar', 'wechat_id')}),
         (_('权限'), {
             'fields': ('is_active', 'groups', 'user_permissions'),
         }),

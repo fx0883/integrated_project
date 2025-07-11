@@ -22,14 +22,12 @@ logger = logging.getLogger(__name__)
         tags=["联系人订单"],
         parameters=[
             OpenApiParameter(name="contact_id", description="联系人ID", required=True, type=int),
-            OpenApiParameter(name="status", description="按状态筛选订单", required=False, type=str),
+            # 移除了status参数
             OpenApiParameter(name="payment_status", description="按支付状态筛选订单", required=False, type=str),
             OpenApiParameter(name="service_type", description="按服务类型筛选订单", required=False, type=str),
-            OpenApiParameter(name="start_date_from", description="按开始日期范围筛选（起始）", required=False, type=str),
-            OpenApiParameter(name="start_date_to", description="按开始日期范围筛选（结束）", required=False, type=str),
-            OpenApiParameter(name="due_date_from", description="按截止日期范围筛选（起始）", required=False, type=str),
-            OpenApiParameter(name="due_date_to", description="按截止日期范围筛选（结束）", required=False, type=str),
-            OpenApiParameter(name="search", description="搜索订单编号、描述等信息", required=False, type=str),
+            OpenApiParameter(name="order_date_from", description="按订单日期范围筛选（起始）", required=False, type=str),
+            OpenApiParameter(name="order_date_to", description="按订单日期范围筛选（结束）", required=False, type=str),
+            OpenApiParameter(name="search", description="搜索订单编号、译员等信息", required=False, type=str),
         ]
     ),
     retrieve=extend_schema(
@@ -50,9 +48,9 @@ class ContactOrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     permission_classes = [IsAuthenticated, IsAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'payment_status', 'service_type']
-    search_fields = ['order_number', 'description']
-    ordering_fields = ['created_at', 'due_date', 'total_amount', 'payment_status']
+    filterset_fields = ['payment_status', 'service_type'] # 移除了status字段
+    search_fields = ['order_number', 'translator'] # 移除了description字段
+    ordering_fields = ['created_at', 'order_date', 'customer_total_amount', 'payment_status'] # 更新了字段
     ordering = ['-created_at']
     
     def get_queryset(self):
@@ -62,21 +60,13 @@ class ContactOrderViewSet(viewsets.ReadOnlyModelViewSet):
         contact_id = self.kwargs.get('contact_id')
         queryset = Order.objects.filter(customer_contact_id=contact_id, is_deleted=False)
         
-        # 按开始日期范围筛选
-        start_date_from = self.request.query_params.get('start_date_from')
-        start_date_to = self.request.query_params.get('start_date_to')
-        if start_date_from:
-            queryset = queryset.filter(start_date__gte=start_date_from)
-        if start_date_to:
-            queryset = queryset.filter(start_date__lte=start_date_to)
-        
-        # 按截止日期范围筛选
-        due_date_from = self.request.query_params.get('due_date_from')
-        due_date_to = self.request.query_params.get('due_date_to')
-        if due_date_from:
-            queryset = queryset.filter(due_date__gte=due_date_from)
-        if due_date_to:
-            queryset = queryset.filter(due_date__lte=due_date_to)
+        # 按订单日期范围筛选
+        order_date_from = self.request.query_params.get('order_date_from')
+        order_date_to = self.request.query_params.get('order_date_to')
+        if order_date_from:
+            queryset = queryset.filter(order_date__gte=order_date_from)
+        if order_date_to:
+            queryset = queryset.filter(order_date__lte=order_date_to)
         
         return queryset
     

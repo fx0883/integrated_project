@@ -6,7 +6,7 @@ from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 from .models import Order, OrderHistory
 from customers.serializers import CustomerListSerializer
-from users.serializers import UserMinimalSerializer
+from users.serializers import UserMinimalSerializer, MemberMinimalSerializer
 from users.models import User, Member
 
 
@@ -14,13 +14,13 @@ class OrderSerializer(serializers.ModelSerializer):
     """
     订单基本序列化器
     """
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
     service_type_display = serializers.CharField(source='get_service_type_display', read_only=True)
-    language_direction_display = serializers.CharField(source='get_language_direction_display', read_only=True)
     invoice_status_display = serializers.CharField(source='get_invoice_status_display', read_only=True)
     profit = serializers.SerializerMethodField()
     profit_rate = serializers.SerializerMethodField()
+    formatted_profit = serializers.SerializerMethodField()
+    formatted_profit_rate = serializers.SerializerMethodField()
     
     class Meta:
         model = Order
@@ -33,11 +33,23 @@ class OrderSerializer(serializers.ModelSerializer):
         """
         return obj.calculate_profit()
     
+    def get_formatted_profit(self, obj):
+        """
+        获取格式化的订单毛利（带货币符号）
+        """
+        return f"¥{obj.calculate_profit():.2f}"
+    
     def get_profit_rate(self, obj):
         """
         获取订单毛利率
         """
         return obj.calculate_profit_rate()
+    
+    def get_formatted_profit_rate(self, obj):
+        """
+        获取格式化的订单毛利率（百分比形式）
+        """
+        return f"{obj.calculate_profit_rate():.2%}"
 
 
 class OrderCreateSerializer(OrderSerializer):
@@ -48,17 +60,11 @@ class OrderCreateSerializer(OrderSerializer):
         """
         验证订单创建数据
         """
-        # 校验开始日期和截止日期
-        start_date = data.get('start_date')
-        due_date = data.get('due_date')
-        if start_date and due_date and start_date > due_date:
-            raise serializers.ValidationError({'due_date': _('截止日期不能早于开始日期')})
-        
-        # 对于总金额为0的情况，字数是必填项
-        if 'total_amount' not in data or data.get('total_amount', 0) == 0:
-            word_count = data.get('word_count', 0)
-            if word_count == 0:
-                raise serializers.ValidationError({'word_count': _('字数不能为0')})
+        # 对于总金额为0的情况，客户数量不应为空
+        if 'customer_total_amount' not in data or data.get('customer_total_amount', 0) == 0:
+            customer_count = data.get('customer_count')
+            if not customer_count:
+                raise serializers.ValidationError({'customer_count': _('客户数量不能为空')})
         
         return data
     
@@ -68,10 +74,6 @@ class OrderCreateSerializer(OrderSerializer):
         """
         # 从请求中获取用户
         user = self.context['request'].user
-        
-        # 设置创建人
-        if 'created_by' not in validated_data:
-            validated_data['created_by'] = user
         
         # 设置租户
         if hasattr(user, 'tenant') and user.tenant:
@@ -94,18 +96,6 @@ class OrderUpdateSerializer(OrderSerializer):
     """
     更新订单序列化器
     """
-    def validate(self, data):
-        """
-        验证订单更新数据
-        """
-        # 校验开始日期和截止日期
-        start_date = data.get('start_date', self.instance.start_date)
-        due_date = data.get('due_date', self.instance.due_date)
-        if start_date and due_date and start_date > due_date:
-            raise serializers.ValidationError({'due_date': _('截止日期不能早于开始日期')})
-        
-        return data
-    
     def update(self, instance, validated_data):
         """
         更新订单并记录变更历史
@@ -211,46 +201,44 @@ class OrderCompareSerializer(serializers.Serializer):
     
     def validate(self, data):
         """
-        验证两个版本号
+        验证版本比较数据
         """
         version1 = data.get('version1')
         version2 = data.get('version2')
         
-        # 检查版本号是否相同
         if version1 == version2:
-            raise serializers.ValidationError(_("两个版本号不能相同"))
+            raise serializers.ValidationError({'version2': _('不能与version1相同')})
         
-        # 检查版本号是否存在
+        # 检查是否存在对应的历史记录
         order_id = self.context.get('order_id')
-        if not OrderHistory.objects.filter(order_id=order_id, version=version1).exists():
-            raise serializers.ValidationError(_(f"版本 {version1} 不存在"))
-        
-        if not OrderHistory.objects.filter(order_id=order_id, version=version2).exists():
-            raise serializers.ValidationError(_(f"版本 {version2} 不存在"))
+        if order_id:
+            if not OrderHistory.objects.filter(order_id=order_id, version=version1).exists():
+                raise serializers.ValidationError({'version1': _(f'订单{order_id}不存在版本{version1}')})
+            if not OrderHistory.objects.filter(order_id=order_id, version=version2).exists():
+                raise serializers.ValidationError({'version2': _(f'订单{order_id}不存在版本{version2}')})
         
         return data
 
 
 class OrderListSerializer(serializers.ModelSerializer):
     """
-    订单列表序列化器（简化版，用于列表展示）
+    订单列表序列化器（包含所有字段，与OrderSerializer保持一致）
     """
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
     service_type_display = serializers.CharField(source='get_service_type_display', read_only=True)
-    language_direction_display = serializers.CharField(source='get_language_direction_display', read_only=True)
     invoice_status_display = serializers.CharField(source='get_invoice_status_display', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     created_by_info = serializers.SerializerMethodField()
     customer_contact_info = serializers.SerializerMethodField()
     profit = serializers.SerializerMethodField()
     profit_rate = serializers.SerializerMethodField()
+    formatted_profit = serializers.SerializerMethodField()
+    formatted_profit_rate = serializers.SerializerMethodField()
     
     class Meta:
         model = Order
-        fields = '__all__'  # 返回所有字段
-        read_only_fields = ('created_at', 'updated_at', 'is_deleted', 'order_number', 'tenant', 
-                           'created_by_info', 'customer_contact_info', 'profit', 'profit_rate')
+        fields = '__all__'  # 修改为包含所有字段
+        read_only_fields = ('created_at', 'updated_at', 'is_deleted', 'order_number', 'tenant')
     
     def get_profit(self, obj):
         """
@@ -264,36 +252,58 @@ class OrderListSerializer(serializers.ModelSerializer):
         """
         return obj.calculate_profit_rate()
     
+    def get_formatted_profit(self, obj):
+        """
+        获取格式化的订单毛利（带货币符号）
+        """
+        return f"¥{obj.calculate_profit():.2f}"
+    
+    def get_formatted_profit_rate(self, obj):
+        """
+        获取格式化的订单毛利率（百分比形式）
+        """
+        return f"{obj.calculate_profit_rate():.2%}"
+    
     def get_created_by_info(self, obj):
         """
-        获取创建人详细信息
+        获取创建人信息
         """
-        if not obj.created_by:
-            return None
+        user = None
+        if hasattr(obj, 'created_by_id') and obj.created_by_id:
+            try:
+                user = User.objects.get(id=obj.created_by_id)
+            except User.DoesNotExist:
+                pass
         
-        return {
-            'id': obj.created_by.id,
-            'username': obj.created_by.username,
-            'nick_name': obj.created_by.nick_name,
-            'display_name': obj.created_by.display_name,
-        }
+        if user:
+            return {
+                'id': user.id,
+                'username': user.username,
+                'display_name': user.display_name if hasattr(user, 'display_name') else user.username
+            }
+        return None
     
     def get_customer_contact_info(self, obj):
         """
-        获取客户联系人详细信息
+        获取客户联系人信息
         """
-        if not obj.customer_contact:
-            return None
+        member = None
+        if obj.customer_contact_id:
+            try:
+                member = Member.objects.get(id=obj.customer_contact_id)
+            except Member.DoesNotExist:
+                pass
         
-        return {
-            'id': obj.customer_contact.id,
-            'username': obj.customer_contact.username,
-            'email': obj.customer_contact.email,
-            'phone': obj.customer_contact.phone,
-            'nick_name': obj.customer_contact.nick_name,
-            'display_name': obj.customer_contact.display_name,
-            'avatar': obj.customer_contact.avatar
-        }
+        if member:
+            return {
+                'id': member.id,
+                'username': member.username,
+                'display_name': member.display_name if hasattr(member, 'display_name') else member.username,
+                'phone': member.phone,
+                'email': member.email,
+                'wechat_id': member.wechat_id
+            }
+        return None
 
 
 class OrderDetailSerializer(OrderSerializer):
@@ -301,8 +311,7 @@ class OrderDetailSerializer(OrderSerializer):
     订单详情序列化器（包含关联数据）
     """
     customer = CustomerListSerializer(read_only=True)
-    created_by = UserMinimalSerializer(read_only=True)
-    customer_contact = UserMinimalSerializer(read_only=True)
+    customer_contact = MemberMinimalSerializer(read_only=True)
     history_count = serializers.SerializerMethodField()
     
     class Meta:
@@ -314,7 +323,7 @@ class OrderDetailSerializer(OrderSerializer):
         """
         获取历史记录数量
         """
-        return obj.history_records.count()
+        return OrderHistory.objects.filter(order=obj).count()
 
 
 class OrderStatisticsSerializer(serializers.Serializer):
@@ -325,9 +334,9 @@ class OrderStatisticsSerializer(serializers.Serializer):
     start_date = serializers.DateField(read_only=True)
     end_date = serializers.DateField(read_only=True)
     total_orders = serializers.IntegerField(read_only=True)
-    total_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    customer_total_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     total_profit = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     average_profit_rate = serializers.FloatField(read_only=True)
     by_period = serializers.ListField(child=serializers.JSONField(), read_only=True)
     by_service_type = serializers.ListField(child=serializers.JSONField(), read_only=True)
-    by_status = serializers.ListField(child=serializers.JSONField(), read_only=True)
+    by_payment_status = serializers.ListField(child=serializers.JSONField(), read_only=True)

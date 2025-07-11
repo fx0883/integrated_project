@@ -25,7 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name', 
             'last_name', 'is_active', 'avatar', 'tenant', 'tenant_name', 
-            'is_admin', 'is_member', 'is_super_admin', 'role', 'date_joined'
+            'is_admin', 'is_member', 'is_super_admin', 'role', 'date_joined',
+            'wechat_id'
         ]
         read_only_fields = ['id', 'date_joined', 'role', 'tenant_name', 'is_member']
         extra_kwargs = {
@@ -93,7 +94,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
             'last_name', 'password', 'password_confirm', 'tenant_id',
-            'is_admin', 'is_member', 'avatar'
+            'is_admin', 'is_member', 'avatar', 'wechat_id'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -127,7 +128,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
         
         # 设置其他字段
-        for field in ['phone', 'nick_name', 'first_name', 'last_name', 'tenant', 'avatar']:
+        for field in ['phone', 'nick_name', 'first_name', 'last_name', 'tenant', 'avatar', 'wechat_id']:
             if field in validated_data:
                 setattr(user, field, validated_data[field])
         
@@ -171,7 +172,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'phone', 'nick_name', 'first_name', 'last_name', 
-            'avatar', 'is_active', 'status'
+            'avatar', 'is_active', 'status', 'wechat_id'
         ]
         read_only_fields = ['id']
 
@@ -427,8 +428,47 @@ class UserMinimalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'display_name', 'avatar']
-        read_only_fields = ['id', 'username', 'display_name', 'avatar']
+        fields = ['id', 'username', 'display_name', 'avatar', 'email', 'phone', 'wechat_id']
+        read_only_fields = ['id', 'username', 'display_name', 'avatar', 'email', 'phone', 'wechat_id']
+        
+    def get_avatar(self, obj) -> str:
+        """获取完整的头像URL"""
+        if not obj.avatar:
+            return ""
+            
+        # 如果已经是完整URL，直接返回
+        if obj.avatar.startswith(('http://', 'https://')):
+            return obj.avatar
+            
+        # 获取请求对象
+        request = self.context.get('request')
+        if request is not None:
+            # 从请求中获取域名和协议
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            # 确保路径以/开头
+            path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+            return f"{protocol}://{domain}{path}"
+            
+        # 如果无法获取请求对象，使用配置中的BASE_URL
+        from django.conf import settings
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        # 确保路径以/开头
+        path = obj.avatar if obj.avatar.startswith('/') else f'/{obj.avatar}'
+        return f"{base_url}{path}"
+
+
+class MemberMinimalSerializer(serializers.ModelSerializer):
+    """
+    普通会员最小化序列化器，用于嵌套在其他序列化器中
+    """
+    display_name = serializers.CharField(read_only=True)
+    avatar = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Member
+        fields = ['id', 'username', 'display_name', 'avatar', 'email', 'phone', 'wechat_id']
+        read_only_fields = ['id', 'username', 'display_name', 'avatar', 'email', 'phone', 'wechat_id']
         
     def get_avatar(self, obj) -> str:
         """获取完整的头像URL"""
@@ -469,7 +509,7 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'nick_name', 'email', 'phone',
+            'id', 'username', 'nick_name', 'email', 'phone', 'wechat_id',
             'is_active', 'avatar', 'tenant', 'tenant_name', 
             'is_admin', 'is_member', 'role', 'date_joined'
         ]
@@ -527,14 +567,15 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'email', 'phone', 'nick_name', 
+            'username', 'email', 'phone', 'nick_name', 'wechat_id',
             'password', 'password_confirm', 'tenant_id'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},
             'phone': {'required': False},
-            'nick_name': {'required': False}
+            'nick_name': {'required': False},
+            'wechat_id': {'required': False}
         }
     
     def validate_email(self, value):
@@ -627,14 +668,15 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
     """
     子账号创建序列化器
     """
+    
     class Meta:
         model = Member
         fields = [
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
-            'last_name', 'avatar'
+            'last_name', 'avatar', 'wechat_id'
         ]
         extra_kwargs = {
-            'id': {'read_only': True}
+            'id': {'read_only': True},
         }
     
     def validate_username(self, value):
@@ -644,7 +686,7 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
         if Member.objects.filter(username=value).exists():
             raise serializers.ValidationError("该用户名已被使用")
         return value
-    
+
     def validate_email(self, value):
         """
         验证邮箱是否已存在
@@ -677,7 +719,7 @@ class SubAccountCreateSerializer(serializers.ModelSerializer):
         # 保存子账号
         member.save()
         
-        return member
+        return member 
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -761,7 +803,7 @@ class MemberSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name', 
             'last_name', 'is_active', 'avatar', 'tenant', 'tenant_name', 
             'is_sub_account', 'parent', 'parent_username', 'date_joined',
-            'status'
+            'status', 'wechat_id'
         ]
         read_only_fields = ['id', 'date_joined', 'tenant_name', 'is_sub_account', 'parent_username']
     
@@ -825,7 +867,7 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
             'last_name', 'password', 'password_confirm', 'tenant_id',
-            'avatar'
+            'avatar', 'wechat_id'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -876,7 +918,7 @@ class SubAccountSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'phone', 'nick_name', 'first_name',
             'last_name', 'avatar', 'parent', 'parent_username', 'tenant',
-            'tenant_name', 'is_sub_account', 'date_joined'
+            'tenant_name', 'is_sub_account', 'date_joined', 'wechat_id'
         ]
         read_only_fields = ['id', 'parent', 'tenant', 'date_joined', 'parent_username', 'tenant_name', 'is_sub_account']
     

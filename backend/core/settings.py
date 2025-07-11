@@ -218,14 +218,20 @@ JWT_AUTH = {
 }
 
 # CORS 设置
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://espressox.online",
-    "https://espressox.online",
-]
+# CORS_ALLOW_ALL_ORIGINS = DEBUG
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "http://localhost:8000",
+#     "http://espressox.online",
+#     "https://espressox.online",
+# ]
+
+# CORS 配置
+CORS_ALLOW_ALL_ORIGINS = True  # 允许所有源
+CORS_ALLOW_CREDENTIALS = True  # 允许携带凭证（如 cookies）
+
+CORS_ALLOW_HEADERS = ["*"]
 
 # Spectacular API 文档设置
 SPECTACULAR_SETTINGS = {
