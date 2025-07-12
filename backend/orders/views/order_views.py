@@ -1099,17 +1099,17 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     @extend_schema(
         summary="获取订单提醒",
-        description="获取基于订单开始日期的提醒",
+        description="获取未来N天内需要交付的订单提醒",
         tags=["订单管理"],
         parameters=[
-            OpenApiParameter(name="days", description="近期天数范围", required=False, type=int, default=7),
+            OpenApiParameter(name="days", description="未来天数范围", required=False, type=int, default=7),
             OpenApiParameter(name="keyword", description="关键字筛选", required=False, type=str),
         ]
     )
     @action(detail=False, methods=['get'])
     def reminders(self, request):
         """
-        获取订单提醒，基于订单开始日期(order_date)分析需要关注的订单
+        获取订单提醒，基于服务交付日期(service_time)分析未来N天内需要交付的订单
         """
         # 获取查询参数
         days = int(request.query_params.get('days', 7))
@@ -1117,6 +1117,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         # 计算日期范围
         today = datetime.now().date()
+        end_date = today + timedelta(days=days)
         
         # 初始化查询集，筛选未删除订单
         queryset = Order.objects.filter(is_deleted=False)
@@ -1131,25 +1132,25 @@ class OrderViewSet(viewsets.ModelViewSet):
                 Q(customer__name__icontains=keyword)
             )
         else:
-            # 如果没有关键字，根据订单开始日期筛选
-            # 筛选最近days天内的订单
-            start_date = today - timedelta(days=days)
-            end_date = today + timedelta(days=days)
-            
+            # 如果没有关键字，根据服务时间筛选
+            # 筛选未来days天内需要交付的订单
             queryset = queryset.filter(
-                # 订单日期在指定范围内
-                Q(order_date__gte=start_date) & 
-                Q(order_date__lte=end_date)
+                # 服务时间不为空
+                ~Q(service_time=None) &
+                # 服务时间在今天及以后
+                Q(service_time__gte=today) & 
+                # 服务时间在指定范围内
+                Q(service_time__lte=end_date)
             )
         
         # 确保至少返回一些数据
         if not queryset.exists():
-            # 如果没有匹配的订单，返回最近的几条有订单日期的订单
+            # 如果没有匹配的订单，返回最近的几条有服务时间的订单
             queryset = Order.objects.filter(
                 is_deleted=False
             ).exclude(
-                order_date=None
-            ).order_by('-order_date')[:10]
+                service_time=None
+            ).order_by('service_time')[:10]
             
             # 如果仍然没有，则返回最近创建的订单
             if not queryset.exists():
@@ -1180,8 +1181,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response({
             'count': len(reminders),
             'reminders': reminders
-        }) 
-
+        })
+    
     @extend_schema(
         summary="批量操作订单",
         description="批量更新或删除订单",
