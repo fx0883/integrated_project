@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
         description="获取指定订单的所有历史记录",
         tags=["订单历史"],
         parameters=[
-            OpenApiParameter(name="order_id", description="订单ID", required=True, type=int),
+            # 路径参数已经在URL中定义，这里不需要重复定义
         ]
     ),
     retrieve=extend_schema(
@@ -34,8 +34,7 @@ logger = logging.getLogger(__name__)
         description="获取指定订单的特定版本历史记录详情",
         tags=["订单历史"],
         parameters=[
-            OpenApiParameter(name="order_id", description="订单ID", required=True, type=int),
-            OpenApiParameter(name="version", description="版本号", required=True, type=int),
+            # 路径参数已经在URL中定义，这里不需要重复定义
         ]
     ),
 )
@@ -81,7 +80,7 @@ class OrderHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         description="比较指定订单的两个历史版本的差异",
         tags=["订单历史"],
         parameters=[
-            OpenApiParameter(name="order_id", description="订单ID", required=True, type=int),
+            # 路径参数已经在URL中定义，这里不需要重复定义
             OpenApiParameter(name="version1", description="第一个版本号", required=True, type=int),
             OpenApiParameter(name="version2", description="第二个版本号", required=True, type=int),
         ]
@@ -121,6 +120,17 @@ class OrderHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         differences = {}
         snapshot1 = history1.snapshot
         snapshot2 = history2.snapshot
+        
+        # 将JSON字符串解析为Python字典
+        import json
+        try:
+            snapshot1 = json.loads(snapshot1)
+            snapshot2 = json.loads(snapshot2)
+        except (TypeError, json.JSONDecodeError) as e:
+            return Response(
+                {"error": f"无法解析历史记录快照: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         # 获取所有键的并集
         all_keys = set(snapshot1.keys()) | set(snapshot2.keys())

@@ -1047,18 +1047,33 @@ class OrderViewSet(viewsets.ModelViewSet):
                 } for item in date_stats
             ]
         elif period == 'monthly':
-            # 按月统计
-            date_stats = queryset.extra(
-                select={'month': "DATE_FORMAT(created_at, '%Y-%m')"}
-            ).values('month').annotate(
+            # 按月统计 - 使用Django Extract函数替代MySQL特有的DATE_FORMAT
+            from django.db.models.functions import ExtractYear, ExtractMonth, Cast
+            from django.db.models import F, Value, CharField, Case, When
+            from django.db.models.functions import Concat
+
+            # 使用Extract提取年和月，然后用Concat组合成YYYY-MM格式
+            date_stats = queryset.annotate(
+                year=ExtractYear('created_at'),
+                month=ExtractMonth('created_at'),
+                month_str=Concat(
+                    F('year'), 
+                    Value('-'),
+                    Case(
+                        When(month__lt=10, then=Concat(Value('0'), F('month'), output_field=CharField())),
+                        default=Cast('month', output_field=CharField()),
+                    ),
+                    output_field=CharField()
+                )
+            ).values('month_str').annotate(
                 count=Count('id'),
                 amount=Sum('customer_total_amount'),
                 profit=Sum('customer_total_amount') - Sum('translator_fee') - Sum('project_fee')
-            ).order_by('month')
+            ).order_by('month_str')
             
             by_period = [
                 {
-                    'period': item['month'],
+                    'period': item['month_str'],
                     'orders': item['count'],
                     'amount': float(item['amount'] or 0),
                     'profit': float(item['profit'] or 0)

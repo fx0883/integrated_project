@@ -21,8 +21,7 @@ logger = logging.getLogger(__name__)
         description="获取特定客户的所有订单，支持分页、排序和筛选",
         tags=["客户订单"],
         parameters=[
-            OpenApiParameter(name="customer_id", description="客户ID", required=True, type=int),
-            # 移除了status参数
+            # 路径参数已经在URL中定义，这里不需要重复定义
             OpenApiParameter(name="payment_status", description="按支付状态筛选订单", required=False, type=str),
             OpenApiParameter(name="service_type", description="按服务类型筛选订单", required=False, type=str),
             OpenApiParameter(name="order_date_from", description="按订单日期范围筛选（起始）", required=False, type=str),
@@ -90,8 +89,7 @@ logger = logging.getLogger(__name__)
         description="获取特定客户的指定订单详情",
         tags=["客户订单"],
         parameters=[
-            OpenApiParameter(name="customer_id", description="客户ID", required=True, type=int),
-            OpenApiParameter(name="id", description="订单ID", required=True, type=int),
+            # 路径参数已经在URL中定义，这里不需要重复定义
         ],
         examples=[
             OpenApiExample(
