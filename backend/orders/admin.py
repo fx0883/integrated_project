@@ -4,6 +4,8 @@ from django.utils.html import format_html
 from django.urls import reverse
 from .models import Order, OrderHistory
 from django.db import models
+from common.admin import TenantAdminMixin
+import datetime
 
 class OrderHistoryInline(admin.TabularInline):
     model = OrderHistory
@@ -27,7 +29,7 @@ class OrderHistoryInline(admin.TabularInline):
     view_change_details.short_description = _("操作")
 
 @admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_display = (
         'order_number', 'customer', 'customer_contact', 'service_type', 'language',
         'customer_count', 'translation_count', 'customer_total_amount', 'translator_fee',
@@ -65,6 +67,8 @@ class OrderAdmin(admin.ModelAdmin):
                         old_value = getattr(old_obj, field)
                         if isinstance(old_value, (models.Model,)):
                             old_data[field] = old_value.pk
+                        elif isinstance(old_value, (datetime.date, datetime.datetime)):
+                            old_data[field] = old_value.isoformat()
                         else:
                             old_data[field] = old_value
             except Order.DoesNotExist:
@@ -88,6 +92,8 @@ class OrderAdmin(admin.ModelAdmin):
                     new_value = getattr(obj, field)
                     if isinstance(new_value, (models.Model,)):
                         new_value = new_value.pk
+                    elif isinstance(new_value, (datetime.date, datetime.datetime)):
+                        new_value = new_value.isoformat()
                     
                     changes[field] = {
                         'old': old_data[field],
@@ -159,7 +165,7 @@ class OrderAdmin(admin.ModelAdmin):
     )
 
 @admin.register(OrderHistory)
-class OrderHistoryAdmin(admin.ModelAdmin):
+class OrderHistoryAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_display = ('order', 'version', 'modified_by', 'modified_at')
     list_filter = ('modified_at',)
     search_fields = ('order__order_number',)
