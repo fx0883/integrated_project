@@ -50,8 +50,8 @@ class Order(BaseModel):
                                       help_text=_("如：份、字、天、半天、小时、页"))
     translation_count = models.CharField(_("翻译数量"), max_length=100, blank=True, null=True,
                                        help_text=_("与客户数量单位相同但单独计算"))
-    service_time = models.CharField(_("服务时间"), max_length=200, blank=True, null=True,
-                             help_text=_("如：笔译的约定交稿时间、口译的项目具体时间"))
+    service_time = models.DateField(_("服务时间"), blank=True, null=True,
+                             help_text=_("服务交付日期"))
     project_location = models.CharField(_("项目地点"), max_length=100, blank=True, null=True,
                                       help_text=_("如：城市、线上"))
     
@@ -216,7 +216,7 @@ class OrderHistory(models.Model):
             'language': order.language,
             'customer_count': order.customer_count,
             'translation_count': order.translation_count,
-            'service_time': order.service_time,
+            'service_time': order.service_time.isoformat() if order.service_time else None,
             'project_location': order.project_location,
             'customer_contact_id': order.customer_contact_id,
             'translator': order.translator,
@@ -304,7 +304,7 @@ class OrderHistory(models.Model):
                 'language': order.language,
                 'customer_count': order.customer_count,
                 'translation_count': order.translation_count,
-                'service_time': order.service_time,
+                'service_time': order.service_time.isoformat() if order.service_time else None,
                 'project_location': order.project_location,
                 'customer_contact_id': order.customer_contact_id,
                 'translator': order.translator,

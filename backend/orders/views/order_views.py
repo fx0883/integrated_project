@@ -320,23 +320,38 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not show_deleted:
             queryset = queryset.filter(is_deleted=False)
         
-        # 按客户ID筛选
+        # 筛选参数处理
+        payment_status = self.request.query_params.get('payment_status')
+        service_type = self.request.query_params.get('service_type')
+        language = self.request.query_params.get('language')
         customer_id = self.request.query_params.get('customer_id')
+        customer_type = self.request.query_params.get('customer_type')
+        service_time = self.request.query_params.get('service_time')
+        
+        if payment_status:
+            queryset = queryset.filter(payment_status=payment_status)
+        
+        if service_type:
+            queryset = queryset.filter(service_type=service_type)
+        
+        if language:
+            queryset = queryset.filter(language=language)
+        
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
         
-        # 按服务时间筛选
-        service_time = self.request.query_params.get('service_time')
-        if service_time:
-            queryset = queryset.filter(service_time__icontains=service_time)
+        if customer_type:
+            queryset = queryset.filter(customer_type=customer_type)
         
-        # 按下单日期范围筛选
-        order_date_from = self.request.query_params.get('order_date_from')
-        order_date_to = self.request.query_params.get('order_date_to')
-        if order_date_from:
-            queryset = queryset.filter(order_date__gte=order_date_from)
-        if order_date_to:
-            queryset = queryset.filter(order_date__lte=order_date_to)
+        if service_time:
+            try:
+                # 尝试解析为日期格式
+                from datetime import datetime
+                parsed_date = datetime.strptime(service_time, '%Y-%m-%d').date()
+                queryset = queryset.filter(service_time=parsed_date)
+            except ValueError:
+                # 如果解析失败，不进行筛选
+                pass
         
         return queryset
     
@@ -458,7 +473,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 '语种': order.language,
                 '客户数量': order.customer_count or '',
                 '翻译数量': order.translation_count or '',
-                '服务时间': order.service_time or '',
+                '服务时间': order.service_time.strftime('%Y-%m-%d') if order.service_time else '',
                 '项目地点': order.project_location or '',
                 '客户联系人': order.customer_contact.display_name if order.customer_contact else '',
                 '客户联系人昵称': order.customer_contact.nick_name if order.customer_contact and order.customer_contact.nick_name else '',
@@ -742,7 +757,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                             order_data[field] = 0
                     
                     # 处理所有可能的日期时间字段
-                    date_fields = ['order_date', 'payment_date', 'created_at', 'updated_at']
+                    date_fields = ['order_date', 'payment_date', 'service_time', 'created_at', 'updated_at']
                     
                     # 记录原始数据用于调试
                     logger.debug(f"第{index+1}行原始数据: {row}")
@@ -1154,7 +1169,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                     'name': order.customer.name
                 },
                 'order_date': order.order_date.strftime('%Y-%m-%d') if order.order_date else None,
-                'service_time': order.service_time,
+                'service_time': order.service_time.strftime('%Y-%m-%d') if order.service_time else None,
                 'service_type': order.service_type,
                 'language': order.language,
                 'customer_count': order.customer_count,
@@ -1280,6 +1295,18 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             # 处理日期字段，将字符串转换为日期对象
             date_fields = ['payment_date', 'order_date']
+            for field in date_fields:
+                if field in data and isinstance(data[field], str) and data[field].strip():
+                    try:
+                        from datetime import datetime
+                        # 转换字符串为日期对象
+                        data[field] = datetime.strptime(data[field], '%Y-%m-%d').date()
+                    except ValueError:
+                        return Response(
+                            {"error": f"日期格式错误: {field}={data[field]}，应为YYYY-MM-DD格式"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            date_fields = ['payment_date', 'order_date', 'service_time']
             for field in date_fields:
                 if field in data and isinstance(data[field], str) and data[field].strip():
                     try:
