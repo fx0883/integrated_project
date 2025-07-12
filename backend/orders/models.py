@@ -232,7 +232,7 @@ class OrderHistory(models.Model):
             'refund_amount': float(order.refund_amount),
             'refund_reason': order.refund_reason,
             'payment_status': order.payment_status,
-            'payment_date': order.payment_date.isoformat() if order.payment_date else None,
+            'payment_date': order.payment_date.isoformat() if order.payment_date and hasattr(order.payment_date, 'isoformat') else order.payment_date,
             'payment_method': order.payment_method,
             'payment_remarks': order.payment_remarks,
             'invoice_status': order.invoice_status,
@@ -267,3 +267,104 @@ class OrderHistory(models.Model):
             change_details=change_details_json,
             snapshot=snapshot_json
         )
+        
+    @staticmethod
+    def create_bulk_history_records(orders, user, action, message=None):
+        """
+        批量创建订单历史记录
+        
+        Args:
+            orders: 订单对象列表
+            user: 修改用户
+            action: 操作类型，如'create', 'update', 'delete'
+            message: 操作描述，默认为None
+            
+        Returns:
+            int: 创建的历史记录数量
+        """
+        history_records = []
+        now = timezone.now()
+        
+        for order in orders:
+            # 获取版本号
+            last_version = OrderHistory.objects.filter(order=order).order_by('-version').first()
+            new_version = 1 if not last_version else last_version.version + 1
+            
+            # 创建订单快照
+            snapshot = {
+                'id': order.id,
+                'order_number': order.order_number,
+                'customer_id': order.customer_id,
+                'customer_name': order.customer.name,
+                'source_platform': order.source_platform,
+                'project_manager': order.project_manager,
+                'customer_type': order.customer_type,
+                'order_date': order.order_date.isoformat() if order.order_date else None,
+                'service_type': order.service_type,
+                'language': order.language,
+                'customer_count': order.customer_count,
+                'translation_count': order.translation_count,
+                'service_time': order.service_time,
+                'project_location': order.project_location,
+                'customer_contact_id': order.customer_contact_id,
+                'translator': order.translator,
+                'customer_price': order.customer_price,
+                'customer_total_amount': float(order.customer_total_amount),
+                'translator_fee': float(order.translator_fee),
+                'translator_price': order.translator_price,
+                'translator_payment_status': order.translator_payment_status,
+                'translator_payment_method': order.translator_payment_method,
+                'project_fee': float(order.project_fee),
+                'project_details': order.project_details,
+                'cost_details': order.cost_details,
+                'refund_amount': float(order.refund_amount),
+                'refund_reason': order.refund_reason,
+                'payment_status': order.payment_status,
+                'payment_date': order.payment_date.isoformat() if order.payment_date and hasattr(order.payment_date, 'isoformat') else order.payment_date,
+                'payment_method': order.payment_method,
+                'payment_remarks': order.payment_remarks,
+                'invoice_status': order.invoice_status,
+                'invoice_info': order.invoice_info,
+                'contract_number': order.contract_number,
+                'contract_info': order.contract_info,
+                'contract_remarks': order.contract_remarks,
+                'delivery_address': order.delivery_address,
+                'order_address': order.order_address,
+                'remarks': order.remarks,
+                'follow_up_record': order.follow_up_record,
+                'tenant_id': order.tenant_id if order.tenant_id else None,
+                'created_at': order.created_at.isoformat() if order.created_at else None,
+                'updated_at': order.updated_at.isoformat() if order.updated_at else None,
+                'is_deleted': order.is_deleted,
+                # 记录当前执行更新的用户信息
+                'modified_by_id': user.id,
+                'modified_by_username': user.username,
+                'modified_by_display_name': user.display_name if hasattr(user, 'display_name') else user.username,
+                'modified_at': now.isoformat(),
+            }
+            
+            # 创建变更详情
+            change_details = {
+                'action': action,
+                'message': message or f'批量{action}操作'
+            }
+            
+            # 将字典转换为JSON字符串
+            snapshot_json = json.dumps(snapshot)
+            change_details_json = json.dumps(change_details)
+            
+            # 准备历史记录
+            history_records.append(OrderHistory(
+                order=order,
+                version=new_version,
+                modified_by=user,
+                modified_at=now,
+                change_details=change_details_json,
+                snapshot=snapshot_json
+            ))
+        
+        # 批量创建
+        if history_records:
+            created = OrderHistory.objects.bulk_create(history_records)
+            return len(created)
+        return 0

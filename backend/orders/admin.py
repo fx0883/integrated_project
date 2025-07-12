@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.urls import reverse
 from .models import Order, OrderHistory
+from django.db import models
 
 class OrderHistoryInline(admin.TabularInline):
     model = OrderHistory
@@ -48,6 +49,78 @@ class OrderAdmin(admin.ModelAdmin):
         """获取毛利率，并格式化为百分比形式"""
         return f"{obj.calculate_profit_rate():.2%}"
     get_profit_rate_display.short_description = "毛利率"
+    
+    def save_model(self, request, obj, form, change):
+        """保存模型时记录历史"""
+        # 判断是创建还是更新操作
+        is_create = obj.pk is None
+        
+        # 如果是更新，先记录旧值
+        old_data = {}
+        if not is_create:
+            try:
+                old_obj = Order.objects.get(pk=obj.pk)
+                for field in form.changed_data:
+                    if hasattr(old_obj, field):
+                        old_value = getattr(old_obj, field)
+                        if isinstance(old_value, (models.Model,)):
+                            old_data[field] = old_value.pk
+                        else:
+                            old_data[field] = old_value
+            except Order.DoesNotExist:
+                pass
+        
+        # 保存模型
+        super().save_model(request, obj, form, change)
+        
+        # 创建历史记录
+        if is_create:
+            OrderHistory.create_history_record(
+                order=obj,
+                user=request.user,
+                change_details={'action': 'create', 'message': '管理界面创建订单'}
+            )
+        else:
+            # 构建详细的变更记录
+            changes = {}
+            for field in form.changed_data:
+                if field in old_data:
+                    new_value = getattr(obj, field)
+                    if isinstance(new_value, (models.Model,)):
+                        new_value = new_value.pk
+                    
+                    changes[field] = {
+                        'old': old_data[field],
+                        'new': new_value
+                    }
+            
+            if changes:
+                OrderHistory.create_history_record(
+                    order=obj,
+                    user=request.user,
+                    change_details={'action': 'update', 'changes': changes, 'message': '管理界面更新订单'}
+                )
+    
+    def delete_model(self, request, obj):
+        """删除模型时记录历史"""
+        # 先记录历史
+        OrderHistory.create_history_record(
+            order=obj,
+            user=request.user,
+            change_details={'action': 'delete', 'message': '管理界面删除订单'}
+        )
+        # 执行删除
+        super().delete_model(request, obj)
+    
+    def delete_queryset(self, request, queryset):
+        """批量删除时记录历史"""
+        for obj in queryset:
+            OrderHistory.create_history_record(
+                order=obj,
+                user=request.user,
+                change_details={'action': 'delete', 'message': '管理界面批量删除订单'}
+            )
+        super().delete_queryset(request, queryset)
     
     fieldsets = (
         (_('订单基本信息'), {
