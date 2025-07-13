@@ -26,6 +26,13 @@ common:
   yes: Yes
   no: No
   close: Close
+  filter: Filter
+  advancedFilter: Advanced Filter
+  collapseFilter: Collapse Filter
+  startDate: Start Date
+  endDate: End Date
+  notSpecified: Not Specified
+  or: Or
   form:
     submit: Submit
     reset: Reset
@@ -46,6 +53,10 @@ common:
     confirmAction: Confirm action?
     yes: Yes
     no: No
+    numberRequired: Please input a number
+    invalidFormat: Invalid format
+    invalidYearRange: Invalid year range
+    lengthLimit: Length must be between {min} and {max}
   button:
     add: Add
     edit: Edit
@@ -77,6 +88,225 @@ common:
     reset: Reset
     page: "Page {page}"
     pageSize: "{size} items per page"
+
+order:
+  orderManagement: Order Management
+  orderList: Order List
+  createOrder: Create Order
+  editOrder: Edit Order
+  orderDetail: Order Details
+  statisticsTitle: Order Statistics
+  deleteConfirmTitle: Confirm Delete Order
+  deleteConfirmContent: Are you sure you want to delete order {number}?
+  batchDeleteConfirmTitle: Confirm Batch Delete
+  batchDeleteConfirmContent: Are you sure you want to delete {count} selected orders?
+  deleteSuccess: Order deleted successfully
+  batchDeleteSuccess: Batch delete successful
+  createSuccess: Order created successfully
+  updateSuccess: Order updated successfully
+  fetchFailed: Failed to fetch order
+  invalidId: Invalid order ID
+  noOrdersSelected: No orders selected
+  noOrderData: No order data
+  exportOrders: Export Orders
+  importOrders: Import Orders
+  batchDelete: Batch Delete
+  selectedCount: Selected {count} items
+  searchPlaceholder: Search order number, customer, etc.
+  filterPaymentStatus: Payment Status
+  filterServiceType: Service Type
+  selectCustomer: Select Customer
+  inputLanguage: Input Language
+  dateRange: Date Range
+  selectServiceTime: Select Service Time
+  historyVersions: Has {count} historical versions
+  
+  # Order History Related
+  historyRecords: History Records
+  changeLog: Change Log
+  versionCompare: Version Compare
+  versionNumber: Version Number
+  modifiedBy: Modified By
+  modifiedAt: Modified At
+  changeType: Change Type
+  changeDetails: Change Details
+  created: Created
+  updated: Updated
+  restored: Restored
+  noChangeDetails: No Change Details
+  compare: Compare
+  restore: Restore
+  historyVersion: History Version
+  currentVersion: Current Version
+  field: Field
+  from: From
+  to: To
+  version: Version
+  by: By
+  historyLoadFailed: Failed to load history records
+  versionLoadFailed: Failed to load version data
+  confirmRestoreVersion: Are you sure you want to restore the order to this version? This operation will overwrite the current order data.
+  restoreVersion: Restore Version
+  restoreVersionSuccess: Version restored successfully
+  restoreVersionFailed: Failed to restore version
+  
+  # Customer/Member Order Integration
+  customerOrders: Customer Orders
+  memberOrders: Member Orders
+  customerOrdersLoadFailed: Failed to load customer orders
+  memberOrdersLoadFailed: Failed to load member orders
+  
+  # Batch Update Related
+  batchUpdate: Batch Update
+  batchUpdateTitle: Batch Update Orders
+  selectedOrdersInfo: Selected {count} orders
+  selectFieldsToUpdate: Select Fields to Update
+  fieldsToUpdate: Update Fields
+  updateResult: Update Result
+  batchUpdateSuccess: Batch update successful
+  batchUpdatePartial: Partial update successful, {success} succeeded, {failed} failed
+  batchUpdateFailed: Batch update failed
+  updateAgain: Update Again
+  noFieldsSelected: No fields selected
+  orderId: Order ID
+  
+  # Batch Export Related
+  exportSelected: Export Selected
+  exportAllSuccess: Export all orders successful
+  exportSelectedSuccess: Export {count} selected orders successful
+  exportFailed: Export failed
+  
+  # Batch Delete Related
+  batchDeletePartial: Partial delete successful, {success} succeeded, {failed} failed
+  batchDeleteFailed: Batch delete failed
+  
+  # Import Related
+  importDialogTitle: Import Orders
+  importDialogDescription: Please upload an Excel file that matches the template format. You can click "Download Template" to get the standard import template.
+  downloadTemplate: Download Template
+  downloadTemplateFailed: Failed to download template
+  selectFile: Select File
+  dragFileHere: Drag file here
+  uploadProgress: Upload Progress
+  uploadingFile: "Uploading file: {name}"
+  importSuccess: Orders imported successfully
+  importFailed: Failed to import orders
+  importResult: Import Result
+  successCount: Success Count
+  failedCount: Failed Count
+  totalCount: Total Count
+  errorDetails: Error Details
+  rowNumber: Row Number
+  errorMessage: Error Message
+  resetUpload: Reset Upload
+  noFileSelected: No file selected
+  invalidFileType: Invalid file type, please upload Excel file (.xlsx or .xls)
+  fileTooLarge: File is too large, please upload a file smaller than 10MB
+  confirmCancelUpload: Confirm cancel upload? The ongoing upload will be interrupted.
+  
+  # Chart and Statistics Related
+  orderTrendChart: Order Trend Analysis
+  orderStatusDistribution: Order Payment Status Distribution
+  serviceTypeDistribution: Service Type Distribution
+  period: Period
+  dailyPeriod: Daily
+  weeklyPeriod: Weekly
+  monthlyPeriod: Monthly
+  quarterlyPeriod: Quarterly
+  yearlyPeriod: Yearly
+  weekLabel: "Week {week}"
+  monthLabel: "Month {month}"
+  loadingChart: Loading chart...
+  fetchChartDataFailed: Failed to fetch chart data
+  totalOrders: Total Orders
+  totalAmount: Total Amount
+  totalProfit: Total Profit
+  avgProfitRate: Average Profit Rate
+  orderCount: Order Count
+  orderAmount: Order Amount
+  chartProfit: Chart Profit
+  chartProfitRate: Chart Profit Rate
+
+  # Order Basic Fields
+  orderNumber: Order Number
+  customer: Customer
+  contactPerson: Contact Person
+  createdAt: Created At
+  serviceType: Service Type
+  language: Language
+  amount: Amount
+  paymentStatus: Payment Status
+  orderDate: Order Date
+  serviceTime: Service Time
+  customerCount: Customer Count
+  translationCount: Translation Count
+  projectLocation: Project Location
+  sourcePlatform: Source Platform
+  customerType: Customer Type
+
+  # Service Types
+  serviceTypeDocument: Document Translation
+  serviceTypeInterpretation: Interpretation Service
+  serviceTypeProofreading: Proofreading Service
+  serviceTypeLocalization: Localization Service
+  serviceTypeOther: Other Service
+
+  # Payment Status
+  paymentStatusPaid: Paid
+  paymentStatusUnpaid: Unpaid
+  paymentStatusPartial: Partial Payment
+  paymentStatusRefunded: Refunded
+  paymentStatusCancelled: Cancelled
+
+  # Invoice Status
+  invoiceStatusIssued: Issued
+  invoiceStatusPending: Pending
+  invoiceStatusNotRequired: Not Required
+
+  # Tab Titles
+  basicInfo: Basic Information
+  priceAndPayment: Price and Payment
+  additionalInfo: Additional Information
+  remarksAndRecords: Remarks and Records
+
+  # Order Detail Fields
+  translator: Translator
+  customerPrice: Customer Price
+  customerTotalAmount: Customer Total Amount
+  translatorFee: Translator Fee
+  translatorPrice: Translator Price
+  translatorPaymentStatus: Translator Payment Status
+  translatorPaymentMethod: Translator Payment Method
+  projectFee: Project Fee
+  profitInfo: Profit Information
+  profit: Profit
+  profitRate: Profit Rate
+  paymentInfo: Payment Information
+  paymentDate: Payment Date
+  paymentMethod: Payment Method
+  paymentRemarks: Payment Remarks
+  projectManager: Project Manager
+  invoiceStatus: Invoice Status
+  invoiceInfo: Invoice Information
+  projectDetails: Project Details
+  costDetails: Cost Details
+  refundAmount: Refund Amount
+  refundReason: Refund Reason
+  contractNumber: Contract Number
+  contractInfo: Contract Information
+  contractRemarks: Contract Remarks
+  deliveryAddress: Delivery Address
+  orderAddress: Order Address
+  remarks: Remarks
+  followUpRecord: Follow-up Record
+  
+  # Form Groups
+  formBasicInfo: Basic Information
+  formPriceInfo: Price Information
+  formPaymentInfo: Payment Information
+  formInvoiceInfo: Invoice Information
+  formContractInfo: Contract Information
+  formRemarks: Remarks
 
 login:
   title: Login
@@ -582,25 +812,27 @@ cms:
 
 menus:
   pureHome: Home
-  pureTenantManagement: Tenant Management
-  pureTenantList: Tenant List
-  articleVersion: Article Version
-  CategroyDetail: Category Detail
-  pureAbnormal: Error Pages
-  pureFourZeroFour: 404
-  pureFourZeroThree: 403
-  pureFiveZeroZero: 500
+  pureLogin: Login
+  purePermission: Permission
+  purePermissionPage: Page Permission
+  purePermissionButton: Button Permission
+  purePermissionButtonRouter: Router Button Permission
+  purePermissionButtonLogin: Login Button Permission
+  pureTenant: Tenant Management
+  pureAdminUser: Admin Management
+  pureCustomer: Customer Management
+  pureMember: Member Management
+  pureMenu: Menu Management
   pureDashboard: Dashboard
-  pureCms: CMS Management
+  pureCms: Content Management
   pureCmsArticle: Article Management
   pureCmsCategory: Category Management
   pureCmsTag: Tag Management
   pureCmsComment: Comment Management
-  pureMenuManagement: Menu Management
+  pureOrder: Order Management
   pureMenuList: Menu List
   pureAdminUserManagement: Admin User Management
   pureAdminUserList: Admin User List
-  pureLogin: Login
 
 adminUser:
   management: Admin User Management

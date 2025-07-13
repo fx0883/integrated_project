@@ -26,6 +26,13 @@ common:
   yes: 是
   no: 否
   close: 关闭
+  filter: 筛选
+  advancedFilter: 高级筛选
+  collapseFilter: 收起筛选
+  startDate: 开始日期
+  endDate: 结束日期
+  notSpecified: 未指定
+  or: 或者
   form:
     submit: 提交
     reset: 重置
@@ -46,6 +53,10 @@ common:
     confirmAction: 确认操作？
     yes: 是
     no: 否
+    numberRequired: 请输入数字
+    invalidFormat: 格式无效
+    invalidYearRange: 年份范围无效
+    lengthLimit: 长度必须在{min}到{max}之间
   button:
     add: 添加
     edit: 编辑
@@ -77,6 +88,224 @@ common:
     reset: 重置
     page: "第 {page} 页"
     pageSize: "每页 {size} 条"
+
+order:
+  orderManagement: 订单管理
+  orderList: 订单列表
+  createOrder: 创建订单
+  editOrder: 编辑订单
+  orderDetail: 订单详情
+  statisticsTitle: 订单统计
+  deleteConfirmTitle: 确认删除订单
+  deleteConfirmContent: 确认要删除订单 {number} 吗？
+  batchDeleteConfirmTitle: 确认批量删除
+  batchDeleteConfirmContent: 确认要删除选中的 {count} 个订单吗？
+  deleteSuccess: 订单删除成功
+  batchDeleteSuccess: 批量删除成功
+  createSuccess: 订单创建成功
+  updateSuccess: 订单更新成功
+  fetchFailed: 获取订单失败
+  invalidId: 无效的订单ID
+  noOrdersSelected: 未选中任何订单
+  noOrderData: 无订单数据
+  exportOrders: 导出订单
+  importOrders: 导入订单
+  batchDelete: 批量删除
+  selectedCount: 已选中 {count} 项
+  searchPlaceholder: 搜索订单编号、客户等
+  filterPaymentStatus: 支付状态
+  filterServiceType: 服务类型
+  selectCustomer: 选择客户
+  inputLanguage: 输入语种
+  dateRange: 日期范围
+  selectServiceTime: 选择服务时间
+  historyVersions: 有 {count} 个历史版本
+  
+  # 订单历史相关翻译
+  historyRecords: 历史记录
+  changeLog: 变更日志
+  versionCompare: 版本对比
+  versionNumber: 版本号
+  modifiedBy: 修改人
+  modifiedAt: 修改时间
+  changeType: 变更类型
+  changeDetails: 变更详情
+  created: 创建
+  updated: 更新
+  restored: 恢复
+  noChangeDetails: 无变更详情
+  compare: 对比
+  restore: 恢复
+  historyVersion: 历史版本
+  currentVersion: 当前版本
+  field: 字段
+  from: 从
+  to: 到
+  version: 版本
+  by: 由
+  historyLoadFailed: 加载历史记录失败
+  versionLoadFailed: 加载版本数据失败
+  confirmRestoreVersion: 确定要将订单恢复到此版本吗？此操作会覆盖当前订单数据。
+  restoreVersion: 恢复版本
+  restoreVersionSuccess: 恢复版本成功
+  restoreVersionFailed: 恢复版本失败
+  
+  # 客户/联系人订单关联
+  customerOrders: 客户订单
+  memberOrders: 会员订单
+  customerOrdersLoadFailed: 加载客户订单失败
+  memberOrdersLoadFailed: 加载会员订单失败
+  
+  # 批量更新相关
+  batchUpdate: 批量更新
+  batchUpdateTitle: 批量更新订单
+  selectedOrdersInfo: 已选中 {count} 个订单
+  selectFieldsToUpdate: 选择要更新的字段
+  fieldsToUpdate: 更新字段
+  updateResult: 更新结果
+  batchUpdateSuccess: 批量更新成功
+  batchUpdatePartial: 部分更新成功，成功 {success} 个，失败 {failed} 个
+  batchUpdateFailed: 批量更新失败
+  updateAgain: 再次更新
+  noFieldsSelected: 未选择任何字段
+  orderId: 订单ID
+  
+  # 批量导出相关
+  exportSelected: 导出选中
+  exportAllSuccess: 导出所有订单成功
+  exportSelectedSuccess: 导出选中的 {count} 个订单成功
+  exportFailed: 导出失败
+  
+  # 批量删除相关
+  batchDeletePartial: 部分删除成功，成功 {success} 个，失败 {failed} 个
+  batchDeleteFailed: 批量删除失败
+  
+  # 图表和统计相关
+  orderTrendChart: 订单趋势分析
+  orderStatusDistribution: 订单支付状态分布
+  serviceTypeDistribution: 服务类型分布
+  period: 周期
+  dailyPeriod: 日报
+  weeklyPeriod: 周报
+  monthlyPeriod: 月报
+  quarterlyPeriod: 季报
+  yearlyPeriod: 年报
+  weekLabel: 第{week}周
+  monthLabel: "{month}月"
+  loadingChart: 加载图表中...
+  fetchChartDataFailed: 获取图表数据失败
+  totalOrders: 订单总数
+  totalAmount: 订单总金额
+  totalProfit: 总利润
+  avgProfitRate: 平均利润率
+  orderCount: 订单数量
+  orderAmount: 订单金额
+  chartProfit: 图表利润
+  chartProfitRate: 图表利润率
+
+  # 订单基本字段
+  orderNumber: 订单编号
+  customer: 客户
+  contactPerson: 联系人
+  createdAt: 创建时间
+  serviceType: 服务类型
+  language: 语种
+  amount: 金额
+  paymentStatus: 支付状态
+  orderDate: 下单日期
+  serviceTime: 服务时间
+  customerCount: 客户数量
+  translationCount: 翻译数量
+  projectLocation: 项目地点
+  sourcePlatform: 来源平台
+  customerType: 客户类型
+
+  # 服务类型
+  serviceTypeDocument: 文档翻译
+  serviceTypeInterpretation: 口译服务
+  serviceTypeProofreading: 校对服务
+  serviceTypeLocalization: 本地化服务
+  serviceTypeOther: 其他服务
+
+  # 支付状态
+  paymentStatusPaid: 已支付
+  paymentStatusUnpaid: 未支付
+  paymentStatusPartial: 部分支付
+  paymentStatusRefunded: 已退款
+  paymentStatusCancelled: 已取消
+
+  # 发票状态
+  invoiceStatusIssued: 已开具
+  invoiceStatusPending: 待开具
+  invoiceStatusNotRequired: 无需开具
+
+  # 标签页标题
+  basicInfo: 基本信息
+  priceAndPayment: 价格和支付信息
+  additionalInfo: 附加信息
+  remarksAndRecords: 备注和记录
+
+  # 订单详细字段
+  translator: 译员
+  customerPrice: 客户单价
+  customerTotalAmount: 客户总价
+  translatorFee: 译员费用
+  translatorPrice: 译员单价
+  translatorPaymentStatus: 译员支付状态
+  translatorPaymentMethod: 译员支付方式
+  projectFee: 项目费用
+  profitInfo: 利润信息
+  profit: 毛利
+  profitRate: 毛利率
+  paymentInfo: 支付信息
+  paymentDate: 支付日期
+  paymentMethod: 支付方式
+  paymentRemarks: 支付备注
+  projectManager: 项目负责人
+  invoiceStatus: 发票状态
+  invoiceInfo: 发票信息
+  projectDetails: 项目明细
+  costDetails: 费用明细
+  refundAmount: 退款金额
+  refundReason: 退款原因
+  contractNumber: 合同编号
+  contractInfo: 合同信息
+  contractRemarks: 合同备注
+  deliveryAddress: 收件地址
+  orderAddress: 订单地址
+  remarks: 备注
+  followUpRecord: 回访记录
+  
+  # 表单分组
+  formBasicInfo: 基本信息
+  formPriceInfo: 价格信息
+  formPaymentInfo: 支付信息
+  formInvoiceInfo: 发票信息
+  formContractInfo: 合同信息
+  formRemarks: 备注信息
+
+  importDialogTitle: 导入订单
+  importDialogDescription: 请上传符合模板格式的Excel文件。您可以点击"下载模板"按钮获取标准导入模板。
+  downloadTemplate: 下载模板
+  downloadTemplateFailed: 下载模板失败
+  selectFile: 选择文件
+  dragFileHere: 拖拽文件到此处
+  uploadProgress: 上传进度
+  uploadingFile: 正在上传文件：{name}
+  importSuccess: 订单导入成功
+  importFailed: 订单导入失败
+  importResult: 导入结果
+  successCount: 成功数量
+  failedCount: 失败数量
+  totalCount: 总数量
+  errorDetails: 错误详情
+  rowNumber: 行号
+  errorMessage: 错误信息
+  resetUpload: 重新上传
+  noFileSelected: 未选择文件
+  invalidFileType: 文件类型无效，请上传Excel文件(.xlsx或.xls)
+  fileTooLarge: 文件过大，请上传小于10MB的文件
+  confirmCancelUpload: 确认取消上传？正在进行的上传将被中断。
 
 login:
   title: 登录
@@ -600,25 +829,20 @@ cms:
 
 menus:
   pureHome: 首页
-  pureTenantManagement: 租户管理
-  pureTenantList: 租户列表
-  articleVersion: 文章版本
-  CategroyDetail: 分类详情
-  pureAbnormal: 异常页面
-  pureFourZeroFour: 404
-  pureFourZeroThree: 403
-  pureFiveZeroZero: 500
-  pureDashboard: 仪表盘
-  pureCms: CMS管理
-  pureCmsArticle: 文章管理
-  pureCmsCategory: 分类管理
-  pureCmsTag: 标签管理
-  pureCmsComment: 评论管理
-  pureMenuManagement: 菜单管理
-  pureMenuList: 菜单列表
-  pureAdminUserManagement: 管理员用户管理
-  pureAdminUserList: 管理员用户列表
   pureLogin: 登录
+  purePermission: 权限管理
+  purePermissionPage: 页面权限
+  purePermissionButton: 按钮权限
+  purePermissionButtonRouter: 路由按钮权限
+  purePermissionButtonLogin: 登录按钮权限
+  pureTenant: 租户管理
+  pureAdminUser: 管理员管理
+  pureCustomer: 客户管理
+  pureMember: 会员管理
+  pureMenu: 菜单管理
+  pureDashboard: 数据大盘
+  pureCms: 内容管理
+  pureOrder: 订单管理
 
 adminUser:
   management: 管理员用户管理

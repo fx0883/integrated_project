@@ -21,6 +21,7 @@ import type {
   CustomerTenantLinkCreateParams
 } from "@/types/customer";
 import logger from "@/utils/logger";
+import CustomerOrderList from "@/components/OrderManagement/CustomerOrderList.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -698,6 +699,10 @@ onMounted(() => {
             </el-table-column>
           </el-table>
         </el-card>
+      </el-tab-pane>
+
+      <el-tab-pane :label="t('order.customerOrders')" name="orders">
+        <CustomerOrderList :customer-id="customerId" />
       </el-tab-pane>
     </el-tabs>
 

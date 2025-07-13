@@ -23,114 +23,127 @@
     <el-row :gutter="16">
       <!-- 基本信息卡片 -->
       <el-col :span="16">
-        <el-card class="detail-card" v-loading="detailLoading">
-          <template #header>
-            <div class="card-header">
-              <h3>{{ $t("member.basicInfo") }}</h3>
-            </div>
-          </template>
-          <div class="member-info" v-if="memberData">
-            <el-descriptions :column="2" border>
-              <el-descriptions-item :label="$t('member.id')">
-                {{ memberData.id }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.username')">
-                {{ memberData.username }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.name')">
-                {{
-                  memberData.nick_name ||
-                  (memberData.first_name && memberData.last_name
-                    ? `${memberData.first_name} ${memberData.last_name}`
-                    : memberData.first_name ||
-                      memberData.last_name ||
-                      $t("common.notSet"))
-                }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.email')">
-                {{ memberData.email }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.phone')">
-                {{ memberData.phone || $t("common.notSet") }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.status')">
-                <MemberStatusTag :status="memberData.status" />
-              </el-descriptions-item>
-              <el-descriptions-item
-                :label="$t('member.tenant')"
-                v-if="isSuperAdmin"
-              >
-                {{ memberData.tenant_name || $t("common.notSet") }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.createdAt')">
-                {{ memberData.created_at }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.lastLogin')">
-                {{ memberData.last_login || $t("common.never") }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('member.notes')" :span="2">
-                {{ memberData.notes || $t("common.noNotes") }}
-              </el-descriptions-item>
-            </el-descriptions>
-          </div>
-        </el-card>
+        <el-card class="detail-card">
+          <el-tabs v-model="activeTab">
+            <el-tab-pane :label="$t('member.basicInfo')" name="basic">
+              <div v-loading="detailLoading">
+                <div class="member-info" v-if="memberData">
+                  <el-descriptions :column="2" border>
+                    <el-descriptions-item :label="$t('member.id')">
+                      {{ memberData.id }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.username')">
+                      {{ memberData.username }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.name')">
+                      {{
+                        memberData.nick_name ||
+                        (memberData.first_name && memberData.last_name
+                          ? `${memberData.first_name} ${memberData.last_name}`
+                          : memberData.first_name ||
+                            memberData.last_name ||
+                            $t("common.notSet"))
+                      }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.email')">
+                      {{ memberData.email }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.phone')">
+                      {{ memberData.phone || $t("common.notSet") }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.status')">
+                      <MemberStatusTag :status="memberData.status" />
+                    </el-descriptions-item>
+                    <el-descriptions-item
+                      :label="$t('member.tenant')"
+                      v-if="isSuperAdmin"
+                    >
+                      {{ memberData.tenant_name || $t("common.notSet") }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.createdAt')">
+                      {{ memberData.created_at }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.lastLogin')">
+                      {{ memberData.last_login || $t("common.never") }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('member.notes')" :span="2">
+                      {{ memberData.notes || $t("common.noNotes") }}
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
+              </div>
+            </el-tab-pane>
 
-        <!-- 客户关系卡片 -->
-        <el-card class="detail-card" v-loading="relationLoading">
-          <template #header>
-            <div class="card-header">
-              <h3>{{ $t("member.customerRelations") }}</h3>
-              <el-button
-                type="primary"
-                size="small"
-                @click="handleAddRelation"
-                v-if="hasManagePermission"
-              >
-                <el-icon><Plus /></el-icon>
-                {{ $t("member.addRelation") }}
-              </el-button>
-            </div>
-          </template>
-          <div class="relation-list">
-            <el-table :data="customerRelations" style="width: 100%" border>
-              <el-table-column
-                prop="customer.name"
-                :label="$t('member.customer')"
-                min-width="150"
-                show-overflow-tooltip
-              />
-              <el-table-column
-                prop="customer.type"
-                :label="$t('member.customerType')"
-                min-width="120"
-                show-overflow-tooltip
-              >
-                <template #default="{ row }">
-                  {{ formatCustomerType(row.customer.type) }}
-                </template>
-              </el-table-column>
-              <el-table-column
-                :label="$t('common.operations')"
-                width="120"
-                fixed="right"
-                v-if="hasManagePermission"
-              >
-                <template #default="{ row }">
+            <el-tab-pane
+              :label="$t('member.customerRelations')"
+              name="relations"
+            >
+              <div v-loading="relationLoading">
+                <div class="card-header">
                   <el-button
-                    link
-                    type="danger"
+                    type="primary"
                     size="small"
-                    @click="handleDeleteRelation(row)"
+                    @click="handleAddRelation"
+                    v-if="hasManagePermission"
                   >
-                    {{ $t("common.delete") }}
+                    <el-icon><Plus /></el-icon>
+                    {{ $t("member.addRelation") }}
                   </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <div class="empty-relation" v-if="customerRelations.length === 0">
-              {{ $t("member.noRelations") }}
-            </div>
-          </div>
+                </div>
+                <div class="relation-list">
+                  <el-table
+                    :data="customerRelations"
+                    style="width: 100%"
+                    border
+                  >
+                    <el-table-column
+                      prop="customer.name"
+                      :label="$t('member.customer')"
+                      min-width="150"
+                      show-overflow-tooltip
+                    />
+                    <el-table-column
+                      prop="customer.type"
+                      :label="$t('member.customerType')"
+                      min-width="120"
+                      show-overflow-tooltip
+                    >
+                      <template #default="{ row }">
+                        {{ formatCustomerType(row.customer.type) }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column
+                      :label="$t('common.operations')"
+                      width="120"
+                      fixed="right"
+                      v-if="hasManagePermission"
+                    >
+                      <template #default="{ row }">
+                        <el-button
+                          link
+                          type="danger"
+                          size="small"
+                          @click="handleDeleteRelation(row)"
+                        >
+                          {{ $t("common.delete") }}
+                        </el-button>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                  <div
+                    class="empty-relation"
+                    v-if="customerRelations.length === 0"
+                  >
+                    {{ $t("member.noRelations") }}
+                  </div>
+                </div>
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane :label="$t('order.memberOrders')" name="orders">
+              <MemberOrderList :member-id="memberId" />
+            </el-tab-pane>
+          </el-tabs>
         </el-card>
       </el-col>
 
@@ -242,6 +255,7 @@ import {
   ConfirmDialog
 } from "@/components/MemberManagement";
 import logger from "@/utils/logger";
+import MemberOrderList from "@/components/OrderManagement/MemberOrderList.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -520,6 +534,9 @@ const formatCustomerType = (type: string) => {
   };
   return typeMap[type] || type;
 };
+
+// 添加activeTab的状态变量
+const activeTab = ref("basic");
 
 // 初始化
 onMounted(() => {
