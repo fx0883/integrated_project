@@ -363,6 +363,16 @@ const formatDateTime = (dateTimeStr: string) => {
       />
 
       <el-table-column
+        prop="customer_contact_name"
+        :label="t('order.customerContact')"
+        min-width="150"
+      >
+        <template #default="scope">
+          {{ scope.row.customer_contact_info?.display_name || "-" }}
+        </template>
+      </el-table-column>
+
+      <el-table-column
         prop="service_type"
         :label="t('order.serviceType')"
         min-width="120"
@@ -372,6 +382,12 @@ const formatDateTime = (dateTimeStr: string) => {
         prop="language"
         :label="t('order.language')"
         min-width="100"
+      />
+
+      <el-table-column
+        prop="service_time"
+        :label="t('order.serviceTime')"
+        min-width="120"
       />
 
       <el-table-column
@@ -393,17 +409,6 @@ const formatDateTime = (dateTimeStr: string) => {
             :status="scope.row.payment_status"
             size="small"
           />
-        </template>
-      </el-table-column>
-
-      <el-table-column
-        prop="created_at"
-        :label="t('order.createdAt')"
-        min-width="150"
-        sortable="custom"
-      >
-        <template #default="scope">
-          {{ formatDateTime(scope.row.created_at) }}
         </template>
       </el-table-column>
 

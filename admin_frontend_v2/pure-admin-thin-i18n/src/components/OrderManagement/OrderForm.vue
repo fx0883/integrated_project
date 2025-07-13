@@ -69,6 +69,108 @@ const formData = reactive<OrderCreateUpdateParams>({
   follow_up_record: props.order?.follow_up_record || ""
 });
 
+// 加载客户列表
+const loadCustomerList = async () => {
+  try {
+    await customerStore.fetchCustomerList();
+    customerList.value = customerStore.getCustomers.map(customer => ({
+      value: customer.id,
+      label: customer.name
+    }));
+
+    // 客户列表加载完成后，尝试匹配当前订单的客户
+    if (props.order && props.order.customer) {
+      findAndSetCustomer(props.order.customer);
+    }
+  } catch (error) {
+    console.error("加载客户列表失败", error);
+  }
+};
+
+// 根据客户ID查找并设置客户
+const findAndSetCustomer = customerId => {
+  // 如果customerId是对象，提取ID
+  const id =
+    typeof customerId === "object" && customerId !== null
+      ? customerId.id
+      : customerId;
+
+  // 查找客户列表中是否有匹配项
+  const customerItem = customerList.value.find(item => item.value === id);
+
+  if (customerItem) {
+    // 找到匹配项，设置客户
+    formData.customer = customerItem.value;
+
+    // 同时加载该客户的联系人
+    loadCustomerContactPersons(customerItem.value);
+  } else {
+    // 没找到匹配项，使用ID作为值
+    formData.customer = id;
+    console.warn(`未在客户列表中找到ID为${id}的客户`);
+
+    // 尝试加载联系人
+    loadCustomerContactPersons(id);
+  }
+};
+
+// 加载客户联系人列表
+const loadCustomerContactPersons = async customerId => {
+  if (!customerId) {
+    contactPersonList.value = [];
+    return;
+  }
+
+  try {
+    // 确保传入的是ID值而不是对象
+    const id = typeof customerId === "object" ? customerId.id : customerId;
+    await customerStore.fetchCustomerMemberRelations(id);
+    contactPersonList.value = customerStore.getMemberRelations.map(
+      relation => ({
+        value: relation.id,
+        label: relation.member_name || `联系人${relation.id}`
+      })
+    );
+  } catch (error) {
+    console.error("加载客户联系人失败", error);
+    contactPersonList.value = [];
+  }
+};
+
+// 监听客户变化，加载对应的联系人
+watch(
+  () => formData.customer,
+  async newCustomerId => {
+    if (newCustomerId) {
+      formData.customer_contact = undefined; // 清空之前选择的联系人
+      await loadCustomerContactPersons(newCustomerId);
+    } else {
+      contactPersonList.value = [];
+    }
+  }
+);
+
+// 处理客户数据，确保是ID类型
+const processCustomerData = () => {
+  // 检查customer是否为对象类型
+  if (typeof formData.customer === "object" && formData.customer !== null) {
+    // 如果是对象，提取ID并查找匹配项
+    findAndSetCustomer(formData.customer);
+  } else if (formData.customer) {
+    // 如果是ID，也尝试查找匹配项
+    findAndSetCustomer(formData.customer);
+  }
+
+  // 检查customer_contact是否为对象类型
+  if (
+    typeof formData.customer_contact === "object" &&
+    formData.customer_contact !== null
+  ) {
+    // 如果是对象，提取ID
+    formData.customer_contact = formData.customer_contact.id;
+  }
+};
+
 // 监听props变化，更新表单数据
 watch(
   () => props.order,
@@ -113,6 +215,14 @@ watch(
       formData.order_address = newVal.order_address || "";
       formData.remarks = newVal.remarks || "";
       formData.follow_up_record = newVal.follow_up_record || "";
+
+      // 处理客户和联系人数据
+      processCustomerData();
+
+      // 如果有客户ID，加载联系人数据
+      if (formData.customer) {
+        loadCustomerContactPersons(formData.customer);
+      }
     }
   }
 );
@@ -206,21 +316,16 @@ const invoiceStatusOptions = [
 // 客户列表
 const customerList = ref([]);
 
-// 加载客户列表
-const loadCustomerList = async () => {
-  try {
-    await customerStore.fetchCustomerList();
-    customerList.value = customerStore.getCustomers.map(customer => ({
-      value: customer.id,
-      label: customer.name
-    }));
-  } catch (error) {
-    console.error("加载客户列表失败", error);
-  }
-};
+// 客户联系人列表
+const contactPersonList = ref([]);
 
 // 初始化加载客户列表
 loadCustomerList();
+
+// 如果有初始客户ID，加载该客户的联系人
+if (formData.customer) {
+  loadCustomerContactPersons(formData.customer);
+}
 
 // 提交表单
 const handleSubmit = async () => {
@@ -228,7 +333,27 @@ const handleSubmit = async () => {
 
   await formRef.value.validate((valid, fields) => {
     if (valid) {
-      emit("submit", { ...formData });
+      // 创建表单数据的副本
+      const formDataToSubmit = { ...formData };
+
+      // 确保customer是ID值而不是对象
+      if (
+        typeof formDataToSubmit.customer === "object" &&
+        formDataToSubmit.customer !== null
+      ) {
+        formDataToSubmit.customer = formDataToSubmit.customer.id;
+      }
+
+      // 确保customer_contact是ID值而不是对象
+      if (
+        typeof formDataToSubmit.customer_contact === "object" &&
+        formDataToSubmit.customer_contact !== null
+      ) {
+        formDataToSubmit.customer_contact =
+          formDataToSubmit.customer_contact.id;
+      }
+
+      emit("submit", formDataToSubmit);
     }
   });
 };
@@ -289,6 +414,26 @@ const calculateProfit = () => {
             >
               <el-option
                 v-for="item in customerList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item
+            :label="t('order.customerContact')"
+            prop="customer_contact"
+          >
+            <el-select
+              v-model="formData.customer_contact"
+              filterable
+              class="w-full"
+              :placeholder="t('order.selectContact')"
+              :disabled="!formData.customer"
+            >
+              <el-option
+                v-for="item in contactPersonList"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"

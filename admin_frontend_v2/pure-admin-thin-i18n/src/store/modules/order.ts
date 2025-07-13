@@ -200,6 +200,29 @@ export const useOrderStore = defineStore("order", {
         const response = await getOrderDetail(id);
         if (response.success) {
           this.currentOrder = response.data;
+          
+          // 确保有客户名称
+          if (!this.currentOrder.customer_name && this.currentOrder.customer) {
+            try {
+              // 这里可以添加获取客户名称的额外API调用
+              // 或者从客户缓存中获取
+              logger.info(`订单 ${id} 缺少客户名称信息`);
+            } catch (err) {
+              logger.error("获取客户名称失败", err);
+            }
+          }
+          
+          // 确保有联系人信息
+          if (this.currentOrder.customer_contact && !this.currentOrder.customer_contact_info) {
+            try {
+              // 这里可以添加获取联系人信息的额外API调用
+              // 或者从联系人缓存中获取
+              logger.info(`订单 ${id} 缺少联系人信息`);
+            } catch (err) {
+              logger.error("获取联系人信息失败", err);
+            }
+          }
+          
           return response;
         } else {
           this.error = response.message || "获取订单详情失败";

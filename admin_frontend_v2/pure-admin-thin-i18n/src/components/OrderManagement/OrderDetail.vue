@@ -26,11 +26,44 @@ const profitInfo = computed(() => {
   };
 });
 
+// 计算客户名称
+const customerName = computed(() => {
+  if (
+    typeof props.order.customer === "object" &&
+    props.order.customer !== null &&
+    props.order.customer.name
+  ) {
+    return props.order.customer.name;
+  }
+  return props.order.customer_name || t("common.notSpecified");
+});
+
 // 计算客户联系人名称
 const contactPersonName = computed(() => {
-  return (
-    props.order.customer_contact_info?.display_name || t("common.notSpecified")
-  );
+  // 如果customer_contact_info存在且有display_name
+  if (
+    props.order.customer_contact_info &&
+    props.order.customer_contact_info.display_name
+  ) {
+    return props.order.customer_contact_info.display_name;
+  }
+  // 如果customer_contact是对象且有name或display_name
+  else if (
+    typeof props.order.customer_contact === "object" &&
+    props.order.customer_contact !== null
+  ) {
+    return (
+      props.order.customer_contact.display_name ||
+      props.order.customer_contact.name ||
+      t("common.notSpecified")
+    );
+  }
+  // 如果是ID
+  else if (props.order.customer_contact) {
+    return `${t("common.contact")} ${props.order.customer_contact}`;
+  } else {
+    return t("common.notSpecified");
+  }
 });
 </script>
 
@@ -56,7 +89,7 @@ const contactPersonName = computed(() => {
       </el-descriptions-item>
 
       <el-descriptions-item :label="t('order.customer')">
-        {{ order.customer_name }}
+        {{ customerName }}
       </el-descriptions-item>
       <el-descriptions-item :label="t('order.contactPerson')">
         {{ contactPersonName }}

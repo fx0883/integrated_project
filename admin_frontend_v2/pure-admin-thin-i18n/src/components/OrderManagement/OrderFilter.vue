@@ -161,35 +161,21 @@ watch(
         </template>
       </el-input>
 
-      <el-select
+      <el-input
         v-model="filterForm.payment_status"
         :placeholder="t('order.filterPaymentStatus')"
         clearable
         class="filter-select"
         @change="applyFilter"
-      >
-        <el-option
-          v-for="item in paymentStatusOptions"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-        />
-      </el-select>
+      />
 
-      <el-select
+      <el-input
         v-model="filterForm.service_type"
         :placeholder="t('order.filterServiceType')"
         clearable
         class="filter-select"
         @change="applyFilter"
-      >
-        <el-option
-          v-for="item in serviceTypeOptions"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-        />
-      </el-select>
+      />
 
       <div class="advanced-toggle" @click="toggleAdvancedFilter">
         {{
