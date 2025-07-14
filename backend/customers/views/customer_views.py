@@ -201,9 +201,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        获取客户查询集，默认不返回已删除的客户
+        获取客户查询集，默认不返回已删除的客户，并且根据当前租户进行过滤
         """
-        queryset = Customer.objects.all()
+        queryset = Customer.objects.all()  # 使用BaseModel的TenantManager自动过滤租户
         
         # 默认不显示已删除客户，除非明确要求
         show_deleted = self.request.query_params.get('show_deleted', 'false').lower() == 'true'
@@ -214,9 +214,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """
-        创建客户时记录创建者
+        创建客户时记录创建者和设置租户
         """
-        serializer.save(created_by=self.request.user.username)
+        # 从请求上下文获取当前租户
+        tenant = self.request.tenant
+        serializer.save(created_by=self.request.user.username, tenant=tenant)
     
     def perform_update(self, serializer):
         """

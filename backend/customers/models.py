@@ -1,8 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 import datetime
+from common.models import BaseModel
 
-class Customer(models.Model):
+class Customer(BaseModel):
     """
     客户实体类，代表客户公司或组织
     """
@@ -70,11 +71,8 @@ class Customer(models.Model):
     special_requirements = models.TextField(_("特殊要求"), blank=True, null=True)
     notes = models.TextField(_("备注信息"), blank=True, null=True)
     source = models.CharField(_("客户来源"), max_length=50, blank=True, null=True)
-    is_deleted = models.BooleanField(_("是否删除"), default=False)
     
-    # 审计字段
-    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    # 审计字段 (created_at, updated_at, is_deleted由BaseModel提供)
     created_by = models.CharField(_("创建者"), max_length=50, blank=True, null=True)
     updated_by = models.CharField(_("更新者"), max_length=50, blank=True, null=True)
     
@@ -89,11 +87,11 @@ class Customer(models.Model):
     
     def soft_delete(self):
         """
-        软删除客户
+        软删除客户，复写BaseModel的方法
         """
         self.is_deleted = True
         self.status = 'inactive'
-        self.save(update_fields=['is_deleted', 'status'])
+        self.save(update_fields=['is_deleted', 'status', 'updated_at'])
         return self
     
     def get_primary_tenant_relation(self, relation_type=None):
@@ -141,7 +139,7 @@ class Customer(models.Model):
         return Tenant.objects.filter(id__in=tenant_ids)
 
 
-class CustomerMemberRelation(models.Model):
+class CustomerMemberRelation(BaseModel):
     """
     客户-联系人关联表，建立客户与Member之间的多对多关系
     """
@@ -164,9 +162,7 @@ class CustomerMemberRelation(models.Model):
     is_primary = models.BooleanField(_("主要联系人"), default=False, help_text=_("是否为该客户的主要联系人"))
     remarks = models.TextField(_("备注"), blank=True, null=True, help_text=_("关于该联系人与客户关系的补充说明"))
     
-    # 审计字段
-    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    # 审计字段由BaseModel提供
     
     class Meta:
         verbose_name = _('客户-联系人关系')
@@ -188,7 +184,7 @@ class CustomerMemberRelation(models.Model):
         super().save(*args, **kwargs)
 
 
-class CustomerTenantRelation(models.Model):
+class CustomerTenantRelation(BaseModel):
     """
     客户-租户关联表，建立客户与Tenant之间的多对多关系
     """
@@ -254,9 +250,7 @@ class CustomerTenantRelation(models.Model):
         help_text=_("详细说明客户与租户之间的关系")
     )
     
-    # 审计字段
-    created_at = models.DateTimeField(_("创建时间"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("更新时间"), auto_now=True)
+    # 审计字段 (created_at, updated_at, is_deleted由BaseModel提供)
     created_by = models.CharField(_("创建者"), max_length=50, blank=True, null=True)
     updated_by = models.CharField(_("更新者"), max_length=50, blank=True, null=True)
     

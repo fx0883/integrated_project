@@ -69,9 +69,9 @@ class CustomerTenantRelationViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        获取查询集，可以按客户ID、租户ID和关系类型过滤
+        获取查询集，可以按客户ID、租户ID和关系类型过滤，并且根据当前租户进行过滤
         """
-        queryset = CustomerTenantRelation.objects.all()
+        queryset = CustomerTenantRelation.objects.all()  # 使用BaseModel的TenantManager自动过滤租户
         
         # 过滤条件
         customer_id = self.request.query_params.get('customer_id')
@@ -86,14 +86,21 @@ class CustomerTenantRelationViewSet(viewsets.ModelViewSet):
         
         if relation_type:
             queryset = queryset.filter(relation_type=relation_type)
+            
+        # 默认不显示已删除关系
+        show_deleted = self.request.query_params.get('show_deleted', 'false').lower() == 'true'
+        if not show_deleted:
+            queryset = queryset.filter(is_deleted=False)
         
         return queryset
     
     def perform_create(self, serializer):
         """
-        创建关系时记录创建者
+        创建关系时记录创建者和设置租户
         """
-        serializer.save(created_by=self.request.user.username)
+        # 从请求上下文获取当前租户
+        tenant = self.request.tenant
+        serializer.save(created_by=self.request.user.username, tenant=tenant)
     
     def perform_update(self, serializer):
         """

@@ -7,14 +7,14 @@ from .models import Customer, CustomerMemberRelation, CustomerTenantRelation
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ('name', 'type', 'value_level', 'status', 'primary_contact_name', 
                    'primary_contact_phone', 'industry_type', 'company_size', 'tenant_relations_count', 'created_at')
-    list_filter = ('type', 'value_level', 'status', 'company_size', 'is_deleted')
+    list_filter = ('type', 'value_level', 'status', 'company_size', 'is_deleted', 'tenant')
     search_fields = ('name', 'business_license_number', 'primary_contact_name', 'primary_contact_phone')
     # date_hierarchy = 'created_at'  # 暂时注释掉此行，避免MySQL时区问题
     readonly_fields = ('created_at', 'updated_at', 'tenant_relations_display')
     
     fieldsets = (
         (_('基本信息'), {
-            'fields': ('name', 'type', 'value_level', 'status', 'source')
+            'fields': ('name', 'type', 'value_level', 'status', 'source', 'tenant')
         }),
         (_('公司信息'), {
             'fields': ('business_license_number', 'tax_identification_number', 'registered_capital',
@@ -82,20 +82,20 @@ class CustomerAdmin(admin.ModelAdmin):
 @admin.register(CustomerMemberRelation)
 class CustomerMemberRelationAdmin(admin.ModelAdmin):
     list_display = ('customer', 'member', 'role', 'is_primary', 'remarks', 'created_at')
-    list_filter = ('is_primary', 'customer', 'role')
+    list_filter = ('is_primary', 'customer', 'role', 'tenant')
     search_fields = ('customer__name', 'member__username', 'role', 'remarks')
     raw_id_fields = ('customer', 'member')
     readonly_fields = ('created_at', 'updated_at')
     
     fieldsets = (
         (None, {
-            'fields': ('customer', 'member')
+            'fields': ('customer', 'member', 'tenant')
         }),
         (_('关系信息'), {
             'fields': ('role', 'is_primary', 'remarks')
         }),
         (_('审计信息'), {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at', 'updated_at', 'is_deleted'),
             'classes': ('collapse',)
         }),
     )
@@ -103,7 +103,7 @@ class CustomerMemberRelationAdmin(admin.ModelAdmin):
 @admin.register(CustomerTenantRelation)
 class CustomerTenantRelationAdmin(admin.ModelAdmin):
     list_display = ('customer', 'tenant', 'relation_type', 'is_primary', 'contract_number', 'start_date', 'end_date', 'created_at')
-    list_filter = ('relation_type', 'is_primary', 'customer', 'tenant')
+    list_filter = ('relation_type', 'is_primary', 'customer', 'tenant', 'is_deleted')
     search_fields = ('customer__name', 'tenant__name', 'contract_number', 'description')
     raw_id_fields = ('customer', 'tenant')
     readonly_fields = ('created_at', 'updated_at')
@@ -120,7 +120,7 @@ class CustomerTenantRelationAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         (_('审计信息'), {
-            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by', 'is_deleted'),
             'classes': ('collapse',)
         }),
     )

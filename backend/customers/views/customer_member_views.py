@@ -70,16 +70,29 @@ class CustomerMemberRelationViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        获取查询集，可以按客户ID过滤
+        获取查询集，可以按客户ID过滤，并且根据当前租户进行过滤
         """
-        queryset = CustomerMemberRelation.objects.all()
+        queryset = CustomerMemberRelation.objects.all()  # 使用BaseModel的TenantManager自动过滤租户
         
         # 如果提供了customer_id参数，则按客户ID过滤
         customer_id = self.request.query_params.get('customer_id')
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
+            
+        # 默认不显示已删除关系
+        show_deleted = self.request.query_params.get('show_deleted', 'false').lower() == 'true'
+        if not show_deleted:
+            queryset = queryset.filter(is_deleted=False)
         
         return queryset
+    
+    def perform_create(self, serializer):
+        """
+        创建关系时设置租户
+        """
+        # 从请求上下文获取当前租户
+        tenant = self.request.tenant
+        serializer.save(tenant=tenant)
     
     @extend_schema(
         summary="设置主要联系人",
