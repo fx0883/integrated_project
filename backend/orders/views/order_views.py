@@ -1344,7 +1344,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                     # 如果是空值，直接移除该字段，不更新
                     if data[field] is None or data[field] == '':
                         data.pop(field)
-                    # 如果是非空字符串，尝试转换为日期对象
+                                        # 如果是非空字符串，尝试转换为日期对象
                     elif isinstance(data[field], str) and data[field].strip():
                         try:
                             from datetime import datetime

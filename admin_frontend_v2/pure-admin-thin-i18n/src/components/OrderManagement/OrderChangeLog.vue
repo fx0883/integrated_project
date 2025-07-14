@@ -128,6 +128,18 @@ const formatContactPersonValue = (contactId: any) => {
   return `${t("common.contact")} ${contactId}`;
 };
 
+// 格式化变更值，优先使用 customer_contact_name 字段
+const formatChangeValue = (field, value) => {
+  // 处理联系人字段
+  if (field === "customer_contact") {
+    // 如果有 customer_contact_name，直接使用
+    return formatContactPersonValue(value);
+  }
+
+  // 处理其他字段
+  return value || t("common.notSpecified");
+};
+
 // 初始加载
 onMounted(() => {
   loadHistoryList();
@@ -135,7 +147,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="order-change-log" v-loading="loading">
+  <div v-loading="loading" class="order-change-log">
     <el-timeline>
       <el-timeline-item
         v-for="item in sortedHistoryList"
@@ -160,8 +172,8 @@ onMounted(() => {
           </p>
 
           <div
-            class="changes-container"
             v-if="item.change_details_data?.changes"
+            class="changes-container"
           >
             <div
               v-for="(change, field) in item.change_details_data.changes"
@@ -174,7 +186,9 @@ onMounted(() => {
                   <span class="value-label">{{ t("order.from") }}:</span>
                   <span class="value">
                     <template v-if="field === 'customer_contact'">
-                      {{ formatContactPersonValue(change.old) }}
+                      {{
+                        change.old_name || formatContactPersonValue(change.old)
+                      }}
                     </template>
                     <template v-else>
                       {{ change.old || t("common.notSpecified") }}
@@ -185,7 +199,9 @@ onMounted(() => {
                   <span class="value-label">{{ t("order.to") }}:</span>
                   <span class="value">
                     <template v-if="field === 'customer_contact'">
-                      {{ formatContactPersonValue(change.new) }}
+                      {{
+                        change.new_name || formatContactPersonValue(change.new)
+                      }}
                     </template>
                     <template v-else>
                       {{ change.new || t("common.notSpecified") }}
@@ -207,8 +223,8 @@ onMounted(() => {
     </el-timeline>
 
     <div
-      class="pagination-container"
       v-if="pagination.total > pagination.pageSize"
+      class="pagination-container"
     >
       <el-pagination
         v-model:current-page="pagination.currentPage"
