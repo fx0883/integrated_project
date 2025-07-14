@@ -8,6 +8,9 @@ from .models import Order, OrderHistory
 from customers.serializers import CustomerListSerializer
 from users.serializers import UserMinimalSerializer, MemberMinimalSerializer
 from users.models import User, Member
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -116,31 +119,62 @@ class OrderUpdateSerializer(OrderSerializer):
         # 从请求中获取用户
         user = self.context['request'].user
         
+        # 记录开始更新的日志
+        logger.info(f"开始更新订单: ID={instance.id}, 订单号={instance.order_number}, 用户={user.username}")
+        
         # 记录变更详情
         change_details = {'action': 'update', 'changes': {}}
         for field, value in validated_data.items():
             if hasattr(instance, field):
                 old_value = getattr(instance, field)
                 if old_value != value:
+                    # 对于简单类型，直接记录旧值和新值
                     if isinstance(old_value, (int, float, str, bool)) or old_value is None:
                         change_details['changes'][field] = {
                             'old': old_value,
                             'new': value
                         }
+                        logger.debug(f"订单字段变更: {field}, 旧值: {old_value}, 新值: {value}")
+                    # 对于外键字段，尝试记录更多有用信息
+                    elif field.endswith('_id') or field in ['customer', 'customer_contact']:
+                        # 记录外键对象的ID和标识信息
+                        old_id = getattr(old_value, 'id', None) if old_value else None
+                        old_name = getattr(old_value, 'name', None) or getattr(old_value, 'display_name', None) if old_value else None
+                        
+                        new_id = getattr(value, 'id', None) if value else None
+                        new_name = getattr(value, 'name', None) or getattr(value, 'display_name', None) if value else None
+                        
+                        change_details['changes'][field] = {
+                            'old': {'id': old_id, 'name': old_name} if old_value else None,
+                            'new': {'id': new_id, 'name': new_name} if value else None
+                        }
+                        logger.debug(f"订单外键字段变更: {field}, 旧值: {old_id}/{old_name}, 新值: {new_id}/{new_name}")
+                    # 对于其他复杂类型，记录基本变更信息
                     else:
-                        # 对于复杂类型，只记录已更改
-                        change_details['changes'][field] = {'changed': True}
+                        change_details['changes'][field] = {
+                            'old_type': type(old_value).__name__ if old_value else 'None',
+                            'new_type': type(value).__name__ if value else 'None',
+                            'changed': True
+                        }
+                        logger.debug(f"订单复杂类型字段变更: {field}, 类型从 {type(old_value).__name__} 变为 {type(value).__name__}")
         
         # 更新订单
         order = super().update(instance, validated_data)
         
         # 如果有变更，创建历史记录
         if change_details['changes']:
-            OrderHistory.create_history_record(
+            change_details['message'] = f'更新订单字段: {", ".join(change_details["changes"].keys())}'
+            
+            # 创建历史记录
+            history = OrderHistory.create_history_record(
                 order=order,
                 user=user,
                 change_details=change_details
             )
+            
+            logger.info(f"订单更新完成并创建历史记录: ID={order.id}, 订单号={order.order_number}, 历史版本={history.version}")
+        else:
+            logger.info(f"订单无实际变更，未创建历史记录: ID={order.id}, 订单号={order.order_number}")
         
         return order
 

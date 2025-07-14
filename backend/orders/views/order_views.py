@@ -396,6 +396,21 @@ class OrderViewSet(viewsets.ModelViewSet):
         # 执行软删除
         instance.soft_delete()
     
+    def perform_update(self, serializer):
+        """
+        执行更新操作，记录日志
+        
+        注意：历史记录的创建已经在OrderUpdateSerializer的update方法中处理，
+        这里只是添加额外的日志记录
+        """
+        logger.info(f"执行订单更新操作: ID={serializer.instance.id}, 订单号={serializer.instance.order_number}")
+        
+        # 调用父类方法执行实际更新
+        # OrderUpdateSerializer中已经处理了历史记录创建，不需要在这里重复
+        super().perform_update(serializer)
+        
+        logger.info(f"订单更新完成: ID={serializer.instance.id}, 订单号={serializer.instance.order_number}")
+    
     @extend_schema(
         summary="导出订单数据",
         description="导出订单数据为Excel文件，可选择按订单ID列表进行筛选",
