@@ -28,6 +28,9 @@ const emit = defineEmits<{
 // 表单引用
 const formRef = ref<FormInstance>();
 
+// 初始化标志位，用于区分首次加载和后续用户操作
+const isInitialLoad = ref(true);
+
 // 表单数据
 const formData = reactive<OrderCreateUpdateParams>({
   customer: props.order?.customer || undefined,
@@ -124,16 +127,91 @@ const loadCustomerContactPersons = async customerId => {
   try {
     // 确保传入的是ID值而不是对象
     const id = typeof customerId === "object" ? customerId.id : customerId;
+
+    console.log(`正在加载客户 ${id} 的联系人`);
     await customerStore.fetchCustomerMemberRelations(id);
-    contactPersonList.value = customerStore.getMemberRelations.map(
-      relation => ({
-        value: relation.id,
-        label: relation.member_name || `联系人${relation.id}`
-      })
+
+    // 修改联系人数据映射，使用会员ID而不是关系ID
+    contactPersonList.value = customerStore.getMemberRelations.map(relation => {
+      // 调试显示完整的关系数据
+      console.log("联系人关系数据:", JSON.stringify(relation));
+
+      // 确保会员数据存在
+      if (!relation.member) {
+        console.warn(`关系缺少会员数据:`, relation);
+        return {
+          value: relation.id, // 如果没有会员数据，退回使用关系ID
+          label: `未知联系人 ${relation.id}`
+        };
+      }
+
+      // 使用会员ID，而不是关系ID
+      return {
+        value: relation.member.id, // 会员ID
+        label:
+          relation.member.name ||
+          relation.member.email ||
+          `联系人 ${relation.member.id}`
+      };
+    });
+
+    console.log(
+      `加载了 ${contactPersonList.value.length} 个联系人，详细数据:`,
+      JSON.stringify(contactPersonList.value)
     );
+
+    // 只有在编辑模式下，且是首次加载时，才尝试匹配联系人
+    if (
+      props.mode === "edit" &&
+      isInitialLoad.value &&
+      props.order &&
+      props.order.customer_contact
+    ) {
+      console.log(
+        `准备选中联系人ID: ${props.order.customer_contact}, 类型: ${typeof props.order.customer_contact}`
+      );
+      findAndSetContact(props.order.customer_contact);
+
+      // 首次加载完成
+      if (isInitialLoad.value) {
+        isInitialLoad.value = false;
+      }
+    }
   } catch (error) {
     console.error("加载客户联系人失败", error);
     contactPersonList.value = [];
+  }
+};
+
+// 根据联系人ID查找并设置联系人
+const findAndSetContact = contactId => {
+  // 如果contactId是对象，提取ID
+  const id =
+    typeof contactId === "object" && contactId !== null
+      ? contactId.id
+      : contactId;
+
+  // 确保ID是数字类型，便于比较
+  const numericId = Number(id);
+
+  console.log(`尝试查找联系人ID: ${numericId}, 类型: ${typeof numericId}`);
+  console.log(`当前联系人列表:`, JSON.stringify(contactPersonList.value));
+
+  // 查找联系人列表中是否有匹配项
+  const contactItem = contactPersonList.value.find(
+    item => Number(item.value) === numericId
+  );
+
+  if (contactItem) {
+    // 找到匹配项，设置联系人
+    formData.customer_contact = contactItem.value;
+    console.log(
+      `成功选中联系人: ${contactItem.label} (ID: ${contactItem.value})`
+    );
+  } else {
+    // 没找到匹配项，使用ID作为值
+    formData.customer_contact = numericId; // 使用数字类型ID
+    console.warn(`未在联系人列表中找到ID为${numericId}的联系人`);
   }
 };
 
@@ -142,7 +220,9 @@ watch(
   () => formData.customer,
   async newCustomerId => {
     if (newCustomerId) {
-      formData.customer_contact = undefined; // 清空之前选择的联系人
+      // 清空之前选择的联系人，不再尝试恢复选择
+      formData.customer_contact = undefined;
+      // 加载新客户的联系人列表
       await loadCustomerContactPersons(newCustomerId);
     } else {
       contactPersonList.value = [];
@@ -176,6 +256,15 @@ watch(
   () => props.order,
   newVal => {
     if (newVal) {
+      // 重置初始化标志，表示正在加载新订单数据
+      isInitialLoad.value = true;
+
+      // 先记录原始联系人ID用于调试
+      const originalContactId = newVal.customer_contact;
+      console.log(
+        `订单原始联系人ID: ${originalContactId}, 类型: ${typeof originalContactId}`
+      );
+
       formData.customer = newVal.customer;
       formData.source_platform = newVal.source_platform || "";
       formData.project_manager = newVal.project_manager || "";
@@ -215,6 +304,8 @@ watch(
       formData.order_address = newVal.order_address || "";
       formData.remarks = newVal.remarks || "";
       formData.follow_up_record = newVal.follow_up_record || "";
+
+      console.log(`设置联系人ID: ${formData.customer_contact}`);
 
       // 处理客户和联系人数据
       processCustomerData();
@@ -338,20 +429,23 @@ const handleSubmit = async () => {
 
       // 确保customer是ID值而不是对象
       if (
-        typeof formDataToSubmit.customer === "object" &&
-        formDataToSubmit.customer !== null
+        formDataToSubmit.customer &&
+        typeof formDataToSubmit.customer === "object"
       ) {
         formDataToSubmit.customer = formDataToSubmit.customer.id;
       }
 
       // 确保customer_contact是ID值而不是对象
       if (
-        typeof formDataToSubmit.customer_contact === "object" &&
-        formDataToSubmit.customer_contact !== null
+        formDataToSubmit.customer_contact &&
+        typeof formDataToSubmit.customer_contact === "object"
       ) {
         formDataToSubmit.customer_contact =
           formDataToSubmit.customer_contact.id;
       }
+
+      // 记录处理后的表单数据
+      console.log("提交订单数据:", JSON.stringify(formDataToSubmit));
 
       emit("submit", formDataToSubmit);
     }

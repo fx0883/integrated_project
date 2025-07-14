@@ -289,7 +289,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['payment_status', 'service_type', 'language', 'customer', 'customer_type']
-    search_fields = ['order_number', 'customer__name', 'translator', 'project_details']
+    search_fields = ['order_number', 'customer__name', 'translator', 'project_details', 'customer_contact__username', 'customer_contact__nick_name', 'customer_contact__first_name', 'customer_contact__last_name']
     ordering_fields = ['created_at', 'order_date', 'customer_total_amount', 'payment_status']
     ordering = ['-created_at']
     
@@ -1144,7 +1144,12 @@ class OrderViewSet(viewsets.ModelViewSet):
                 Q(order_number__icontains=keyword) |
                 Q(project_details__icontains=keyword) |
                 Q(remarks__icontains=keyword) |
-                Q(customer__name__icontains=keyword)
+                Q(customer__name__icontains=keyword) |
+                Q(translator__icontains=keyword) |
+                Q(customer_contact__username__icontains=keyword) |
+                Q(customer_contact__nick_name__icontains=keyword) |
+                Q(customer_contact__first_name__icontains=keyword) |
+                Q(customer_contact__last_name__icontains=keyword)
             )
         else:
             # 如果没有关键字，根据服务时间筛选

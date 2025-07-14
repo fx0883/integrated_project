@@ -116,6 +116,7 @@ order:
   filterPaymentStatus: 支付状态
   filterServiceType: 服务类型
   selectCustomer: 选择客户
+  selectContact: 选择联系人
   inputLanguage: 输入语种
   dateRange: 日期范围
   selectServiceTime: 选择服务时间
@@ -206,6 +207,7 @@ order:
   # 订单基本字段
   orderNumber: 订单编号
   customer: 客户
+  customerContact: 客户联系人
   contactPerson: 联系人
   createdAt: 创建时间
   serviceType: 服务类型

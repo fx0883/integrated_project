@@ -176,7 +176,7 @@ class CustomerOrderViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['payment_status', 'service_type'] # 移除了status字段
-    search_fields = ['order_number', 'translator'] # 移除了description字段
+    search_fields = ['order_number', 'translator', 'project_details', 'customer_contact__username', 'customer_contact__nick_name', 'customer_contact__first_name', 'customer_contact__last_name'] # 移除了description字段
     ordering_fields = ['created_at', 'order_date', 'customer_total_amount', 'payment_status'] # 更新了字段
     ordering = ['-created_at']
     
