@@ -853,6 +853,10 @@ menus:
   pureDashboard: 数据大盘
   pureCms: 内容管理
   pureOrder: 订单管理
+  pureFourZeroFour: 404页面
+  pureAbnormal: 错误页面
+  pureFourZeroThree: 403页面
+  pureFiveZeroZero: 500页面
 
 adminUser:
   management: 管理员用户管理

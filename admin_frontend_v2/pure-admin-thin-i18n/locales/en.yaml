@@ -840,6 +840,10 @@ menus:
   pureMenuList: Menu List
   pureAdminUserManagement: Admin User Management
   pureAdminUserList: Admin User List
+  pureFourZeroFour: 404 Page
+  pureAbnormal: Error Pages
+  pureFourZeroThree: 403 Page
+  pureFiveZeroZero: 500 Page
 
 adminUser:
   management: Admin User Management
