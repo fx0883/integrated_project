@@ -430,24 +430,40 @@ const handleSubmit = async () => {
       // 确保customer是ID值而不是对象
       if (
         formDataToSubmit.customer &&
-        typeof formDataToSubmit.customer === "object"
+        typeof formDataToSubmit.customer === "object" &&
+        formDataToSubmit.customer !== null
       ) {
-        formDataToSubmit.customer = formDataToSubmit.customer.id;
+        formDataToSubmit.customer = (formDataToSubmit.customer as any).id;
       }
 
       // 确保customer_contact是ID值而不是对象
       if (
         formDataToSubmit.customer_contact &&
-        typeof formDataToSubmit.customer_contact === "object"
+        typeof formDataToSubmit.customer_contact === "object" &&
+        formDataToSubmit.customer_contact !== null
       ) {
-        formDataToSubmit.customer_contact =
-          formDataToSubmit.customer_contact.id;
+        formDataToSubmit.customer_contact = (
+          formDataToSubmit.customer_contact as any
+        ).id;
       }
 
-      // 记录处理后的表单数据
-      console.log("提交订单数据:", JSON.stringify(formDataToSubmit));
+      // 过滤掉空值和空字符串字段
+      const cleanedFormData = Object.entries(formDataToSubmit).reduce(
+        (result, [key, value]) => {
+          // 如果值不是空、undefined或空字符串，则保留该字段
+          if (value !== null && value !== undefined && value !== "") {
+            result[key] = value;
+          }
+          return result;
+        },
+        {} as Record<string, any>
+      );
 
-      emit("submit", formDataToSubmit);
+      // 记录处理后的表单数据
+      console.log("提交订单数据:", JSON.stringify(cleanedFormData));
+
+      // 提交表单数据
+      emit("submit", cleanedFormData as OrderCreateUpdateParams);
     }
   });
 };
