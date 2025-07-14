@@ -145,13 +145,13 @@ const chartOptions = computed<EChartsOption>(() => {
   }));
   const amountData = serviceTypeData.map(item => {
     // 将金额字符串转换为数字，处理格式如 "¥1,234.56"
-    const amountStr = item.customer_total_amount;
-    return parseFloat(amountStr.replace(/[^\d.-]/g, ""));
+    const amountStr = String(item.customer_total_amount || "0");
+    return parseFloat(amountStr.replace(/[^\d.-]/g, "") || "0");
   });
   const profitData = serviceTypeData.map(item => {
     // 将金额字符串转换为数字
-    const profitStr = item.profit;
-    return parseFloat(profitStr.replace(/[^\d.-]/g, ""));
+    const profitStr = String(item.profit || "0");
+    return parseFloat(profitStr.replace(/[^\d.-]/g, "") || "0");
   });
   const profitRateData = serviceTypeData.map(item => {
     // 将利润率转为百分比
@@ -383,7 +383,9 @@ const { setOptions, resizeChart } = useChartDataFlow(
 
 // 监听窗口大小变化
 const handleResize = () => {
-  resizeChart();
+  if (typeof resizeChart === "function") {
+    resizeChart();
+  }
 };
 
 onMounted(() => {

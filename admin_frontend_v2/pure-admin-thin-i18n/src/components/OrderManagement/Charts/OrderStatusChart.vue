@@ -265,7 +265,9 @@ const { setOptions, resizeChart } = useChartDataFlow(
 
 // 监听窗口大小变化
 const handleResize = () => {
-  resizeChart();
+  if (typeof resizeChart === "function") {
+    resizeChart();
+  }
 };
 
 onMounted(() => {
