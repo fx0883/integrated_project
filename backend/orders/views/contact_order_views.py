@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
             OpenApiParameter(name="service_type", description="按服务类型筛选订单", required=False, type=str),
             OpenApiParameter(name="order_date_from", description="按订单日期范围筛选（起始）", required=False, type=str),
             OpenApiParameter(name="order_date_to", description="按订单日期范围筛选（结束）", required=False, type=str),
+            OpenApiParameter(name="start_date", description="按服务时间范围筛选（起始日期）", required=False, type=str),
+            OpenApiParameter(name="end_date", description="按服务时间范围筛选（结束日期）", required=False, type=str),
             OpenApiParameter(name="search", description="搜索订单编号、译员等信息", required=False, type=str),
         ],
         examples=[
@@ -194,6 +196,27 @@ class ContactOrderViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(order_date__gte=order_date_from)
         if order_date_to:
             queryset = queryset.filter(order_date__lte=order_date_to)
+            
+        # 按服务时间范围筛选
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        if start_date:
+            try:
+                from datetime import datetime
+                parsed_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(service_time__gte=parsed_date)
+            except ValueError:
+                # 如果解析失败，不进行筛选
+                pass
+                
+        if end_date:
+            try:
+                from datetime import datetime
+                parsed_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(service_time__lte=parsed_date)
+            except ValueError:
+                # 如果解析失败，不进行筛选
+                pass
         
         return queryset
     

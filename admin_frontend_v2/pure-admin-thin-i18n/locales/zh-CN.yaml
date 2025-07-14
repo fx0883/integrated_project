@@ -119,6 +119,7 @@ order:
   selectContact: 选择联系人
   inputLanguage: 输入语种
   dateRange: 日期范围
+  serviceTimeRange: 服务时间范围
   selectServiceTime: 选择服务时间
   historyVersions: 有 {count} 个历史版本
   

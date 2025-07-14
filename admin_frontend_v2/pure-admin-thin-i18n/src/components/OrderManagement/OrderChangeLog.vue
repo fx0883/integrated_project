@@ -3,6 +3,7 @@ import { ref, onMounted, defineProps, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
 import { useOrderStore } from "@/store/modules/order";
+import { useCustomerStore } from "@/store/modules/customer";
 import type { OrderHistory } from "@/types/order";
 
 const props = defineProps<{
@@ -11,6 +12,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const orderStore = useOrderStore();
+const customerStore = useCustomerStore();
 
 const historyList = ref<OrderHistory[]>([]);
 const loading = ref(false);
@@ -19,6 +21,9 @@ const pagination = ref({
   pageSize: 20,
   total: 0
 });
+
+// 存储所有已加载的联系人信息
+const contactPersonsMap = ref<Record<number, any>>({});
 
 // 加载所有历史记录用于时间线展示
 const loadHistoryList = async () => {
@@ -30,6 +35,34 @@ const loadHistoryList = async () => {
     });
     historyList.value = orderStore.getOrderHistory;
     pagination.value.total = orderStore.orderHistory.total;
+
+    // 查找涉及联系人变更的记录
+    const customerIds = new Set<number>();
+    historyList.value.forEach(history => {
+      if (history.change_details_data?.changes?.customer) {
+        const customerId = history.change_details_data.changes.customer.new;
+        if (customerId && typeof customerId === "number") {
+          customerIds.add(customerId);
+        }
+      }
+    });
+
+    // 加载客户的联系人数据
+    await Promise.all(
+      Array.from(customerIds).map(async customerId => {
+        try {
+          await customerStore.fetchCustomerMemberRelations(customerId);
+          const relations = customerStore.getMemberRelations;
+          relations.forEach(relation => {
+            if (relation.member && relation.member.id) {
+              contactPersonsMap.value[relation.member.id] = relation.member;
+            }
+          });
+        } catch (error) {
+          console.error(`加载客户 ${customerId} 的联系人失败`, error);
+        }
+      })
+    );
   } catch (error) {
     console.error("Failed to load history:", error);
     ElMessage.error(t("order.historyLoadFailed"));
@@ -66,6 +99,33 @@ const getChangeTypeInfo = (change: OrderHistory) => {
     default:
       return { icon: "Info", type: "info" };
   }
+};
+
+// 格式化联系人值
+const formatContactPersonValue = (contactId: any) => {
+  if (!contactId) return t("common.notSpecified");
+
+  // 如果是对象且有name属性，直接使用name
+  if (typeof contactId === "object" && contactId !== null) {
+    if (contactId.name) return contactId.name;
+    if (contactId.display_name) return contactId.display_name;
+    if (contactId.id) return formatContactPersonValue(contactId.id);
+  }
+
+  // 如果是数字ID，查找联系人映射表
+  const numericId = Number(contactId);
+  if (contactPersonsMap.value[numericId]) {
+    const contact = contactPersonsMap.value[numericId];
+    return (
+      contact.name ||
+      contact.display_name ||
+      contact.email ||
+      `${t("common.contact")} ${numericId}`
+    );
+  }
+
+  // 如果没找到，显示ID
+  return `${t("common.contact")} ${contactId}`;
 };
 
 // 初始加载
@@ -112,15 +172,25 @@ onMounted(() => {
               <div class="change-values">
                 <div class="old-value">
                   <span class="value-label">{{ t("order.from") }}:</span>
-                  <span class="value">{{
-                    change.old || t("common.notSpecified")
-                  }}</span>
+                  <span class="value">
+                    <template v-if="field === 'customer_contact'">
+                      {{ formatContactPersonValue(change.old) }}
+                    </template>
+                    <template v-else>
+                      {{ change.old || t("common.notSpecified") }}
+                    </template>
+                  </span>
                 </div>
                 <div class="new-value">
                   <span class="value-label">{{ t("order.to") }}:</span>
-                  <span class="value">{{
-                    change.new || t("common.notSpecified")
-                  }}</span>
+                  <span class="value">
+                    <template v-if="field === 'customer_contact'">
+                      {{ formatContactPersonValue(change.new) }}
+                    </template>
+                    <template v-else>
+                      {{ change.new || t("common.notSpecified") }}
+                    </template>
+                  </span>
                 </div>
               </div>
             </div>

@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
             OpenApiParameter(name="customer_id", description="按客户ID筛选订单", required=False, type=int),
             OpenApiParameter(name="customer_type", description="按客户类型筛选订单", required=False, type=str),
             OpenApiParameter(name="service_time", description="按服务时间筛选订单", required=False, type=str),
+            OpenApiParameter(name="start_date", description="按服务时间范围筛选（起始日期）", required=False, type=str),
+            OpenApiParameter(name="end_date", description="按服务时间范围筛选（结束日期）", required=False, type=str),
             OpenApiParameter(name="search", description="搜索订单编号、客户名称等信息", required=False, type=str),
         ]
     ),
@@ -327,6 +329,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         customer_id = self.request.query_params.get('customer_id')
         customer_type = self.request.query_params.get('customer_type')
         service_time = self.request.query_params.get('service_time')
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
         
         if payment_status:
             queryset = queryset.filter(payment_status=payment_status)
@@ -349,6 +353,25 @@ class OrderViewSet(viewsets.ModelViewSet):
                 from datetime import datetime
                 parsed_date = datetime.strptime(service_time, '%Y-%m-%d').date()
                 queryset = queryset.filter(service_time=parsed_date)
+            except ValueError:
+                # 如果解析失败，不进行筛选
+                pass
+        
+        # 处理服务时间范围查询
+        if start_date:
+            try:
+                from datetime import datetime
+                parsed_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(service_time__gte=parsed_date)
+            except ValueError:
+                # 如果解析失败，不进行筛选
+                pass
+                
+        if end_date:
+            try:
+                from datetime import datetime
+                parsed_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(service_time__lte=parsed_date)
             except ValueError:
                 # 如果解析失败，不进行筛选
                 pass
@@ -921,8 +944,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         tags=["订单管理"],
         parameters=[
             OpenApiParameter(name="period", description="统计周期，可选值: daily, weekly, monthly, yearly", required=False, type=str, default="monthly"),
-            OpenApiParameter(name="start_date", description="开始日期", required=False, type=str),
-            OpenApiParameter(name="end_date", description="结束日期", required=False, type=str),
+            OpenApiParameter(name="start_date", description="服务时间范围起始日期", required=False, type=str),
+            OpenApiParameter(name="end_date", description="服务时间范围结束日期", required=False, type=str),
             OpenApiParameter(name="customer", description="客户ID", required=False, type=int),
             OpenApiParameter(name="service_type", description="服务类型", required=False, type=str),
         ]
@@ -946,8 +969,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not end_date:
             end_date = datetime.now().strftime('%Y-%m-%d')
         
-        # 按日期范围筛选
-        queryset = queryset.filter(created_at__gte=start_date, created_at__lte=end_date)
+        # 按日期范围筛选 - 改为筛选服务时间，与get_queryset保持一致
+        # 注意：此处不需要额外筛选，因为已经在get_queryset中处理了start_date和end_date参数
         
         # 计算基本统计数据
         total_count = queryset.count()
@@ -1315,30 +1338,23 @@ class OrderViewSet(viewsets.ModelViewSet):
                 )
             
             # 处理日期字段，将字符串转换为日期对象
-            date_fields = ['payment_date', 'order_date']
-            for field in date_fields:
-                if field in data and isinstance(data[field], str) and data[field].strip():
-                    try:
-                        from datetime import datetime
-                        # 转换字符串为日期对象
-                        data[field] = datetime.strptime(data[field], '%Y-%m-%d').date()
-                    except ValueError:
-                        return Response(
-                            {"error": f"日期格式错误: {field}={data[field]}，应为YYYY-MM-DD格式"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
             date_fields = ['payment_date', 'order_date', 'service_time']
             for field in date_fields:
-                if field in data and isinstance(data[field], str) and data[field].strip():
-                    try:
-                        from datetime import datetime
-                        # 转换字符串为日期对象
-                        data[field] = datetime.strptime(data[field], '%Y-%m-%d').date()
-                    except ValueError:
-                        return Response(
-                            {"error": f"日期格式错误: {field}={data[field]}，应为YYYY-MM-DD格式"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
+                if field in data:
+                    # 如果是空值，直接移除该字段，不更新
+                    if data[field] is None or data[field] == '':
+                        data.pop(field)
+                    # 如果是非空字符串，尝试转换为日期对象
+                    elif isinstance(data[field], str) and data[field].strip():
+                        try:
+                            from datetime import datetime
+                            # 转换字符串为日期对象
+                            data[field] = datetime.strptime(data[field], '%Y-%m-%d').date()
+                        except ValueError:
+                            return Response(
+                                {"error": f"日期格式错误: {field}={data[field]}，应为YYYY-MM-DD格式"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
             
             # 执行批量更新
             updated_count = 0

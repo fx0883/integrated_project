@@ -27,6 +27,19 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at', 'is_deleted', 'order_number', 'tenant')
     
+    def to_internal_value(self, data):
+        """
+        重写to_internal_value方法，处理payment_date为null或空字符串的情况
+        """
+        # 检查payment_date是否为空值（null或空字符串）
+        if 'payment_date' in data and (data['payment_date'] is None or data['payment_date'] == ''):
+            # 从数据中移除payment_date，这样就不会更新此字段
+            data = data.copy()  # 创建一个副本以避免修改原始数据
+            data.pop('payment_date')
+        
+        # 调用父类方法继续处理
+        return super().to_internal_value(data)
+    
     def get_profit(self, obj):
         """
         获取订单毛利
@@ -173,7 +186,20 @@ class OrderHistorySerializer(serializers.ModelSerializer):
         import json
         try:
             if obj.snapshot:
-                return json.loads(obj.snapshot)
+                snapshot_data = json.loads(obj.snapshot)
+                
+                # 确保存在customer_contact_name字段
+                # 如果snapshot_data中没有这个字段但有customer_contact_id，尝试从Member获取
+                if 'customer_contact_name' not in snapshot_data and 'customer_contact_id' in snapshot_data and snapshot_data['customer_contact_id']:
+                    from users.models import Member
+                    try:
+                        member = Member.objects.get(id=snapshot_data['customer_contact_id'])
+                        snapshot_data['customer_contact_name'] = member.display_name
+                    except (Member.DoesNotExist, Exception):
+                        # 如果找不到用户或出现其他错误，设置为None
+                        snapshot_data['customer_contact_name'] = None
+                
+                return snapshot_data
         except (TypeError, json.JSONDecodeError):
             pass
         return {}
@@ -298,7 +324,7 @@ class OrderListSerializer(serializers.ModelSerializer):
             return {
                 'id': member.id,
                 'username': member.username,
-                'display_name': member.display_name if hasattr(member, 'display_name') else member.username,
+                'display_name': member.display_name,
                 'phone': member.phone,
                 'email': member.email,
                 'wechat_id': member.wechat_id

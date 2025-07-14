@@ -24,8 +24,7 @@ const filterForm = reactive<OrderListParams>({
   language: "",
   customer_id: undefined,
   start_date: "",
-  end_date: "",
-  service_time: ""
+  end_date: ""
 });
 
 // 服务类型选项
@@ -111,7 +110,6 @@ const applyFilter = () => {
   if (filterForm.customer_id) filters.customer_id = filterForm.customer_id;
   if (filterForm.start_date) filters.start_date = filterForm.start_date;
   if (filterForm.end_date) filters.end_date = filterForm.end_date;
-  if (filterForm.service_time) filters.service_time = filterForm.service_time;
 
   emit("filter", filters);
 };
@@ -224,7 +222,7 @@ watch(
           />
         </el-form-item>
 
-        <el-form-item :label="t('order.dateRange')">
+        <el-form-item :label="t('order.serviceTimeRange')">
           <el-date-picker
             v-model="filterForm.start_date"
             type="date"
@@ -241,16 +239,6 @@ watch(
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
             style="width: 150px"
-          />
-        </el-form-item>
-
-        <el-form-item :label="t('order.serviceTime')">
-          <el-date-picker
-            v-model="filterForm.service_time"
-            type="date"
-            :placeholder="t('order.selectServiceTime')"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
           />
         </el-form-item>
       </el-form>
