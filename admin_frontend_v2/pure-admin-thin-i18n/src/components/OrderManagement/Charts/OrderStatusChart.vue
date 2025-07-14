@@ -58,7 +58,8 @@ const statisticsData = ref<OrderStatistics | null>(null);
 const statusColorMap = {
   paid: "#52c41a", // 已支付 - 绿色
   unpaid: "#faad14", // 未支付 - 黄色
-  partial: "#1890ff", // 部分支付 - 蓝色
+  partially_paid: "#1890ff", // 部分支付 - 蓝色
+  partial: "#1890ff", // 部分支付（旧称）- 蓝色
   refunded: "#f5222d", // 已退款 - 红色
   cancelled: "#bfbfbf" // 已取消 - 灰色
 };
@@ -70,6 +71,7 @@ const getStatusTranslation = (status: string) => {
       return t("order.paymentStatusPaid");
     case "unpaid":
       return t("order.paymentStatusUnpaid");
+    case "partially_paid":
     case "partial":
       return t("order.paymentStatusPartial");
     case "refunded":
@@ -124,15 +126,30 @@ const chartOptions = computed<EChartsOption>(() => {
 
   // 处理数据
   const statusData = statisticsData.value.by_payment_status;
-  const pieData = statusData.map(item => ({
+
+  // 按支付状态合并数据
+  const mergedData = {};
+  statusData.forEach(item => {
+    let status = item.payment_status;
+    if (!mergedData[status]) {
+      mergedData[status] = {
+        payment_status: status,
+        orders: 0,
+        amount: 0
+      };
+    }
+    mergedData[status].orders += item.orders;
+    mergedData[status].amount += parseFloat(String(item.amount || "0"));
+  });
+
+  const consolidatedData = Object.values(mergedData);
+  const pieData = consolidatedData.map(item => ({
     name: getStatusTranslation(item.payment_status),
-    value: item.count,
+    value: item.orders,
     itemStyle: {
       color: statusColorMap[item.payment_status] || "#909399"
     },
-    customerTotalAmount: item.customer_total_amount,
-    profit: item.profit,
-    profitRate: (item.profit_rate * 100).toFixed(2) + "%"
+    customerTotalAmount: item.amount.toFixed(2)
   }));
 
   return {
@@ -146,9 +163,7 @@ const chartOptions = computed<EChartsOption>(() => {
         const data = params.data;
         return `${t("order.paymentStatus")}: ${params.name}<br/>
                 ${t("order.orderCount")}: ${params.value}<br/>
-                ${t("order.orderAmount")}: ${data.customerTotalAmount}<br/>
-                ${t("order.chartProfit")}: ${data.profit}<br/>
-                ${t("order.chartProfitRate")}: ${data.profitRate}`;
+                ${t("order.orderAmount")}: ¥${data.customerTotalAmount}`;
       }
     },
     legend: {
@@ -196,6 +211,7 @@ const fetchData = async () => {
 
   try {
     const params = {
+      period: "monthly", // 默认使用月度统计
       start_date: props.startDate,
       end_date: props.endDate
     };

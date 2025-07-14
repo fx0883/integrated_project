@@ -134,29 +134,39 @@ const chartOptions = computed<EChartsOption>(() => {
 
   // 处理数据
   const serviceTypeData = statisticsData.value.by_service_type;
-  const categories = serviceTypeData.map(item =>
+
+  // 按服务类型合并数据 - 因为API可能会返回多条相同服务类型的记录
+  const mergedData = {};
+  serviceTypeData.forEach(item => {
+    const type = item.service_type;
+    if (!mergedData[type]) {
+      mergedData[type] = {
+        service_type: type,
+        orders: 0,
+        amount: 0
+      };
+    }
+    mergedData[type].orders += item.orders;
+    mergedData[type].amount += parseFloat(String(item.amount || "0"));
+  });
+
+  const consolidatedData = Object.values(mergedData);
+  const categories = consolidatedData.map(item =>
     getServiceTypeTranslation(item.service_type)
   );
-  const countData = serviceTypeData.map(item => ({
-    value: item.count,
+
+  const countData = consolidatedData.map(item => ({
+    value: item.orders,
     itemStyle: {
       color: serviceTypeColorMap[item.service_type] || "#909399"
     }
   }));
-  const amountData = serviceTypeData.map(item => {
-    // 将金额字符串转换为数字，处理格式如 "¥1,234.56"
-    const amountStr = String(item.customer_total_amount || "0");
-    return parseFloat(amountStr.replace(/[^\d.-]/g, "") || "0");
-  });
-  const profitData = serviceTypeData.map(item => {
-    // 将金额字符串转换为数字
-    const profitStr = String(item.profit || "0");
-    return parseFloat(profitStr.replace(/[^\d.-]/g, "") || "0");
-  });
-  const profitRateData = serviceTypeData.map(item => {
-    // 将利润率转为百分比
-    return parseFloat((item.profit_rate * 100).toFixed(2));
-  });
+
+  const amountData = consolidatedData.map(item => item.amount);
+
+  // 由于API没有提供单个服务类型的利润数据，这里暂时设为空数组
+  const profitData = new Array(consolidatedData.length).fill(0);
+  const profitRateData = new Array(consolidatedData.length).fill(0);
 
   // 创建提示框格式化函数
   const tooltipFormatter = (params: any[]) => {
@@ -168,10 +178,6 @@ const chartOptions = computed<EChartsOption>(() => {
         result += `<div>${param.seriesName}: ${param.value}</div>`;
       } else if (param.seriesName === t("order.orderAmount")) {
         result += `<div>${param.seriesName}: ¥${param.value.toFixed(2)}</div>`;
-      } else if (param.seriesName === t("order.chartProfit")) {
-        result += `<div>${param.seriesName}: ¥${param.value.toFixed(2)}</div>`;
-      } else if (param.seriesName === t("order.chartProfitRate")) {
-        result += `<div>${param.seriesName}: ${param.value}%</div>`;
       }
     });
 
@@ -193,12 +199,7 @@ const chartOptions = computed<EChartsOption>(() => {
     legend: {
       orient: "horizontal",
       bottom: "bottom",
-      data: [
-        t("order.orderCount"),
-        t("order.orderAmount"),
-        t("order.chartProfit"),
-        t("order.chartProfitRate")
-      ]
+      data: [t("order.orderCount"), t("order.orderAmount")]
     },
     grid: {
       left: "3%",
@@ -268,41 +269,6 @@ const chartOptions = computed<EChartsOption>(() => {
         itemStyle: {
           color: "#52c41a"
         }
-      },
-      {
-        name: t("order.chartProfit"),
-        type: "line",
-        yAxisIndex: 1,
-        data: profitData,
-        emphasis: {
-          focus: "series"
-        },
-        symbol: "circle",
-        symbolSize: 6,
-        lineStyle: {
-          width: 2,
-          type: "dashed"
-        },
-        itemStyle: {
-          color: "#fa8c16"
-        }
-      },
-      {
-        name: t("order.chartProfitRate"),
-        type: "line",
-        data: profitRateData,
-        emphasis: {
-          focus: "series"
-        },
-        symbol: "circle",
-        symbolSize: 6,
-        lineStyle: {
-          width: 2,
-          type: "dotted"
-        },
-        itemStyle: {
-          color: "#722ed1"
-        }
       }
     ]
   };
@@ -316,6 +282,7 @@ const fetchData = async () => {
 
   try {
     const params = {
+      period: "monthly", // 默认使用月度统计
       start_date: props.startDate,
       end_date: props.endDate
     };

@@ -110,23 +110,25 @@ const chartOptions = computed<EChartsOption>(() => {
 
   // 处理数据
   const periodData = statisticsData.value.by_period;
-  const xAxisData = periodData.map(item => formatPeriodLabel(item.period));
-  const orderCountData = periodData.map(item => item.count);
-  const orderAmountData = periodData.map(item => {
-    // 将金额字符串转换为数字，处理格式如 "¥1,234.56"
-    const amountStr = String(item.customer_total_amount || "0");
-    return parseFloat(amountStr.replace(/[^\d.-]/g, "") || "0");
-  });
 
-  const profitData = periodData.map(item => {
-    // 将金额字符串转换为数字
-    const profitStr = String(item.profit || "0");
-    return parseFloat(profitStr.replace(/[^\d.-]/g, "") || "0");
-  });
+  // 过滤掉无效的周期标记
+  const validPeriodData = periodData.filter(item => item.period !== "-");
 
-  const profitRateData = periodData.map(item => {
-    // 将利润率转为百分比
-    return parseFloat((item.profit_rate * 100).toFixed(2));
+  const xAxisData = validPeriodData.map(item => formatPeriodLabel(item.period));
+  const orderCountData = validPeriodData.map(item => item.orders);
+  const orderAmountData = validPeriodData.map(item =>
+    parseFloat(String(item.amount || "0"))
+  );
+
+  const profitData = validPeriodData.map(item =>
+    parseFloat(String(item.profit || "0"))
+  );
+
+  // 计算每个周期的利润率
+  const profitRateData = validPeriodData.map(item => {
+    const amount = parseFloat(String(item.amount || "0"));
+    const profit = parseFloat(String(item.profit || "0"));
+    return amount > 0 ? parseFloat(((profit / amount) * 100).toFixed(2)) : 0;
   });
 
   return {

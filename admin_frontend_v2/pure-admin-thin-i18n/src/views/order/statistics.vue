@@ -16,7 +16,11 @@
       <el-form :model="filterForm" inline class="filter-form">
         <!-- 周期选择 -->
         <el-form-item :label="$t('order.period')">
-          <el-select v-model="filterForm.period" @change="handlePeriodChange">
+          <el-select
+            v-model="filterForm.period"
+            @change="handlePeriodChange"
+            class="period-select"
+          >
             <el-option
               v-for="period in periodOptions"
               :key="period.value"
@@ -394,6 +398,10 @@ onMounted(() => {
     .filter-form {
       display: flex;
       flex-wrap: wrap;
+    }
+    
+    .period-select {
+      width: 120px;
     }
   }
 
