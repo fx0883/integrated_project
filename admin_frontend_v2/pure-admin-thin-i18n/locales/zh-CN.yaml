@@ -124,6 +124,13 @@ order:
   selectServiceTime: 选择服务时间
   historyVersions: 有 {count} 个历史版本
   
+  # 菜单相关
+  menu:
+    pureOrder: 订单管理
+    pureOrde: 订单管理
+    orderList: 订单列表
+    statisticsTitle: 订单统计
+  
   # 客户信息相关
   customer_type: 客户类型
   delivery_address: 收件地址
@@ -846,6 +853,7 @@ menus:
   purePermissionButtonRouter: 路由按钮权限
   purePermissionButtonLogin: 登录按钮权限
   pureTenant: 租户管理
+  pureTenantList: 租户列表
   pureAdminUser: 管理员管理
   pureCustomer: 客户管理
   pureMember: 会员管理
@@ -1009,6 +1017,11 @@ panel:
   pureHiddenFooter: 隐藏页脚
   pureMultiTagsCache: 多标签页持久化
   pureClearCache: 清除缓存
+  pureStretch: 布局拉伸
+  pureStretchFixed: 固定拉伸
+  pureStretchFixedTip: 固定宽高比拉伸
+  pureStretchCustom: 自定义拉伸
+  pureStretchCustomTip: 自定义宽高比拉伸
 
 status:
   pureNotify: 通知

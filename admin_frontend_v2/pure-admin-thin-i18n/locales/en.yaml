@@ -122,6 +122,13 @@ order:
   selectServiceTime: Select Service Time
   historyVersions: Has {count} historical versions
   
+  # Menu Related
+  menu:
+    pureOrder: Order Management
+    pureOrde: Order Management
+    orderList: Order List
+    statisticsTitle: Order Statistics
+  
   # Customer Information Related
   customer_type: Customer Type
   delivery_address: Delivery Address
@@ -826,6 +833,7 @@ menus:
   purePermissionButtonRouter: Router Button Permission
   purePermissionButtonLogin: Login Button Permission
   pureTenant: Tenant Management
+  pureTenantList: Tenant List
   pureAdminUser: Admin Management
   pureCustomer: Customer Management
   pureMember: Member Management
@@ -996,6 +1004,11 @@ panel:
   pureHiddenFooter: Hide Footer
   pureMultiTagsCache: Persistent Tabs
   pureClearCache: Clear Cache
+  pureStretch: Layout Stretch
+  pureStretchFixed: Fixed Stretch
+  pureStretchFixedTip: Fixed aspect ratio stretch
+  pureStretchCustom: Custom Stretch
+  pureStretchCustomTip: Custom aspect ratio stretch
 
 status:
   pureNotify: Notifications
