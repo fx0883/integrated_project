@@ -955,7 +955,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     @extend_schema(
         summary="获取订单统计数据",
-        description="获取订单的统计数据，包括总数、总金额、平均金额等",
+        description="获取订单的统计数据，包括总数、总金额、平均金额等。所有日期筛选和周期统计都基于服务时间(service_time)。",
         tags=["订单管理"],
         parameters=[
             OpenApiParameter(name="period", description="统计周期，可选值: daily, weekly, monthly, yearly", required=False, type=str, default="monthly"),
@@ -1046,12 +1046,12 @@ class OrderViewSet(viewsets.ModelViewSet):
             } for item in service_type_stats
         ]
         
-        # 按周期统计
+        # 按周期统计 - 所有统计都基于服务时间(service_time)
         by_period = []
         if period == 'daily':
-            # 按日统计
+            # 按日统计 - 使用service_time而不是created_at
             date_stats = queryset.extra(
-                select={'date': "DATE(created_at)"}
+                select={'date': "DATE(service_time)"}
             ).values('date').annotate(
                 count=Count('id'),
                 amount=Sum('customer_total_amount'),
@@ -1060,16 +1060,16 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             by_period = [
                 {
-                    'period': item['date'].strftime('%Y-%m-%d'),
+                    'period': item['date'].strftime('%Y-%m-%d') if item['date'] else 'unknown',
                     'orders': item['count'],
                     'amount': float(item['amount'] or 0),
                     'profit': float(item['profit'] or 0)
                 } for item in date_stats
             ]
         elif period == 'weekly':
-            # 按周统计
+            # 按周统计 - 使用service_time而不是created_at
             date_stats = queryset.extra(
-                select={'week': "CONCAT(YEAR(created_at), '-', WEEK(created_at))"}
+                select={'week': "CONCAT(YEAR(service_time), '-', WEEK(service_time))"}
             ).values('week').annotate(
                 count=Count('id'),
                 amount=Sum('customer_total_amount'),
@@ -1078,22 +1078,22 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             by_period = [
                 {
-                    'period': item['week'],
+                    'period': item['week'] if item['week'] else 'unknown',
                     'orders': item['count'],
                     'amount': float(item['amount'] or 0),
                     'profit': float(item['profit'] or 0)
                 } for item in date_stats
             ]
         elif period == 'monthly':
-            # 按月统计 - 使用Django Extract函数替代MySQL特有的DATE_FORMAT
+            # 按月统计 - 使用service_time而不是created_at
             from django.db.models.functions import ExtractYear, ExtractMonth, Cast
             from django.db.models import F, Value, CharField, Case, When
             from django.db.models.functions import Concat
 
             # 使用Extract提取年和月，然后用Concat组合成YYYY-MM格式
             date_stats = queryset.annotate(
-                year=ExtractYear('created_at'),
-                month=ExtractMonth('created_at'),
+                year=ExtractYear('service_time'),
+                month=ExtractMonth('service_time'),
                 month_str=Concat(
                     F('year'), 
                     Value('-'),
@@ -1111,16 +1111,16 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             by_period = [
                 {
-                    'period': item['month_str'],
+                    'period': item['month_str'] if item['month_str'] else 'unknown',
                     'orders': item['count'],
                     'amount': float(item['amount'] or 0),
                     'profit': float(item['profit'] or 0)
                 } for item in date_stats
             ]
         elif period == 'yearly':
-            # 按年统计
+            # 按年统计 - 使用service_time而不是created_at
             date_stats = queryset.extra(
-                select={'year': "YEAR(created_at)"}
+                select={'year': "YEAR(service_time)"}
             ).values('year').annotate(
                 count=Count('id'),
                 amount=Sum('customer_total_amount'),
@@ -1129,7 +1129,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             by_period = [
                 {
-                    'period': str(item['year']),
+                    'period': str(item['year']) if item['year'] else 'unknown',
                     'orders': item['count'],
                     'amount': float(item['amount'] or 0),
                     'profit': float(item['profit'] or 0)
