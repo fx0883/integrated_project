@@ -95,6 +95,7 @@ order:
   createOrder: Create Order
   editOrder: Edit Order
   orderDetail: Order Details
+  orderDetails: Order Details
   statisticsTitle: Order Statistics
   deleteConfirmTitle: Confirm Delete Order
   deleteConfirmContent: Are you sure you want to delete order {number}?
@@ -120,6 +121,12 @@ order:
   dateRange: Date Range
   selectServiceTime: Select Service Time
   historyVersions: Has {count} historical versions
+  
+  # Customer Information Related
+  customer_type: Customer Type
+  delivery_address: Delivery Address
+  order_address: Order Address
+  follow_up_record: Follow-up Record
   
   # Order History Related
   historyRecords: History Records

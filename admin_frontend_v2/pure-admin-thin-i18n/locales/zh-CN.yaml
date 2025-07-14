@@ -95,6 +95,7 @@ order:
   createOrder: 创建订单
   editOrder: 编辑订单
   orderDetail: 订单详情
+  orderDetails: 订单详情
   statisticsTitle: 订单统计
   deleteConfirmTitle: 确认删除订单
   deleteConfirmContent: 确认要删除订单 {number} 吗？
@@ -122,6 +123,12 @@ order:
   serviceTimeRange: 服务时间范围
   selectServiceTime: 选择服务时间
   historyVersions: 有 {count} 个历史版本
+  
+  # 客户信息相关
+  customer_type: 客户类型
+  delivery_address: 收件地址
+  order_address: 订单地址
+  follow_up_record: 回访记录
   
   # 订单历史相关翻译
   historyRecords: 历史记录
