@@ -28,9 +28,6 @@ const emit = defineEmits<{
 // 表单引用
 const formRef = ref<FormInstance>();
 
-// 初始化标志位，用于区分首次加载和后续用户操作
-const isInitialLoad = ref(true);
-
 // 表单数据
 const formData = reactive<OrderCreateUpdateParams>({
   customer: props.order?.customer || undefined,
@@ -161,21 +158,11 @@ const loadCustomerContactPersons = async customerId => {
     );
 
     // 只有在编辑模式下，且是首次加载时，才尝试匹配联系人
-    if (
-      props.mode === "edit" &&
-      isInitialLoad.value &&
-      props.order &&
-      props.order.customer_contact
-    ) {
+    if (props.mode === "edit" && props.order && props.order.customer_contact) {
       console.log(
         `准备选中联系人ID: ${props.order.customer_contact}, 类型: ${typeof props.order.customer_contact}`
       );
       findAndSetContact(props.order.customer_contact);
-
-      // 首次加载完成
-      if (isInitialLoad.value) {
-        isInitialLoad.value = false;
-      }
     }
   } catch (error) {
     console.error("加载客户联系人失败", error);
@@ -208,11 +195,12 @@ const findAndSetContact = contactId => {
     console.log(
       `成功选中联系人: ${contactItem.label} (ID: ${contactItem.value})`
     );
-  } else {
-    // 没找到匹配项，使用ID作为值
-    formData.customer_contact = numericId; // 使用数字类型ID
-    console.warn(`未在联系人列表中找到ID为${numericId}的联系人`);
   }
+  // else {
+  //   // 没找到匹配项，使用ID作为值
+  //   formData.customer_contact = numericId; // 使用数字类型ID
+  //   console.warn(`未在联系人列表中找到ID为${numericId}的联系人`);
+  // }
 };
 
 // 监听客户变化，加载对应的联系人
@@ -247,7 +235,7 @@ const processCustomerData = () => {
     formData.customer_contact !== null
   ) {
     // 如果是对象，提取ID
-    formData.customer_contact = formData.customer_contact.id;
+    formData.customer_contact = (formData.customer_contact as any).id;
   }
 };
 
@@ -256,15 +244,6 @@ watch(
   () => props.order,
   newVal => {
     if (newVal) {
-      // 重置初始化标志，表示正在加载新订单数据
-      isInitialLoad.value = true;
-
-      // 先记录原始联系人ID用于调试
-      const originalContactId = newVal.customer_contact;
-      console.log(
-        `订单原始联系人ID: ${originalContactId}, 类型: ${typeof originalContactId}`
-      );
-
       formData.customer = newVal.customer;
       formData.source_platform = newVal.source_platform || "";
       formData.project_manager = newVal.project_manager || "";

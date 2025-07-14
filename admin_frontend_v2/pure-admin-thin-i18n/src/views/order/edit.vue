@@ -41,10 +41,16 @@ const handleSubmit = async (formData: OrderCreateUpdateParams) => {
   try {
     await orderStore.updateOrderInfo(orderId.value, formData);
     ElMessage.success(t("order.updateSuccess"));
-    // 更新成功后跳转到详情页
+
+    // 更新成功后重新获取最新数据
+    await orderStore.fetchOrderDetail(orderId.value);
+    order.value = orderStore.currentOrder;
+
+    // 获取最新数据后跳转到详情页
     router.push(`/order/detail/${orderId.value}`);
   } catch (error) {
     console.error("Failed to update order:", error);
+    ElMessage.error(t("order.updateFailed"));
   } finally {
     loading.value = false;
   }
