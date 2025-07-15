@@ -5,11 +5,21 @@
     width="70%"
     destroy-on-close
   >
+    <!-- 添加搜索框 -->
+    <div class="search-container">
+      <el-input
+        v-model="searchQuery"
+        placeholder="搜索图标"
+        clearable
+        prefix-icon="ep:search"
+        @input="handleSearch"
+      />
+    </div>
     <el-tabs v-model="activeTab">
       <el-tab-pane label="Element Plus 图标" name="element">
         <div class="icon-container">
           <div
-            v-for="icon in elementIcons"
+            v-for="icon in filteredElementIcons"
             :key="icon"
             :class="[
               'icon-item',
@@ -29,7 +39,7 @@
       <el-tab-pane label="Remix 图标" name="remix">
         <div class="icon-container">
           <div
-            v-for="icon in remixIcons"
+            v-for="icon in filteredRemixIcons"
             :key="icon"
             :class="[
               'icon-item',
@@ -79,7 +89,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineEmits, defineExpose } from "vue";
+import { ref, defineEmits, defineExpose, computed } from "vue";
 import { IconifyIconOnline } from "@/components/ReIcon";
 import logger from "@/utils/logger";
 
@@ -87,6 +97,7 @@ const dialogVisible = ref(false);
 const activeTab = ref("element");
 const selectedIcon = ref("");
 const customIcon = ref("");
+const searchQuery = ref(""); // 添加搜索查询
 
 // 常用的Element Plus图标
 const elementIcons = [
@@ -595,6 +606,27 @@ const remixIcons = [
   "emotion-normal-fill"
 ];
 
+// 过滤后的图标列表
+const filteredElementIcons = computed(() => {
+  if (!searchQuery.value) return elementIcons;
+  return elementIcons.filter(icon =>
+    icon.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+const filteredRemixIcons = computed(() => {
+  if (!searchQuery.value) return remixIcons;
+  return remixIcons.filter(icon =>
+    icon.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+// 处理搜索输入
+const handleSearch = () => {
+  // 可以在这里添加额外的搜索逻辑，如果需要的话
+  logger.debug("Searching for icons:", searchQuery.value);
+};
+
 const emit = defineEmits<{
   (e: "select", icon: string): void;
 }>();
@@ -636,6 +668,7 @@ const open = () => {
   dialogVisible.value = true;
   selectedIcon.value = "";
   customIcon.value = "";
+  searchQuery.value = ""; // 重置搜索框
 };
 
 defineExpose({
@@ -644,6 +677,11 @@ defineExpose({
 </script>
 
 <style scoped>
+.search-container {
+  margin-bottom: 15px;
+  padding: 0 10px;
+}
+
 .icon-container {
   display: flex;
   flex-wrap: wrap;
